@@ -111,6 +111,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private Menu menu;
     private int offColor = Color.WHITE;
     private int onColor = Color.WHITE;
+    private int middleColor = Color.WHITE;
 
     public String getLastPathComponent(String filePath) {
         String[] segments = filePath.split("/");
@@ -376,7 +377,18 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 theCode = new OpenLocationCode(theLocation.getLatitude(), theLocation.getLongitude());
                 locationCode = theCode.getCode();
                 Log.i("elocApp", "code: " + locationCode + "  lat: " + Double.toString(theLocation.getLatitude()) + "   lon: " + Double.toString(theLocation.getLongitude()) + "   alt: " + Double.toString(theLocation.getAltitude()) + "   acc: " + Float.toString(locationAccuracy));
-                gpsBtn.setText("GPS\n" + Float.toString(locationAccuracy) + "m");
+                String prettyAccuracy = formatNumber(locationAccuracy, "m");
+                gpsBtn.setText("GPS\n" + prettyAccuracy);
+                if (locationAccuracy < 5) {
+                    binding.gpsValueTv.setTextColor(onColor);
+                } else if (locationAccuracy < 10) {
+                    binding.gpsValueTv.setTextColor(middleColor);
+                } else {
+                    binding.gpsValueTv.setTextColor(offColor);
+                }
+
+                binding.gpsValueTv.setText(prettyAccuracy);
+
                 gpsBtn.setBackgroundColor(0xFFFF0000);
                 // if (recBtn.getText().toString().startsWith("START RECORDING")) recBtn.setBackgroundColor(0xFFFF0000);
                 if (locationAccuracy < 12.0) {
@@ -451,6 +463,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         if (activity != null) {
             onColor = ContextCompat.getColor(activity, R.color.on_color);
             offColor = ContextCompat.getColor(activity, R.color.off_color);
+            middleColor = ContextCompat.getColor(activity, R.color.middle_color);
+
             SharedPreferences mPrefs = activity.getSharedPreferences("label", 0);
             rangerName = mPrefs.getString("rangerName", "notSet");
         }
@@ -959,6 +973,27 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 } else if (l.startsWith("!13!")) {
                     String gain = l.replace("!13!", "").trim();
                     binding.gainValueTv.setText(gain);
+                } else if (l.startsWith("!14!")) {
+                    String location = l.replace("!14!", "").trim();
+                    binding.lastLocationValueTv.setText(location);
+                } else if (l.startsWith("!15!")) {
+                    String gpsAccuracyString = l
+                            .replace("!15!", "")
+                            .replace("m", "")
+                            .trim();
+                    Double accuracy = parseDouble(gpsAccuracyString);
+                    String prettyAccuracy = "Unknown";
+                    if (accuracy != null) {
+                        prettyAccuracy = formatNumber(accuracy, "m");
+                        if (accuracy < 5) {
+                            binding.gpsValueTv.setTextColor(onColor);
+                        } else if (accuracy < 10) {
+                            binding.gpsValueTv.setTextColor(middleColor);
+                        } else {
+                            binding.gpsValueTv.setTextColor(offColor);
+                        }
+                    }
+                    binding.lastAccuracyValueTv.setText(prettyAccuracy);
                 }
 
             }

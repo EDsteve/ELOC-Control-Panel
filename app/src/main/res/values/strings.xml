@@ -23,4 +23,6 @@
     <string name="rec_time_since_boot">Rec Time Since Boot</string>
     <string name="bluetooth_recording">Bluetooth Recording</string>
     <string name="microphone_type">Microphone Type</string>
+    <string name="last_gps_accuracy">Last GPS Accuracy</string>
+    <string name="last_gps_location">Last GPS Location</string>
 </resources>

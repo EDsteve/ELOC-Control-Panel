@@ -554,6 +554,66 @@
                 android:layout_marginVertical="8dp"
                 android:background="#999"
                 app:layout_constraintTop_toBottomOf="@id/microphone_value_tv" />
+            <TextView
+                android:id="@+id/last_location_title_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/last_gps_location"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/divider15" />
+
+            <TextView
+                android:id="@+id/last_location_value_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@id/last_location_title_tv"
+                app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                app:layout_constraintTop_toTopOf="@id/last_location_title_tv"
+                tools:text="4534985893+QR" />
+
+            <View
+                android:id="@+id/divider16"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginVertical="8dp"
+                android:background="#999"
+                app:layout_constraintTop_toBottomOf="@id/last_location_value_tv" />
+            <TextView
+                android:id="@+id/last_accuracy_title_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/last_gps_accuracy"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/divider16" />
+
+            <TextView
+                android:id="@+id/last_accuracy_value_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@id/last_accuracy_title_tv"
+                app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                app:layout_constraintTop_toTopOf="@id/last_accuracy_title_tv"
+                tools:text="56m" />
+
+            <View
+                android:id="@+id/divider17"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginVertical="8dp"
+                android:background="#999"
+                app:layout_constraintTop_toBottomOf="@id/last_accuracy_value_tv" />
 
 
             <!-- Dummy widgets, delete after migration to new UI -->
