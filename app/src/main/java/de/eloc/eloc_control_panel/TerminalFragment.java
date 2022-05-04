@@ -379,9 +379,9 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 Log.i("elocApp", "code: " + locationCode + "  lat: " + Double.toString(theLocation.getLatitude()) + "   lon: " + Double.toString(theLocation.getLongitude()) + "   alt: " + Double.toString(theLocation.getAltitude()) + "   acc: " + Float.toString(locationAccuracy));
                 String prettyAccuracy = formatNumber(locationAccuracy, "m");
                 gpsBtn.setText("GPS\n" + prettyAccuracy);
-                if (locationAccuracy < 5) {
+                if (locationAccuracy < 8) {
                     binding.gpsValueTv.setTextColor(onColor);
-                } else if (locationAccuracy < 10) {
+                } else if (locationAccuracy < 12) {
                     binding.gpsValueTv.setTextColor(middleColor);
                 } else {
                     binding.gpsValueTv.setTextColor(offColor);
@@ -895,7 +895,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private void setTime(TextView textView, String time) {
         if (time != null && (!time.contains("0.00"))) {
             textView.setText(time.trim());
-            textView.setTextColor(Color.WHITE);
+            textView.setTextColor(onColor);
         } else {
             textView.setText("OFF");
             textView.setTextColor(offColor);
