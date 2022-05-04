@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="#FF000000">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_margin="30dp"
+        android:textSize="22sp"
+        tools:text="This is a popup window." />
+
+
+    <EditText
+        android:id="@+id/rangerName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="text|textNoSuggestions"
+        android:singleLine="true"
+
+        android:text=""
+        android:textColor="#AAFFFFFF" />
+
+</RelativeLayout>
