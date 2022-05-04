@@ -8,6 +8,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.Editable;
@@ -33,9 +34,13 @@ import android.view.inputmethod.InputMethodManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.Date;
 import java.util.Calendar;
@@ -82,7 +87,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private TextView receiveText;
     private TextView sendText;
     private TextUtil.HexWatcher hexWatcher;
-private FragmentTerminalBinding binding;
+    private FragmentTerminalBinding binding;
     private Connected connected = Connected.False;
     private boolean initialStart = true;
     private boolean hexEnabled = false;
@@ -104,6 +109,8 @@ private FragmentTerminalBinding binding;
     public String rangerName;
     private int buttonPressCounter = 0;
     private Menu menu;
+    private int offColor = Color.WHITE;
+    private int onColor = Color.WHITE;
 
     public String getLastPathComponent(String filePath) {
         String[] segments = filePath.split("/");
@@ -299,8 +306,8 @@ private FragmentTerminalBinding binding;
     private void handleStop() {
         locationCode = "UNKNOWN";
         locationAccuracy = 99.0f;
-      binding.  gpsBtn.setText("GPS\nwait...");
-        binding.  gpsBtn.setBackgroundColor(0xFF888888);
+        binding.gpsBtn.setText("GPS\nwait...");
+        binding.gpsBtn.setBackgroundColor(0xFF888888);
 
         theLocation.endUpdates();
 
@@ -314,15 +321,15 @@ private FragmentTerminalBinding binding;
 
         if (theLocation.hasLocationEnabled()) {
             Log.i("elocApp", "gps enabled");
-            binding.    gpsBtn.setText("GPS\nwait...");
-            binding.    gpsBtn.setBackgroundColor(0xFF888888);
+            binding.gpsBtn.setText("GPS\nwait...");
+            binding.gpsBtn.setBackgroundColor(0xFF888888);
 
             //appendReceiveText("\nGetting GPS coords\n");
 
         } else {
             Log.i("elocApp", "gps off");
-            binding.    gpsBtn.setText("enable\nGPS!");
-            binding.    gpsBtn.setBackgroundColor(0xFFFF0000);
+            binding.gpsBtn.setText("enable\nGPS!");
+            binding.gpsBtn.setBackgroundColor(0xFFFF0000);
             //appendReceiveText("\nPlease enable GPS\n");
             //theLocation.openSettings(context);
 
@@ -440,10 +447,13 @@ private FragmentTerminalBinding binding;
         if (args != null) {
             deviceAddress = args.getString("device", "<no address found>");
         }
-        SharedPreferences mPrefs = getActivity().getSharedPreferences("label", 0);
-
-
-        rangerName = mPrefs.getString("rangerName", "notSet");
+        FragmentActivity activity = getActivity();
+        if (activity != null) {
+            onColor = ContextCompat.getColor(activity, R.color.on_color);
+            offColor = ContextCompat.getColor(activity, R.color.off_color);
+            SharedPreferences mPrefs = activity.getSharedPreferences("label", 0);
+            rangerName = mPrefs.getString("rangerName", "notSet");
+        }
         Log.i("elocApp", "terminal rangerName " + rangerName);
         Log.i("elocApp", "device address " + deviceAddress);
         getBestTimeEstimate();
@@ -532,7 +542,7 @@ private FragmentTerminalBinding binding;
      */
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-         binding = FragmentTerminalBinding.inflate(inflater, container, false);
+        binding = FragmentTerminalBinding.inflate(inflater, container, false);
 
         receiveText = binding.receiveText;                          // TextView performance decreases with number of spans
         receiveText.setTextColor(getResources().getColor(R.color.colorRecieveText)); // set as default color to reduce number of spans
@@ -844,18 +854,46 @@ private FragmentTerminalBinding binding;
             data = "";
         }
         ArrayList<String> lines = new ArrayList<>();
-        data  = data.trim();
+        data = data.trim();
         if (data.startsWith("statusupdate")) {
-            String [] parts = data.split("\n");
-            for (String s: parts) {
+            String[] parts = data.split("\n");
+            for (String s : parts) {
                 if (s.startsWith("Ranger") || s.startsWith("!")) {
                     lines.add(s);
                 }
             }
         }
-        return lines.toArray(new String[] {});
+        return lines.toArray(new String[]{});
     }
 
+    private Double parseDouble(String rawValue) {
+        Double result = null;
+        if (rawValue == null) {
+            rawValue = "";
+        }
+        try {
+            result = Double.parseDouble(rawValue.trim());
+        } catch (NumberFormatException ignore) {
+        }
+        return result;
+    }
+
+    private void setTime(TextView textView, String time) {
+        if (time != null && (!time.contains("0.00"))) {
+            textView.setText(time.trim());
+            textView.setTextColor(Color.WHITE);
+        } else {
+            textView.setText("OFF");
+            textView.setTextColor(offColor);
+        }
+    }
+
+    private String formatNumber(double number, String units) {
+        NumberFormat format = NumberFormat.getInstance(Locale.ENGLISH);
+        format.setMaximumFractionDigits(2);
+        format.setMinimumFractionDigits(0);
+        return format.format(number) + units;
+    }
 
     private void elocReceive(String msg) {
 
@@ -864,7 +902,65 @@ private FragmentTerminalBinding binding;
             for (String l : lines) {
                 if (l.startsWith("Ranger:")) {
                     String rangerName = l.replace("Ranger:", "").trim();
+                    binding.rangerNameTv.setText(rangerName);
+                } else if (l.startsWith("!0!")) {
+                    String deviceName = l.replace("!0!", "").trim();
+                    binding.elocTv.setText(deviceName);
+
+                } else if (l.startsWith("!1!")) {
+                    String firmware = l.replace("!1!", "").trim();
+                    binding.firmwareValueTv.setText(firmware);
+
+                } else if (l.startsWith("!2!")) {
+                    int index = l.indexOf("#");
+                    String batteryLevel = "Unknown";
+                    if (index >= 0) {
+                        batteryLevel = l.substring(index + 1).trim();
+                    }
+                    binding.batteryValueTv.setText(batteryLevel);
+
+                } else if (l.startsWith("!4!")) {
+                    String uptime = l.replace("!4!", "").trim();
+                    setTime(binding.uptimeValueTv, uptime);
+                } else if (l.startsWith("!5!")) {
+                    String recordBootTime = l.replace("!5!", "").trim();
+                    setTime(binding.recordingBootValueTv, recordBootTime);
+                } else if (l.startsWith("!6!")) {
+                    String recordTime = l.replace("!6!", "").trim();
+                    setTime(binding.recordingValueTv, recordTime);
+                    // Skip !7!
+                } else if (l.startsWith("!8!")) {
+                    String btRecording = l.replace("!8!", "").toUpperCase().trim();
+                    binding.btRecordingValueTv.setText(btRecording);
+                    binding.btRecordingValueTv.setTextColor(btRecording.contains("ON") ? onColor : offColor);
+                } else if (l.startsWith("!9!")) {
+                    String sampleRate = l.replace("!9!", "").trim();
+                    Double rate = parseDouble(sampleRate);
+                    String prettyRate = "Unknown";
+                    if (rate != null) {
+                        prettyRate = formatNumber(rate / 1000, "KHz");
+                    }
+                    binding.sampleRateValueTv.setText(prettyRate);
+                } else if (l.startsWith("!10!")) {
+                    String secondsString = l.replace("!10!", "").trim();
+                    String hoursString = "Unknown";
+                    Double seconds = parseDouble(secondsString);
+                    if (seconds != null) {
+                        double hours = seconds / 3600;
+                        hoursString = formatNumber(hours, "h");
+                    }
+                    binding.hoursPerFileValueTv.setText(hoursString);
+                } else if (l.startsWith("!11!")) {
+                    String gb = l.replace("!11!", "").trim();
+                    binding.sdCardValueTv.setText(gb);
+                } else if (l.startsWith("!12!")) {
+                    String mic = l.replace("!12!", "").trim();
+                    binding.microphoneValueTv.setText(mic);
+                } else if (l.startsWith("!13!")) {
+                    String gain = l.replace("!13!", "").trim();
+                    binding.gainValueTv.setText(gain);
                 }
+
             }
         }
 

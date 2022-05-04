@@ -18,4 +18,9 @@
     <string name="gain">Gain</string>
     <string name="please_wait">Please wait…</string>
     <string name="gps">gps</string>
+    <string name="firmware">Firmware</string>
+    <string name="uptime">Uptime</string>
+    <string name="rec_time_since_boot">Rec Time Since Boot</string>
+    <string name="bluetooth_recording">Bluetooth Recording</string>
+    <string name="microphone_type">Microphone Type</string>
 </resources>

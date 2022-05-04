@@ -119,7 +119,7 @@
                 android:id="@+id/sd_card_value_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#5eb65f"
+                android:textColor="@color/on_color"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="@id/sd_card_desc_tv"
@@ -158,7 +158,7 @@
                 android:id="@+id/battery_value_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#5eb65f"
+                android:textColor="@color/on_color"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="@id/battery_desc_tv"
@@ -197,7 +197,7 @@
                 android:id="@+id/gps_value_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#c8322d"
+                android:textColor="@color/off_color"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="@id/gps_desc_tv"
@@ -218,6 +218,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:text="@string/recording"
                 android:textSize="20sp"
@@ -236,7 +237,7 @@
                 android:id="@+id/recording_value_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#5eb65f"
+                android:textColor="@color/on_color"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="@id/recording_desc_tv"
@@ -275,7 +276,7 @@
                 android:id="@+id/time_sync_value_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#c8322d"
+                android:textColor="@color/off_color"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="@id/time_sync_desc_tv"
@@ -401,10 +402,167 @@
                 android:background="#999"
                 app:layout_constraintTop_toBottomOf="@id/gain_value_tv" />
 
+            <TextView
+                android:id="@+id/firmware_title_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/firmware"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/divider10" />
+
+            <TextView
+                android:id="@+id/firmware_value_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@id/firmware_title_tv"
+                app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                app:layout_constraintTop_toTopOf="@id/firmware_title_tv"
+                tools:text="3.5" />
+
+            <View
+                android:id="@+id/divider11"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginVertical="8dp"
+                android:background="#999"
+                app:layout_constraintTop_toBottomOf="@id/firmware_value_tv" />
+
+            <TextView
+                android:id="@+id/uptime_title_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/uptime"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/divider11" />
+
+            <TextView
+                android:id="@+id/uptime_value_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@id/uptime_title_tv"
+                app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                app:layout_constraintTop_toTopOf="@id/uptime_title_tv"
+                tools:text="35 h" />
+
+            <View
+                android:id="@+id/divider12"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginVertical="8dp"
+                android:background="#999"
+                app:layout_constraintTop_toBottomOf="@id/uptime_value_tv" />
+
+            <TextView
+                android:id="@+id/recording_boot_title_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/rec_time_since_boot"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/divider12" />
+
+            <TextView
+                android:id="@+id/recording_boot_value_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@id/recording_boot_title_tv"
+                app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                app:layout_constraintTop_toTopOf="@id/recording_boot_title_tv"
+                tools:text="255h" />
+
+            <View
+                android:id="@+id/divider13"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginVertical="8dp"
+                android:background="#999"
+                app:layout_constraintTop_toBottomOf="@id/recording_boot_value_tv" />
+
+            <TextView
+                android:id="@+id/bt_recording_title_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/bluetooth_recording"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/divider13" />
+
+            <TextView
+                android:id="@+id/bt_recording_value_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@id/bt_recording_title_tv"
+                app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                app:layout_constraintTop_toTopOf="@id/bt_recording_title_tv"
+                tools:text="OFF" />
+
+            <View
+                android:id="@+id/divider14"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginVertical="8dp"
+                android:background="#999"
+                app:layout_constraintTop_toBottomOf="@id/bt_recording_value_tv" />
+
+            <TextView
+                android:id="@+id/microphone_title_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/microphone_type"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/divider14" />
+
+            <TextView
+                android:id="@+id/microphone_value_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@id/microphone_title_tv"
+                app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                app:layout_constraintTop_toTopOf="@id/microphone_title_tv"
+                tools:text="ns" />
+
+            <View
+                android:id="@+id/divider15"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginVertical="8dp"
+                android:background="#999"
+                app:layout_constraintTop_toBottomOf="@id/microphone_value_tv" />
+
+
             <!-- Dummy widgets, delete after migration to new UI -->
-            <LinearLayout app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent" android:orientation="vertical"
+            <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="0dp">
+                android:layout_height="0dp"
+                android:orientation="vertical"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
                 <EditText
                     android:id="@+id/locationText"
@@ -470,8 +628,10 @@
                 </RadioGroup>
 
 
-
-                <TextView android:id="@+id/receive_text" android:layout_width="0dp" android:layout_height="0dp" />
+                <TextView
+                    android:id="@+id/receive_text"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp" />
 
                 <RadioGroup
                     android:id="@+id/radioGroupSamplesPerSec"
