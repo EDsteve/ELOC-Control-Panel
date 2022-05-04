@@ -35,6 +35,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import java.util.ArrayList;
 import java.util.TimeZone;
 import java.util.Date;
 import java.util.Calendar;
@@ -69,6 +70,8 @@ import android.app.AlertDialog;
 import android.widget.EditText;
 import android.content.DialogInterface;
 
+import de.eloc.eloc_control_panel.databinding.FragmentTerminalBinding;
+
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
 
     private enum Connected {False, Pending, True}
@@ -79,7 +82,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private TextView receiveText;
     private TextView sendText;
     private TextUtil.HexWatcher hexWatcher;
-
+private FragmentTerminalBinding binding;
     private Connected connected = Connected.False;
     private boolean initialStart = true;
     private boolean hexEnabled = false;
@@ -94,7 +97,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private boolean gRecording = false;
     public Long gLastGoogleSync = 0L; //need to get the elapsedRealtime ()
     public Long gLastTimeDifferenceMillisecond = 0L;
-    private Button gpsBtn;
     private String locationCode;
     public float locationAccuracy;
 
@@ -297,8 +299,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private void handleStop() {
         locationCode = "UNKNOWN";
         locationAccuracy = 99.0f;
-        gpsBtn.setText("GPS\nwait...");
-        gpsBtn.setBackgroundColor(0xFF888888);
+      binding.  gpsBtn.setText("GPS\nwait...");
+        binding.  gpsBtn.setBackgroundColor(0xFF888888);
 
         theLocation.endUpdates();
 
@@ -312,15 +314,15 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         if (theLocation.hasLocationEnabled()) {
             Log.i("elocApp", "gps enabled");
-            gpsBtn.setText("GPS\nwait...");
-            gpsBtn.setBackgroundColor(0xFF888888);
+            binding.    gpsBtn.setText("GPS\nwait...");
+            binding.    gpsBtn.setBackgroundColor(0xFF888888);
 
             //appendReceiveText("\nGetting GPS coords\n");
 
         } else {
             Log.i("elocApp", "gps off");
-            gpsBtn.setText("enable\nGPS!");
-            gpsBtn.setBackgroundColor(0xFFFF0000);
+            binding.    gpsBtn.setText("enable\nGPS!");
+            binding.    gpsBtn.setBackgroundColor(0xFFFF0000);
             //appendReceiveText("\nPlease enable GPS\n");
             //theLocation.openSettings(context);
 
@@ -530,9 +532,9 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
      */
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_terminal, container, false);
-        gpsBtn = view.findViewById(R.id.gpsBtn);
-        receiveText = view.findViewById(R.id.receive_text);                          // TextView performance decreases with number of spans
+         binding = FragmentTerminalBinding.inflate(inflater, container, false);
+
+        receiveText = binding.receiveText;                          // TextView performance decreases with number of spans
         receiveText.setTextColor(getResources().getColor(R.color.colorRecieveText)); // set as default color to reduce number of spans
         receiveText.setMovementMethod(ScrollingMovementMethod.getInstance());
         //marker
@@ -540,14 +542,11 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         startLocation();
 
-
-        EditText locText = (EditText) view.findViewById(R.id.locationText);
-        locText.addTextChangedListener(new TextWatcher() {
+        binding.locationText.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
                 //if (gInitialSettings) return;
                 Log.i("elocApp", "glocation afterchange");
-                Button recBtn = view.findViewById(R.id.recBtn);
 								
 /* 				String temp=locText.getText().toString().trim();
 				
@@ -557,13 +556,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 					return;
 				} */
 
-                if (!(locText.getText().toString()).matches(gPattern)) {
-                    recBtn.setText("invalid filename");
-                    recBtn.setBackgroundColor(0x000000);
+                if (!(binding.locationText.getText().toString()).matches(gPattern)) {
+                    binding.recBtn.setText("invalid filename");
+                    binding.recBtn.setBackgroundColor(0x000000);
 
                 } else {
 
-                    if (locText.getText().toString().equals("uploadnow")) {
+                    if (binding.locationText.getText().toString().equals("uploadnow")) {
 
 
                         //old stuff
@@ -572,10 +571,10 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     } else {
 
 
-                        recBtn.setText("update settings");
-                        recBtn.setBackgroundColor(0xFFEE8006);
+                        binding.recBtn.setText("update settings");
+                        binding.recBtn.setBackgroundColor(0xFFEE8006);
 
-                        gLocation = locText.getText().toString().trim();
+                        gLocation = binding.locationText.getText().toString().trim();
                         //glocation is getting set to null
 
                     }
@@ -593,8 +592,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         });
 
 
-        RadioGroup radioGroupSamplesPerSec = (RadioGroup) view.findViewById(R.id.radioGroupSamplesPerSec);
-        radioGroupSamplesPerSec.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+        binding.radioGroupSamplesPerSec.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 // checkedId is the RadioButton selected
@@ -605,9 +603,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 // return;
                 // }
                 Log.i("elocApp", "samplerate buttonpress");
-                Button recBtn = view.findViewById(R.id.recBtn);
-                recBtn.setText("update settings");
-                recBtn.setBackgroundColor(0xFFEE8006);
+                binding.recBtn.setText("update settings");
+                binding.recBtn.setBackgroundColor(0xFFEE8006);
 
                 switch (checkedId) {
                     case R.id.rad8k:
@@ -632,9 +629,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }
         });
 
-
-        RadioGroup radioGroupSecPerFile = (RadioGroup) view.findViewById(R.id.radioGroupSecPerFile);
-        radioGroupSecPerFile.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+        binding.radioGroupSecPerFile.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 // checkedId is the RadioButton selected
@@ -648,9 +643,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
                 Log.i("elocApp", "secperfile buttonpress");
 
-                Button recBtn = view.findViewById(R.id.recBtn);
-                recBtn.setText("update settings");
-                recBtn.setBackgroundColor(0xFFEE8006);
+                binding.recBtn.setText("update settings");
+                binding.recBtn.setBackgroundColor(0xFFEE8006);
                 switch (checkedId) {
                     case R.id.rad10s:
                         gSecondsPerFile = "10";
@@ -679,20 +673,17 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         });
 
 
-        View recBtn = view.findViewById(R.id.recBtn);
-        recBtn.setOnClickListener(new View.OnClickListener() {
+        binding.recBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //tv.setText(months[rand.nextInt(12)]);
                 //tv.setTextColor(Color.rgb(rand.nextInt(255)+1, rand.nextInt(255)+1, rand.nextInt(255)+1));
                 //EditText editText = v.findViewById(R.id.send_text);
 
-                Button thisBtn = view.findViewById(R.id.recBtn);
-
 
                 //send(thisBtn.getText().toString());
-
-                if (thisBtn.getText().toString().equals("START RECORDING")) {
+                String buttonText = binding.recBtn.getText().toString();
+                if (buttonText.equals("START RECORDING")) {
 
                     if (locationAccuracy <= 8.1) {
                         startRecording();
@@ -701,35 +692,27 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                         popUpRecord();
                         return;
                     }
-                }
-
-                // if (thisBtn.getText().toString().startsWith("WAITING FOR GPS")) {
-                // buttonPressCounter=buttonPressCounter+1;
-                // if (buttonPressCounter>2) {
-                // startRecording();
-                // }
-                //startRecording();
-                // return;
-                // }
-
-
-                if (thisBtn.getText().toString().equals("STOP RECORDING")) {
-                    thisBtn.setText("please wait...");
-                    thisBtn.setBackgroundColor(0x000000);
+                } else if (buttonText.startsWith("WAITING FOR GPS")) {
+                    // buttonPressCounter=buttonPressCounter+1;
+                    // if (buttonPressCounter>2) {
+                    // startRecording();
+                    // }
+                    //startRecording();
+                    // return;
+                    // }
+                } else if (buttonText.equals("STOP RECORDING")) {
+                    binding.recBtn.setText("please wait...");
+                    binding.recBtn.setBackgroundColor(0x000000);
                     send("stoprecord");
                     return;
-                }
-
-
-                if (thisBtn.getText().toString().equals("update settings")) {
+                } else if (buttonText.equals("update settings")) {
 
 
                     //marker
-                    EditText locText = (EditText) view.findViewById(R.id.locationText);
-                    locText.clearFocus();
+                    binding.locationText.clearFocus();
                     send("#settings" + "#" + gSamplesPerSec + "#" + gSecondsPerFile + "#" + gLocation);
-                    thisBtn.setBackgroundColor(0x000000);
-                    thisBtn.setText("please wait...");
+                    binding.recBtn.setBackgroundColor(0x000000);
+                    binding.recBtn.setText("please wait...");
                     getView().findViewById(R.id.setupStuff).setVisibility(View.GONE);
                     //send("stoprecord");
                     return;
@@ -741,7 +724,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         });
 
 
-        return view;
+        return binding.getRoot();
     }
 
     @Override
@@ -855,8 +838,35 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         }
     }
 
+    private String[] getStatusLines(String data) {
+        // Valid update datat starts with 'statusupdate'
+        if (data == null) {
+            data = "";
+        }
+        ArrayList<String> lines = new ArrayList<>();
+        data  = data.trim();
+        if (data.startsWith("statusupdate")) {
+            String [] parts = data.split("\n");
+            for (String s: parts) {
+                if (s.startsWith("Ranger") || s.startsWith("!")) {
+                    lines.add(s);
+                }
+            }
+        }
+        return lines.toArray(new String[] {});
+    }
+
 
     private void elocReceive(String msg) {
+
+        String[] lines = getStatusLines(msg);
+        if (lines.length > 0) {
+            for (String l : lines) {
+                if (l.startsWith("Ranger:")) {
+                    String rangerName = l.replace("Ranger:", "").trim();
+                }
+            }
+        }
 
         //if (true) return;
         //RadioButton b = (RadioButton) findViewById(R.id.option1);
