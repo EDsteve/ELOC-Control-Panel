@@ -1,0 +1,85 @@
+commit c71a2c83c01a6ad63f8151bdd59b3c52d6609bfd
+Merge: 0472fbf d18f193
+Author: name <email>
+Date:   Sat May 7 13:32:38 2022 +0700
+
+    Merge branch 'main' of https://github.com/EDsteve/eloc_control_panel
+
+commit 0472fbf955742c248272b4cd712bafb49943fb73
+Author: name <email>
+Date:   Sat May 7 13:32:09 2022 +0700
+
+    Updated battery info
+
+commit d18f19369c0bf43862813a5ac1d71290f603b992
+Author: EDsteve <edleast@gmail.com>
+Date:   Thu May 5 00:13:56 2022 +0700
+
+    Update README.md
+
+commit ac51fa6abb79461a880ada2b270ec7a4a3f88b00
+Author: EDsteve <Weltreise-44>
+Date:   Thu May 5 00:06:32 2022 +0700
+
+    New UI
+
+commit 109aea01ece4330bddb7c24ad29e4968c51cd06d
+Author: EDsteve <Weltreise-44>
+Date:   Thu May 5 00:05:53 2022 +0700
+
+    New UI
+
+commit cfaed22cf1abfe2354a55ded583f0d2214b4694d
+Author: EDsteve <Weltreise-44>
+Date:   Thu May 5 00:04:23 2022 +0700
+
+    New UI
+
+commit e778ca1047fd7db8df2d709f795642b34330caff
+Author: EDsteve <Weltreise-44>
+Date:   Thu May 5 00:03:13 2022 +0700
+
+    test
+
+commit 0e03f8394d6db8d9b093a74c4d107650a4b4de9d
+Merge: 9dbea4a 8828586
+Author: name <email>
+Date:   Wed May 4 23:04:50 2022 +0700
+
+    Merge branch 'main' of https://github.com/EDsteve/eloc_control_panel
+
+commit 9dbea4a2ed3f5618620e81605dfbd5261019cb8b
+Author: name <email>
+Date:   Wed May 4 23:01:16 2022 +0700
+
+    New UI
+
+commit 88285866e85aa6845d73324076080e30a3b43a67
+Author: EDsteve <edleast@gmail.com>
+Date:   Wed May 4 22:57:12 2022 +0700
+
+    Update README.md
+
+commit 941908d675b28d98dffc9c1a39929e5524b86168
+Author: name <email>
+Date:   Wed May 4 18:05:25 2022 +0700
+
+    After day 1 - UI almost done
+
+commit f0620969e994c9f9bbc4f9c007e1894a4423b8f3
+Author: name <email>
+Date:   Wed May 4 16:55:56 2022 +0700
+
+    Random save point
+
+commit 11ce46adadbd1bc3da2decffe825df50841add8e
+Author: name <email>
+Date:   Wed May 4 15:02:47 2022 +0700
+
+    New UI added
+
+commit b734e7ae0cd74e698b6c3748ec0eff816002d5d6
+Author: name <email>
+Date:   Wed May 4 14:15:00 2022 +0700
+
+    Old code working

@@ -85,6 +85,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     public Long gLastTimeDifferenceMillisecond = 0L;
     private String locationCode;
     public float locationAccuracy;
+    private boolean recording = false;
+    private String recordingTime = "0:00 h";
 
     public SimpleLocation theLocation;
     public String rangerName;
@@ -730,8 +732,10 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         }
 
         if (id == R.id.elocsettings) {
-            Button recBtn = getView().findViewById(R.id.recBtn);
-            if (recBtn.getText().toString().equals("STOP RECORDING")) return true;
+            String recText = binding.recBtn.getText().toString();
+            if (recText.equals("STOP RECORDING")) return true;
+
+
 
 // TODO:            getView().findViewById(R.id.setupStuff).setVisibility(View.VISIBLE);
             receiveText.setText("");
@@ -862,6 +866,22 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         }
     }
 
+    private void setRecordingTime() {
+        String text;
+        int color = offColor;
+        if (recordingTime != null && (!recordingTime.contains("0.00"))) {
+            text = recordingTime.trim();
+            color = onColor;
+        } else if (recording) {
+            text = "0:00 h";
+            color = onColor;
+        } else {
+            text = "OFF";
+        }
+        binding.recordingValueTv.setText(text);
+        binding.recordingValueTv.setTextColor(color);
+    }
+
     private String formatNumber(double number, String units) {
         NumberFormat format = NumberFormat.getInstance(Locale.ENGLISH);
         format.setMaximumFractionDigits(2);
@@ -916,13 +936,16 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     String recordBootTime = l.replace("!5!", "").trim();
                     setTime(binding.recordingBootValueTv, recordBootTime);
                 } else if (l.startsWith("!6!")) {
-                    String recordTime = l.replace("!6!", "").trim();
-                    setTime(binding.recordingValueTv, recordTime);
-                    // Skip !7!
+                    recordingTime = l.replace("!6!", "").trim();
+                    setRecordingTime();
+                } else if (l.startsWith("!7!")) {
+                    recording = l.contains("1");
+                    setRecordingTime();
                 } else if (l.startsWith("!8!")) {
-                    String btRecording = l.replace("!8!", "").toUpperCase().trim();
-                    binding.btRecordingValueTv.setText(btRecording);
-                    binding.btRecordingValueTv.setTextColor(btRecording.contains("ON") ? onColor : offColor);
+                    String recordingTime = l.replace("!8!", "").toUpperCase().trim();
+                    boolean hasTime = recordingTime.contains(":") || (!recordingTime.toLowerCase().contains("on"));
+                    binding.btRecordingValueTv.setText(recordingTime);
+                    binding.btRecordingValueTv.setTextColor(hasTime ? onColor : offColor);
                 } else if (l.startsWith("!9!")) {
                     String sampleRate = l.replace("!9!", "").trim();
                     Double rate = parseDouble(sampleRate);
@@ -942,7 +965,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     binding.hoursPerFileValueTv.setText(hoursString);
                 } else if (l.startsWith("!11!")) {
                     String gb = l.replace("!11!", "").trim();
-                    binding.sdCardValueTv.setText(String.format("%sGB", gb));
+                    binding.sdCardValueTv.setText(String.format("%s GB", gb));
                 } else if (l.startsWith("!12!")) {
                     String mic = l.replace("!12!", "").trim();
                     binding.microphoneValueTv.setText(mic);
@@ -1003,7 +1026,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             //RadioButton loc;
             if (separated.length < 4) return;
             bit = (RadioButton) getView().findViewById(R.id.rad8k);
-            if (separated[1].equals("8000")) bit = (RadioButton) getView().findViewById(R.id.rad8k);
+            if (separated[1].equals("8000"))
+                bit = (RadioButton) getView().findViewById(R.id.rad8k);
             if (separated[1].equals("16000"))
                 bit = (RadioButton) getView().findViewById(R.id.rad16k);
             if (separated[1].equals("22050"))
@@ -1015,9 +1039,12 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             bit.setChecked(true);
 
             sec = (RadioButton) getView().findViewById(R.id.rad10s);
-            if (separated[2].equals("10")) sec = (RadioButton) getView().findViewById(R.id.rad10s);
-            if (separated[2].equals("60")) sec = (RadioButton) getView().findViewById(R.id.rad1m);
-            if (separated[2].equals("3600")) sec = (RadioButton) getView().findViewById(R.id.rad1h);
+            if (separated[2].equals("10"))
+                sec = (RadioButton) getView().findViewById(R.id.rad10s);
+            if (separated[2].equals("60"))
+                sec = (RadioButton) getView().findViewById(R.id.rad1m);
+            if (separated[2].equals("3600"))
+                sec = (RadioButton) getView().findViewById(R.id.rad1h);
             if (separated[2].equals("14400"))
                 sec = (RadioButton) getView().findViewById(R.id.rad4h);
             if (separated[2].equals("43200"))
