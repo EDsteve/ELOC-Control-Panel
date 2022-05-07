@@ -22,7 +22,27 @@
     <string name="uptime">Uptime</string>
     <string name="rec_time_since_boot">Rec Time Since Boot</string>
     <string name="bluetooth_recording">Bluetooth Recording</string>
-    <string name="microphone_type">Microphone Type</string>
+    <string name="microphone_type">Microphone Type</string><string name="microphone_type_colon">Microphone Type:</string>
     <string name="last_gps_accuracy">Last GPS Accuracy</string>
     <string name="last_gps_location">Last GPS Location</string>
+    <string name="battery_voltage">Battery Voltage</string>
+    <string name="wait">Wait…</string>
+    <string name="update_settings">Update Settings</string>
+    <string name="filename">Filename:</string>
+    <string name="_44k">44k</string>
+    <string name="_32k">32k</string>
+    <string name="_22k">22k</string>
+    <string name="_16k">16K</string>
+    <string name="_8k">8k</string>
+    <string name="recording_time_per_file">Recording time per file</string>
+    <string name="_12h">12h</string>
+    <string name="_4h">4h</string>
+    <string name="_1h">1h</string>
+    <string name="_1m">1m</string>
+    <string name="_10s">10s</string>
+    <string name="eloc_bt_name">ELOC BT name:</string>
+    <string name="forest">Forest</string>
+    <string name="mahout">Mahout</string>
+    <string name="bluetooth_state_when_recording">Bluetooth state when recording</string>
+    <string name="update_reboot_upgrade_firmware">Update (reboot + upgrade firmware)</string>
 </resources>

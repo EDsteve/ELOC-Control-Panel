@@ -6,31 +6,36 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.TextWatcher;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
-import android.widget.Button;
-import android.text.TextWatcher;
-import android.view.inputmethod.InputMethodManager;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -38,42 +43,18 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Locale;
-import java.util.TimeZone;
-import java.util.Date;
-import java.util.Calendar;
-
-import android.os.SystemClock;
-import android.content.SharedPreferences;
-
-import java.util.Timer;
-import java.util.TimerTask;
-
-import android.content.Context;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.os.Bundle;
-import android.util.Log;
-import android.content.pm.ActivityInfo;
-import android.location.LocationManager;
-import android.os.Handler;
-
-import java.io.OutputStreamWriter;
-import java.io.IOException;
-import java.io.*;
-import java.util.zip.*;
-import java.util.concurrent.TimeUnit;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import android.widget.PopupWindow;
-import android.widget.LinearLayout;
-import android.app.AlertDialog;
-import android.widget.EditText;
-import android.content.DialogInterface;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import de.eloc.eloc_control_panel.databinding.FragmentTerminalBinding;
 
@@ -303,52 +284,11 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         //send("setGPS^"+locationCode+"#"+Float.toString(locationAccuracy));
     }
 
-
     private void handleStop() {
         locationCode = "UNKNOWN";
         locationAccuracy = 99.0f;
-        binding.gpsBtn.setText("GPS\nwait...");
-        binding.gpsBtn.setBackgroundColor(0xFF888888);
-
         theLocation.endUpdates();
-
-
     }
-
-    public void handleResume() {
-        locationCode = "UNKNOWN";
-        locationAccuracy = 99.0f;
-        //sendLocation();
-
-        if (theLocation.hasLocationEnabled()) {
-            Log.i("elocApp", "gps enabled");
-            binding.gpsBtn.setText("GPS\nwait...");
-            binding.gpsBtn.setBackgroundColor(0xFF888888);
-
-            //appendReceiveText("\nGetting GPS coords\n");
-
-        } else {
-            Log.i("elocApp", "gps off");
-            binding.gpsBtn.setText("enable\nGPS!");
-            binding.gpsBtn.setBackgroundColor(0xFFFF0000);
-            //appendReceiveText("\nPlease enable GPS\n");
-            //theLocation.openSettings(context);
-
-        }
-
-
-        //setRecButton();
-
-        // if the recbtn is start recording then wait gps
-        theLocation.beginUpdates();
-        Button recBtn = getView().findViewById(R.id.recBtn);
-        if (recBtn.getText().toString().startsWith("START RECORDING")) {
-            setRecButton(getView());
-        }
-
-
-    }
-
 
     public void startLocation() {
         //It really depends on the way you call that constructor. Make sure not to enable passive mode while using a network/coarse location.
@@ -368,7 +308,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             OpenLocationCode theCode;
 
             public void onPositionChanged() {
-                Button gpsBtn = getView().findViewById(R.id.gpsBtn);
                 Button recBtn = getView().findViewById(R.id.recBtn);
                 //Log.i("elocApp", "position changed");
                 //my house balcony +- 2m in locus is 6MJWMRHV+9Q
@@ -378,7 +317,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 locationCode = theCode.getCode();
                 Log.i("elocApp", "code: " + locationCode + "  lat: " + Double.toString(theLocation.getLatitude()) + "   lon: " + Double.toString(theLocation.getLongitude()) + "   alt: " + Double.toString(theLocation.getAltitude()) + "   acc: " + Float.toString(locationAccuracy));
                 String prettyAccuracy = formatNumber(locationAccuracy, "m");
-                gpsBtn.setText("GPS\n" + prettyAccuracy);
                 if (locationAccuracy < 8) {
                     binding.gpsValueTv.setTextColor(onColor);
                 } else if (locationAccuracy < 12) {
@@ -389,15 +327,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
                 binding.gpsValueTv.setText(prettyAccuracy);
 
-                gpsBtn.setBackgroundColor(0xFFFF0000);
                 // if (recBtn.getText().toString().startsWith("START RECORDING")) recBtn.setBackgroundColor(0xFFFF0000);
                 if (locationAccuracy < 12.0) {
-                    gpsBtn.setBackgroundColor(0xFFFFFF00);
+
 
                 }
 
                 if (locationAccuracy <= 8.1) {
-                    gpsBtn.setBackgroundColor(0xFF009900);
                     if (recBtn.getText().toString().startsWith("START RECORDING"))
                         recBtn.setBackgroundColor(0xFF009900);
 
@@ -525,15 +461,38 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     @Override
     public void onResume() {
-        Log.i("elocApp", "terminal onResume()");
-        handleResume();
-
         super.onResume();
-        if (initialStart && service != null) {
-            initialStart = false;
-            getActivity().runOnUiThread(this::connect);
+        Log.i("elocApp", "terminal onResume()");
+        locationCode = "UNKNOWN";
+        locationAccuracy = 99.0f;
+        //sendLocation();
+
+        if (theLocation.hasLocationEnabled()) {
+            Log.i("elocApp", "gps enabled");
+
+            //appendReceiveText("\nGetting GPS coords\n");
+
+        } else {
+            Log.i("elocApp", "gps off");
+            //appendReceiveText("\nPlease enable GPS\n");
+            //theLocation.openSettings(context);
 
         }
+
+
+        //setRecButton();
+
+        // if the recbtn is start recording then wait gps
+        theLocation.beginUpdates();
+        if (binding.recBtn.getText().toString().startsWith("START RECORDING")) {
+            setRecButton();
+        }
+
+        if (initialStart && service != null) {
+            initialStart = false;
+            connect();
+        }
+        binding.gpsValueTv.setText(R.string.wait);
     }
 
     @Override
@@ -737,7 +696,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     send("#settings" + "#" + gSamplesPerSec + "#" + gSecondsPerFile + "#" + gLocation);
                     binding.recBtn.setBackgroundColor(0x000000);
                     binding.recBtn.setText("please wait...");
-                    getView().findViewById(R.id.setupStuff).setVisibility(View.GONE);
+                    // TODO: I'll comment it out for now
+//                    getView().findViewById(R.id.setupStuff).setVisibility(View.GONE);
                     //send("stoprecord");
                     return;
 
@@ -773,7 +733,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             Button recBtn = getView().findViewById(R.id.recBtn);
             if (recBtn.getText().toString().equals("STOP RECORDING")) return true;
 
-            getView().findViewById(R.id.setupStuff).setVisibility(View.VISIBLE);
+// TODO:            getView().findViewById(R.id.setupStuff).setVisibility(View.VISIBLE);
             receiveText.setText("");
             status("\n***Other Settings***\nXXsetgain (11=forest, 14=Mahout)\nXXXXsettype (set mic type)\nXXXXsetname (set eloc bt name)\nupdate (reboot + upgrade firmware)\nbtoff (BT off when record)\nbton (BT on when record)\n\n");
 
@@ -926,13 +886,29 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     binding.firmwareValueTv.setText(firmware);
 
                 } else if (l.startsWith("!2!")) {
-                    int index = l.indexOf("#");
+                    String[] parts = l
+                            .replace("!2!", "")
+                            .split("#");
                     String batteryLevel = "Unknown";
-                    if (index >= 0) {
-                        batteryLevel = l.substring(index + 1).trim();
+                    if (parts.length >= 2) {
+                        batteryLevel = parts[1].trim().toUpperCase();
+                        if (batteryLevel.isEmpty()) {
+                            batteryLevel = "OK";
+                        }
                     }
                     binding.batteryValueTv.setText(batteryLevel);
+                    String tmp = batteryLevel.toLowerCase();
+                    int batteryValueColor = Color.YELLOW;
+                    if (tmp.contains("low")) {
+                        batteryValueColor = offColor;
+                    } else if (tmp.contains("full")) {
+                        batteryValueColor = onColor;
+                    }
+                    binding.batteryValueTv.setTextColor(batteryValueColor);
 
+                    if (parts.length >= 1) {
+                        binding.batteryVoltageValueTv.setText(parts[0].trim());
+                    }
                 } else if (l.startsWith("!4!")) {
                     String uptime = l.replace("!4!", "").trim();
                     setTime(binding.uptimeValueTv, uptime);
@@ -966,7 +942,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     binding.hoursPerFileValueTv.setText(hoursString);
                 } else if (l.startsWith("!11!")) {
                     String gb = l.replace("!11!", "").trim();
-                    binding.sdCardValueTv.setText(gb);
+                    binding.sdCardValueTv.setText(String.format("%sGB", gb));
                 } else if (l.startsWith("!12!")) {
                     String mic = l.replace("!12!", "").trim();
                     binding.microphoneValueTv.setText(mic);
@@ -1052,7 +1028,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
             locText.setText(separated[3].trim());
 
-            setRecButton(getView());
+            setRecButton();
 
             //send(separated[1]);
             //String bitrate= separated[1];
@@ -1075,14 +1051,14 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         if (msg.startsWith("Finished recording")) {
 
-            setRecButton(getView());
+            setRecButton();
 
 
         }
 
         if (msg.startsWith("settings updated")) {
 
-            setRecButton(getView());
+            setRecButton();
 
 
         }
@@ -1218,21 +1194,15 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     }
 
-    public void setRecButton(View theView) { //on for
-        Button recBtn = theView.findViewById(R.id.recBtn);
+    public void setRecButton() { //on for
         enableAll();
         Log.i("elocApp", "in setRecButton");
 
-        recBtn.setBackgroundColor(0xFF111111);
+        binding.recBtn.setBackgroundColor(0xFF111111);
         if (locationAccuracy <= 8.1) {
-            recBtn.setText("START RECORDING");
-            recBtn.setBackgroundColor(0xFF009900);
-
-        } else {
-            recBtn.setText("START RECORDING");
-
-
+            binding.recBtn.setBackgroundColor(0xFF009900);
         }
+        binding.recBtn.setText("START RECORDING");
     }
 
 
