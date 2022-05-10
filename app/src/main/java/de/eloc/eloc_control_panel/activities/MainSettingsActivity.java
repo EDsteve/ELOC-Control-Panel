@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel;
+package de.eloc.eloc_control_panel.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 

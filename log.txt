@@ -1,85 +1,40 @@
-commit c71a2c83c01a6ad63f8151bdd59b3c52d6609bfd
-Merge: 0472fbf d18f193
-Author: name <email>
-Date:   Sat May 7 13:32:38 2022 +0700
+so the settings can now load in a separate activity.
 
-    Merge branch 'main' of https://github.com/EDsteve/eloc_control_panel
+is there anything you want to chagne about the layout before data is filled in?
 
-commit 0472fbf955742c248272b4cd712bafb49943fb73
-Author: name <email>
-Date:   Sat May 7 13:32:09 2022 +0700
+So there must be something like a send button. Before it was just behind the Filename. Which is used to send commands to the ESP32
+So basicallz for example vcal will be written in the filename and then this command can calibrate the volateg on the ESP32
+So there is a missing button.
+right
+Zes
+wait i will send yopu a screenshot from the old version
+I have to think where i stored it :)
 
-    Updated battery info
+Ahh. I was wrong the button does not exist anz more. So it should be all good. I love the waz you made it. But i am sure my friend who programmed the app before *He is a super minimalist and
+doesn|t like buttons will have to be convinced to the new design. Haha
 
-commit d18f19369c0bf43862813a5ac1d71290f603b992
-Author: EDsteve <edleast@gmail.com>
-Date:   Thu May 5 00:13:56 2022 +0700
+ha
 
-    Update README.md
+Should we leave it for today and i do some testing over night_ Or is there something  else+) Your endurance is pretty strong. haha
+You are correct, it is a good time to take a break. I usually can write code for hours at a time but my focus slowly dropss.
+so let's take a break. Right now the UI is not linked to the data. So nothing gets saved. But linking the data must be easier than parsing data from the ESP32, because it looks like all the settings do it to load saved
+data and let the user modify it, then save again. That's all. I will research more about the new Bluetooth API from Google. Their new APIs are
+always a pain, because Google does not always provide detailed instructions. but I will figure it out. or We can just stay at build tools 30 for now. We will see.
 
-commit ac51fa6abb79461a880ada2b270ec7a4a3f88b00
-Author: EDsteve <Weltreise-44>
-Date:   Thu May 5 00:06:32 2022 +0700
+That's all I have to say dfor now. :)
+Okaz. So if i undertdsand you correctly. The settings do not work yet. Yes, because the activity is empty. What Iwill be doing though is copying and pasting the old code from the TerminalFragment.java file. it is all in there.
+Okay. Understood. One last question if i may :) How old are you
+I turn 33 next week on Friday  :)
+Okay. Your skills are impressive. Your barely used Google.
 
-    New UI
+Thank you, I still feel I need to learn more, especially now that I could not figure out the new bluetooth stuff haha.
 
-commit 109aea01ece4330bddb7c24ad29e4968c51cd06d
-Author: EDsteve <Weltreise-44>
-Date:   Thu May 5 00:05:53 2022 +0700
+Yea. Haha. I think you might be also addictive to coding. Hehe
+Do you also code on the ESP32_ Cplu plus
+I am currentlyl learning it. I started a few weeks ago. I  do know come c++ but not how it all fits for the esp32. I have done some stuff on the
+raspberry pi, it is the only non intel/amd processor I have ever written low level code for. I like to learn :)
+Yes. You will love the ESP world. Awseome. I am more of an hardware guy and volunteering for that elephant project. But i can|t code. So i need you for it. Hehe
+I am glad I could help. Let me rest now... and don't forget to save our work so far haha.
+You mean YOUR work. Hehe. Yes i will do it ANd have a good rest.
 
-    New UI
-
-commit cfaed22cf1abfe2354a55ded583f0d2214b4694d
-Author: EDsteve <Weltreise-44>
-Date:   Thu May 5 00:04:23 2022 +0700
-
-    New UI
-
-commit e778ca1047fd7db8df2d709f795642b34330caff
-Author: EDsteve <Weltreise-44>
-Date:   Thu May 5 00:03:13 2022 +0700
-
-    test
-
-commit 0e03f8394d6db8d9b093a74c4d107650a4b4de9d
-Merge: 9dbea4a 8828586
-Author: name <email>
-Date:   Wed May 4 23:04:50 2022 +0700
-
-    Merge branch 'main' of https://github.com/EDsteve/eloc_control_panel
-
-commit 9dbea4a2ed3f5618620e81605dfbd5261019cb8b
-Author: name <email>
-Date:   Wed May 4 23:01:16 2022 +0700
-
-    New UI
-
-commit 88285866e85aa6845d73324076080e30a3b43a67
-Author: EDsteve <edleast@gmail.com>
-Date:   Wed May 4 22:57:12 2022 +0700
-
-    Update README.md
-
-commit 941908d675b28d98dffc9c1a39929e5524b86168
-Author: name <email>
-Date:   Wed May 4 18:05:25 2022 +0700
-
-    After day 1 - UI almost done
-
-commit f0620969e994c9f9bbc4f9c007e1894a4423b8f3
-Author: name <email>
-Date:   Wed May 4 16:55:56 2022 +0700
-
-    Random save point
-
-commit 11ce46adadbd1bc3da2decffe825df50841add8e
-Author: name <email>
-Date:   Wed May 4 15:02:47 2022 +0700
-
-    New UI added
-
-commit b734e7ae0cd74e698b6c3748ec0eff816002d5d6
-Author: name <email>
-Date:   Wed May 4 14:15:00 2022 +0700
-
-    Old code working
+thanks, disconnecting

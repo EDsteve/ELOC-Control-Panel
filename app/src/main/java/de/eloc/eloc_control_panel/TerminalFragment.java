@@ -56,6 +56,8 @@ import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import de.eloc.eloc_control_panel.activities.DeviceActivity;
+import de.eloc.eloc_control_panel.activities.MainSettingsActivity;
 import de.eloc.eloc_control_panel.databinding.FragmentTerminalBinding;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
@@ -734,16 +736,18 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         if (id == R.id.elocsettings) {
             String recText = binding.recBtn.getText().toString();
             if (recText.equals("STOP RECORDING")) return true;
+            startActivity(new Intent(getActivity(), MainSettingsActivity.class));
+/*
 
 
 
-// TODO:            getView().findViewById(R.id.setupStuff).setVisibility(View.VISIBLE);
+             getView().findViewById(R.id.setupStuff).setVisibility(View.VISIBLE);
             receiveText.setText("");
             status("\n***Other Settings***\nXXsetgain (11=forest, 14=Mahout)\nXXXXsettype (set mic type)\nXXXXsetname (set eloc bt name)\nupdate (reboot + upgrade firmware)\nbtoff (BT off when record)\nbton (BT on when record)\n\n");
 
             recBtn.setText("update settings");
             recBtn.setBackgroundColor(0xFFEE8006);
-
+*/
             return true;
         }
 

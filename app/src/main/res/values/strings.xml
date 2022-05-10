@@ -22,7 +22,8 @@
     <string name="uptime">Uptime</string>
     <string name="rec_time_since_boot">Rec Time Since Boot</string>
     <string name="bluetooth_recording">Bluetooth Recording</string>
-    <string name="microphone_type">Microphone Type</string><string name="microphone_type_colon">Microphone Type:</string>
+    <string name="microphone_type">Microphone Type</string>
+    <string name="microphone_type_colon">Microphone Type:</string>
     <string name="last_gps_accuracy">Last GPS Accuracy</string>
     <string name="last_gps_location">Last GPS Location</string>
     <string name="battery_voltage">Battery Voltage</string>
@@ -45,4 +46,7 @@
     <string name="mahout">Mahout</string>
     <string name="bluetooth_state_when_recording">Bluetooth state when recording</string>
     <string name="update_reboot_upgrade_firmware">Update (reboot + upgrade firmware)</string>
+    <string name="sync_template">sync SUCCESS\n Your phone differs by %d ms"</string>
+    <string name="initializing">Initializing...</string>
+    <string name="yes_permissions">yes, grant permissions</string>
 </resources>
