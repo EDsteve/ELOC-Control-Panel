@@ -90,10 +90,10 @@ public class SNTPClient {
 
 /*  	public  void saveTimestamps(Long gCurrentElapsedTimeMS, Long gLastGoogleSyncTimestampMS ) {
 	 	
-		//SharedPreferences mPrefs = getApplicationContext().getSharedPreferences("label", 0);
-		
-		SharedPreferences mPrefs = getSharedPreferences("label", 0);
-		//SharedPreferences mPrefs = getSharedPreferences("label", 0);
+		//SharedPreferences mPrefs = getApplicationContext().getSharedPreferences("lab el", 0);
+		//  !!! Future note: If this code is ever activated, use SharedPreferences from App.java
+		SharedPreferences mPrefs = getSharedPreferences("labe l", 0);
+		//SharedPreferences mPrefs = getSharedPreferences("labe l", 0);
 		SharedPreferences.Editor mEditor = mPrefs.edit();
 		mEditor.putString("elapsedTimeAtGoogleTimestamp", gCurrentElapsedTimeMS.toString()).commit();
 		mEditor.putString("lastGoogleTimestamp", gLastGoogleSyncTimestampMS.toString()).commit();

@@ -4,28 +4,40 @@ package de.eloc.eloc_control_panel;
 
 import android.util.Log;
 import android.os.AsyncTask;
-import 	java.net.HttpURLConnection;
-import 	java.io.DataOutputStream;
-import 	java.io.File;
+
+import java.net.HttpURLConnection;
+import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
-import 	java.net.URL;
+import java.net.URL;
 
 import android.widget.Toast;
 
- import android.content.Context;
+import android.content.Context;
+
 import androidx.fragment.app.Fragment;
 
 
-  public class UploadFileAsync extends AsyncTask<String, Void, String> {
-	 public String filename="";
-	 public Context theContext;
-	
-	public boolean success=false;
+public class UploadFileAsync extends AsyncTask<String, Void, String> {
+
+    public String filename = "";
+    public File filesDir;
+    public interface StringCallback {
+        void handle(String s);
+    }
+    private StringCallback snackHandler;
+
+    public boolean success = false;
+
+    public UploadFileAsync(StringCallback callback) {
+        snackHandler = callback;
+    }
+
     @Override
     protected String doInBackground(String... params) {
 
         try {
-  String sourceFileUri = filename;   
+            String sourceFileUri = filename;
 
             HttpURLConnection conn = null;
             DataOutputStream dos = null;
@@ -41,7 +53,7 @@ import androidx.fragment.app.Fragment;
 
                 try {
                     String upLoadServerUri = "http://indodic.com/tom/eloc/upload.php?";
-					// php file looks like this
+                    // php file looks like this
 					
 	/* 				<?php
 
@@ -114,18 +126,17 @@ import androidx.fragment.app.Fragment;
                     String serverResponseMessage = conn.getResponseMessage();
 
                     if (serverResponseCode == 200) {
-						success=true;
+                        success = true;
                         // messageText.setText(msg);
                         //Toast.makeText(ctx, "Status update SUCCESS", Toast.LENGTH_SHORT).show();
 
-						
 
                     } else {
-						
-							success=false;
-							//Toast.makeText(getActivity(), "Upload FAIL", Toast.LENGTH_SHORT).show();
-						
-					}
+
+                        success = false;
+                        //Toast.makeText(getActivity(), "Upload FAIL", Toast.LENGTH_SHORT).show();
+
+                    }
 
                     // close the streams //
                     fileInputStream.close();
@@ -152,50 +163,53 @@ import androidx.fragment.app.Fragment;
     }
 
 
-	private void deleteAllWithExtension(String extension) {
-		File[] files = theContext.getFilesDir().listFiles();
-		for (int i = 0; i < files.length; ++i) {
-			File file = files[i];
+    private void deleteAllWithExtension(String extension) {
+        if (filesDir != null) {
+            File[] files = filesDir.listFiles();
+            for (int i = 0; i < files.length; ++i) {
+                File file = files[i];
 
-			if (file.getName().endsWith(extension)) {
-				file.delete();
-				Log.i("elocApp", "deleted file "+file.getName());
+                if (file.getName().endsWith(extension)) {
+                    file.delete();
+                    Log.i("elocApp", "deleted file " + file.getName());
 
-			}
-
-	
-		}
-	}
-
+                }
+            }
+        }
+    }
 
 
     @Override
     protected void onPostExecute(String result) {
-				//TerminalFragment.appendReceiveText("finished");
-				//success=false;
-		File temp = new File(filename);
-		temp.delete();
-		Log.i("elocApp", "file deleted "+filename);
+        //TerminalFragment.appendReceiveText("finished");
+        //success=false;
+        File temp = new File(filename);
+        temp.delete();
+        Log.i("elocApp", "file deleted " + filename);
 
-		if (success==true) {
-				Log.i("elocApp", "upload SUCCESS ");
-				Toast.makeText(theContext, "Upload Success", Toast.LENGTH_LONG).show();
-				// recursiveDelete(mDirectory1);
-				deleteAllWithExtension(".txt");
-				
-		} else {
-				Log.i("elocApp", "upload FAIL ");
-				Toast.makeText(theContext, "Upload FAIL", Toast.LENGTH_LONG).show();
+        if (success == true) {
+            Log.i("elocApp", "upload SUCCESS ");
+            if (snackHandler != null) {
+                snackHandler.handle("Upload Success");
+            }
+            // recursiveDelete(mDirectory1);
+            deleteAllWithExtension(".txt");
 
-				// leave the file
-			
-		}
-    }			
+        } else {
+            Log.i("elocApp", "upload FAIL ");
+            if (snackHandler != null) {
+                snackHandler.handle("Upload FAIL");
+            }
+
+            // leave the file
+
+        }
+    }
 
     @Override
     protected void onPreExecute() {
-			success=false;
-	}
+        success = false;
+    }
 
     @Override
     protected void onProgressUpdate(Void... values) {

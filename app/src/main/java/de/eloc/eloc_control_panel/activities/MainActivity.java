@@ -51,6 +51,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 
+import de.eloc.eloc_control_panel.App;
 import de.eloc.eloc_control_panel.BuildConfig;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.SNTPClient;
@@ -88,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
             String action = intent.getAction();
             //Toast.makeText(getActivity(), "in onreceive ", Toast.LENGTH_LONG).show();
 
-            // TODO: Add code to automatically check for BT permissions
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 // Discovery has found a device. Get the BluetoothDevice
                 // object and its info from the Intent.
@@ -133,7 +133,6 @@ public class MainActivity extends AppCompatActivity {
         initialize();
         Log.i("elocApp", "\n\n\n mainActivity onCreate");
         instance = this;
-//        setLaunchers();
     }
 
     @Override
@@ -166,10 +165,6 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.uploadeloc) {
             //item.setEnabled(false);
             // no use zipFileAtPath instead
-
-            // check when last google sync was.
-            UploadFileAsync upload = new UploadFileAsync();
-
             //concatenate files and send one.
             //FileOutputStream fOut = openFileOutput("savedData.txt");
             try {
@@ -177,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
                 File[] files = getFilesDir().listFiles();
                 //String filename;
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-                rangerName = getSharedPrefs().getString("rangerName", "notSet");
+                rangerName = App.getInstance().getSharedPrefs().getString("rangerName", "notSet");
                 String filestring = "update " + sdf.format(new Date()) + ".upd";
                 //String tempfilename = "tempfilename.upd";
                 //start out with a temp file
@@ -207,7 +202,11 @@ public class MainActivity extends AppCompatActivity {
                         //rename the file
                         //handle the case for multiple upd files.
 
+
+
+                        UploadFileAsync upload = new UploadFileAsync(this::showSnack);
                         upload.filename = getFilesDir().getAbsolutePath() + "/" + filestring;
+                        upload.filesDir  = getFilesDir();
                         //upload.filename
                         Log.i("elocApp", "uploading   " + upload.filename);
                         upload.execute(""); //test when this finished?
@@ -218,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
                         //deleteAllWithExtension(".upd");
                         //fileout.delete();
                         Log.i("elocApp", "Nothing to upload!   ");
-                        showSnack("Nothing to Upload!");
+                        Helper.showSnack(binding.coordinator, "Nothing to Upload!");
                     }
                 }
             } catch (Exception e) {
@@ -253,12 +252,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         Log.i("elocApp", "devices onresume()");
         String statusMessage;
-       /* if (!hasBTPermission()) {
-            binding.progressHorizontal.setVisibility(View.INVISIBLE);
-            statusMessage = "Bluetooth permission required";
-            binding.permissionsBtn.setVisibility(View.VISIBLE);
-            binding.permissionsBtn.setOnClickListener(view -> askBTPermissions());
-        } else */
+
         binding.initLayout.setVisibility(View.VISIBLE);
         binding.devicesListView.setVisibility(View.GONE);
         if (bluetoothAdapter == null) {
@@ -288,6 +282,22 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         binding.devicesListView.setAdapter(listAdapter);
+    }
+
+    private void showSnack(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                String msg = message;
+                if (msg == null) {
+                    msg = "";
+                }
+                if (msg.trim().isEmpty()) {
+                    return;
+                }
+                Helper.showSnack(binding.coordinator, msg);
+            }
+        });
 
     }
 
@@ -349,25 +359,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return -1;
     }
-/*
-    private void setLaunchers() {
-        permissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), new ActivityResultCallback<Map<String, Boolean>>() {
-            @Override
-            public void onActivityResult(Map<String, Boolean> result) {
-
-                // Notes for later: If there is need to force user to enable bluetooth, redirect user here!
-                // only do scan after  permission is granted
-                //doSync(3000,false);;
-                if (hasBTPermission()) {
-                    binding.progressHorizontal.setVisibility(View.VISIBLE);
-                    binding.permissionsBtn.setVisibility(View.GONE);
-                    doScan();
-                    refresh();
-                }
-
-            }
-        });
-    }*/
 
     private void initialize() {
 
@@ -396,7 +387,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setRangerName() {
-        rangerName = getSharedPrefs().getString("rangerName", "notSet");
+        rangerName = App.getInstance().getSharedPrefs().getString("rangerName", "notSet");
 //            if (rangerName.equals("notSet")) {
 //                popUpEditText();
 //            }
@@ -472,7 +463,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void saveRangerName(String theName) {
-        SharedPreferences.Editor mEditor = getSharedPrefs().edit();
+        SharedPreferences.Editor mEditor = App.getInstance().getSharedPrefs().edit();
         mEditor.putString("rangerName", theName).apply();
     }
 
@@ -487,7 +478,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("elocApp", "google sync failed");
 
                 if (showMessage) {
-                    showSnack("sync FAILED\nCheck internet connection");
+                    Helper.showSnack(binding.coordinator, "sync FAILED\nCheck internet connection");
                 }
             } else {
                 gLastTimeDifferenceMillisecond = System.currentTimeMillis() - googletimestamp;
@@ -498,7 +489,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("elocApp", "google sync success");
                 if (showMessage) {
                     String message = getString(R.string.sync_template, gLastTimeDifferenceMillisecond);
-                    showSnack(message);
+                    Helper.showSnack(binding.coordinator, message);
                 }
             }
 
@@ -506,62 +497,12 @@ public class MainActivity extends AppCompatActivity {
         //send("testing latency");
     }
 
-    private void showSnack(String message) {
-        Snackbar
-                .make(binding.coordinator, message, Snackbar.LENGTH_LONG)
-                .show();
-    }
 
     public void saveTimestamps(Long gCurrentElapsedTimeMS, Long gLastGoogleSyncTimestampMS) {
-        SharedPreferences.Editor mEditor = getSharedPrefs().edit();
+        SharedPreferences.Editor mEditor = App.getInstance().getSharedPrefs().edit();
         mEditor.putString("elapsedTimeAtGoogleTimestamp", gCurrentElapsedTimeMS.toString()).apply();
         mEditor.putString("lastGoogleTimestamp", gLastGoogleSyncTimestampMS.toString()).apply();
     }
 
-    private SharedPreferences getSharedPrefs() {
-        return getSharedPreferences("label", 0);
-    }
-/*
-    private boolean hasBTPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            boolean scanPermissionGranted = (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED);
-            boolean connectPermissionGranted = (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED);
-            return (scanPermissionGranted && connectPermissionGranted);
-        } else {
-            // Older devices will have permission automatically granted
-            return true;
-        }
-    }*/
 
-   /* private void askBTPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!hasBTPermission()) {
-                boolean showScanRationale = shouldShowRequestPermissionRationale(Manifest.permission.BLUETOOTH_SCAN);
-                boolean showConnectRationale = shouldShowRequestPermissionRationale(Manifest.permission.BLUETOOTH_CONNECT);
-
-                if (showScanRationale || showConnectRationale) {
-                    new AlertDialog.Builder(this)
-                            .setTitle("Bluetooth permissions required")
-                            .setMessage("This app needs to scan and connect to bluetooth devices.\n\nDo you want to grant the required permmission now?")
-                            .setCancelable(false)
-                            .setNegativeButton(android.R.string.cancel, (dialog, i) -> dialog.dismiss())
-                            .setPositiveButton(R.string.yes_permissions, (dialog, i) -> {
-                                dialog.dismiss();
-                                doRequestPermissions();
-                            })
-                            .show();
-                } else {
-                    doRequestPermissions();
-                }
-            }
-        }
-    }
-
-    private void doRequestPermissions() {
-
-//        String[] permissions = new String[]{Manifest.permission.CAMERA};
-                    String[] permissions = new String[]{Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT};
-
-        permissionLauncher.launch(permissions);
-    }*/
 }

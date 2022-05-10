@@ -18,7 +18,6 @@ import android.os.SystemClock;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
-import android.text.TextWatcher;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
@@ -32,9 +31,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -57,12 +54,19 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import de.eloc.eloc_control_panel.activities.DeviceActivity;
+import de.eloc.eloc_control_panel.activities.Helper;
 import de.eloc.eloc_control_panel.activities.MainSettingsActivity;
 import de.eloc.eloc_control_panel.databinding.FragmentTerminalBinding;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
 
     private enum Connected {False, Pending, True}
+
+    private enum DeviceState {
+        Recording,
+        Stopping,
+        Ready,
+    }
 
     private String deviceAddress = "<no address>";
     private SerialService service;
@@ -76,27 +80,24 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private boolean hexEnabled = false;
     private boolean pendingNewline = false;
     private String newline = TextUtil.newline_crlf;
-    private String gSamplesPerSec;
-    private String gSecondsPerFile;
-    private String gLocation;
     private String gVersion = "AppBeta3.2";
-    private String gPattern = "^[a-zA-Z0-9]+$";
     private boolean gInitialSettings = false;
-    private boolean gRecording = false;
     public Long gLastGoogleSync = 0L; //need to get the elapsedRealtime ()
     public Long gLastTimeDifferenceMillisecond = 0L;
     private String locationCode;
     public float locationAccuracy;
-    private boolean recording = false;
+    private DeviceState deviceState = DeviceState.Ready;
     private String recordingTime = "0:00 h";
+    private boolean hasSDCardError = false;
+    private MenuItem elocSettingsItem;
 
     public SimpleLocation theLocation;
     public String rangerName;
     private int buttonPressCounter = 0;
     private Menu menu;
-    private int offColor = Color.WHITE;
-    private int onColor = Color.WHITE;
-    private int middleColor = Color.WHITE;
+    private int redColor = Color.WHITE;
+    private int greenColor = Color.WHITE;
+    private int yellowColor = Color.WHITE;
 
     public String getLastPathComponent(String filePath) {
         String[] segments = filePath.split("/");
@@ -242,9 +243,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
 
         Context context = getActivity();
-        //SharedPreferences mPrefs = getApplicationContext().getSharedPreferences("label", 0);
 
-        SharedPreferences mPrefs = context.getSharedPreferences("label", 0);
+        SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
 
         //long googletimestamp=  Long.parseLong("0");
         long lastGoogleTimestamp = Long.parseLong(mPrefs.getString("lastGoogleTimestamp", "0"));
@@ -312,7 +312,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             OpenLocationCode theCode;
 
             public void onPositionChanged() {
-                Button recBtn = getView().findViewById(R.id.recBtn);
                 //Log.i("elocApp", "position changed");
                 //my house balcony +- 2m in locus is 6MJWMRHV+9Q
                 locationAccuracy = theLocation.getAccuracy();
@@ -322,11 +321,11 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 Log.i("elocApp", "code: " + locationCode + "  lat: " + Double.toString(theLocation.getLatitude()) + "   lon: " + Double.toString(theLocation.getLongitude()) + "   alt: " + Double.toString(theLocation.getAltitude()) + "   acc: " + Float.toString(locationAccuracy));
                 String prettyAccuracy = formatNumber(locationAccuracy, "m");
                 if (locationAccuracy < 8) {
-                    binding.gpsValueTv.setTextColor(onColor);
+                    binding.gpsValueTv.setTextColor(greenColor);
                 } else if (locationAccuracy < 12) {
-                    binding.gpsValueTv.setTextColor(middleColor);
+                    binding.gpsValueTv.setTextColor(yellowColor);
                 } else {
-                    binding.gpsValueTv.setTextColor(offColor);
+                    binding.gpsValueTv.setTextColor(redColor);
                 }
 
                 binding.gpsValueTv.setText(prettyAccuracy);
@@ -336,20 +335,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
 
                 }
-
-                if (locationAccuracy <= 8.1) {
-                    if (recBtn.getText().toString().startsWith("START RECORDING"))
-                        recBtn.setBackgroundColor(0xFF009900);
-
-
-                    // if (recBtn.getText().toString().startsWith("START RECORDING")) recBtn.setBackgroundColor(0xFF009900);
-
-                    // if (recBtn.getText().toString().startsWith("WAITING FOR GPS")) { //was waiting for GPS
-
-                    // setRecButton(getView());
-                    // }
-                }
-
 
             }
 
@@ -401,11 +386,11 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         }
         FragmentActivity activity = getActivity();
         if (activity != null) {
-            onColor = ContextCompat.getColor(activity, R.color.on_color);
-            offColor = ContextCompat.getColor(activity, R.color.off_color);
-            middleColor = ContextCompat.getColor(activity, R.color.middle_color);
+            greenColor = ContextCompat.getColor(activity, R.color.on_color);
+            redColor = ContextCompat.getColor(activity, R.color.off_color);
+            yellowColor = ContextCompat.getColor(activity, R.color.middle_color);
 
-            SharedPreferences mPrefs = activity.getSharedPreferences("label", 0);
+            SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
             rangerName = mPrefs.getString("rangerName", "notSet");
         }
         Log.i("elocApp", "terminal rangerName " + rangerName);
@@ -488,8 +473,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         // if the recbtn is start recording then wait gps
         theLocation.beginUpdates();
-        if (binding.recBtn.getText().toString().startsWith("START RECORDING")) {
-            setRecButton();
+        if (deviceState == DeviceState.Ready) {
+            updateRecordButton();
         }
 
         if (initialStart && service != null) {
@@ -528,190 +513,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         appendReceiveText("\nEloc App version: " + gVersion + "\n");
 
         startLocation();
-
-        binding.locationText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void afterTextChanged(Editable s) {
-                //if (gInitialSettings) return;
-                Log.i("elocApp", "glocation afterchange");
-								
-/* 				String temp=locText.getText().toString().trim();
-				
-				//temp.trim();
-				if (gLocation.equals(temp)) { 
-					 Log.i("elocApp", "glocation same");
-					return;
-				} */
-
-                if (!(binding.locationText.getText().toString()).matches(gPattern)) {
-                    binding.recBtn.setText("invalid filename");
-                    binding.recBtn.setBackgroundColor(0x000000);
-
-                } else {
-
-                    if (binding.locationText.getText().toString().equals("uploadnow")) {
-
-
-                        //old stuff
-
-
-                    } else {
-
-
-                        binding.recBtn.setText("update settings");
-                        binding.recBtn.setBackgroundColor(0xFFEE8006);
-
-                        gLocation = binding.locationText.getText().toString().trim();
-                        //glocation is getting set to null
-
-                    }
-
-                }
-
-
-            }
-
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-        });
-
-
-        binding.radioGroupSamplesPerSec.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                // checkedId is the RadioButton selected
-                //if (gInitialSettings) return;
-                // if (!group.isPressed())
-                // {
-
-                // return;
-                // }
-                Log.i("elocApp", "samplerate buttonpress");
-                binding.recBtn.setText("update settings");
-                binding.recBtn.setBackgroundColor(0xFFEE8006);
-
-                switch (checkedId) {
-                    case R.id.rad8k:
-                        gSamplesPerSec = "8000";
-                        break;
-                    case R.id.rad16k:
-                        gSamplesPerSec = "16000";
-                        break;
-                    case R.id.rad22k:
-                        gSamplesPerSec = "22050";
-                        break;
-                    case R.id.rad32k:
-                        gSamplesPerSec = "32000";
-                        break;
-
-                    case R.id.rad44k:
-                        gSamplesPerSec = "44100";
-                        break;
-                }
-
-                //sendText.setText(String.valueOf(checkedId));
-            }
-        });
-
-        binding.radioGroupSecPerFile.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                // checkedId is the RadioButton selected
-                //sendText.setText(String.valueOf(checkedId));
-                //if (gInitialSettings) return;
-                // if (!group.isPressed())
-                // {
-                //Not from user!
-                // return;
-                // }
-
-                Log.i("elocApp", "secperfile buttonpress");
-
-                binding.recBtn.setText("update settings");
-                binding.recBtn.setBackgroundColor(0xFFEE8006);
-                switch (checkedId) {
-                    case R.id.rad10s:
-                        gSecondsPerFile = "10";
-                        break;
-                    case R.id.rad1m:
-                        gSecondsPerFile = "60";
-
-                        break;
-
-                    case R.id.rad1h:
-                        gSecondsPerFile = "3600";
-                        break;
-
-                    case R.id.rad4h:
-                        gSecondsPerFile = "14400";
-                        break;
-                    case R.id.rad12h:
-                        gSecondsPerFile = "43200";
-                        break;
-
-
-                }
-
-
-            }
-        });
-
-
-        binding.recBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //tv.setText(months[rand.nextInt(12)]);
-                //tv.setTextColor(Color.rgb(rand.nextInt(255)+1, rand.nextInt(255)+1, rand.nextInt(255)+1));
-                //EditText editText = v.findViewById(R.id.send_text);
-
-
-                //send(thisBtn.getText().toString());
-                String buttonText = binding.recBtn.getText().toString();
-                if (buttonText.equals("START RECORDING")) {
-
-                    if (locationAccuracy <= 8.1) {
-                        startRecording();
-                        return;
-                    } else {
-                        popUpRecord();
-                        return;
-                    }
-                } else if (buttonText.startsWith("WAITING FOR GPS")) {
-                    // buttonPressCounter=buttonPressCounter+1;
-                    // if (buttonPressCounter>2) {
-                    // startRecording();
-                    // }
-                    //startRecording();
-                    // return;
-                    // }
-                } else if (buttonText.equals("STOP RECORDING")) {
-                    binding.recBtn.setText("please wait...");
-                    binding.recBtn.setBackgroundColor(0x000000);
-                    send("stoprecord");
-                    return;
-                } else if (buttonText.equals("update settings")) {
-
-
-                    //marker
-                    binding.locationText.clearFocus();
-                    send("#settings" + "#" + gSamplesPerSec + "#" + gSecondsPerFile + "#" + gLocation);
-                    binding.recBtn.setBackgroundColor(0x000000);
-                    binding.recBtn.setText("please wait...");
-                    // TODO: I'll comment it out for now
-//                    getView().findViewById(R.id.setupStuff).setVisibility(View.GONE);
-                    //send("stoprecord");
-                    return;
-
-                }
-
-
-            }
-        });
-
-
+        setListeners();
         return binding.getRoot();
     }
 
@@ -720,6 +522,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         inflater.inflate(R.menu.menu_terminal, menu);
         this.menu = menu;
         menu.findItem(R.id.hex).setChecked(hexEnabled);
+        elocSettingsItem = menu.findItem(R.id.elocsettings);
     }
 
     @Override
@@ -734,20 +537,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         }
 
         if (id == R.id.elocsettings) {
-            String recText = binding.recBtn.getText().toString();
-            if (recText.equals("STOP RECORDING")) return true;
-            startActivity(new Intent(getActivity(), MainSettingsActivity.class));
-/*
+            if (deviceState == DeviceState.Ready) {
+                DeviceActivity parent = (DeviceActivity) getActivity();
+                if (parent != null) {
+                    parent.settingsLauncher.launch(new Intent(parent, MainSettingsActivity.class));
+                }
+            }
 
-
-
-             getView().findViewById(R.id.setupStuff).setVisibility(View.VISIBLE);
-            receiveText.setText("");
-            status("\n***Other Settings***\nXXsetgain (11=forest, 14=Mahout)\nXXXXsettype (set mic type)\nXXXXsetname (set eloc bt name)\nupdate (reboot + upgrade firmware)\nbtoff (BT off when record)\nbton (BT on when record)\n\n");
-
-            recBtn.setText("update settings");
-            recBtn.setBackgroundColor(0xFFEE8006);
-*/
             return true;
         }
 
@@ -786,7 +582,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         try {
             BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             BluetoothDevice device = bluetoothAdapter.getRemoteDevice(deviceAddress);
-            status("connecting...");
+            // this line might have introduced a bug. This is bluetooth connection and not recording sttatus.
+            //updateDeviceState(DeviceState.Recording, null);
             connected = Connected.Pending;
             SerialSocket socket = new SerialSocket(getActivity().getApplicationContext(), device);
             service.connect(socket);
@@ -802,10 +599,9 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     }
 
-    private void send(String str) {
+    public String send(String str) {
         if (connected != Connected.True) {
-            //Toast.makeText(getActivity(), "not connected", Toast.LENGTH_SHORT).show();
-            return;
+            return "not connected";
         }
         try {
             String msg;
@@ -825,8 +621,10 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             //receiveText.append(spn); //mark
             appendReceiveText(msg + "\n");
             service.write(data);
+            return null;
         } catch (Exception e) {
             onSerialIoError(e);
+            return "Command not sent- error occurred!";
         }
     }
 
@@ -863,22 +661,22 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private void setTime(TextView textView, String time) {
         if (time != null && (!time.contains("0.00"))) {
             textView.setText(time.trim());
-            textView.setTextColor(onColor);
+            textView.setTextColor(greenColor);
         } else {
             textView.setText("OFF");
-            textView.setTextColor(offColor);
+            textView.setTextColor(redColor);
         }
     }
 
     private void setRecordingTime() {
         String text;
-        int color = offColor;
+        int color = redColor;
         if (recordingTime != null && (!recordingTime.contains("0.00"))) {
             text = recordingTime.trim();
-            color = onColor;
-        } else if (recording) {
+            color = greenColor;
+        } else if (deviceState == DeviceState.Recording) {
             text = "0:00 h";
-            color = onColor;
+            color = greenColor;
         } else {
             text = "OFF";
         }
@@ -893,10 +691,37 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         return format.format(number) + units;
     }
 
-    private void elocReceive(String msg) {
+    private void setDeviceInfo(String msg) {
+        // Set data from prefs
+        SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
+        long lastGoogleTimestamp = Long.parseLong(mPrefs.getString("lastGoogleTimestamp", "0"));
+        double millisPerHour = 1000 * 3600;
+        double hoursSinceLastSync = (System.currentTimeMillis() - lastGoogleTimestamp) / millisPerHour;
+        binding.timeSyncValueTv.setText(String.format(Locale.ENGLISH, "%.2f h", hoursSinceLastSync));
+        int syncColor = greenColor;
+        if (hoursSinceLastSync < 48) {
+            syncColor = redColor;
+        }
+        binding.timeSyncValueTv.setTextColor(syncColor);
+        msg = msg.replace("_@b$_", rangerName);
+        String temp = deviceAddress.replace(":", "-");
+        String filename = temp + ".txt";
+        writeToFile(msg, filename, getActivity());
+        File test = getActivity().getFilesDir();
+        //getAbsolutePath()
+        Log.i("elocApp", "file written   " + test.getAbsolutePath() + filename);
+        //Log.i("elocApp", msg);
 
+        // Set data from bt device
         String[] lines = getStatusLines(msg);
-        if (lines.length > 0) {
+
+        String btName = null;
+        String sampleRate = null;
+        String secondsString = null;
+        String micGain = null;
+        String micType = null;
+
+        if (lines.length > 0) { // got an update this time
             for (String l : lines) {
                 if (l.startsWith("Ranger:")) {
                     String rangerName = l.replace("Ranger:", "").trim();
@@ -922,17 +747,19 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     }
                     binding.batteryValueTv.setText(batteryLevel);
                     String tmp = batteryLevel.toLowerCase();
-                    int batteryValueColor = Color.YELLOW;
+                    int batteryValueColor = yellowColor;
                     if (tmp.contains("low")) {
-                        batteryValueColor = offColor;
+                        batteryValueColor = redColor;
                     } else if (tmp.contains("full")) {
-                        batteryValueColor = onColor;
+                        batteryValueColor = greenColor;
                     }
                     binding.batteryValueTv.setTextColor(batteryValueColor);
 
                     if (parts.length >= 1) {
                         binding.batteryVoltageValueTv.setText(parts[0].trim());
                     }
+                } else if (l.startsWith("!3!")) {
+                    btName = l.replace("!3!", "").trim();
                 } else if (l.startsWith("!4!")) {
                     String uptime = l.replace("!4!", "").trim();
                     setTime(binding.uptimeValueTv, uptime);
@@ -943,15 +770,20 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     recordingTime = l.replace("!6!", "").trim();
                     setRecordingTime();
                 } else if (l.startsWith("!7!")) {
-                    recording = l.contains("1");
+                    if (l.contains("1")) {
+                        updateDeviceState(DeviceState.Recording, null);
+                    } else {
+                        updateDeviceState(DeviceState.Ready, null);
+                    }
+                    updateRecordButton();
                     setRecordingTime();
                 } else if (l.startsWith("!8!")) {
                     String recordingTime = l.replace("!8!", "").toUpperCase().trim();
                     boolean hasTime = recordingTime.contains(":") || (!recordingTime.toLowerCase().contains("on"));
                     binding.btRecordingValueTv.setText(recordingTime);
-                    binding.btRecordingValueTv.setTextColor(hasTime ? onColor : offColor);
+                    binding.btRecordingValueTv.setTextColor(hasTime ? greenColor : redColor);
                 } else if (l.startsWith("!9!")) {
-                    String sampleRate = l.replace("!9!", "").trim();
+                    sampleRate = l.replace("!9!", "").trim();
                     Double rate = parseDouble(sampleRate);
                     String prettyRate = "Unknown";
                     if (rate != null) {
@@ -959,7 +791,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     }
                     binding.sampleRateValueTv.setText(prettyRate);
                 } else if (l.startsWith("!10!")) {
-                    String secondsString = l.replace("!10!", "").trim();
+                    secondsString = l.replace("!10!", "").trim();
                     String hoursString = "Unknown";
                     Double seconds = parseDouble(secondsString);
                     if (seconds != null) {
@@ -969,13 +801,17 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     binding.hoursPerFileValueTv.setText(hoursString);
                 } else if (l.startsWith("!11!")) {
                     String gb = l.replace("!11!", "").trim();
+                    Double usedGB = parseDouble(gb);
+                    hasSDCardError = (usedGB == null) || usedGB <= 0;
+                    binding.sdCardErrorBtn.setVisibility(hasSDCardError? View.VISIBLE: View.GONE);
                     binding.sdCardValueTv.setText(String.format("%s GB", gb));
+                    binding.sdCardValueTv.setTextColor(usedGB < 40? redColor: greenColor);
                 } else if (l.startsWith("!12!")) {
-                    String mic = l.replace("!12!", "").trim();
-                    binding.microphoneValueTv.setText(mic);
+                      micType = l.replace("!12!", "").trim();
+                    binding.microphoneValueTv.setText(micType);
                 } else if (l.startsWith("!13!")) {
-                    String gain = l.replace("!13!", "").trim();
-                    binding.gainValueTv.setText(gain);
+                    micGain = l.replace("!13!", "").trim();
+                    binding.gainValueTv.setText(micGain);
                 } else if (l.startsWith("!14!")) {
                     String location = l.replace("!14!", "").trim();
                     binding.lastLocationValueTv.setText(location);
@@ -989,17 +825,45 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     if (accuracy != null) {
                         prettyAccuracy = formatNumber(accuracy, "m");
                         if (accuracy < 5) {
-                            binding.gpsValueTv.setTextColor(onColor);
+                            binding.gpsValueTv.setTextColor(greenColor);
                         } else if (accuracy < 10) {
-                            binding.gpsValueTv.setTextColor(middleColor);
+                            binding.gpsValueTv.setTextColor(yellowColor);
                         } else {
-                            binding.gpsValueTv.setTextColor(offColor);
+                            binding.gpsValueTv.setTextColor(redColor);
                         }
                     }
                     binding.lastAccuracyValueTv.setText(prettyAccuracy);
                 }
-
+                if ((btName != null) && (sampleRate != null) && (secondsString != null)) {
+                    String settings = String.format(
+                            Locale.ENGLISH,
+                            "#%s#%s#%s",
+                            sampleRate, secondsString, btName);
+                    saveSettings(MainSettingsActivity.DATA_KEY, settings);
+                }
+                if ((micGain != null) && (micType != null) ) {
+                    String settings = String.format(
+                            Locale.ENGLISH,
+                            "#%s#%s",
+                            micType, micGain);
+                    saveSettings(MainSettingsActivity.MIC_DATA_KEY, settings);
+                }
             }
+        }
+    }
+
+    private void elocReceive(String msg) {
+        // Save device settings; but we can see that tthe value was actually saved. So maybe the firmware need to do a follow
+     // let check the old project.
+        if (msg.startsWith("#")) {
+            saveSettings(MainSettingsActivity.DATA_KEY, msg);
+        } else if (msg.startsWith("please check")) {
+            hasSDCardError = true;
+            showSDCardError();
+        } else if (msg.startsWith("getClk")) {
+            send("_setClk_" + getBestTimeEstimate());
+        } else {
+            setDeviceInfo(msg);
         }
 
         //if (true) return;
@@ -1009,7 +873,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         //String[] separated = msg.split(":");
         //separated[0]; // this will contain "Fruit"
         //separated[1]; // this will contain " they taste good"
-        RadioButton bit;
+  /* OLD CODE     RadioButton bit;
         RadioButton sec;
         EditText locText = getView().findViewById(R.id.locationText);
         RadioGroup radioGroupSecPerFile = (RadioGroup) getView().findViewById(R.id.radioGroupSecPerFile);
@@ -1018,63 +882,16 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         msg.trim();
 
-        if (msg.startsWith("getClk")) {
-            send("_setClk_" + getBestTimeEstimate());
-        }
+
+*/
 
 
-        if (msg.startsWith("#")) {
-            //gInitialSettings=true;
 
-            String[] separated = msg.split("#");
-            //RadioButton loc;
-            if (separated.length < 4) return;
-            bit = (RadioButton) getView().findViewById(R.id.rad8k);
-            if (separated[1].equals("8000"))
-                bit = (RadioButton) getView().findViewById(R.id.rad8k);
-            if (separated[1].equals("16000"))
-                bit = (RadioButton) getView().findViewById(R.id.rad16k);
-            if (separated[1].equals("22050"))
-                bit = (RadioButton) getView().findViewById(R.id.rad22k);
-            if (separated[1].equals("32000"))
-                bit = (RadioButton) getView().findViewById(R.id.rad32k);
-            if (separated[1].equals("44100"))
-                bit = (RadioButton) getView().findViewById(R.id.rad44k);
-            bit.setChecked(true);
-
-            sec = (RadioButton) getView().findViewById(R.id.rad10s);
-            if (separated[2].equals("10"))
-                sec = (RadioButton) getView().findViewById(R.id.rad10s);
-            if (separated[2].equals("60"))
-                sec = (RadioButton) getView().findViewById(R.id.rad1m);
-            if (separated[2].equals("3600"))
-                sec = (RadioButton) getView().findViewById(R.id.rad1h);
-            if (separated[2].equals("14400"))
-                sec = (RadioButton) getView().findViewById(R.id.rad4h);
-            if (separated[2].equals("43200"))
-                sec = (RadioButton) getView().findViewById(R.id.rad12h);
-
-            sec.setChecked(true);
-
-
-            locText.setText(separated[3].trim());
-
-            setRecButton();
-
-            //send(separated[1]);
-            //String bitrate= separated[1];
-            //String secPerFile= separated[2];
-            //String location= separated[3];
-
-
-        }
-
-
+/*
         if (msg.startsWith("recording")) {
 
             disableAll();
-            recBtn.setText("STOP RECORDING");
-            recBtn.setBackgroundColor(0xFF731212);
+            recBtn.set Text("STOP RECORDING");
 
 
         }
@@ -1094,121 +911,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         }
 
-
-        if (msg.startsWith("please check")) {
-
-
-            recBtn.setText("CHECK SDCARD");
-            recBtn.setBackgroundColor(0x000000);
-
-
-        }
-
-
-        if (msg.startsWith("statusupdate")) {
-
-            //String top="";
-
-
-            msg = msg.replace("statusupdate", "----STATUS----");
-
-            msg = msg.replace("_@b$_", rangerName);
-
-            msg = msg.replace("!0!", "Device Name:  ");
-            msg = msg.replace("!1!", "Firmware:  ");
-            msg = msg.replace("!2!", "Battery volts:  ");
-            msg = msg.replace("!3!", "File header:  ");
-            msg = msg.replace("!4!", "Up Time Since Boot:  ");
-            msg = msg.replace("!5!", "Record Time Since Boot:  ");
-            msg = msg.replace("!6!", "Current Record Time:  ");
-            msg = msg.replace("!7!", "Recording?:  ");
-            msg = msg.replace("!8!", "Bluetooth Record?:  ");
-            msg = msg.replace("!9!", "Sample Rate:  ");
-            msg = msg.replace("!10!", "Seconds Per File:  ");
-            msg = msg.replace("!11!", "SD Card Free GB:  ");
-            msg = msg.replace("!12!", "Microphone Type:  ");
-            msg = msg.replace("!13!", "Microphone Gain:  ");
-            msg = msg.replace("!14!", "Last GPS Location:  ");
-            msg = msg.replace("!15!", "Last GPS Accuracy:  ");
-
-            SharedPreferences mPrefs = getActivity().getSharedPreferences("label", 0);
-            long lastGoogleTimestamp = Long.parseLong(mPrefs.getString("lastGoogleTimestamp", "0"));
-            msg = msg.trim() + "\nApp last time sync:  " + Long.toString(((System.currentTimeMillis() - lastGoogleTimestamp) / 1000l / 60l)) + " min\n";
-            msg = msg + "App Version:  " + gVersion;
-
-
-            //msg=top+msg;
-
-            //receiveText.setText("");
-            //status(msg);
-            receiveText.setText(spanWhite(msg.trim()));
-
-            receiveText.post(new Runnable() { //always first  one fails
-
-                public void run() {
-                    receiveText.scrollTo(0, 0);
-                }
-            });
-
-
-            //String lines[] = msg.split("\\r?\\n");
-            String temp = deviceAddress.replace(":", "-");
-            String filename = temp + ".txt";
-            writeToFile(msg, filename, getActivity());
-            File test = getActivity().getFilesDir();
-            //getAbsolutePath()
-            Log.i("elocApp", "file written   " + test.getAbsolutePath() + filename);
-            //Log.i("elocApp", msg);
-
-
-        }
-
-        if (msg.startsWith("uploadnow")) {
-
-
-        }
-
-
-    }
-
-
-    private void disableAll() {
-
-        MenuItem item = menu.findItem(R.id.elocsettings);
-        item.setEnabled(false);
-
-        Button recBtn = getView().findViewById(R.id.recBtn);
-        EditText locText = getView().findViewById(R.id.locationText);
-        RadioGroup radioGroupSecPerFile = (RadioGroup) getView().findViewById(R.id.radioGroupSecPerFile);
-        RadioGroup radioGroupSamplesPerSec = (RadioGroup) getView().findViewById(R.id.radioGroupSamplesPerSec);
-        //Button recBtn = getView().findViewById(R.id.recBtn);
-        //handleStop();
-        for (int i = 0; i < radioGroupSamplesPerSec.getChildCount(); i++)
-            radioGroupSamplesPerSec.getChildAt(i).setEnabled(false);
-        for (int i = 0; i < radioGroupSecPerFile.getChildCount(); i++)
-            radioGroupSecPerFile.getChildAt(i).setEnabled(false);
-        locText.setEnabled(false);
-
-
-    }
-
-    public void enableAll() {
-        MenuItem item = menu.findItem(R.id.elocsettings);
-        item.setEnabled(true);
-
-        Button recBtn = getView().findViewById(R.id.recBtn);
-        EditText locText = getView().findViewById(R.id.locationText);
-        RadioGroup radioGroupSecPerFile = (RadioGroup) getView().findViewById(R.id.radioGroupSecPerFile);
-        RadioGroup radioGroupSamplesPerSec = (RadioGroup) getView().findViewById(R.id.radioGroupSamplesPerSec);
-        theLocation.beginUpdates();
-        //handleResume();
-
-
-        for (int i = 0; i < radioGroupSamplesPerSec.getChildCount(); i++)
-            radioGroupSamplesPerSec.getChildAt(i).setEnabled(true);
-        for (int i = 0; i < radioGroupSecPerFile.getChildCount(); i++)
-            radioGroupSecPerFile.getChildAt(i).setEnabled(true);
-        locText.setEnabled(true);
+*/
 
 
     }
@@ -1216,26 +919,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private void startRecording() {
         buttonPressCounter = 0;
-        Button thisBtn = getView().findViewById(R.id.recBtn);
+        TextView thisBtn = getView().findViewById(R.id.recBtn);
         thisBtn.setText("please wait...");
-        thisBtn.setBackgroundColor(0x000000);
         send("setGPS^" + locationCode + "#" + Float.toString(locationAccuracy));
         //sendDelayed("_record_",1700);
         handleStop();
 
     }
-
-    public void setRecButton() { //on for
-        enableAll();
-        Log.i("elocApp", "in setRecButton");
-
-        binding.recBtn.setBackgroundColor(0xFF111111);
-        if (locationAccuracy <= 8.1) {
-            binding.recBtn.setBackgroundColor(0xFF009900);
-        }
-        binding.recBtn.setText("START RECORDING");
-    }
-
 
     private void receive(byte[] data) {
         if (hexEnabled) {
@@ -1268,19 +958,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         return (spn);
     }
 
-    private void status(String str) {
-        SpannableStringBuilder spn = new SpannableStringBuilder(str + '\n');
-        spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorStatusText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        receiveText.append(spn);
-    }
-
 
     /*
      * SerialListener
      */
     @Override
     public void onSerialConnect() {
-        status("connected");
+        Helper.showSnack(binding.coordinator, "connected");
         connected = Connected.True;
         //send("_setClk_"+getBestTimeEstimate());
         //send("settingsRequest");
@@ -1288,11 +972,11 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     @Override
     public void onSerialConnectError(Exception e) {
-        disableAll();
-        Button recBtn = getView().findViewById(R.id.recBtn);
-        recBtn.setText("NOT CONNECTED");
-        recBtn.setBackgroundColor(0x000000);
-        status("connection failed: " + e.getMessage());
+        TextView recBtn = getView().findViewById(R.id.recBtn);
+        updateDeviceState(DeviceState.Ready, "Connection Lost");
+        Helper.showSnack(binding.coordinator, "Connection Lost");
+        updateRecordButton();
+        // status("connection failed: " + e.getMessage()); // TODO: this message must be in a log
         disconnect();
     }
 
@@ -1303,14 +987,106 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     @Override
     public void onSerialIoError(Exception e) {
-
-        disableAll();
-        Button recBtn = getView().findViewById(R.id.recBtn);
-        recBtn.setText("NOT CONNECTED");
-        recBtn.setBackgroundColor(0x000000);
+        updateDeviceState(DeviceState.Ready, "Connection Lost");
+        Helper.showSnack(binding.coordinator, "Connection Lost");
+        updateRecordButton();
         receiveText.setText("");
-        status("connection lost: " + e.getMessage());
+        //status("connection lost: " + e.getMessage()); //TODO: This message should be in some kind of log
         disconnect();
+    }
+
+    private void updateDeviceState(DeviceState state, String errorMessage) {
+        deviceState = state;
+        if (elocSettingsItem != null) {
+            elocSettingsItem.setEnabled(false);
+        }
+        switch (state) {
+            case Recording:
+                binding.statusTv.setText("Connected");
+                binding.statusIcon.setImageResource(R.drawable.connected);
+                break;
+            case Ready:
+                binding.statusTv.setText("Ready");
+                binding.statusIcon.setImageBitmap(null);
+                if (elocSettingsItem != null) {
+                    elocSettingsItem.setEnabled(true);
+                }
+                break;
+            case Stopping:
+                binding.statusTv.setText("Please wait...");
+                binding.statusIcon.setImageResource(R.drawable.connecting);
+                break;
+        }
+        if (errorMessage != null) {
+            binding.statusIcon.setImageResource(R.drawable.error);
+            binding.statusTv.setText(errorMessage);
+        }
+        updateRecordButton();
+    }
+
+    private void saveSettings(String key, String settings) {
+        SharedPreferences.Editor editor = App.getInstance().getSharedPrefs().edit();
+        editor.putString(key, settings);
+        editor.apply();
+    }
+
+    private void updateRecordButton() {
+        int text = R.string.rec_state_ready;
+        int color = greenColor;
+        switch (deviceState) {
+            case Recording:
+                text = R.string.rec_state_recording;
+                color = redColor; // Red when recording
+                break;
+            case Stopping:
+                text = R.string.rec_state_wait;
+                color = yellowColor;
+                break;
+            case Ready:
+                text = R.string.rec_state_ready;
+                color = greenColor; // Green when ready
+                break;
+        }
+        binding.recBtn.setText(text);
+        binding.recBtn.setBackgroundColor(color);
+    }
+
+    private void setListeners() {
+        binding.sdCardValueTv.setOnClickListener(view -> showSDCardError());
+        binding.sdCardErrorBtn.setOnClickListener(view -> showSDCardError());
+        binding.recBtn.setOnClickListener(view -> recordButtonClicked());
+    }
+
+    private void recordButtonClicked() {
+        switch (deviceState) {
+            case Recording:
+                updateDeviceState(DeviceState.Stopping, null);
+                updateRecordButton();
+                binding.recBtn.setBackgroundColor(0x000000);
+                send("stoprecord"); //When this line is executed and command is sent, we are supposed to receive a message from the device toindicate when device is disconnected, right?
+                // TODO: Notes for future: remove line below and wait for update from !7! value.
+                updateDeviceState(DeviceState.Ready, null);
+                break;
+            case Ready:
+                if (hasSDCardError) {
+                    showSDCardError();
+                    return;
+                }
+                if (locationAccuracy <= 8.1) {
+                    startRecording();
+                } else {
+                    popUpRecord();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void showSDCardError() {
+        if (hasSDCardError) {
+            Helper.showSnack(binding.coordinator, "Check SD card!");
+        }
     }
 
 }

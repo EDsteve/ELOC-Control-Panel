@@ -17,37 +17,62 @@
         android:padding="16dp"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
-        <LinearLayout
-            android:id="@+id/filename_ll"
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            app:cardCornerRadius="8dp"
+            app:contentPadding="8dp" android:id="@+id/command_line_card"
             app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
-                android:id="@+id/filename_tv"
-                android:layout_width="120dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="end"
-                android:labelFor="@id/filename_et"
-                android:text="@string/filename"
-                android:textAlignment="textEnd" />
+                android:orientation="vertical">
 
-            <View
-                android:layout_width="8dp"
-                android:layout_height="0dp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:orientation="horizontal"
+                    app:layout_constraintTop_toTopOf="parent">
 
-            <EditText
-                android:id="@+id/filename_et"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:imeOptions="actionNext"
-                android:importantForAutofill="no"
-                android:inputType="text"
-                tools:text="ELOC18" />
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/custom_command"
+                        android:textAllCaps="true"
+                        android:textStyle="bold" />
 
-        </LinearLayout>
+                    <TextView android:layout_marginHorizontal="8dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="24dp"
+                        android:gravity="center" android:id="@+id/command_line_btn"
+                        android:text="@string/run"
+                        android:textAlignment="center"
+                        android:textAllCaps="true"
+                        app:drawableStartCompat="@drawable/run" />
+
+                </LinearLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Command">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/filename_et"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:imeOptions="actionNext"
+                        android:importantForAutofill="no"
+                        android:inputType="text"
+                        tools:text="ELOC18" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
         <View
             android:id="@+id/divider1"
@@ -55,7 +80,7 @@
             android:layout_height="4dp"
             android:layout_marginVertical="8dp"
             android:background="#535353"
-            app:layout_constraintTop_toBottomOf="@id/filename_ll" />
+            app:layout_constraintTop_toBottomOf="@id/command_line_card" />
 
         <LinearLayout
             android:id="@+id/eloc_bt_name_ll"
@@ -285,19 +310,19 @@
             app:layout_constraintTop_toBottomOf="@id/gain_tv">
 
             <RadioButton
-                android:id="@+id/radForest"
+                android:id="@+id/radHigh"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/forest"
+                android:text="@string/high"
                 android:textColor="#B5FFFFFF" />
 
             <RadioButton
-                android:id="@+id/radMahout"
+                android:id="@+id/radLow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/mahout"
+                android:text="@string/low"
                 android:textColor="#B5FFFFFF" />
 
         </RadioGroup>
@@ -353,13 +378,23 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <Button
+    <TextView
         android:id="@+id/updateSettingsButton"
         android:layout_width="match_parent"
         android:layout_height="?actionBarSize"
         android:layout_gravity="bottom"
-        android:background="#ee8006"
+        android:layout_weight="0.2"
+        android:background="@color/on_color"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="horizontal"
         android:text="@string/update_settings"
+        android:textAlignment="center"
+        android:textAllCaps="true"
+        android:textColor="#fff"
+        android:textSize="25sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
