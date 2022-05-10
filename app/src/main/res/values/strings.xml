@@ -8,7 +8,6 @@
     <string name="battery_level">Battery Level</string>
     <string name="gps_location">GPS Location</string>
     <string name="accuracy">Accuracy</string>
-    <string name="recording">Recording</string>
     <string name="hours_since_recording_started">Hours since recording started</string>
     <string name="last_time_sync">Last Time Sync</string>
     <string name="hours_since_last_sync">Hours since last sync</string>
@@ -22,14 +21,12 @@
     <string name="uptime">Uptime</string>
     <string name="rec_time_since_boot">Rec Time Since Boot</string>
     <string name="bluetooth_recording">Bluetooth Recording</string>
-    <string name="microphone_type">Microphone Type</string>
-    <string name="microphone_type_colon">Microphone Type:</string>
     <string name="last_gps_accuracy">Last GPS Accuracy</string>
     <string name="last_gps_location">Last GPS Location</string>
     <string name="battery_voltage">Battery Voltage</string>
     <string name="wait">Wait…</string>
     <string name="update_settings">Update Settings</string>
-    <string name="filename">Filename:</string>
+    <string name="filename">Filename</string>
     <string name="_44k">44k</string>
     <string name="_32k">32k</string>
     <string name="_22k">22k</string>
@@ -41,7 +38,7 @@
     <string name="_1h">1h</string>
     <string name="_1m">1m</string>
     <string name="_10s">10s</string>
-    <string name="eloc_bt_name">ELOC BT name:</string>
+    <string name="eloc_bt_name">ELOC BT name</string>
     <string name="low">Low</string>
     <string name="high">High</string>
     <string name="bluetooth_state_when_recording">Bluetooth state when recording</string>
@@ -57,4 +54,10 @@
     <string name="sd_card_error_button">SD card error button</string>
     <string name="custom_command">Custom command</string>
     <string name="run">Run</string>
+    <string name="recording">Recording</string>
+    <string name="file_header_name">File header name</string>
+    <string name="file_header">File header</string>
+    <string name="command">Command</string>
+    <string name="microphone_type">Microphone type</string>
+    <string name="microphone_gain">Microphone gain</string>
 </resources>

@@ -48,7 +48,7 @@ public class MainSettingsActivity extends AppCompatActivity {
 
     public static String DATA_KEY = "device_settings";
     public static String MIC_DATA_KEY = "microphone_settings";
-    private String gPattern = "^[a-zA-Z0-9]+$";
+    private String gPattern = "^[a-zA-Z0-9]+$"; // Pattern for filename
     private String gLocation = "";
     private String gSecondsPerFile = "";
     private String gSamplesPerSec = "";
@@ -62,6 +62,7 @@ public class MainSettingsActivity extends AppCompatActivity {
         binding = ActivityMainSettingsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         setData();
+        setMicData();
         setToolbar();
         setListeners();
     }
@@ -172,14 +173,20 @@ public class MainSettingsActivity extends AppCompatActivity {
     }
 
     private void setListeners() {
-        binding.updateSettingsButton.setOnClickListener(view -> update());
         binding.radioGroupSamplesPerSec.setOnCheckedChangeListener(this::samplesPeSecChanged);
         binding.radioGroupSecPerFile.setOnCheckedChangeListener(this::secPerFileChanged);
         binding.radioGroupGain.setOnCheckedChangeListener(this::gainChanged);
         binding.commandLineBtn.setOnClickListener(view -> runCommandLine());
+        binding.recordingBtn.setOnClickListener(view -> runRecordingCommand());
+        binding.microphoneTypeBtn.setOnClickListener(view -> runMicTypeCommand());
+        binding.microphoneGainBtn.setOnClickListener(view -> runMicGainCommand());
     }
 
     private void runCommand(String command) {
+        hideKeyboard();
+        if (!command.startsWith("#settings#")) {
+            command = "#settings#" + command; // This should make it easy to enter showrt commands without the prefix.
+        }
         Intent resultIntent = new Intent();
         resultIntent.putExtra(COMMAND, command);
         setResult(RESULT_OK, resultIntent);
@@ -195,12 +202,45 @@ public class MainSettingsActivity extends AppCompatActivity {
         runCommand(command);
     }
 
+    private void runMicTypeCommand() {
+        String type = getValue(binding.micTypeEt.getText());
+        if (type.isEmpty()) {
+            Helper.showSnack(binding.coordinator, "You must enter a mic type to set!");
+            return;
+        }
+        String command = String.format(Locale.ENGLISH, "%ssettype", type);
+        runCommand(command);
+    }
+
+    private void runMicGainCommand() {
+        int gain = micGain.intValue;
+        String command = String.format(Locale.ENGLISH, "%dsetgain", gain);
+        runCommand(command);
+    }
+
+    private void runRecordingCommand() {
+        Editable editable = binding.elocBtNameEt.getText();
+        if (editable != null) {
+            gLocation = editable.toString().trim();
+        }
+        if (gLocation.isEmpty()) {
+            Helper.showSnack(binding.coordinator, "ELOC BT name is required!");
+            return;
+        } else if (!gLocation.matches(gPattern)) {
+            Helper.showSnack(binding.coordinator, "Invalid ELOC BT name!");
+            return;
+        }
+
+        String command = "#settings" + "#" + gSamplesPerSec + "#" + gSecondsPerFile + "#" + gLocation;
+        runCommand(command);
+    }
+
     private String getValue(Editable editable) {
         String val = "";
         if (editable != null) {
             val = editable.toString().trim();
         }
-        return  val;
+        return val;
     }
 
     private void update() {
@@ -234,8 +274,8 @@ public class MainSettingsActivity extends AppCompatActivity {
         // generates a command.
 
         String command = "#settings" + "#" + gSamplesPerSec + "#" + gSecondsPerFile + "#" + gLocation;
-        String micGainCommand =String.format(Locale.ENGLISH, "%dsetgain", micGain.intValue);
-        String micTypeCommand =String.format(Locale.ENGLISH, "%ssettype", micGain.intValue);
+        String micGainCommand = String.format(Locale.ENGLISH, "%dsetgain", micGain.intValue);
+        String micTypeCommand = String.format(Locale.ENGLISH, "%ssettype", micGain.intValue);
         Intent resultIntent = new Intent();
         resultIntent.putExtra(COMMAND, command);
         setResult(RESULT_OK, resultIntent);

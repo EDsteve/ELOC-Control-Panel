@@ -726,10 +726,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 if (l.startsWith("Ranger:")) {
                     String rangerName = l.replace("Ranger:", "").trim();
                     binding.rangerNameTv.setText(rangerName);
-                } else if (l.startsWith("!0!")) {
-                    String deviceName = l.replace("!0!", "").trim();
-                    binding.elocTv.setText(deviceName);
-
+                //} else if (l.startsWith("!0!")) {
+                 //   String deviceName = l.replace("!0!", "").trim();
                 } else if (l.startsWith("!1!")) {
                     String firmware = l.replace("!1!", "").trim();
                     binding.firmwareValueTv.setText(firmware);
@@ -760,6 +758,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     }
                 } else if (l.startsWith("!3!")) {
                     btName = l.replace("!3!", "").trim();
+                    binding.elocTv.setText(btName);
                 } else if (l.startsWith("!4!")) {
                     String uptime = l.replace("!4!", "").trim();
                     setTime(binding.uptimeValueTv, uptime);
@@ -865,6 +864,9 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         } else {
             setDeviceInfo(msg);
         }
+
+
+         // which is the old project, before I started working in it.
 
         //if (true) return;
         //RadioButton b = (RadioButton) findViewById(R.id.option1);

@@ -10,19 +10,19 @@
         android:id="@+id/appbar"
         layout="@layout/layout_appbar" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="?actionBarSize"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:padding="16dp"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/command_line_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardCornerRadius="8dp"
-            app:contentPadding="8dp" android:id="@+id/command_line_card"
-            app:layout_constraintTop_toTopOf="parent">
+            app:contentPadding="8dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -33,8 +33,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="4dp"
-                    android:orientation="horizontal"
-                    app:layout_constraintTop_toTopOf="parent">
+                    android:orientation="horizontal">
 
                     <TextView
                         android:layout_width="0dp"
@@ -44,10 +43,12 @@
                         android:textAllCaps="true"
                         android:textStyle="bold" />
 
-                    <TextView android:layout_marginHorizontal="8dp"
+                    <TextView
+                        android:id="@+id/command_line_btn"
                         android:layout_width="wrap_content"
                         android:layout_height="24dp"
-                        android:gravity="center" android:id="@+id/command_line_btn"
+                        android:layout_marginHorizontal="8dp"
+                        android:gravity="center"
                         android:text="@string/run"
                         android:textAlignment="center"
                         android:textAllCaps="true"
@@ -59,7 +60,7 @@
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Command">
+                    android:hint="@string/command">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/filename_et"
@@ -74,293 +75,399 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <View
-            android:id="@+id/divider1"
-            android:layout_width="match_parent"
-            android:layout_height="4dp"
-            android:layout_marginVertical="8dp"
-            android:background="#535353"
-            app:layout_constraintTop_toBottomOf="@id/command_line_card" />
-
-        <LinearLayout
-            android:id="@+id/eloc_bt_name_ll"
+        <androidx.cardview.widget.CardView
+            android:id="@+id/fileheader_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/divider1">
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="8dp"
+            app:contentPadding="8dp">
 
-            <TextView
-                android:id="@+id/eloc_bt_name_tv"
-                android:layout_width="120dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="end"
-                android:labelFor="@id/eloc_bt_name_et"
-                android:text="@string/eloc_bt_name"
-                android:textAlignment="textEnd" />
+                android:orientation="vertical">
 
-            <View
-                android:layout_width="8dp"
-                android:layout_height="0dp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:orientation="horizontal">
 
-            <EditText
-                android:id="@+id/eloc_bt_name_et"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:imeOptions="actionNext"
-                android:importantForAutofill="no"
-                android:inputType="text"
-                tools:text="ELOC BT name" />
-        </LinearLayout>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/file_header"
+                        android:textAllCaps="true"
+                        android:textStyle="bold" />
 
-        <View
-            android:id="@+id/divider2"
-            android:layout_width="match_parent"
-            android:layout_height="4dp"
-            android:layout_marginVertical="8dp"
-            android:background="#535353"
-            app:layout_constraintTop_toBottomOf="@id/eloc_bt_name_ll" />
+                    <TextView
+                        android:id="@+id/fileheader_btn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="24dp"
+                        android:layout_marginHorizontal="8dp"
+                        android:gravity="center"
+                        android:text="@string/run"
+                        android:textAlignment="center"
+                        android:textAllCaps="true"
+                        app:drawableStartCompat="@drawable/run" />
 
-        <LinearLayout
-            android:id="@+id/mic_type_ll"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/divider2">
+                </LinearLayout>
 
-            <TextView
-                android:layout_width="120dp"
-                android:layout_height="wrap_content"
-                android:gravity="end"
-                android:labelFor="@id/eloc_bt_name_et"
-                android:text="@string/microphone_type_colon"
-                android:textAlignment="textEnd" />
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/file_header_name">
 
-            <View
-                android:layout_width="8dp"
-                android:layout_height="0dp" />
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/fileheader_et"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:imeOptions="actionNext"
+                        android:importantForAutofill="no"
+                        android:inputType="text"
+                        tools:text="ELOC18" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
-            <EditText
-                android:id="@+id/mic_type_et"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:imeOptions="actionDone"
-                android:importantForAutofill="no"
-                android:inputType="text"
-                tools:text="Mic type" />
-        </LinearLayout>
-
-        <View
-            android:id="@+id/divider3"
-            android:layout_width="match_parent"
-            android:layout_height="4dp"
-            android:layout_marginVertical="8dp"
-            android:background="#535353"
-            app:layout_constraintTop_toBottomOf="@id/mic_type_ll" />
-
-        <TextView
-            android:id="@+id/sample_rate_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/sample_rate"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/divider3" />
-
-        <RadioGroup
-            android:id="@+id/radioGroupSamplesPerSec"
+        <androidx.cardview.widget.CardView
+            android:id="@+id/recording_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/sample_rate_tv">
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="8dp"
+            app:contentPadding="8dp">
 
-            <RadioButton
-                android:id="@+id/rad44k"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/_44k"
-                android:textColor="#B0FFFFFF"
-                tools:checked="true" />
+                android:orientation="vertical">
 
-            <RadioButton
-                android:id="@+id/rad32k"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/_32k"
-                android:textColor="#B0FFFFFF" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:orientation="horizontal">
 
-            <RadioButton
-                android:id="@+id/rad22k"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/_22k"
-                android:textColor="#B0FFFFFF" />
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/recording"
+                        android:textAllCaps="true"
+                        android:textStyle="bold" />
 
-            <RadioButton
-                android:id="@+id/rad16k"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/_16k"
-                android:textColor="#B0FFFFFF" />
+                    <TextView
+                        android:id="@+id/recording_btn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="24dp"
+                        android:layout_marginHorizontal="8dp"
+                        android:gravity="center"
+                        android:text="@string/run"
+                        android:textAlignment="center"
+                        android:textAllCaps="true"
+                        app:drawableStartCompat="@drawable/run" />
 
-            <RadioButton
-                android:id="@+id/rad8k"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/_8k"
-                android:textColor="#B0FFFFFF" />
-        </RadioGroup>
+                </LinearLayout>
 
-        <View
-            android:id="@+id/divider4"
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/eloc_bt_name">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/eloc_bt_name_et"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:imeOptions="actionNext"
+                        android:importantForAutofill="no"
+                        android:inputType="text"
+                        tools:text="ELOC18" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView
+                    android:id="@+id/sample_rate_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/sample_rate" />
+
+                <RadioGroup
+                    android:id="@+id/radioGroupSamplesPerSec"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/rad44k"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/_44k"
+                        android:textColor="#B0FFFFFF"
+                        tools:checked="true" />
+
+                    <RadioButton
+                        android:id="@+id/rad32k"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/_32k"
+                        android:textColor="#B0FFFFFF" />
+
+                    <RadioButton
+                        android:id="@+id/rad22k"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/_22k"
+                        android:textColor="#B0FFFFFF" />
+
+                    <RadioButton
+                        android:id="@+id/rad16k"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/_16k"
+                        android:textColor="#B0FFFFFF" />
+
+                    <RadioButton
+                        android:id="@+id/rad8k"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/_8k"
+                        android:textColor="#B0FFFFFF" />
+                </RadioGroup>
+
+                <TextView
+                    android:id="@+id/recording_time_per_file_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/recording_time_per_file" />
+
+                <RadioGroup
+                    android:id="@+id/radioGroupSecPerFile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/rad12h"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/_12h"
+                        android:textColor="#B5FFFFFF" />
+
+                    <RadioButton
+                        android:id="@+id/rad4h"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/_4h"
+                        android:textColor="#B5FFFFFF" />
+
+                    <RadioButton
+                        android:id="@+id/rad1h"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/_1h"
+                        android:textColor="#B5FFFFFF" />
+
+                    <RadioButton
+                        android:id="@+id/rad1m"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/_1m"
+                        android:textColor="#B5FFFFFF"
+                        tools:checked="true" />
+
+
+                    <RadioButton
+                        android:id="@+id/rad10s"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/_10s"
+                        android:textColor="#B5FFFFFF" />
+
+                </RadioGroup>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/microphone_type_card"
             android:layout_width="match_parent"
-            android:layout_height="4dp"
-            android:layout_marginVertical="8dp"
-            android:background="#535353"
-            app:layout_constraintTop_toBottomOf="@id/radioGroupSamplesPerSec" />
-
-        <TextView
-            android:id="@+id/recording_time_per_file_tv"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/recording_time_per_file"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/divider4" />
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="8dp"
+            app:contentPadding="8dp">
 
-        <RadioGroup
-            android:id="@+id/radioGroupSecPerFile"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/microphone_type"
+                        android:textAllCaps="true"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/microphone_type_btn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="24dp"
+                        android:layout_marginHorizontal="8dp"
+                        android:gravity="center"
+                        android:text="@string/run"
+                        android:textAlignment="center"
+                        android:textAllCaps="true"
+                        app:drawableStartCompat="@drawable/run" />
+
+                </LinearLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/microphone_type">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/mic_type_et"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:imeOptions="actionNext"
+                        android:importantForAutofill="no"
+                        android:inputType="text"
+                        tools:text="ns" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/microphone_gain_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/recording_time_per_file_tv">
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="8dp"
+            app:contentPadding="8dp">
 
-            <RadioButton
-                android:id="@+id/rad12h"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/_12h"
-                android:textColor="#B5FFFFFF" />
+                android:orientation="vertical">
 
-            <RadioButton
-                android:id="@+id/rad4h"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/_4h"
-                android:textColor="#B5FFFFFF" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:orientation="horizontal">
 
-            <RadioButton
-                android:id="@+id/rad1h"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/_1h"
-                android:textColor="#B5FFFFFF" />
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/microphone_gain"
+                        android:textAllCaps="true"
+                        android:textStyle="bold" />
 
-            <RadioButton
-                android:id="@+id/rad1m"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/_1m"
-                android:textColor="#B5FFFFFF"
-                tools:checked="true" />
+                    <TextView
+                        android:id="@+id/microphone_gain_btn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="24dp"
+                        android:layout_marginHorizontal="8dp"
+                        android:gravity="center"
+                        android:text="@string/run"
+                        android:textAlignment="center"
+                        android:textAllCaps="true"
+                        app:drawableStartCompat="@drawable/run" />
 
+                </LinearLayout>
 
-            <RadioButton
-                android:id="@+id/rad10s"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/_10s"
-                android:textColor="#B5FFFFFF" />
+                <RadioGroup
+                    android:id="@+id/radioGroupGain"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
-        </RadioGroup>
+                    <RadioButton
+                        android:id="@+id/radHigh"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/high"
+                        android:textColor="#B5FFFFFF" />
 
-        <View
-            android:id="@+id/divider5"
-            android:layout_width="match_parent"
-            android:layout_height="4dp"
-            android:layout_marginVertical="8dp"
-            android:background="#535353"
-            app:layout_constraintTop_toBottomOf="@id/radioGroupSecPerFile" />
+                    <RadioButton
+                        android:id="@+id/radLow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/low"
+                        android:textColor="#B5FFFFFF" />
 
-        <TextView
-            android:id="@+id/gain_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/gain"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/divider5" />
+                </RadioGroup>
 
-        <RadioGroup
-            android:id="@+id/radioGroupGain"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/gain_tv">
-
-            <RadioButton
-                android:id="@+id/radHigh"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/high"
-                android:textColor="#B5FFFFFF" />
-
-            <RadioButton
-                android:id="@+id/radLow"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/low"
-                android:textColor="#B5FFFFFF" />
-
-        </RadioGroup>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
         <View
             android:id="@+id/divider6"
             android:layout_width="match_parent"
             android:layout_height="4dp"
             android:layout_marginVertical="8dp"
-            android:background="#535353"
-            app:layout_constraintTop_toBottomOf="@id/radioGroupGain" />
+            android:background="#535353" />
 
-        <ToggleButton
-            android:id="@+id/bt_state_btn"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/bluetooth_state_when_recording"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/divider6" />
+            android:gravity="center"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/bt_recording_state_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/bluetooth_state_when_recording"
-            app:layout_constraintBottom_toBottomOf="@id/bt_state_btn"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/bt_state_btn" />
+            <TextView
+                android:id="@+id/bt_recording_state_tv"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" android:layout_gravity="center"
+                android:text="@string/bluetooth_state_when_recording" />
+
+            <ToggleButton
+                android:id="@+id/bt_state_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/bluetooth_state_when_recording" />
+
+        </LinearLayout>
 
         <View
             android:id="@+id/divider7"
             android:layout_width="match_parent"
             android:layout_height="4dp"
             android:layout_marginVertical="8dp"
-            android:background="#535353"
-            app:layout_constraintTop_toBottomOf="@id/bt_state_btn" />
+            android:background="#535353" />
 
         <TextView
             android:id="@+id/update_btn"
@@ -373,28 +480,9 @@
             android:gravity="center_vertical"
             android:text="@string/update_reboot_upgrade_firmware"
             android:textAllCaps="true"
-            android:textColor="#D65757"
-            app:layout_constraintTop_toBottomOf="@id/divider7" />
+            android:textColor="#D65757" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
-    <TextView
-        android:id="@+id/updateSettingsButton"
-        android:layout_width="match_parent"
-        android:layout_height="?actionBarSize"
-        android:layout_gravity="bottom"
-        android:layout_weight="0.2"
-        android:background="@color/on_color"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:text="@string/update_settings"
-        android:textAlignment="center"
-        android:textAllCaps="true"
-        android:textColor="#fff"
-        android:textSize="25sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
