@@ -698,9 +698,9 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         double millisPerHour = 1000 * 3600;
         double hoursSinceLastSync = (System.currentTimeMillis() - lastGoogleTimestamp) / millisPerHour;
         binding.timeSyncValueTv.setText(String.format(Locale.ENGLISH, "%.2f h", hoursSinceLastSync));
-        int syncColor = greenColor;
+        int syncColor = redColor;
         if (hoursSinceLastSync < 48) {
-            syncColor = redColor;
+            syncColor = greenColor;
         }
         binding.timeSyncValueTv.setTextColor(syncColor);
         msg = msg.replace("_@b$_", rangerName);
@@ -817,7 +817,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 } else if (l.startsWith("!15!")) {
                     String gpsAccuracyString = l
                             .replace("!15!", "")
-                            .replace("m", "")
+                            .replace(" m", "")
                             .trim();
                     Double accuracy = parseDouble(gpsAccuracyString);
                     String prettyAccuracy = "Unknown";
