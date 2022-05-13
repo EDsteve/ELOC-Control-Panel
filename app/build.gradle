@@ -8,7 +8,7 @@ android {
         vectorDrawables.useSupportLibrary true
 
         applicationId "de.eloc.eloc_control_panel"
-        versionCode 4
+        versionCode 6
         versionName '4'
         versionNameSuffix 'AppBeta'
     }
