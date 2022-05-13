@@ -209,6 +209,10 @@ public class MainSettingsActivity extends AppCompatActivity {
             Helper.showSnack(binding.coordinator, "You must enter a Device Name!");
             return;
         }
+        String suffix = "setname";
+        if (!command.endsWith(suffix)) {
+            command = command + suffix;
+        }
         runCommand(command);
     }
 

@@ -119,15 +119,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="4dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/ranger_name_tv" />
 
                 <TextView
                     android:id="@+id/sd_card_title_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginHorizontal="20dp"
+                    android:layout_marginTop="4dp"
                     android:text="@string/sd_card"
                     android:textSize="22sp"
                     app:layout_constraintStart_toStartOf="parent"
@@ -175,15 +175,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/sd_card_desc_tv" />
 
                 <TextView
                     android:id="@+id/battery_title_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginHorizontal="20dp"
+                    android:layout_marginTop="4dp"
                     android:text="@string/battery_level"
                     android:textSize="22sp"
                     app:layout_constraintStart_toStartOf="parent"
@@ -214,15 +214,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/battery_desc_tv" />
 
                 <TextView
                     android:id="@+id/gps_title_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginHorizontal="20dp"
+                    android:layout_marginTop="4dp"
                     android:text="@string/gps_location"
                     android:textSize="22sp"
                     app:layout_constraintStart_toStartOf="parent"
@@ -253,7 +253,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/gps_desc_tv" />
 
                 <TextView
@@ -261,8 +261,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="4dp"
                     android:text="@string/recording"
                     android:textSize="22sp"
                     app:layout_constraintStart_toStartOf="parent"
@@ -293,15 +293,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/recording_desc_tv" />
 
                 <TextView
                     android:id="@+id/time_sync_title_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginHorizontal="20dp"
+                    android:layout_marginTop="4dp"
                     android:text="@string/last_time_sync"
                     android:textSize="22sp"
                     app:layout_constraintStart_toStartOf="parent"
@@ -332,7 +332,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/time_sync_desc_tv" />
 
                 <TextView
@@ -354,14 +354,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="4dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/settings_title" />
 
                 <TextView
                     android:id="@+id/sample_rate_title_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginHorizontal="20dp"
                     android:layout_marginTop="8dp"
                     android:text="@string/sample_rate"
                     android:textSize="20sp"
@@ -384,14 +384,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/sample_rate_value_tv" />
 
                 <TextView
                     android:id="@+id/hours_per_file_title_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginHorizontal="20dp"
                     android:layout_marginTop="8dp"
                     android:text="@string/hours_per_file"
                     android:textSize="20sp"
@@ -414,14 +414,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/hours_per_file_value_tv" />
 
                 <TextView
                     android:id="@+id/gain_title_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginHorizontal="20dp"
                     android:layout_marginTop="8dp"
                     android:text="@string/gain"
                     android:textSize="20sp"
@@ -444,7 +444,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/gain_value_tv" />
 
                 <TextView
@@ -466,7 +466,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="4dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/misc" />
 
                 <TextView
@@ -474,7 +474,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="20dp"
                     android:layout_marginTop="8dp"
                     android:text="@string/last_gps_accuracy"
                     android:textSize="20sp"
@@ -497,7 +497,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/last_accuracy_value_tv" />
 
                 <TextView
@@ -506,6 +506,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
                     android:layout_marginTop="8dp"
+                    android:layout_marginStart="20dp"
                     android:text="@string/uptime"
                     android:textSize="20sp"
                     app:layout_constraintStart_toStartOf="parent"
@@ -527,7 +528,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/uptime_value_tv" />
 
                 <TextView
@@ -535,7 +536,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="20dp"
                     android:layout_marginTop="8dp"
                     android:text="@string/rec_time_since_boot"
                     android:textSize="20sp"
@@ -558,7 +559,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/recording_boot_value_tv" />
 
                 <TextView
@@ -566,7 +567,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="20dp"
                     android:layout_marginTop="8dp"
                     android:text="@string/bluetooth_recording"
                     android:textSize="20sp"
@@ -589,7 +590,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/bt_recording_value_tv" />
 
                 <TextView
@@ -597,7 +598,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="20dp"
                     android:layout_marginTop="8dp"
                     android:text="@string/microphone_type"
                     android:textSize="20sp"
@@ -620,7 +621,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/microphone_value_tv" />
 
                 <TextView
@@ -628,7 +629,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="20dp"
                     android:layout_marginTop="8dp"
                     android:text="@string/last_gps_location"
                     android:textSize="20sp"
@@ -651,7 +652,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/last_location_value_tv" />
 
                 <TextView
@@ -659,7 +660,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="20dp"
                     android:layout_marginTop="8dp"
                     android:text="@string/battery_voltage"
                     android:textSize="20sp"
@@ -682,7 +683,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/battery_voltage_value_tv" />
 
                 <TextView
@@ -691,6 +692,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
                     android:layout_marginTop="8dp"
+                    android:layout_marginStart="20dp"
                     android:text="@string/firmware"
                     android:textSize="20sp"
                     app:layout_constraintStart_toStartOf="parent"
@@ -713,7 +715,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginVertical="8dp"
-                    android:background="#535353"
+                    android:background="#1B1B1B"
                     app:layout_constraintTop_toBottomOf="@id/firmware_title_tv" />
 
 

@@ -9,7 +9,7 @@ android {
         applicationId "de.eloc.eloc_control_panel"
         minSdk 16
         targetSdk 32
-        versionCode 6
+        versionCode 8
         versionName '4'
         versionNameSuffix 'AppBeta'
     }
