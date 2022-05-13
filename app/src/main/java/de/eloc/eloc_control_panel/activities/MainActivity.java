@@ -312,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
         bluetoothAdapter.cancelDiscovery();
 
 
-        Intent intent = new Intent(this, DeviceActivity.class);
+        Intent intent = new Intent(this, TerminalActivity.class);
         intent.putExtra("device", address);
         startActivity(intent);
 

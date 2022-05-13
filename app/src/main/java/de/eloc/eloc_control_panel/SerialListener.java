@@ -1,6 +1,6 @@
 package de.eloc.eloc_control_panel;
 
-interface SerialListener {
+public interface SerialListener {
     void onSerialConnect      ();
     void onSerialConnectError (Exception e);
     void onSerialRead         (byte[] data);

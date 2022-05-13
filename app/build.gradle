@@ -1,13 +1,14 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+}
 
 android {
-    compileSdkVersion 32
-    defaultConfig {
-        targetSdk 32
-        minSdkVersion 18
-        vectorDrawables.useSupportLibrary true
+    compileSdk 32
 
+    defaultConfig {
         applicationId "de.eloc.eloc_control_panel"
+        minSdk 16
+        targetSdk 32
         versionCode 6
         versionName '4'
         versionNameSuffix 'AppBeta'
@@ -17,21 +18,21 @@ android {
         viewBinding true
     }
 
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
-    buildToolsVersion '32.0.0'
 }
 
 dependencies {
+
     implementation 'androidx.appcompat:appcompat:1.4.1'
-    implementation 'com.google.android.material:material:1.5.0'
+    implementation 'com.google.android.material:material:1.6.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
 }
