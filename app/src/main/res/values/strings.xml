@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">ELOC Control Panel</string>
     <string name="devices">ELOC Devices</string>
+    <string name="device_name">Device Name</string>
     <string name="status">Status</string>
     <string name="ranger">Ranger:</string>
     <string name="sd_card">SD Card</string>

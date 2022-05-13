@@ -180,10 +180,11 @@ public class MainSettingsActivity extends AppCompatActivity {
         binding.recordingBtn.setOnClickListener(view -> runRecordingCommand());
         binding.microphoneTypeBtn.setOnClickListener(view -> runMicTypeCommand());
         binding.microphoneGainBtn.setOnClickListener(view -> runMicGainCommand());
+        binding.fileheaderBtn.setOnClickListener(view -> runFileHeaderCommand());
     }
 
     private void runCommand(String command) {
-        hideKeyboard();
+        Helper.hideKeyboard(this);
         if (!command.startsWith("#settings#")) {
             command = "#settings#" + command; // This should make it easy to enter showrt commands without the prefix.
         }
@@ -194,9 +195,18 @@ public class MainSettingsActivity extends AppCompatActivity {
     }
 
     private void runCommandLine() {
-        String command = getValue(binding.filenameEt.getText());
+        String command = getValue(binding.customCommandEt.getText());
         if (command.isEmpty()) {
             Helper.showSnack(binding.coordinator, "You must enter a command to run!");
+            return;
+        }
+        runCommand(command);
+    }
+
+    private void runFileHeaderCommand() {
+        String command = getValue(binding.fileheaderEt.getText());
+        if (command.isEmpty()) {
+            Helper.showSnack(binding.coordinator, "You must enter a Device Name!");
             return;
         }
         runCommand(command);
@@ -224,10 +234,10 @@ public class MainSettingsActivity extends AppCompatActivity {
             gLocation = editable.toString().trim();
         }
         if (gLocation.isEmpty()) {
-            Helper.showSnack(binding.coordinator, "ELOC BT name is required!");
+            Helper.showSnack(binding.coordinator, "File header name is required!");
             return;
         } else if (!gLocation.matches(gPattern)) {
-            Helper.showSnack(binding.coordinator, "Invalid ELOC BT name!");
+            Helper.showSnack(binding.coordinator, "Invalid file header name!");
             return;
         }
 
@@ -241,58 +251,6 @@ public class MainSettingsActivity extends AppCompatActivity {
             val = editable.toString().trim();
         }
         return val;
-    }
-
-    private void update() {
-        Editable editable = binding.elocBtNameEt.getText();
-        if (editable != null) {
-            gLocation = editable.toString().trim();
-        }
-        if (!gLocation.matches(gPattern)) {
-            Helper.showSnack(binding.coordinator, "Invalid filename!");
-            return;
-        }
-
-        editable = binding.micTypeEt.getText();
-        if (editable != null) {
-            micType = editable.toString().trim();
-        }
-
-        // Validate text input
-        if (gLocation.isEmpty()) {
-            Helper.showSnack(binding.coordinator, "ELOC BT name is required!");
-            return;
-        } else if (micType.isEmpty()) {
-            Helper.showSnack(binding.coordinator, "Microphone type is required!");
-            return;
-        }
-
-        //marker
-        hideKeyboard();
-
-        // We can have multiple commands, so I will split the functionality of update button to each section that
-        // generates a command.
-
-        String command = "#settings" + "#" + gSamplesPerSec + "#" + gSecondsPerFile + "#" + gLocation;
-        String micGainCommand = String.format(Locale.ENGLISH, "%dsetgain", micGain.intValue);
-        String micTypeCommand = String.format(Locale.ENGLISH, "%ssettype", micGain.intValue);
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra(COMMAND, command);
-        setResult(RESULT_OK, resultIntent);
-        finish();
-    }
-
-    private void hideKeyboard() {
-        InputMethodManager manager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-        if (manager != null) {
-            View view = getCurrentFocus();
-            if (view != null) {
-                IBinder binder = getCurrentFocus().getWindowToken();
-                if (binder != null) {
-                    manager.hideSoftInputFromWindow(binder, 0);
-                }
-            }
-        }
     }
 
     public void samplesPeSecChanged(RadioGroup group, int checkedId) {

@@ -62,6 +62,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         Ready,
     }
 
+    final String gVersion = "AppBeta3.2";
     public ActivityResultLauncher<Intent> settingsLauncher;
     private String deviceAddress = "<no address>";
     private SerialService service;
@@ -131,7 +132,6 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         receiveText.setTextColor(getResources().getColor(R.color.colorRecieveText)); // set as default color to reduce number of spans
         receiveText.setMovementMethod(ScrollingMovementMethod.getInstance());
         //marker
-        String gVersion = "AppBeta3.2";
         appendReceiveText("\nEloc App version: " + gVersion + "\n");
 
         startLocation();
@@ -381,14 +381,70 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         }
     }
 
-    private void writeToFile(String data, String filename, Context context) {
+    private void writeToFile(String data) {
+
+        data = data.replace("statusupdate", "----STATUS----")
+                .replace("_@b$_", rangerName)
+                .replace("!0!", "Device Name:  ")
+                .replace("!1!", "Firmware:  ")
+                .replace("!2!", "Battery volts:  ")
+                .replace("!3!", "File header:  ")
+                .replace("!4!", "Up Time Since Boot:  ")
+                .replace("!5!", "Record Time Since Boot:  ")
+                .replace("!6!", "Current Record Time:  ")
+                .replace("!7!", "Recording?:  ")
+                .replace("!8!", "Bluetooth Record?:  ")
+                .replace("!9!", "Sample Rate:  ")
+                .replace("!10!", "Seconds Per File:  ")
+                .replace("!11!", "SD Card Free GB:  ")
+                .replace("!12!", "Microphone Type:  ")
+                .replace("!13!", "Microphone Gain:  ")
+                .replace("!14!", "Last GPS Location:  ")
+                .replace("!15!", "Last GPS Accuracy:  ");
+
+        SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
+        long lastGoogleTimestamp = Long.parseLong(mPrefs.getString("lastGoogleTimestamp", "0"));
+        data = data.trim() + "\nApp last time sync:  " + Long.toString(((System.currentTimeMillis() - lastGoogleTimestamp) / 1000l / 60l)) + " min\n";
+        data = data + "App Version:  " + gVersion;
+
+
+        //msg=top+msg;
+
+        //receiveText.setText("");
+        //status(msg);
+        receiveText.setText(spanWhite(data.trim()));
+
+        receiveText.post(new Runnable() { //always first  one fails
+
+            public void run() {
+                receiveText.scrollTo(0, 0);
+            }
+        });
+
+        //String lines[] = msg.split("\\r?\\n");
+        String temp = deviceAddress.replace(":", "-");
+        String filename = temp + ".txt";
+
+        File test = getFilesDir();
+        //getAbsolutePath()
+        Log.i("elocApp", "file written   " + test.getAbsolutePath() + filename);
+        //Log.i("elocApp", msg);
+
+
         try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(filename, Context.MODE_PRIVATE));
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(openFileOutput(filename, Context.MODE_PRIVATE));
             outputStreamWriter.write(data);
             outputStreamWriter.close();
         } catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
         }
+    }
+
+    private SpannableStringBuilder spanWhite(String str) {
+        SpannableStringBuilder spn = new SpannableStringBuilder(str + '\n');
+        spn.setSpan(new ForegroundColorSpan(getResources().getColor(android.R.color.white)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        //receiveText.append(spn);
+        return (spn);
     }
 
     private void setDeviceInfo(String msg) {
@@ -403,19 +459,16 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             syncColor = greenColor;
         }
         binding.timeSyncValueTv.setTextColor(syncColor);
+
+
         msg = msg.replace("_@b$_", rangerName);
-        String temp = deviceAddress.replace(":", "-");
-        String filename = temp + ".txt";
-        writeToFile(msg, filename, this);
-        File test = getFilesDir();
-        //getAbsolutePath()
-        Log.i("elocApp", "file written   " + test.getAbsolutePath() + filename);
-        //Log.i("elocApp", msg);
+
+        writeToFile(msg);
 
         // Set data from bt device
         String[] lines = getStatusLines(msg);
 
-        String btName = null;
+        String fileHeader = null;
         String sampleRate = null;
         String secondsString = null;
         String micGain = null;
@@ -426,8 +479,9 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                 if (l.startsWith("Ranger:")) {
                     String rangerName = l.replace("Ranger:", "").trim();
                     binding.rangerNameTv.setText(rangerName);
-                    //} else if (l.startsWith("!0!")) {
-                    //   String deviceName = l.replace("!0!", "").trim();
+                } else if (l.startsWith("!0!")) {
+                    String deviceName = l.replace("!0!", "").trim();
+                    binding.elocTv.setText(deviceName);
                 } else if (l.startsWith("!1!")) {
                     String firmware = l.replace("!1!", "").trim();
                     binding.firmwareValueTv.setText(firmware);
@@ -457,8 +511,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                         binding.batteryVoltageValueTv.setText(parts[0].trim());
                     }
                 } else if (l.startsWith("!3!")) {
-                    btName = l.replace("!3!", "").trim();
-                    binding.elocTv.setText(btName);
+                    fileHeader = l.replace("!3!", "").trim();
                 } else if (l.startsWith("!4!")) {
                     String uptime = l.replace("!4!", "").trim();
                     setTime(binding.uptimeValueTv, uptime);
@@ -533,11 +586,11 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                     }
                     binding.lastAccuracyValueTv.setText(prettyAccuracy);
                 }
-                if ((btName != null) && (sampleRate != null) && (secondsString != null)) {
+                if ((fileHeader != null) && (sampleRate != null) && (secondsString != null)) {
                     String settings = String.format(
                             Locale.ENGLISH,
                             "#%s#%s#%s",
-                            sampleRate, secondsString, btName);
+                            sampleRate, secondsString, fileHeader);
                     saveSettings(MainSettingsActivity.DATA_KEY, settings);
                 }
                 if ((micGain != null) && (micType != null)) {

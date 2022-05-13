@@ -162,12 +162,7 @@ public class TerminalFragment extends Fragment  {
 
 
 
-    private SpannableStringBuilder spanWhite(String str) {
-        SpannableStringBuilder spn = new SpannableStringBuilder(str + '\n');
-        spn.setSpan(new ForegroundColorSpan(getResources().getColor(android.R.color.white)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        //receiveText.append(spn);
-        return (spn);
-    }
+
 
 
 
