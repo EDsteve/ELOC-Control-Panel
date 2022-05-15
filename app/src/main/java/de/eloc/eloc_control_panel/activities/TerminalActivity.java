@@ -383,6 +383,10 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void writeToFile(String data) {
 
+        boolean hasInfo = data.contains("!0!");
+        if (!hasInfo) {
+            return;
+        }
         data = data.replace("statusupdate", "----STATUS----")
                 .replace("_@b$_", rangerName)
                 .replace("!0!", "Device Name:  ")
@@ -414,8 +418,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         //status(msg);
         receiveText.setText(spanWhite(data.trim()));
 
-        receiveText.post(new Runnable() { //always first  one fails
-
+        receiveText.post(new Runnable() { //always first one fails
             public void run() {
                 receiveText.scrollTo(0, 0);
             }
@@ -533,7 +536,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                     String recordingTime = l.replace("!8!", "").toUpperCase().trim();
                     boolean hasTime = recordingTime.contains(":") || (!recordingTime.toLowerCase().contains("on"));
                     binding.btRecordingValueTv.setText(recordingTime);
-                    binding.btRecordingValueTv.setTextColor(hasTime ? greenColor : redColor);
+                    //binding.btRecordingValueTv.setTextColor(hasTime ? greenColor : redColor);
                 } else if (l.startsWith("!9!")) {
                     sampleRate = l.replace("!9!", "").trim();
                     Double rate = parseDouble(sampleRate);
@@ -563,6 +566,12 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                     binding.microphoneValueTv.setText(micType);
                 } else if (l.startsWith("!13!")) {
                     micGain = l.replace("!13!", "").trim();
+                    if (micGain == "11") {
+                        micGain = "HIGH";
+                    }
+                    if (micGain == "14") {
+                        micGain = "LOW";
+                    }
                     binding.gainValueTv.setText(micGain);
                 } else if (l.startsWith("!14!")) {
                     String location = l.replace("!14!", "").trim();

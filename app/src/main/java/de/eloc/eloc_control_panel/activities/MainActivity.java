@@ -202,13 +202,10 @@ public class MainActivity extends AppCompatActivity {
                         //handle the case for multiple upd files.
 
 
-
-                        UploadFileAsync upload = new UploadFileAsync(this::showSnack);
-                        upload.filename = getFilesDir().getAbsolutePath() + "/" + filestring;
-                        upload.filesDir  = getFilesDir();
-                        //upload.filename
-                        Log.i("elocApp", "uploading   " + upload.filename);
-                        upload.execute(""); //test when this finished?
+                        UploadFileAsync upload = new UploadFileAsync();
+                        String  filename = getFilesDir().getAbsolutePath() + "/" + filestring;
+                        Log.i("elocApp", "uploading   " + filename);
+                        upload.run(filename, getFilesDir(), this::showSnack);
                     } else {
 //                        File temp = new File(getActivity().getFilesDir().getAbsolutePath() + "/" + filestring);
 //                        temp.delete();
