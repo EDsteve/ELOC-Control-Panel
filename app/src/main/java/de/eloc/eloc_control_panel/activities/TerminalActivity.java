@@ -566,10 +566,9 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                     binding.microphoneValueTv.setText(micType);
                 } else if (l.startsWith("!13!")) {
                     micGain = l.replace("!13!", "").trim();
-                    if (micGain == "11") {
+                    if ( "11".equals(micGain)) {
                         micGain = "HIGH";
-                    }
-                    if (micGain == "14") {
+                    } else if ("14".equals(micGain)) {
                         micGain = "LOW";
                     }
                     binding.gainValueTv.setText(micGain);
