@@ -404,8 +404,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                 .replace("!12!", "Microphone Type:  ")
                 .replace("!13!", "Microphone Gain:  ")
                 .replace("!14!", "Last GPS Location:  ")
-                .replace("!15!", "Last GPS Accuracy:  ");
-
+                .replace("!15!", "Last GPS Accuracy:  ")
+                .replace("!16!", "SessionID:  ");
         SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
         long lastGoogleTimestamp = Long.parseLong(mPrefs.getString("lastGoogleTimestamp", "0"));
         data = data.trim() + "\nApp last time sync:  " + Long.toString(((System.currentTimeMillis() - lastGoogleTimestamp) / 1000l / 60l)) + " min\n";
@@ -476,6 +476,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         String secondsString = null;
         String micGain = null;
         String micType = null;
+        String sessionID = null;
 
         if (lines.length > 0) { // got an update this time
             for (String l : lines) {
@@ -593,6 +594,10 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                         }
                     }
                     binding.lastAccuracyValueTv.setText(prettyAccuracy);
+                }
+                else if (l.startsWith("!16!")) {
+                    sessionID = l.replace("!16!", "").trim();
+                    binding.sessionIdValueTv.setText(sessionID);
                 }
                 if ((fileHeader != null) && (sampleRate != null) && (secondsString != null)) {
                     String settings = String.format(
