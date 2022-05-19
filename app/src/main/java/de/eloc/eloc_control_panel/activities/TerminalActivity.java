@@ -48,6 +48,7 @@ import de.eloc.eloc_control_panel.SerialSocket;
 import de.eloc.eloc_control_panel.SimpleLocation;
 import de.eloc.eloc_control_panel.TextUtil;
 import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
+import de.eloc.eloc_control_panel.BuildConfig;
 
 public class TerminalActivity extends AppCompatActivity implements ServiceConnection, SerialListener {
     private ActivityTerminalBinding binding;
@@ -61,8 +62,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         Stopping,
         Ready,
     }
-
-    final String gVersion = "AppBeta3.2";
+    final String gVersion = BuildConfig.VERSION_NAME;
+ //   final String gVersion = "AppBeta4.1";
     public ActivityResultLauncher<Intent> settingsLauncher;
     private String deviceAddress = "<no address>";
     private SerialService service;
@@ -392,7 +393,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                 .replace("!0!", "Device Name:  ")
                 .replace("!1!", "Firmware:  ")
                 .replace("!2!", "Battery volts:  ")
-                .replace("!3!", "File header:  ")
+                .replace("!3!", "Grid ID:  ")                       //Normally file header
                 .replace("!4!", "Up Time Since Boot:  ")
                 .replace("!5!", "Record Time Since Boot:  ")
                 .replace("!6!", "Current Record Time:  ")
@@ -405,7 +406,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                 .replace("!13!", "Microphone Gain:  ")
                 .replace("!14!", "Last GPS Location:  ")
                 .replace("!15!", "Last GPS Accuracy:  ")
-                .replace("!16!", "SessionID:  ");
+                .replace("!16!", "Session ID:  ");
         SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
         long lastGoogleTimestamp = Long.parseLong(mPrefs.getString("lastGoogleTimestamp", "0"));
         data = data.trim() + "\nApp last time sync:  " + Long.toString(((System.currentTimeMillis() - lastGoogleTimestamp) / 1000l / 60l)) + " min\n";
@@ -477,8 +478,10 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         String micGain = null;
         String micType = null;
         String sessionID = null;
+        Integer recON = 0;
 
         if (lines.length > 0) { // got an update this time
+            binding.appversionValueTv.setText(gVersion);
             for (String l : lines) {
                 if (l.startsWith("Ranger:")) {
                     String rangerName = l.replace("Ranger:", "").trim();
@@ -516,6 +519,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                     }
                 } else if (l.startsWith("!3!")) {
                     fileHeader = l.replace("!3!", "").trim();
+                    binding.fileHeaderNameValueTv.setText(fileHeader);
                 } else if (l.startsWith("!4!")) {
                     String uptime = l.replace("!4!", "").trim();
                     setTime(binding.uptimeValueTv, uptime);
@@ -528,8 +532,10 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                 } else if (l.startsWith("!7!")) {
                     if (l.contains("1")) {
                         updateDeviceState(DeviceState.Recording, null);
+                        recON = 1;
                     } else {
                         updateDeviceState(DeviceState.Ready, null);
+                        recON = 0;
                     }
                     updateRecordButton();
                     setRecordingTime();
@@ -596,8 +602,14 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                     binding.lastAccuracyValueTv.setText(prettyAccuracy);
                 }
                 else if (l.startsWith("!16!")) {
-                    sessionID = l.replace("!16!", "").trim();
-                    binding.sessionIdValueTv.setText(sessionID);
+                    if (recON == 0) {
+                        sessionID = "";
+                        binding.sessionIdValueTv.setText(sessionID);
+                    }
+                    else {
+                        sessionID = l.replace("!16!", "").trim();
+                        binding.sessionIdValueTv.setText(sessionID);
+                    }
                 }
                 if ((fileHeader != null) && (sampleRate != null) && (secondsString != null)) {
                     String settings = String.format(
@@ -858,7 +870,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     private void popUpRecord() {
         new AlertDialog.Builder(this)
                 .setTitle("")
-                .setMessage("Please wait for better GPS accuracy (< 8 m)")
+                .setMessage("Please wait for better GPS accuracy < 8 m")
                 .setPositiveButton("Record Anyway", (dialog, which) -> {
                     // do something here on OK
                     Log.i("elocApp", "clicked record");
