@@ -57,8 +57,10 @@
     <string name="run">Run</string>
     <string name="recording">Recording</string>
     <string name="file_header_name">File header name</string>
-    <string name="file_header">File header</string>
+    <string name="file_header">Grid ID</string>
     <string name="command">Command</string>
     <string name="microphone_type">Microphone type</string>
     <string name="microphone_gain">Microphone gain</string>
+    <string name="session_id">Session ID</string>
+    <string name="appversion">App Version</string>
 </resources>
