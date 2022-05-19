@@ -63,7 +63,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         Ready,
     }
     final String gVersion = BuildConfig.VERSION_NAME;
- //   final String gVersion = "AppBeta4.1";
+    //   final String gVersion = "AppBeta4.1";
     public ActivityResultLauncher<Intent> settingsLauncher;
     private String deviceAddress = "<no address>";
     private SerialService service;
