@@ -741,7 +741,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         long elapsedTimeDifferenceMS = (currentElapsedTime - previouselapsedtime);
         String X, Y, timestamp;
 
-        if ((lastGoogleTimestamp == 0L) || (elapsedTimeDifferenceMinutes > (48 * 60))) {
+        if (true || (lastGoogleTimestamp==0L)  || (elapsedTimeDifferenceMinutes>(48*60)))  {
             X = "P";
 
             Y = Long.toString(elapsedTimeDifferenceMinutes);
