@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/coordinator"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include
+        android:id="@+id/appbar"
+        layout="@layout/layout_appbar" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <LinearLayout
+            android:id="@+id/card_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/recording_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/cardview"
+                app:cardCornerRadius="8dp"
+                app:contentPadding="8dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/recording"
+                            android:textAllCaps="true"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/recording_btn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="24dp"
+                            android:layout_marginHorizontal="8dp"
+                            android:gravity="center"
+                            android:text="@string/run"
+                            android:textAlignment="center"
+                            android:textAllCaps="true"
+                            app:drawableStartCompat="@drawable/run" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/file_header_name">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/eloc_bt_name_et"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:imeOptions="actionNext"
+                            android:importantForAutofill="no"
+                            android:inputType="text"
+                            tools:text="ELOC18" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:id="@+id/sample_rate_tv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/sample_rate" />
+
+                    <RadioGroup
+                        android:id="@+id/radioGroupSamplesPerSec"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/rad44k"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/_44k"
+                            android:textColor="#B0FFFFFF"
+                            tools:checked="true" />
+
+                        <RadioButton
+                            android:id="@+id/rad32k"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/_32k"
+                            android:textColor="#B0FFFFFF" />
+
+                        <RadioButton
+                            android:id="@+id/rad22k"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/_22k"
+                            android:textColor="#B0FFFFFF" />
+
+                        <RadioButton
+                            android:id="@+id/rad16k"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/_16k"
+                            android:textColor="#B0FFFFFF" />
+
+                        <RadioButton
+                            android:id="@+id/rad8k"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/_8k"
+                            android:textColor="#B0FFFFFF" />
+                    </RadioGroup>
+
+                    <TextView
+                        android:id="@+id/recording_time_per_file_tv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/recording_time_per_file" />
+
+                    <RadioGroup
+                        android:id="@+id/radioGroupSecPerFile"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/rad12h"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/_12h"
+                            android:textColor="#B5FFFFFF" />
+
+                        <RadioButton
+                            android:id="@+id/rad4h"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/_4h"
+                            android:textColor="#B5FFFFFF" />
+
+                        <RadioButton
+                            android:id="@+id/rad1h"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/_1h"
+                            android:textColor="#B5FFFFFF" />
+
+                        <RadioButton
+                            android:id="@+id/rad1m"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/_1m"
+                            android:textColor="#B5FFFFFF"
+                            tools:checked="true" />
+
+
+                        <RadioButton
+                            android:id="@+id/rad10s"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/_10s"
+                            android:textColor="#B5FFFFFF" />
+
+                    </RadioGroup>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <Button
+                android:id="@+id/show_advanced_options_button"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginVertical="16dp"
+                android:drawableEnd="@drawable/keyboard_arrow_down"
+                android:drawableRight="@drawable/keyboard_arrow_down"
+                android:text="@string/advanced_options"
+                android:textColor="#fff" />
+
+            <Button
+                android:id="@+id/hide_advanced_options_button"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginVertical="16dp"
+                android:drawableEnd="@drawable/keyboard_arrow_up"
+                android:drawableRight="@drawable/keyboard_arrow_up"
+                android:text="@string/advanced_options"
+                android:textColor="#fff" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/command_line_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="@color/cardview"
+                app:cardCornerRadius="8dp"
+                app:contentPadding="8dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/custom_command"
+                            android:textAllCaps="true"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/command_line_btn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="24dp"
+                            android:layout_marginHorizontal="8dp"
+                            android:gravity="center"
+                            android:text="@string/run"
+                            android:textAlignment="center"
+                            android:textAllCaps="true"
+                            app:drawableStartCompat="@drawable/run" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/command">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/custom_command_et"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:imeOptions="actionNext"
+                            android:importantForAutofill="no"
+                            android:inputType="text"
+                            tools:text="ELOC18" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/fileheader_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="@color/cardview"
+                app:cardCornerRadius="8dp"
+                app:contentPadding="8dp">
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/device_name"
+                            android:textAllCaps="true"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/fileheader_btn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="24dp"
+                            android:layout_marginHorizontal="8dp"
+                            android:gravity="center"
+                            android:text="@string/run"
+                            android:textAlignment="center"
+                            android:textAllCaps="true"
+                            app:drawableStartCompat="@drawable/run" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/device_name">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/fileheader_et"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:imeOptions="actionNext"
+                            android:importantForAutofill="no"
+                            android:inputType="text"
+                            tools:text="ELOC18" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/microphone_type_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="@color/cardview"
+                app:cardCornerRadius="8dp"
+                app:contentPadding="8dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/microphone_type"
+                            android:textAllCaps="true"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/microphone_type_btn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="24dp"
+                            android:layout_marginHorizontal="8dp"
+                            android:gravity="center"
+                            android:text="@string/run"
+                            android:textAlignment="center"
+                            android:textAllCaps="true"
+                            app:drawableStartCompat="@drawable/run" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/microphone_type">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/mic_type_et"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:imeOptions="actionNext"
+                            android:importantForAutofill="no"
+                            android:inputType="text"
+                            tools:text="ns" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/microphone_gain_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="@color/cardview"
+                app:cardCornerRadius="8dp"
+                app:contentPadding="8dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/microphone_gain"
+                            android:textAllCaps="true"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/microphone_gain_btn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="24dp"
+                            android:layout_marginHorizontal="8dp"
+                            android:gravity="center"
+                            android:text="@string/run"
+                            android:textAlignment="center"
+                            android:textAllCaps="true"
+                            app:drawableStartCompat="@drawable/run" />
+
+                    </LinearLayout>
+
+                    <RadioGroup
+                        android:id="@+id/radioGroupGain"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/radHigh"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/high"
+                            android:textColor="#B5FFFFFF" />
+
+                        <RadioButton
+                            android:id="@+id/radLow"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/low"
+                            android:textColor="#B5FFFFFF" />
+
+                    </RadioGroup>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <View
+                android:id="@+id/divider6"
+                android:layout_width="match_parent"
+                android:layout_height="4dp"
+                android:layout_marginVertical="8dp"
+                android:background="#535353" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/bt_recording_state_tv"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:text="@string/bluetooth_state_when_recording" />
+
+                <ToggleButton
+                    android:id="@+id/bt_state_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/bluetooth_state_when_recording" />
+
+            </LinearLayout>
+
+            <View
+                android:id="@+id/divider7"
+                android:layout_width="match_parent"
+                android:layout_height="4dp"
+                android:layout_marginVertical="8dp"
+                android:background="#535353" />
+
+            <TextView
+                android:id="@+id/update_btn"
+                android:layout_width="match_parent"
+                android:layout_height="28dp"
+                android:layout_marginTop="8dp"
+                android:background="?selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:text="@string/update_reboot_upgrade_firmware"
+                android:textAllCaps="true"
+                android:textColor="#D65757" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

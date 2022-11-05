@@ -1,0 +1,294 @@
+commit 27d47ea5f808443ad07b20cc43721a0bebe0bb06
+Author: name <email>
+Date:   Sat Nov 5 16:39:57 2022 +0700
+
+    Reorganized device settings layout
+
+commit 98eb46fc84c569ba8279d1e44b195292d1fd4be0
+Author: name <email>
+Date:   Sat Nov 5 15:30:46 2022 +0700
+
+    Fixed scroll bug
+
+commit 023da20b6c8dab7693a4cdc44324b54b048f1021
+Author: name <email>
+Date:   Sat Nov 5 15:12:07 2022 +0700
+
+    Added swipe to refresh
+
+commit 9d25b1efe50fd6c286ba8204d038d5f9ee3d91e8
+Author: name <email>
+Date:   Sat Nov 5 00:51:44 2022 +0700
+
+    Layout changes and Status-Server IP updated
+
+commit a23818a8d0be040c09a0cdd29519c97fd9e6172c
+Author: name <email>
+Date:   Fri Nov 4 17:37:00 2022 +0700
+
+    Added buttons to Main Screen
+
+commit d471a3b2ecbc344a9649e1fc6b2d3b60580cabfe
+Author: name <email>
+Date:   Fri Nov 4 17:05:16 2022 +0700
+
+    Make sure that ranger ID is always set
+
+commit 20ceb50d7bade660350ec11cddd7e86332e24fb3
+Author: name <email>
+Date:   Fri Nov 4 15:55:38 2022 +0700
+
+    Replaced snackbars with alert dialogs in ELOC settings screen
+
+commit 2c11b4620e8e5ecb3d9a4dda09e7117dec08489a
+Author: name <email>
+Date:   Tue Nov 1 22:41:42 2022 +0700
+
+    Fixes Settings for Android 12
+
+commit 182b2217ae2a9f145f4dd73a3a5be4eec990df2a
+Author: name <email>
+Date:   Mon Oct 31 20:38:02 2022 +0700
+
+    Fixes Settings for Android 12
+
+commit d6652a53948464ad49bf80c62ba854d5cef135b3
+Author: EDsteve <edleast@gmail.com>
+Date:   Tue Jul 5 21:10:14 2022 +0200
+
+    Changing File header to GridID
+
+commit 01a124dbfc48b55b63620685ae28a5ae662049e3
+Author: EDsteve <edleast@gmail.com>
+Date:   Tue Jul 5 20:30:13 2022 +0200
+
+    Deactivating TimeSync
+
+commit 05f3884c11b824d21432b2e9347b62d594091374
+Author: name <email>
+Date:   Fri May 20 00:57:19 2022 +0700
+
+    Added SessionID GridID
+
+commit 560f6aa9f7076b2a20e08a29525849c660ea7c6e
+Merge: 1e05b7e 61c1aff
+Author: name <email>
+Date:   Fri May 20 00:51:17 2022 +0700
+
+    Merge remote-tracking branch 'origin/main'
+    
+    # Conflicts:
+    #       app/build.gradle
+    #       app/src/main/res/values/strings.xml
+
+commit 1e05b7e1b7ac09db1685a1d5f568911be75fc853
+Author: name <email>
+Date:   Fri May 20 00:42:31 2022 +0700
+
+    BackCL
+
+commit 61c1aff96928a162276344a2938665283b08d643
+Author: name <email>
+Date:   Thu May 19 23:54:15 2022 +0700
+
+    Add SessionID
+
+commit d5a88198f1396d5981661d2b0c28c1031f168f71
+Author: name <email>
+Date:   Wed May 18 19:50:24 2022 +0700
+
+    Added SessionID
+
+commit 11dd660e6ac8aa111fc5c943b87e3502e750298a
+Author: name <email>
+Date:   Mon May 16 15:32:55 2022 +0700
+
+    Color adjustments
+
+commit 3611e584ee73e7914ab4e9cf19aff7c5594bad48
+Author: name <email>
+Date:   Mon May 16 01:56:46 2022 +0700
+
+    Fixed string equality test for micGain
+
+commit dd8ac0f8233554167ce79407d29c3677e7c8ce96
+Author: name <email>
+Date:   Mon May 16 01:42:28 2022 +0700
+
+    Fixed file upload issue when data was empty
+
+commit 57e852edaf55a0dc17d974dac52d675e9554e63a
+Merge: 583b9d7 b293940
+Author: name <email>
+Date:   Sat May 14 00:41:37 2022 +0700
+
+    Merge branch 'main' of https://github.com/EDsteve/eloc_control_panel
+
+commit 583b9d7ddd573c99d1dae21c93ac7ee432f3d8b2
+Author: name <email>
+Date:   Sat May 14 00:41:03 2022 +0700
+
+    Minor fixes
+
+commit b29394091008df287d957327beeb336b8f0cec15
+Merge: 24df78a 75fd245
+Author: EDsteve <edleast@gmail.com>
+Date:   Fri May 13 23:15:11 2022 +0700
+
+    Merge pull request #1 from josephx86/patch-1
+    
+    Update MainSettingsActivity.java
+
+commit 75fd245fe93dd287dcf269d7391c1635dfa55db3
+Author: josephx86 <simplex86@gmail.com>
+Date:   Fri May 13 06:37:58 2022 -0500
+
+    Update MainSettingsActivity.java
+    
+    Add suffix for file header name if not provided
+
+commit 24df78ad59d67558c80b0e7005bfef9c8d8a7fe1
+Author: name <email>
+Date:   Fri May 13 18:18:33 2022 +0700
+
+    Fixed screen issue
+
+commit 8503f844f04f9e433b1e8578b6f3973e37cb0888
+Author: name <email>
+Date:   Fri May 13 16:37:22 2022 +0700
+
+    Fixed screen issue
+
+commit 762e1e00fa53b4509c3b4062c9c636e1370fae60
+Author: name <email>
+Date:   Fri May 13 13:31:37 2022 +0700
+
+    May 13 snapshot
+
+commit 49330b610a27bf00cc70a325faf27362afb4c2d7
+Author: name <email>
+Date:   Wed May 11 11:41:26 2022 +0700
+
+    tiny changes
+
+commit 4aceff443bd3cf2a6b1567523869cb86f0d7c85a
+Author: name <email>
+Date:   Wed May 11 11:18:46 2022 +0700
+
+    minor adjustments
+
+commit 5b646abf9f91ba5a43c929cf0a671366783bf506
+Author: name <email>
+Date:   Wed May 11 01:01:58 2022 +0700
+
+    ready for PlayStore
+
+commit 3f2bac13f4f80c277d529aa79f6453bf07f4b600
+Author: name <email>
+Date:   Wed May 11 00:03:46 2022 +0700
+
+    Some settings done
+
+commit 540e18f7a00fba8b61808e244017847057af52cb
+Author: name <email>
+Date:   Tue May 10 21:59:11 2022 +0700
+
+    snapshot
+
+commit 8575c6be15bec237c03f445a5f256b949e3b3090
+Author: name <email>
+Date:   Tue May 10 12:32:22 2022 +0700
+
+    may 05 session start
+
+commit 73fd150bac92c0e885e593a89070b7061c3a02db
+Author: name <email>
+Date:   Sat May 7 14:32:59 2022 +0700
+
+    Main section changes done
+
+commit c71a2c83c01a6ad63f8151bdd59b3c52d6609bfd
+Merge: 0472fbf d18f193
+Author: name <email>
+Date:   Sat May 7 13:32:38 2022 +0700
+
+    Merge branch 'main' of https://github.com/EDsteve/eloc_control_panel
+
+commit 0472fbf955742c248272b4cd712bafb49943fb73
+Author: name <email>
+Date:   Sat May 7 13:32:09 2022 +0700
+
+    Updated battery info
+
+commit d18f19369c0bf43862813a5ac1d71290f603b992
+Author: EDsteve <edleast@gmail.com>
+Date:   Thu May 5 00:13:56 2022 +0700
+
+    Update README.md
+
+commit ac51fa6abb79461a880ada2b270ec7a4a3f88b00
+Author: EDsteve <Weltreise-44>
+Date:   Thu May 5 00:06:32 2022 +0700
+
+    New UI
+
+commit 109aea01ece4330bddb7c24ad29e4968c51cd06d
+Author: EDsteve <Weltreise-44>
+Date:   Thu May 5 00:05:53 2022 +0700
+
+    New UI
+
+commit cfaed22cf1abfe2354a55ded583f0d2214b4694d
+Author: EDsteve <Weltreise-44>
+Date:   Thu May 5 00:04:23 2022 +0700
+
+    New UI
+
+commit e778ca1047fd7db8df2d709f795642b34330caff
+Author: EDsteve <Weltreise-44>
+Date:   Thu May 5 00:03:13 2022 +0700
+
+    test
+
+commit 0e03f8394d6db8d9b093a74c4d107650a4b4de9d
+Merge: 9dbea4a 8828586
+Author: name <email>
+Date:   Wed May 4 23:04:50 2022 +0700
+
+    Merge branch 'main' of https://github.com/EDsteve/eloc_control_panel
+
+commit 9dbea4a2ed3f5618620e81605dfbd5261019cb8b
+Author: name <email>
+Date:   Wed May 4 23:01:16 2022 +0700
+
+    New UI
+
+commit 88285866e85aa6845d73324076080e30a3b43a67
+Author: EDsteve <edleast@gmail.com>
+Date:   Wed May 4 22:57:12 2022 +0700
+
+    Update README.md
+
+commit 941908d675b28d98dffc9c1a39929e5524b86168
+Author: name <email>
+Date:   Wed May 4 18:05:25 2022 +0700
+
+    After day 1 - UI almost done
+
+commit f0620969e994c9f9bbc4f9c007e1894a4423b8f3
+Author: name <email>
+Date:   Wed May 4 16:55:56 2022 +0700
+
+    Random save point
+
+commit 11ce46adadbd1bc3da2decffe825df50841add8e
+Author: name <email>
+Date:   Wed May 4 15:02:47 2022 +0700
+
+    New UI added
+
+commit b734e7ae0cd74e698b6c3748ec0eff816002d5d6
+Author: name <email>
+Date:   Wed May 4 14:15:00 2022 +0700
+
+    Old code working

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:mytest="http://schemas.android.com/apk/res-auto">
+ 
+<!--   <item-->
+<!--        android:id="@+id/rescan"-->
+<!--        android:title="Re-Scan"-->
+<!--        mytest:showAsAction="always"-->
+<!--        android:visible="true" />-->
+
+	<item
+        android:id="@+id/bt_settings"
+        android:title="Bluetooth settings" />
+
+<!--		-->
+<!--    <item-->
+<!--        android:id="@+id/uploadeloc"-->
+<!--        android:title="@string/upload_eloc_status"-->
+<!--		 -->
+<!--		/>	-->
+
+  <item
+        android:id="@+id/browseStatusUpdates"
+        android:title="Browse Eloc Status" 
+		 
+		/>	
+
+
+    <item
+        android:id="@+id/setRangerName"
+        android:title="Change Ranger ID"
+		 
+		/>		
+
+ 			
+
+   <item
+        android:id="@+id/timeSync"
+        android:title="Synchronize clock" 
+		 
+		/>		
+		
+		
+	
+   <item
+        android:id="@+id/about"
+        android:title="App Version: notSet" 
+		 
+		/>		
+
+</menu>
