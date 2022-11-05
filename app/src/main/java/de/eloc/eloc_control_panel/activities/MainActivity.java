@@ -379,10 +379,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setListeners() {
         binding.instructionsButton.setOnClickListener(view -> {
-            String url = getString(R.string.instructions_url);
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(url));
-            startActivity(intent);
+           Helper.openInstructionsUrl(MainActivity.this);
         });
 
         binding.refreshListButton.setOnClickListener(view -> doScan());

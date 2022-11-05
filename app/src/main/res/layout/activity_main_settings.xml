@@ -10,7 +10,20 @@
         android:id="@+id/appbar"
         layout="@layout/layout_appbar" />
 
+    <TextView
+        android:id="@+id/instructions_button"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/bottom_bar_size"
+        android:layout_gravity="bottom|center"
+        android:background="?selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:text="@string/instructions"
+        android:textAlignment="center" />
+
     <ScrollView
+        android:layout_marginBottom="@dimen/bottom_bar_size"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="16dp"
@@ -518,7 +531,9 @@
                 android:textAllCaps="true"
                 android:textColor="#D65757" />
 
+
         </LinearLayout>
     </ScrollView>
+
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

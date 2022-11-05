@@ -48,6 +48,20 @@
             tools:visibility="visible">
 
             <TextView
+                android:id="@+id/instructions_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                android:background="?selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="@string/instructions"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView android:layout_marginBottom="16dp"
                 android:id="@+id/recBtn"
                 android:layout_width="match_parent"
                 android:layout_height="?actionBarSize"
@@ -63,7 +77,7 @@
                 android:textColor="#FFFFFFFF"
                 android:textSize="25sp"
                 android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent" />
+                app:layout_constraintBottom_toTopOf="@id/instructions_button" />
 
             <ScrollView
                 android:id="@+id/scroll_view"

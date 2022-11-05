@@ -187,6 +187,7 @@ public class MainSettingsActivity extends AppCompatActivity {
         binding.fileheaderBtn.setOnClickListener(view -> runFileHeaderCommand());
         binding.hideAdvancedOptionsButton.setOnClickListener(view -> toggleOptions());
         binding.showAdvancedOptionsButton.setOnClickListener(view -> toggleOptions());
+        binding.instructionsButton.setOnClickListener(view -> Helper.openInstructionsUrl(MainSettingsActivity.this));
     }
 
     private void toggleOptions() {
@@ -194,7 +195,7 @@ public class MainSettingsActivity extends AppCompatActivity {
         for (int i = 0; i < binding.cardContainer.getChildCount(); i++) {
             View child = binding.cardContainer.getChildAt(i);
             int childId = child.getId();
-            if (childId == R.id.recording_card) {
+            if ((childId == R.id.recording_card) || (childId == R.id.instructions_button)) {
                 continue;
             }
             child.setVisibility(showingOptions ? View.GONE : View.VISIBLE);

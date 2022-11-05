@@ -876,6 +876,9 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                 refresh();
             }
         });
+        binding.instructionsButton.setOnClickListener(view -> {
+            Helper.openInstructionsUrl(TerminalActivity.this);
+        });
     }
 
     private void refresh() {
