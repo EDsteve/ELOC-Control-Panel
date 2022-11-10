@@ -130,6 +130,8 @@ public class MainActivity extends AppCompatActivity {
                     binding.devicesListView.setVisibility(View.VISIBLE);
                     binding.initLayout.setVisibility(View.GONE);
                 }
+            } else {
+                Log.d("TAG", "onReceive: action -> " + action);
             }
         }
     };
@@ -379,7 +381,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setListeners() {
         binding.instructionsButton.setOnClickListener(view -> {
-           Helper.openInstructionsUrl(MainActivity.this);
+            Helper.openInstructionsUrl(MainActivity.this);
         });
 
         binding.refreshListButton.setOnClickListener(view -> doScan());
@@ -392,24 +394,13 @@ public class MainActivity extends AppCompatActivity {
         listFiles();
         setRangerName();
 
-        boolean hasBluetooth = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH);
-        if (hasBluetooth) {
-            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        }
-        if (bluetoothAdapter != null) {
-            IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-            registerReceiver(receiver, filter);
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        filter.addAction(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        registerReceiver(receiver, filter);
 
-            //newtom
-            if (bluetoothAdapter.isDiscovering()) {
-                bluetoothAdapter.cancelDiscovery();
-            }
-            //Immediately after checking (and possibly canceling) discovery-mode, start discovery by calling,
-
-            bluetoothAdapter.startDiscovery();
-            //endtom
-            //doScan();
-        }
+        doScan();
     }
 
     private void loadRangerName() {
@@ -493,19 +484,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doScan() {
-        //System.out.println("traceeeeeeee"+listItems.get(0).getName().toString());
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (bluetoothAdapter.isDiscovering()) {
-            bluetoothAdapter.cancelDiscovery();
+        boolean hasBluetooth = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH);
+        if (hasBluetooth) {
+            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         }
+        if (bluetoothAdapter != null) {
 
-        bluetoothAdapter.startDiscovery();
-        //newtom
-        if (bluetoothAdapter.isDiscovering()) {
             bluetoothAdapter.cancelDiscovery();
+            bluetoothAdapter.startDiscovery();
+
         }
-        //Immediately after checking (and possibly canceling) discovery-mode, start discovery by calling,
-        bluetoothAdapter.startDiscovery();
     }
 
     private void saveRangerName(String theName) {

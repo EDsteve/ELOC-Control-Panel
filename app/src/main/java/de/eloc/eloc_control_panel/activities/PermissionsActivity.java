@@ -31,13 +31,13 @@ public class PermissionsActivity extends AppCompatActivity {
         binding.permissionsBtn.setOnClickListener(view -> checkPermissions());
         binding.refreshBtn.setOnClickListener(view -> checkPermissions());
         permissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> checkPermissions());
-
+        checkPermissions();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        checkPermissions();
+        // checkPermissions();
     }
 
     private void checkPermissions() {
