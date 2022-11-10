@@ -70,4 +70,5 @@
     <string name="connected">Connected</string>
     <string name="refreshing">Refreshing…</string>
     <string name="advanced_options">Advanced options</string>
+    <string name="scan_error">Something went wrong.\n\nFailed to scan for bluetooth devices!</string>
 </resources>

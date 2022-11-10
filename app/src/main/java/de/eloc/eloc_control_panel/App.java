@@ -4,6 +4,8 @@ import android.app.Application;
 
 import android.content.SharedPreferences;
 
+import de.eloc.eloc_control_panel.helpers.BluetoothHelper;
+
 public class App extends Application {
     private static App mAppInstance;
 
@@ -11,6 +13,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         mAppInstance = this;
+        BluetoothHelper.initialize();
     }
 
     public static App getInstance() {

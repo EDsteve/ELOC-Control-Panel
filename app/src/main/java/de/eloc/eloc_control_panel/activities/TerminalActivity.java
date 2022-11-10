@@ -48,6 +48,7 @@ import de.eloc.eloc_control_panel.SerialService.SerialBinder;
 import de.eloc.eloc_control_panel.SerialSocket;
 import de.eloc.eloc_control_panel.SimpleLocation;
 import de.eloc.eloc_control_panel.TextUtil;
+import de.eloc.eloc_control_panel.helpers.BluetoothHelper;
 import de.eloc.eloc_control_panel.helpers.Helper;
 import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 import de.eloc.eloc_control_panel.BuildConfig;
@@ -314,8 +315,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     private void connect(boolean notify) {
 
         try {
-            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            BluetoothDevice device = bluetoothAdapter.getRemoteDevice(deviceAddress);
+            BluetoothDevice device = BluetoothHelper.getInstance().getDevice(deviceAddress);
             // this line might have introduced a bug. This is bluetooth connection and not recording sttatus.
             //updateDeviceState(DeviceState.Recording, null);
             connected = Connected.Pending;

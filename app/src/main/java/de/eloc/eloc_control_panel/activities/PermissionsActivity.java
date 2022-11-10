@@ -2,7 +2,6 @@ package de.eloc.eloc_control_panel.activities;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -17,6 +16,7 @@ import androidx.core.app.ActivityCompat;
 import java.util.Locale;
 
 import de.eloc.eloc_control_panel.databinding.ActivityPermissionBinding;
+import de.eloc.eloc_control_panel.helpers.BluetoothHelper;
 
 public class PermissionsActivity extends AppCompatActivity {
     private ActivityResultLauncher<String[]> permissionLauncher;
@@ -37,7 +37,17 @@ public class PermissionsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // checkPermissions();
+        checkBluetoothAdapter();
+    }
+
+    private void checkBluetoothAdapter() {
+        if (!BluetoothHelper.isAdapterInitialized()) {
+            // App will close if there is no adapter
+            // This is expected behavior to make sure that
+            // the BluetoothHelper class member 'adapter'
+            // will always have a valid reference to an adapter.
+            finish();
+        }
     }
 
     private void checkPermissions() {
@@ -50,12 +60,7 @@ public class PermissionsActivity extends AppCompatActivity {
         } else {
             checkLocationPermissions();
         }
-        boolean adapterOff = true;
-        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-        if (adapter != null) {
-            adapterOff = (adapter.getState() != BluetoothAdapter.STATE_ON);
-        }
-        if (adapterOff) {
+        if (!BluetoothHelper.getInstance().isAdapterOn()) {
             binding.bluetoothPromptTextView.setVisibility(View.VISIBLE);
             binding.refreshBtn.setVisibility(View.VISIBLE);
             binding.status.setVisibility(View.GONE);

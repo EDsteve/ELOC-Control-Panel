@@ -1,9 +1,7 @@
 package de.eloc.eloc_control_panel.activities;
 
 import android.Manifest;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -12,6 +10,8 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -60,7 +60,10 @@ import de.eloc.eloc_control_panel.UploadFileAsync;
 import de.eloc.eloc_control_panel.databinding.ActivityMainBinding;
 import de.eloc.eloc_control_panel.databinding.DeviceListItemBinding;
 import de.eloc.eloc_control_panel.databinding.PopupWindowBinding;
+import de.eloc.eloc_control_panel.helpers.BluetoothHelper;
+import de.eloc.eloc_control_panel.helpers.DeviceInfo;
 import de.eloc.eloc_control_panel.helpers.Helper;
+import de.eloc.eloc_control_panel.receivers.BluetoothScanReceiver;
 
 public class MainActivity extends AppCompatActivity {
 //public static long testme=0L;
@@ -74,67 +77,16 @@ public class MainActivity extends AppCompatActivity {
 	 */
 
     private ActivityMainBinding binding;
-    private BluetoothAdapter bluetoothAdapter;
     private static MainActivity instance;
     public String rangerName;
     private Menu menu;
-    private ArrayAdapter<BluetoothDevice> listAdapter;
-    private final ArrayList<BluetoothDevice> listItems = new ArrayList<>();
     public boolean gUploadEnabled = false;
+    private boolean isRefreshing = false;
     private Long gLastTimeDifferenceMillisecond = 0L;
     private long gLastGoogleTimeSyncMS = 0L;
     private ActivityResultLauncher<String[]> permissionLauncher;
     private final String DEFAULT_RANGER_NAME = "notSet";
-
-    // Create a BroadcastReceiver for ACTION_FOUND when scanning for bt devices.
-    private final BroadcastReceiver receiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            //Toast.makeText(getActivity(), "in onreceive ", Toast.LENGTH_LONG).show();
-
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Discovery has found a device. Get the BluetoothDevice
-                // object and its info from the Intent.
-                //Toast.makeText(getActivity(), "ACTION_FOUND", Toast.LENGTH_LONG).show();
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-
-                String deviceName = device.getName();
-//                String deviceHardwareAddress = device.getAddress(); // MAC address
-
-                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_DENIED) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.BLUETOOTH_CONNECT}, 2);
-                        return;
-                    }
-                }
-
-                if (device.getBondState() == BluetoothDevice.BOND_BONDED) { //not working on android 7
-                    //Toast.makeText(getActivity(), "BOND_BONDED", Toast.LENGTH_LONG).show();
-                    addDevice(device);
-                } else if (device.getBondState() == BluetoothDevice.BOND_NONE) {
-                    //Toast.makeText(getActivity(), "BOND_NONE", Toast.LENGTH_LONG).show();
-
-                    try {
-                        if (deviceName.toLowerCase().startsWith("eloc")) {
-                            addDevice(device);
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                device.createBond();
-                            }
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Log.e("elocApp", "I got an error", e);
-                    }
-                }
-                if (!listItems.isEmpty()) {
-                    binding.devicesListView.setVisibility(View.VISIBLE);
-                    binding.initLayout.setVisibility(View.GONE);
-                }
-            } else {
-                Log.d("TAG", "onReceive: action -> " + action);
-            }
-        }
-    };
+    private final BluetoothScanReceiver receiver = new BluetoothScanReceiver(this::onListUpdated);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -148,13 +100,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        checkRangerName();
+        registerScanReceiver();
+
+        boolean hasNoDevices = BluetoothHelper.hasEmptyAdapter();
+        onListUpdated(hasNoDevices, false);
+        if (hasNoDevices) {
+            setBluetoothStatus(BluetoothHelper.getInstance().isAdapterOn());
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterScanReceiver();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_devices, menu);
         MenuItem aboutItem = menu.findItem(R.id.about);
         if (aboutItem != null) {
             aboutItem.setTitle(BuildConfig.VERSION_NAME);
         }
-        if (bluetoothAdapter == null) {
+        if (BluetoothHelper.isAdapterInitialized()) {
             menu.findItem(R.id.bt_settings).setEnabled(false);
         }
         return true;
@@ -183,6 +154,65 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         return true;
+    }
+
+    private void onListUpdated(boolean isEmpty, boolean scanFinished) {
+        boolean showScanUI = isEmpty;
+        if (scanFinished) {
+            showScanUI = false;
+        }
+        if (isEmpty) {
+            binding.devicesListView.setVisibility(View.GONE);
+            binding.initLayout.setVisibility(View.VISIBLE);
+            binding.uploadElocStatusButton.setVisibility(View.GONE);
+            binding.refreshListButton.setVisibility(View.GONE);
+        } else {
+            binding.devicesListView.setVisibility(View.VISIBLE);
+            binding.initLayout.setVisibility(View.GONE);
+            binding.uploadElocStatusButton.setVisibility(View.VISIBLE);
+            binding.refreshListButton.setVisibility(View.VISIBLE);
+        }
+        if (scanFinished) {
+            isRefreshing = false;
+            if (BluetoothHelper.hasEmptyAdapter()) {
+                new AlertDialog.Builder(this)
+                        .setCancelable(false)
+                        .setTitle("Scan results")
+                        .setMessage("No devices were found!")
+                        .setNegativeButton(android.R.string.ok, (dialog, i) -> dialog.dismiss())
+                        .show();
+            }
+        }
+    }
+
+    private void startScan() {
+        // Important: see registerScanReceiver() for notes.
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Context context = MainActivity.this;
+                BluetoothHelper.scanAsync(context);
+                boolean scanStarted = BluetoothHelper.getInstance().scan(context);
+                if (!scanStarted) {
+                    Helper.showAlert(context, getString(R.string.scan_error));
+                    BluetoothHelper.getInstance().stopScan(context);
+                }
+            }
+        }, 1000);
+    }
+
+    private void scanCompleted() {
+
+    }
+
+    private void setBluetoothStatus(boolean isOn) {
+        String statusMessage = "<bluetooth is disabled>";
+        if (isOn) {
+            statusMessage = "<scanning for eloc devices>";
+            startScan();
+        }
+        binding.status.setText(statusMessage);
     }
 
     private void uploadElocStatus() {
@@ -250,48 +280,13 @@ public class MainActivity extends AppCompatActivity {
     public void onStop() {
         super.onStop();
         Log.i("elocApp", "devices onstop()");
-        bluetoothAdapter.cancelDiscovery();
+        BluetoothHelper.getInstance().stopScan(this);
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        checkRangerName();
-
-        Log.i("elocApp", "devices onresume()");
-        String statusMessage;
-
-        binding.initLayout.setVisibility(View.VISIBLE);
-        binding.devicesListView.setVisibility(View.GONE);
-        //System.out.println("traceeeeeeee254"+listItems.get(0).getName().toString());
-        if (bluetoothAdapter == null) {
-            statusMessage = "<bluetooth not supported>";
-        } else if (!bluetoothAdapter.isEnabled()) {
-            statusMessage = "<bluetooth is disabled>";
-        } else {
-            statusMessage = "<scanning for eloc devices>";
-            //System.out.println("traceeeeeeee260"+listItems.get(0).getName().toString());
-        }
-        binding.status.setText(statusMessage);
-        doScan();
-        refresh();
-    }
 
     private void setupListView() {
-        listAdapter = new ArrayAdapter<BluetoothDevice>(this, 0, listItems) {
-            @NonNull
-            @Override
-            public View getView(int position, View view, @NonNull ViewGroup parent) {
-                LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-                DeviceListItemBinding itemBinding = DeviceListItemBinding.inflate(inflater, parent, false);
-                BluetoothDevice device = listItems.get(position);
-                itemBinding.text1.setText(device.getName());
-                itemBinding.text2.setText(device.getAddress());
-                itemBinding.getRoot().setOnClickListener(v -> showDevice(device.getAddress()));
-                return itemBinding.getRoot();
-            }
-        };
-        binding.devicesListView.setAdapter(listAdapter);
+        ArrayAdapter<BluetoothDevice> adapter = BluetoothHelper.initializeListAdapter(this, this::showDevice);
+        binding.devicesListView.setAdapter(adapter);
     }
 
     private void checkRangerName() {
@@ -320,30 +315,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showDevice(String address) {
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        //newtom
-        if (bluetoothAdapter.isDiscovering()) {
-            bluetoothAdapter.cancelDiscovery();
-        }
-
-        bluetoothAdapter.cancelDiscovery();
-
+        BluetoothHelper.getInstance().stopScan(this);
 
         Intent intent = new Intent(this, TerminalActivity.class);
         intent.putExtra(TerminalActivity.ARG_DEVICE, address);
         startActivity(intent);
-
     }
 
-    private void addDevice(BluetoothDevice device) {
-        if (!listItems.contains(device)) {
-            listItems.add(device);
-            System.out.println("traceeeeeeeeADDCALLED" + listItems.get(0).getName().toString());
-            listAdapter.notifyDataSetChanged();
-        }
-    }
 
+/* todo: this method does not do anythis except clear list.
     private void refresh() {
         listItems.clear();
 //        if(bluetoothAdapter != null) {
@@ -353,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
 //        }
         Collections.sort(listItems, MainActivity::compareTo);
         listAdapter.notifyDataSetChanged();
-    }
+    }*/
 
     static Context getContext() {
         return instance;
@@ -384,7 +364,7 @@ public class MainActivity extends AppCompatActivity {
             Helper.openInstructionsUrl(MainActivity.this);
         });
 
-        binding.refreshListButton.setOnClickListener(view -> doScan());
+        binding.refreshListButton.setOnClickListener(view -> startScan());
         binding.uploadElocStatusButton.setOnClickListener(view -> uploadElocStatus());
     }
 
@@ -393,14 +373,21 @@ public class MainActivity extends AppCompatActivity {
         setupListView();
         listFiles();
         setRangerName();
+    }
 
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
-        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        filter.addAction(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+    private void registerScanReceiver() {
+        IntentFilter filter = BluetoothHelper.getScanFilter();
         registerReceiver(receiver, filter);
 
-        doScan();
+        // Devices appear to be found after there is a brief delay..
+        // Registration of receiver possible causes some kind of delay
+        // or is possibly async?? More research needed. for now let's
+        // have startScan() wait for 1 second before actually scanning.
+        // be sure to apply the delay in startScan()
+    }
+
+    private void unregisterScanReceiver() {
+        unregisterReceiver(receiver);
     }
 
     private void loadRangerName() {
@@ -481,19 +468,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void setActionBar() {
         setSupportActionBar(binding.appbar.toolbar);
-    }
-
-    private void doScan() {
-        boolean hasBluetooth = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH);
-        if (hasBluetooth) {
-            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        }
-        if (bluetoothAdapter != null) {
-
-            bluetoothAdapter.cancelDiscovery();
-            bluetoothAdapter.startDiscovery();
-
-        }
     }
 
     private void saveRangerName(String theName) {
