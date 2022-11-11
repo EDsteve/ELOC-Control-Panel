@@ -1,6 +1,4 @@
 package de.eloc.eloc_control_panel;
-//https://stackoverflow.com/questions/25398200/uploading-file-in-php-server-from-android-device
-
 
 import android.util.Log;
 
@@ -97,7 +95,7 @@ public class UploadFileAsync {
         temp.delete();
         Log.i("elocApp", "file deleted " + filename);
 
-        if (success == true) {
+        if (success) {
             Log.i("elocApp", "upload SUCCESS ");
             if (snackHandler != null) {
                 snackHandler.handle("Upload Success");

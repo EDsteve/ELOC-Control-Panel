@@ -1,14 +1,11 @@
 package de.eloc.eloc_control_panel.activities;
 
-import android.Manifest;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -16,41 +13,24 @@ import android.os.SystemClock;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
-import com.google.android.material.snackbar.Snackbar;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.security.Permission;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Map;
 
 import de.eloc.eloc_control_panel.App;
 import de.eloc.eloc_control_panel.BuildConfig;
@@ -58,33 +38,17 @@ import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.SNTPClient;
 import de.eloc.eloc_control_panel.UploadFileAsync;
 import de.eloc.eloc_control_panel.databinding.ActivityMainBinding;
-import de.eloc.eloc_control_panel.databinding.DeviceListItemBinding;
 import de.eloc.eloc_control_panel.databinding.PopupWindowBinding;
 import de.eloc.eloc_control_panel.helpers.BluetoothHelper;
-import de.eloc.eloc_control_panel.helpers.DeviceInfo;
 import de.eloc.eloc_control_panel.helpers.Helper;
 import de.eloc.eloc_control_panel.receivers.BluetoothScanReceiver;
 
 public class MainActivity extends AppCompatActivity {
-//public static long testme=0L;
-
-/* 	Context context = this;
-	boolean requireFineGranularity = false;
-	boolean passiveMode = false;
-	long updateIntervalInMilliseconds = 10 * 60 * 1000;
-	boolean requireNewLocation = false;
-	new SimpleLocation(context, requireFineGranularity, passiveMode, updateIntervalInMilliseconds, requireNewLocation);
-	 */
 
     private ActivityMainBinding binding;
-    private static MainActivity instance;
     public String rangerName;
-    private Menu menu;
     public boolean gUploadEnabled = false;
-    private boolean isRefreshing = false;
     private Long gLastTimeDifferenceMillisecond = 0L;
-    private long gLastGoogleTimeSyncMS = 0L;
-    private ActivityResultLauncher<String[]> permissionLauncher;
     private final String DEFAULT_RANGER_NAME = "notSet";
     private final BluetoothScanReceiver receiver = new BluetoothScanReceiver(this::onListUpdated);
 
@@ -96,7 +60,8 @@ public class MainActivity extends AppCompatActivity {
         setActionBar();
         initialize();
         Log.i("elocApp", "\n\n\n mainActivity onCreate");
-        instance = this;
+
+
     }
 
     @Override
@@ -161,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
         if (scanFinished) {
             showScanUI = false;
         }
-        if (isEmpty) {
+        if (showScanUI) {
             binding.devicesListView.setVisibility(View.GONE);
             binding.initLayout.setVisibility(View.VISIBLE);
             binding.uploadElocStatusButton.setVisibility(View.GONE);
@@ -173,7 +138,6 @@ public class MainActivity extends AppCompatActivity {
             binding.refreshListButton.setVisibility(View.VISIBLE);
         }
         if (scanFinished) {
-            isRefreshing = false;
             if (BluetoothHelper.hasEmptyAdapter()) {
                 new AlertDialog.Builder(this)
                         .setCancelable(false)
@@ -188,22 +152,17 @@ public class MainActivity extends AppCompatActivity {
     private void startScan() {
         // Important: see registerScanReceiver() for notes.
         Handler handler = new Handler(Looper.getMainLooper());
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Context context = MainActivity.this;
-                BluetoothHelper.scanAsync(context);
-                boolean scanStarted = BluetoothHelper.getInstance().scan(context);
-                if (!scanStarted) {
-                    Helper.showAlert(context, getString(R.string.scan_error));
-                    BluetoothHelper.getInstance().stopScan(context);
-                }
-            }
+        handler.postDelayed(() -> {
+            Context context = MainActivity.this;
+            BluetoothHelper.scanAsync(context, MainActivity.this::scanStarted);
         }, 1000);
     }
 
-    private void scanCompleted() {
-
+    private void scanStarted(boolean success) {
+        if (!success) {
+            Helper.showAlert(this, getString(R.string.scan_error));
+            BluetoothHelper.stopScan(this);
+        }
     }
 
     private void setBluetoothStatus(boolean isOn) {
@@ -234,17 +193,11 @@ public class MainActivity extends AppCompatActivity {
             if (files != null) {
                 //File outputfile;
                 for (File file : files) {
-                    if (file.isDirectory()) {
-                        //traverse(file);
-                    } else {
-                        //mark
-                        //temp=fileToString(file);
-
+                    if (!file.isDirectory()) {
                         if (file.getName().endsWith(".txt")) {
                             filecounter++;
                             Log.i("elocApp", "writing file   " + file.getName());
                             fileout.write(fileToString(file) + "\n\n\n");
-                            //file.delete();
                         }
                     }
                 }
@@ -252,14 +205,9 @@ public class MainActivity extends AppCompatActivity {
                 fileout.write("\n\n\n end of updates");
                 fileout.close();
                 if (filecounter > 0) {
-                    //rename the file
-                    //handle the case for multiple upd files.
-
-
-                    UploadFileAsync upload = new UploadFileAsync();
                     String filename = getFilesDir().getAbsolutePath() + "/" + filestring;
                     Log.i("elocApp", "uploading   " + filename);
-                    upload.run(filename, getFilesDir(), this::showSnack);
+                    UploadFileAsync.run(filename, getFilesDir(), this::showSnack);
                 } else {
 //                        File temp = new File(getActivity().getFilesDir().getAbsolutePath() + "/" + filestring);
 //                        temp.delete();
@@ -335,35 +283,8 @@ public class MainActivity extends AppCompatActivity {
         listAdapter.notifyDataSetChanged();
     }*/
 
-    static Context getContext() {
-        return instance;
-    }
-
-    /**
-     * sort by name, then address. sort named devices first
-     */
-    static int compareTo(BluetoothDevice a, BluetoothDevice b) {
-        Context context = getContext();
-        if (context != null) {
-            boolean aValid = a.getName() != null && !a.getName().isEmpty();
-            boolean bValid = b.getName() != null && !b.getName().isEmpty();
-            if (aValid && bValid) {
-                int ret = a.getName().compareTo(b.getName());
-                if (ret != 0) return ret;
-                return a.getAddress().compareTo(b.getAddress());
-            }
-            if (aValid) return -1;
-            if (bValid) return +1;
-            return a.getAddress().compareTo(b.getAddress());
-        }
-        return -1;
-    }
-
     private void setListeners() {
-        binding.instructionsButton.setOnClickListener(view -> {
-            Helper.openInstructionsUrl(MainActivity.this);
-        });
-
+        binding.instructionsButton.setOnClickListener(view -> Helper.openInstructionsUrl(MainActivity.this));
         binding.refreshListButton.setOnClickListener(view -> startScan());
         binding.uploadElocStatusButton.setOnClickListener(view -> uploadElocStatus());
     }
@@ -396,9 +317,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void setRangerName() {
         rangerName = App.getInstance().getSharedPrefs().getString("rangerName", DEFAULT_RANGER_NAME);
-//            if (rangerName.equals("notSet")) {
-//                popUpEditText();
-//            }
         Log.i("elocApp", "ranger Name " + rangerName);
     }
 
@@ -413,12 +331,8 @@ public class MainActivity extends AppCompatActivity {
             }
             br.close();
         } catch (IOException ignore) {
-            //You'll need to add proper error handling here
-        }
 
-        //Find the view by its id
-        //TextView tv = (TextView)findViewById(R.id.text_view);
-        //Set the text
+        }
         return text.toString();
     }
 
@@ -492,7 +406,6 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 gLastTimeDifferenceMillisecond = System.currentTimeMillis() - googletimestamp;
                 saveTimestamps(SystemClock.elapsedRealtime(), googletimestamp);
-                gLastGoogleTimeSyncMS = System.currentTimeMillis();
                 gUploadEnabled = true;
                 invalidateOptionsMenu();
                 Log.i("elocApp", "google sync success");

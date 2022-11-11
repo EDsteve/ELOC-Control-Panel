@@ -12,11 +12,7 @@ public class BluetoothStateReceiver extends BroadcastReceiver {
         void handler(boolean isOn);
     }
 
-    private StateChangedCallback callback;
-
-    public BluetoothStateReceiver() {
-        // Empty constructor required by manifest
-    }
+    private final StateChangedCallback callback;
 
     public BluetoothStateReceiver(StateChangedCallback callback) {
         this.callback = callback;
