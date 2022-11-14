@@ -73,8 +73,20 @@ public class BluetoothHelper {
         }
     }
 
+    public static boolean isElocDevice(BluetoothDevice device) {
+        @SuppressLint("MissingPermission") String deviceName = device.getName();
+        if (deviceName == null) {
+            deviceName = "";
+        }
+        //return deviceName.toLowerCase().startsWith("eloc");
+        return true;
+    }
+
     @SuppressLint("MissingPermission")
     public static void addDevice(BluetoothDevice device, ListUpdateCallback callback) {
+        if (!isElocDevice(device)) {
+            return;
+        }
         if (!devices.contains(device)) {
             devices.add(device);
 

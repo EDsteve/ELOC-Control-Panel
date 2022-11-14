@@ -3,12 +3,12 @@ plugins {
 }
 
 android {
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "de.eloc.eloc_control_panel"
         minSdk 16
-        targetSdk 32
+        targetSdk 33
         versionCode 23
         versionName '4.62'
         versionNameSuffix 'AppBeta'
