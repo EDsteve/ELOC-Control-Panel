@@ -29,8 +29,7 @@ public class BluetoothScanReceiver extends BroadcastReceiver {
                     BluetoothHelper.addDevice(device, updateCallback);
                 } else if (device.getBondState() == BluetoothDevice.BOND_NONE) {
                     try {
-                        String deviceName = DeviceInfo.fromDevice(device).name;
-                        if (deviceName.toLowerCase().startsWith("eloc")) {
+                        if (BluetoothHelper.isElocDevice(device)) {
                             BluetoothHelper.addDevice(device, updateCallback);
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                                 device.createBond();
