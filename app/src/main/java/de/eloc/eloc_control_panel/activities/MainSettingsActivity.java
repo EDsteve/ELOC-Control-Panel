@@ -3,27 +3,21 @@ package de.eloc.eloc_control_panel.activities;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
 import java.util.Locale;
 
-import de.eloc.eloc_control_panel.App;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.databinding.ActivityMainSettingsBinding;
 import de.eloc.eloc_control_panel.helpers.Helper;
+import de.eloc.eloc_control_panel.ng.models.AppPreferenceManager;
 
 public class MainSettingsActivity extends AppCompatActivity {
     ActivityMainSettingsBinding binding;
@@ -49,8 +43,8 @@ public class MainSettingsActivity extends AppCompatActivity {
         }
     }
 
-    public static String DATA_KEY = "device_settings";
-    public static String MIC_DATA_KEY = "microphone_settings";
+
+
     private String gPattern = "^[a-zA-Z0-9]+$"; // Pattern for filename
     private String gLocation = "";
     private String gSecondsPerFile = "";
@@ -91,7 +85,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     }
 
     private void setMicData() {
-        String data = App.getInstance().getSharedPrefs().getString(MIC_DATA_KEY, "");
+        String data = AppPreferenceManager.INSTANCE.getMicData();
         String[] separated = data.split("#");
         if (separated.length < 2) {
             return;
@@ -119,7 +113,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     }
 
     private void setData() {
-        String data = App.getInstance().getSharedPrefs().getString(DATA_KEY, "");
+        String data = AppPreferenceManager.INSTANCE.getDeviceSettings();
         //gInitialSettings=true;
         //
         // #16000 sample rate /0

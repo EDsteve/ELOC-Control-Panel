@@ -19,6 +19,7 @@ import androidx.core.app.ActivityCompat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -108,7 +109,8 @@ public class BluetoothHelper {
             } else {
                 BluetoothDevice[] array = devices.toArray(new BluetoothDevice[]{});
                 Arrays.sort(array, comparator);
-                devices = new ArrayList<>(List.of(array));
+                devices = new ArrayList<>();
+                Collections.addAll(devices, array);
             }
             System.out.println("traceeeeeeeeADDCALLED" + devices.get(0).getName());
 
@@ -120,7 +122,7 @@ public class BluetoothHelper {
     }
 
     public static ArrayAdapter<BluetoothDevice> initializeListAdapter(Context context, ListAdapterCallback callback) {
-        listAdapter = new ArrayAdapter<>(context, 0, BluetoothHelper.devices) {
+        listAdapter = new ArrayAdapter<BluetoothDevice>(context, 0, BluetoothHelper.devices) {
             @NonNull
             @Override
             public View getView(int position, View view, @NonNull ViewGroup parent) {

@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -32,7 +31,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-import de.eloc.eloc_control_panel.App;
 import de.eloc.eloc_control_panel.BuildConfig;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.SNTPClient;
@@ -41,7 +39,9 @@ import de.eloc.eloc_control_panel.databinding.ActivityMainBinding;
 import de.eloc.eloc_control_panel.databinding.PopupWindowBinding;
 import de.eloc.eloc_control_panel.helpers.BluetoothHelper;
 import de.eloc.eloc_control_panel.helpers.Helper;
+import de.eloc.eloc_control_panel.ng.models.AppPreferenceManager;
 import de.eloc.eloc_control_panel.receivers.BluetoothScanReceiver;
+import de.eloc.eloc_control_panel.ng.models.Constants;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -49,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
     public String rangerName;
     public boolean gUploadEnabled = false;
     private Long gLastTimeDifferenceMillisecond = 0L;
-    private final String DEFAULT_RANGER_NAME = "notSet";
     private final BluetoothScanReceiver receiver = new BluetoothScanReceiver(this::onListUpdated);
 
     @Override
@@ -240,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
     private void checkRangerName() {
         loadRangerName();
         rangerName = rangerName.trim();
-        if (TextUtils.isEmpty(rangerName) || rangerName.equals(DEFAULT_RANGER_NAME)) {
+        if (TextUtils.isEmpty(rangerName) || rangerName.equals(Constants.DEFAULT_RANGER_NAME)) {
             editRangerName();
         }
     }
@@ -293,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
         setListeners();
         setupListView();
         listFiles();
-        setRangerName();
+        loadRangerName();
     }
 
     private void registerScanReceiver() {
@@ -312,12 +311,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadRangerName() {
-        rangerName = App.getInstance().getSharedPrefs().getString("rangerName", DEFAULT_RANGER_NAME);
-    }
-
-    private void setRangerName() {
-        rangerName = App.getInstance().getSharedPrefs().getString("rangerName", DEFAULT_RANGER_NAME);
-        Log.i("elocApp", "ranger Name " + rangerName);
+        rangerName = AppPreferenceManager.INSTANCE.getRangerName();
     }
 
     private String fileToString(File file) {
@@ -385,8 +379,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void saveRangerName(String theName) {
-        SharedPreferences.Editor mEditor = App.getInstance().getSharedPrefs().edit();
-        mEditor.putString("rangerName", theName).apply();
+        AppPreferenceManager.INSTANCE.setRangerName(theName);
         loadRangerName();
     }
 
@@ -405,7 +398,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             } else {
                 gLastTimeDifferenceMillisecond = System.currentTimeMillis() - googletimestamp;
-                saveTimestamps(SystemClock.elapsedRealtime(), googletimestamp);
+                AppPreferenceManager.INSTANCE.saveTimestamps(SystemClock.elapsedRealtime(), googletimestamp);
                 gUploadEnabled = true;
                 invalidateOptionsMenu();
                 Log.i("elocApp", "google sync success");
@@ -418,13 +411,5 @@ public class MainActivity extends AppCompatActivity {
         }, timeoutMS);
         //send("testing latency");
     }
-
-
-    public void saveTimestamps(Long gCurrentElapsedTimeMS, Long gLastGoogleSyncTimestampMS) {
-        SharedPreferences.Editor mEditor = App.getInstance().getSharedPrefs().edit();
-        mEditor.putString("elapsedTimeAtGoogleTimestamp", gCurrentElapsedTimeMS.toString()).apply();
-        mEditor.putString("lastGoogleTimestamp", gLastGoogleSyncTimestampMS.toString()).apply();
-    }
-
 
 }

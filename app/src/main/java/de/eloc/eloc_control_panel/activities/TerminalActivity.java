@@ -1,13 +1,11 @@
 package de.eloc.eloc_control_panel.activities;
 
 import android.app.AlertDialog;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -39,12 +37,12 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import de.eloc.eloc_control_panel.App;
+import de.eloc.eloc_control_panel.ng.App;
 import de.eloc.eloc_control_panel.OpenLocationCode;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.SerialListener;
-import de.eloc.eloc_control_panel.SerialService;
-import de.eloc.eloc_control_panel.SerialService.SerialBinder;
+import de.eloc.eloc_control_panel.SerialServices;
+import de.eloc.eloc_control_panel.SerialServices.SerialBinder;
 import de.eloc.eloc_control_panel.SerialSocket;
 import de.eloc.eloc_control_panel.SimpleLocation;
 import de.eloc.eloc_control_panel.TextUtil;
@@ -53,6 +51,7 @@ import de.eloc.eloc_control_panel.helpers.Helper;
 import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 import de.eloc.eloc_control_panel.BuildConfig;
 import de.eloc.eloc_control_panel.helpers.Helper;
+import de.eloc.eloc_control_panel.ng.models.AppPreferenceManager;
 
 public class TerminalActivity extends AppCompatActivity implements ServiceConnection, SerialListener {
     private ActivityTerminalBinding binding;
@@ -73,7 +72,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     //   final String gVersion = "AppBeta4.1";
     public ActivityResultLauncher<Intent> settingsLauncher;
     private String deviceAddress = "<no address>";
-    private SerialService service;
+    private SerialServices services;
     private Connected connected = Connected.False;
     private boolean initialStart = true;
     private final boolean hexEnabled = false;
@@ -105,7 +104,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         binding = ActivityTerminalBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        Intent bindIntent = new Intent(this, SerialService.class);
+        Intent bindIntent = new Intent(this, SerialServices.class);
         bindService(bindIntent, this, Context.BIND_AUTO_CREATE);
 
         setActionBar();
@@ -129,8 +128,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         redColor = ContextCompat.getColor(this, R.color.off_color);
         yellowColor = ContextCompat.getColor(this, R.color.middle_color);
 
-        SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
-        rangerName = mPrefs.getString("rangerName", "notSet");
+        rangerName = AppPreferenceManager.INSTANCE.getRangerName();
 
         Log.i("elocApp", "terminal rangerName " + rangerName);
         Log.i("elocApp", "device address " + deviceAddress);
@@ -179,7 +177,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             updateRecordButton();
         }
 
-        if (initialStart && service != null) {
+        if (initialStart && services != null) {
             initialStart = false;
         }
         binding.gpsValueTv.setText(R.string.wait);
@@ -190,11 +188,11 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         super.onStart();
         Log.i("elocApp", "terminal onstart()");
         super.onStart();
-        if (service != null) {
-            service.attach(this);
+        if (services != null) {
+            services.attach(this);
         } else {
             // prevents service destroy on unbind from recreated activity caused by orientation change
-            startService(new Intent(this, SerialService.class));
+            startService(new Intent(this, SerialServices.class));
         }
     }
 
@@ -204,8 +202,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         handleStop();
         //theLocation.endUpdates();
 
-        if (service != null && !isChangingConfigurations()) {
-            service.detach();
+        if (services != null && !isChangingConfigurations()) {
+            services.detach();
         }
         super.onStop();
     }
@@ -219,7 +217,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         }
         if (connected != Connected.False)
             disconnect();
-        stopService(new Intent(this, SerialService.class));
+        stopService(new Intent(this, SerialServices.class));
         super.onDestroy();
     }
 
@@ -254,8 +252,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     public void onServiceConnected(ComponentName name, IBinder binder) {
         SerialBinder serialBinder = (SerialBinder) binder;
         if (serialBinder != null) {
-            service = serialBinder.getService();
-            service.attach(this);
+            services = serialBinder.getService();
+            services.attach(this);
             if (initialStart) {
                 initialStart = false;
                 runOnUiThread(() -> connect(false));
@@ -265,7 +263,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-        service = null;
+        services = null;
     }
 
     /*
@@ -320,8 +318,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             //updateDeviceState(DeviceState.Recording, null);
             connected = Connected.Pending;
             SerialSocket socket = new SerialSocket(getApplicationContext(), device);
-            service.connect(socket);
-            boolean success = service.isConnected();
+            services.connect(socket);
+            boolean success = services.isConnected();
             if (notify && success) {
                 Helper.showSnack(binding.coordinator, getString(R.string.connected));
             }
@@ -338,7 +336,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void disconnect() {
         connected = Connected.False;
-        service.disconnect();
+        services.disconnect();
     }
 
     private void setupScrollHack() {
@@ -422,7 +420,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         // Save device settings; but we can see that tthe value was actually saved. So maybe the firmware need to do a follow
         // let check the old project.
         if (msg.startsWith("#")) {
-            saveSettings(MainSettingsActivity.DATA_KEY, msg);
+            AppPreferenceManager.INSTANCE.setDeviceSettings(msg);
         } else if (msg.startsWith("please check")) {
             hasSDCardError = true;
             showSDCardError();
@@ -458,8 +456,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                 .replace("!14!", "Last GPS Location:  ")
                 .replace("!15!", "Last GPS Accuracy:  ")
                 .replace("!16!", "Session ID:  ");
-        SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
-        long lastGoogleTimestamp = Long.parseLong(mPrefs.getString("lastGoogleTimestamp", "0"));
+
+        long lastGoogleTimestamp = AppPreferenceManager.INSTANCE.getLastGoogleTimestamp();
         data = data.trim() + "\nApp last time sync:  " + Long.toString(((System.currentTimeMillis() - lastGoogleTimestamp) / 1000l / 60l)) + " min\n";
         data = data + "App Version:  " + gVersion;
 
@@ -504,8 +502,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void setDeviceInfo(String msg) {
         // Set data from prefs
-        SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
-        long lastGoogleTimestamp = Long.parseLong(mPrefs.getString("lastGoogleTimestamp", "0"));
+
+        long lastGoogleTimestamp = AppPreferenceManager.INSTANCE.getLastGoogleTimestamp();
         double millisPerHour = 1000 * 3600;
         double hoursSinceLastSync = (System.currentTimeMillis() - lastGoogleTimestamp) / millisPerHour;
         binding.timeSyncValueTv.setText(String.format(Locale.ENGLISH, "%.2f h", hoursSinceLastSync));
@@ -665,14 +663,15 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                             Locale.ENGLISH,
                             "#%s#%s#%s",
                             sampleRate, secondsString, fileHeader);
-                    saveSettings(MainSettingsActivity.DATA_KEY, settings);
+                    AppPreferenceManager.INSTANCE.setDeviceSettings(settings);
+
                 }
                 if ((micGain != null) && (micType != null)) {
                     String settings = String.format(
                             Locale.ENGLISH,
                             "#%s#%s",
                             micType, micGain);
-                    saveSettings(MainSettingsActivity.MIC_DATA_KEY, settings);
+                    AppPreferenceManager.INSTANCE.setMicrophoneSettings(settings);
                 }
             }
         }
@@ -762,7 +761,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             //spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             //receiveText.append(spn); //mark
             appendReceiveText(msg + "\n");
-            service.write(data);
+            services.write(data);
             return null;
         } catch (Exception e) {
             onSerialIoError(e);
@@ -780,11 +779,10 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         //returns a string with the following:
         //X_Y_ZZZZZZZZZZZZZZZ
 
-        SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
 
         //long googletimestamp=  Long.parseLong("0");
-        long lastGoogleTimestamp = Long.parseLong(mPrefs.getString("lastGoogleTimestamp", "0"));
-        long previouselapsedtime = Long.parseLong(mPrefs.getString("elapsedTimeAtGoogleTimestamp", "0"));
+        long lastGoogleTimestamp = AppPreferenceManager.INSTANCE.getLastGoogleTimestamp();
+        long previouselapsedtime = AppPreferenceManager.INSTANCE.getCurrentElapsedTime();
         long currentElapsedTime = SystemClock.elapsedRealtime();
         long elapsedTimeDifferenceMinutes = (currentElapsedTime - previouselapsedtime) / 1000L / 60L;
         long elapsedTimeDifferenceMS = (currentElapsedTime - previouselapsedtime);
@@ -836,12 +834,6 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             binding.statusTv.setText(errorMessage);
         }
         updateRecordButton();
-    }
-
-    private void saveSettings(String key, String settings) {
-        SharedPreferences.Editor editor = App.getInstance().getSharedPrefs().edit();
-        editor.putString(key, settings);
-        editor.apply();
     }
 
     private void updateRecordButton() {
