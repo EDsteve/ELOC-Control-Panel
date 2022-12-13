@@ -32,6 +32,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.openlocationcode.OpenLocationCode;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -39,8 +41,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import de.eloc.eloc_control_panel.App;
-import de.eloc.eloc_control_panel.OpenLocationCode;
+import de.eloc.eloc_control_panel.ng.App;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.SerialListener;
 import de.eloc.eloc_control_panel.SerialService;
@@ -129,7 +130,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         redColor = ContextCompat.getColor(this, R.color.off_color);
         yellowColor = ContextCompat.getColor(this, R.color.middle_color);
 
-        SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
+        SharedPreferences mPrefs = App.Companion.getInstance().getSharedPrefs();
         rangerName = mPrefs.getString("rangerName", "notSet");
 
         Log.i("elocApp", "terminal rangerName " + rangerName);
@@ -458,7 +459,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                 .replace("!14!", "Last GPS Location:  ")
                 .replace("!15!", "Last GPS Accuracy:  ")
                 .replace("!16!", "Session ID:  ");
-        SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
+        SharedPreferences mPrefs = App.Companion.getInstance().getSharedPrefs();
         long lastGoogleTimestamp = Long.parseLong(mPrefs.getString("lastGoogleTimestamp", "0"));
         data = data.trim() + "\nApp last time sync:  " + Long.toString(((System.currentTimeMillis() - lastGoogleTimestamp) / 1000l / 60l)) + " min\n";
         data = data + "App Version:  " + gVersion;
@@ -504,7 +505,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void setDeviceInfo(String msg) {
         // Set data from prefs
-        SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
+        SharedPreferences mPrefs = App.Companion.getInstance().getSharedPrefs();
         long lastGoogleTimestamp = Long.parseLong(mPrefs.getString("lastGoogleTimestamp", "0"));
         double millisPerHour = 1000 * 3600;
         double hoursSinceLastSync = (System.currentTimeMillis() - lastGoogleTimestamp) / millisPerHour;
@@ -780,7 +781,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         //returns a string with the following:
         //X_Y_ZZZZZZZZZZZZZZZ
 
-        SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
+        SharedPreferences mPrefs = App.Companion.getInstance().getSharedPrefs();
 
         //long googletimestamp=  Long.parseLong("0");
         long lastGoogleTimestamp = Long.parseLong(mPrefs.getString("lastGoogleTimestamp", "0"));
@@ -839,7 +840,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     }
 
     private void saveSettings(String key, String settings) {
-        SharedPreferences.Editor editor = App.getInstance().getSharedPrefs().edit();
+        SharedPreferences.Editor editor = App.Companion.getInstance().getSharedPrefs().edit();
         editor.putString(key, settings);
         editor.apply();
     }

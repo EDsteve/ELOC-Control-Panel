@@ -78,8 +78,7 @@ public class BluetoothHelper {
         if (deviceName == null) {
             deviceName = "";
         }
-        //return deviceName.toLowerCase().startsWith("eloc");
-        return true;
+        return deviceName.toLowerCase().startsWith("eloc");
     }
 
     @SuppressLint("MissingPermission")

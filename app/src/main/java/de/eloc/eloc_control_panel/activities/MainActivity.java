@@ -32,7 +32,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-import de.eloc.eloc_control_panel.App;
+import de.eloc.eloc_control_panel.ng.App;
 import de.eloc.eloc_control_panel.BuildConfig;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.SNTPClient;
@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     public String rangerName;
     public boolean gUploadEnabled = false;
     private Long gLastTimeDifferenceMillisecond = 0L;
-    private final String DEFAULT_RANGER_NAME = "notSet";
+
     private final BluetoothScanReceiver receiver = new BluetoothScanReceiver(this::onListUpdated);
 
     @Override
@@ -131,11 +131,13 @@ public class MainActivity extends AppCompatActivity {
             binding.initLayout.setVisibility(View.VISIBLE);
             binding.uploadElocStatusButton.setVisibility(View.GONE);
             binding.refreshListButton.setVisibility(View.GONE);
+            binding.findElocButton.setVisibility(View.GONE);
         } else {
             binding.devicesListView.setVisibility(View.VISIBLE);
             binding.initLayout.setVisibility(View.GONE);
             binding.uploadElocStatusButton.setVisibility(View.VISIBLE);
             binding.refreshListButton.setVisibility(View.VISIBLE);
+            binding.findElocButton.setVisibility(View.VISIBLE);
         }
         if (scanFinished) {
             if (BluetoothHelper.hasEmptyAdapter()) {
@@ -240,7 +242,7 @@ public class MainActivity extends AppCompatActivity {
     private void checkRangerName() {
         loadRangerName();
         rangerName = rangerName.trim();
-        if (TextUtils.isEmpty(rangerName) || rangerName.equals(DEFAULT_RANGER_NAME)) {
+        if (TextUtils.isEmpty(rangerName) || rangerName.equals(Helper.DEFAULT_RANGER_NAME)) {
             editRangerName();
         }
     }
@@ -287,6 +289,7 @@ public class MainActivity extends AppCompatActivity {
         binding.instructionsButton.setOnClickListener(view -> Helper.openInstructionsUrl(MainActivity.this));
         binding.refreshListButton.setOnClickListener(view -> startScan());
         binding.uploadElocStatusButton.setOnClickListener(view -> uploadElocStatus());
+        binding.findElocButton.setOnClickListener(view -> showMap());
     }
 
     private void initialize() {
@@ -294,6 +297,11 @@ public class MainActivity extends AppCompatActivity {
         setupListView();
         listFiles();
         setRangerName();
+    }
+
+    private void showMap() {
+        Intent intent = new Intent(this, MapActivity.class);
+        startActivity(intent);
     }
 
     private void registerScanReceiver() {
@@ -312,11 +320,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadRangerName() {
-        rangerName = App.getInstance().getSharedPrefs().getString("rangerName", DEFAULT_RANGER_NAME);
+        rangerName = App.Companion.getInstance().getSharedPrefs().getString("rangerName", Helper.DEFAULT_RANGER_NAME);
     }
 
     private void setRangerName() {
-        rangerName = App.getInstance().getSharedPrefs().getString("rangerName", DEFAULT_RANGER_NAME);
+        rangerName = App.Companion.getInstance().getSharedPrefs().getString("rangerName", Helper.DEFAULT_RANGER_NAME);
         Log.i("elocApp", "ranger Name " + rangerName);
     }
 
@@ -385,7 +393,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void saveRangerName(String theName) {
-        SharedPreferences.Editor mEditor = App.getInstance().getSharedPrefs().edit();
+        SharedPreferences.Editor mEditor = App.Companion.getInstance().getSharedPrefs().edit();
         mEditor.putString("rangerName", theName).apply();
         loadRangerName();
     }
@@ -421,7 +429,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void saveTimestamps(Long gCurrentElapsedTimeMS, Long gLastGoogleSyncTimestampMS) {
-        SharedPreferences.Editor mEditor = App.getInstance().getSharedPrefs().edit();
+        SharedPreferences.Editor mEditor = App.Companion.getInstance().getSharedPrefs().edit();
         mEditor.putString("elapsedTimeAtGoogleTimestamp", gCurrentElapsedTimeMS.toString()).apply();
         mEditor.putString("lastGoogleTimestamp", gLastGoogleSyncTimestampMS.toString()).apply();
     }

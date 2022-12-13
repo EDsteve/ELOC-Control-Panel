@@ -17,6 +17,8 @@ import com.google.android.material.snackbar.Snackbar;
 import de.eloc.eloc_control_panel.R;
 
 public class Helper {
+    public static final String DEFAULT_RANGER_NAME = "notSet";
+
     public static void openInstructionsUrl(Context context) {
         if (context != null) {
             String url = context.getString(R.string.instructions_url);

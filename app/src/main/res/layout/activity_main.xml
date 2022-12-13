@@ -32,6 +32,15 @@
             app:layout_constraintStart_toStartOf="parent" />
 
         <Button
+            android:id="@+id/find_eloc_button"
+            android:layout_height="?actionBarSize"
+            android:layout_width="match_parent"
+            android:text="@string/map_button_text"
+            android:textColor="#fff"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toTopOf="@id/upload_eloc_status_button" />
+
+        <Button
             android:id="@+id/upload_eloc_status_button"
             android:layout_height="?actionBarSize"
             android:layout_width="match_parent"

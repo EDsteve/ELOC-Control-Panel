@@ -71,4 +71,23 @@
     <string name="refreshing">Refreshing…</string>
     <string name="advanced_options">Advanced options</string>
     <string name="scan_error">Something went wrong.\n\nFailed to scan for bluetooth devices!</string>
+    <string name="loading_map">Loading map…</string>
+    <string name="filter">Filter</string>
+    <string name="filter_by_ranger">Filter by ranger</string>
+    <string name="hide_filter">Hide filter</string>
+    <string name="find_your_elocs">Find your ELOCs</string>
+    <string name="show_all_elocs">Show all ELOCs</string>
+    <string name="map_button_text">FIND MY ELOC</string>
+    <string name="preparing">Preparing…</string>
+    <string name="no_bluetooth_adapter">A bluetooth adapter was not found on this device.\n\nTry using a device that has a bluetooth adapter.</string>
+    <string name="bluetooth_error">Bluetooth error</string>
+    <string name="bluetooth_off_message">You must turn on bluetooth\nto proceed</string>
+    <string name="turn_on">Turn on</string>
+    <string name="bluetooth_disabled">Bluetooth disabled</string>
+    <string name="bluetooth_permission_required_message">You must enable bluetooth permission\nto proceed\n\nOn newer devices, enable the permission for\n\"Nearby devices\"\nin the permissions section</string>
+    <string name="location_permission_required_message">You must enable location permission\nto proceed</string>
+    <string name="enable">Enable</string>
+    <string name="location_permission_required">Location permission required</string>
+    <string name="bluetooth_content_description">Bluetooth permission needed</string>
+    <string name="refresh">Refresh</string>
 </resources>
