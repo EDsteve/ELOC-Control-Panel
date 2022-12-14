@@ -15,6 +15,7 @@ android {
         versionName '4.62'
         versionNameSuffix 'AppBeta'
         multiDexEnabled true
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildFeatures {
@@ -36,7 +37,7 @@ android {
 dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.5.1'
-    implementation 'com.google.android.material:material:1.7.0'
+    implementation 'com.google.android.material:material:1.8.0-beta01'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.work:work-runtime:2.7.1'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01'

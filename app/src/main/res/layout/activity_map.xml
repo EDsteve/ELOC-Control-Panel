@@ -10,7 +10,7 @@
         android:id="@+id/appbar"
         layout="@layout/layout_appbar" />
 
-    <RelativeLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         map:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
@@ -20,7 +20,55 @@
             android:id="@+id/mapView"
             android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="0dp"
+            map:layout_constraintBottom_toTopOf="@id/unknown_devices_panel"
+            map:layout_constraintTop_toTopOf="parent" />
+
+
+        <LinearLayout
+            android:id="@+id/unknown_devices_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            map:layout_constraintBottom_toBottomOf="parent">
+
+            <LinearLayout
+                android:id="@+id/unknown_devices_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/elocs_with_unknown_location"
+                    android:textColor="#fff"
+                    android:textSize="16sp" />
+
+                <ImageView
+                    android:id="@+id/down_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_down" />
+
+                <ImageView
+                    android:id="@+id/up_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_up" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/unknown_devices_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp" />
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/loading_layout"
@@ -29,7 +77,11 @@
             android:layout_centerInParent="true"
             android:layout_margin="16dp"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            map:layout_constraintBottom_toBottomOf="parent"
+            map:layout_constraintEnd_toEndOf="parent"
+            map:layout_constraintStart_toStartOf="parent"
+            map:layout_constraintTop_toTopOf="parent">
 
             <TextView
                 android:id="@+id/message_text_view"
@@ -45,5 +97,5 @@
 
         </LinearLayout>
 
-    </RelativeLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

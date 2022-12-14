@@ -90,4 +90,5 @@
     <string name="location_permission_required">Location permission required</string>
     <string name="bluetooth_content_description">Bluetooth permission needed</string>
     <string name="refresh">Refresh</string>
+    <string name="elocs_with_unknown_location">ELOCS with unknown location</string>
 </resources>

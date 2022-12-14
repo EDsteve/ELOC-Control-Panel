@@ -2,9 +2,9 @@ package de.eloc.eloc_control_panel.activities;
 
 import android.annotation.SuppressLint;
 import android.location.Location;
-import android.os.Build;
 import android.os.Bundle;
-import android.view.Menu;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -13,7 +13,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -22,7 +21,6 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.openlocationcode.OpenLocationCode;
 
@@ -31,21 +29,29 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Locale;
-import java.util.concurrent.Executors;
 
 import de.eloc.eloc_control_panel.R;
-import de.eloc.eloc_control_panel.adapters.RangerFilterAdapter;
 import de.eloc.eloc_control_panel.databinding.ActivityMapBinding;
-import de.eloc.eloc_control_panel.databinding.LayoutRangerFilterBinding;
 import de.eloc.eloc_control_panel.databinding.WindowLayoutBinding;
 import de.eloc.eloc_control_panel.helpers.HttpHelper;
 import de.eloc.eloc_control_panel.models.ElocDeviceInfo;
 import de.eloc.eloc_control_panel.models.ElocMarker;
 
 public class MapActivity extends AppCompatActivity {
+    /*
+    For reference, use the info below to help set default zoom level for when a marker is tapped:
+    1: World
+    5: Landmass/continent
+    10: City
+    15: Streets
+    20: Buildings
+     */
+    private static final int MARKER_ZOOM = 18;
+    private static final int INITIAL_ZOOM = 10; // City level
+    private int customZoom = -1;
+    private ArrayList<String> unknowDevices = new ArrayList<>();
     private ActivityMapBinding binding;
     private GoogleMap map = null;
-    private String[] allRangers = new String[]{};
     private LatLngBounds mapBounds = null;
     private ArrayList<ElocDeviceInfo> devices = null;
     private ClusterManager<ElocMarker> clusterManager = null;
@@ -60,7 +66,11 @@ public class MapActivity extends AppCompatActivity {
 
         @Override
         public View getInfoWindow(@NonNull Marker marker) {
-            map.animateCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.builder().zoom(15).target(marker.getPosition()).build()));
+            // When a marker info window is shown, reset lastCustomZoom
+            // so that when clusters are clicked on later, the map will not zoom too deep
+            customZoom = INITIAL_ZOOM;
+
+            zoomTo(MARKER_ZOOM, marker.getPosition());
             WindowLayoutBinding windowLayoutBinding = WindowLayoutBinding.inflate(getLayoutInflater());
             windowLayoutBinding.titleTextView.setText(marker.getTitle());
             windowLayoutBinding.snippetTextView.setText(marker.getSnippet());
@@ -76,6 +86,8 @@ public class MapActivity extends AppCompatActivity {
 
         setContentView(binding.getRoot());
         setToolbar();
+        setListeners();
+        hideUnknownDevices();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(binding.mapView.getId());
         if (mapFragment != null) {
@@ -84,13 +96,7 @@ public class MapActivity extends AppCompatActivity {
                 showMap();
             });
         }
-        HttpHelper.getElocDevicesAsync();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.map_menu, menu);
-        return true;
+        HttpHelper.getElocDevicesAsync(this::elocDeviceInfoReceived);
     }
 
     @Override
@@ -98,9 +104,6 @@ public class MapActivity extends AppCompatActivity {
         int id = item.getItemId();
         if (id == android.R.id.home) {
             onBackPressed();
-            return true;
-        } else if (id == R.id.action_filter) {
-            showFilter();
             return true;
         }
         return false;
@@ -115,48 +118,50 @@ public class MapActivity extends AppCompatActivity {
         }
     }
 
-    private void getElocDevicessdfsdf() {
-        Executors.newSingleThreadScheduledExecutor().execute(() -> {
-            // Not
-            devices = HttpHelper.getElocDevicesAsync();
-            HashSet<String> rangerSet = new HashSet<>();
-            for (ElocDeviceInfo device : devices) {
-                rangerSet.add(device.ranger);
-            }
-            allRangers = rangerSet.toArray(new String[]{});
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Arrays.sort(allRangers, Comparator.comparing(String::toLowerCase));
+    private void elocDeviceInfoReceived(ArrayList<ElocDeviceInfo> infos) {
+        devices = infos;
+        showMap();
+    }
+
+    private void zoomTo(int zoomLevel, LatLng position) {
+        // Set a delay so that cluster manager does not interfere with zoom animation
+        int delayMillis = 1200;
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(
+                () -> map.animateCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.builder().zoom(zoomLevel).target(position).build()))
+                , delayMillis
+        );
+
+    }
+
+    private void setListeners() {
+        binding.unknownDevicesButton.setOnClickListener(v -> {
+            if (binding.upIcon.getVisibility() == View.VISIBLE) {
+                collapseUnknownDevices();
             } else {
-                Arrays.sort(allRangers, (a, b) -> a.toLowerCase().compareTo(b.toLowerCase()));
+                expandUnknownDevices();
             }
-            showMap();
         });
     }
 
-    private void showFilter() {
+    private void expandUnknownDevices() {
+        binding.upIcon.setVisibility(View.VISIBLE);
+        binding.downIcon.setVisibility(View.GONE);
+        binding.unknownDevicesTextView.setVisibility(View.VISIBLE);
+    }
 
-        // Show the dialog in the bottom third of the device screen.
-        double displayHeight = getResources().getDisplayMetrics().heightPixels;
-        int dialogHeight = (int) (displayHeight / 3);
+    private void collapseUnknownDevices() {
+        binding.upIcon.setVisibility(View.GONE);
+        binding.downIcon.setVisibility(View.VISIBLE);
+        binding.unknownDevicesTextView.setVisibility(View.GONE);
+    }
 
-        BottomSheetDialog filterDialog = new BottomSheetDialog(this);
-        filterDialog.setTitle(getString(R.string.filter_by_ranger));
+    private void hideUnknownDevices() {
+        binding.unknownDevicesPanel.setVisibility(View.GONE);
+    }
 
-        LayoutRangerFilterBinding rangerFilterBinding = LayoutRangerFilterBinding.inflate(getLayoutInflater());
-        rangerFilterBinding.backButton.setOnClickListener(v -> filterDialog.dismiss());
-        RangerFilterAdapter adapter = new RangerFilterAdapter(allRangers);
-        rangerFilterBinding.rangerRecyclerView.setAdapter(adapter);
-        rangerFilterBinding.rangerRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-
-        ConstraintLayout.LayoutParams layoutParams = (ConstraintLayout.LayoutParams) rangerFilterBinding.rangerRecyclerView.getLayoutParams();
-        if (layoutParams != null) {
-            layoutParams.height = dialogHeight;
-            rangerFilterBinding.rangerRecyclerView.setLayoutParams(layoutParams);
-        }
-        filterDialog.setContentView(rangerFilterBinding.getRoot());
-        filterDialog.setOnDismissListener(dialog -> showDevices());
-        filterDialog.setOnCancelListener(dialog -> showDevices());
-        filterDialog.show();
+    private void showUnknownDevices() {
+        binding.unknownDevicesPanel.setVisibility(View.VISIBLE);
     }
 
     @SuppressLint("MissingPermission")
@@ -177,6 +182,16 @@ public class MapActivity extends AppCompatActivity {
 
             clusterManager = new ClusterManager<>(this, map);
             clusterManager.getMarkerCollection().setInfoWindowAdapter(infoWindowAdapter);
+            clusterManager.setOnClusterClickListener(cluster -> {
+                // Changing the zoom level on each tap so that map keeps zooming in.
+                if (customZoom < INITIAL_ZOOM) {
+                    customZoom = INITIAL_ZOOM;
+                } else {
+                    customZoom += 5;
+                }
+                zoomTo(customZoom, cluster.getPosition());
+                return true;
+            });
             map.setOnCameraIdleListener(clusterManager);
             showDevices();
         });
@@ -189,29 +204,46 @@ public class MapActivity extends AppCompatActivity {
             clusterManager.clearItems();
             usedLocations.clear();
         }
-        ArrayList<ElocDeviceInfo> filteredList = applyFilter();
-        for (ElocDeviceInfo device : filteredList) {
+        unknowDevices.clear();
+        for (ElocDeviceInfo device : devices) {
             addMarker(device);
         }
-        clusterManager.cluster();
+        if (clusterManager != null) {
+            clusterManager.cluster();
+        }
     }
 
-    ArrayList<ElocDeviceInfo> applyFilter() {
-        ArrayList<ElocDeviceInfo> filteredDevices = new ArrayList<>();
-        HashSet<String> filter = RangerFilterAdapter.getFilter();
-        if ((filter == null) || filter.isEmpty()) {
-            return devices;
-        }
-        for (ElocDeviceInfo device : devices) {
-            if (filter.contains(device.ranger)) {
-                filteredDevices.add(device);
+    private void updateUnknownDevices() {
+        StringBuilder builder = new StringBuilder();
+        String[] names = unknowDevices.toArray(new String[]{});
+        Arrays.sort(names);
+        int maxIndex = names.length - 1;
+        for (int i = 0; i <= maxIndex; i++) {
+            builder.append(names[i]);
+            if (i < maxIndex) {
+                builder.append(", ");
             }
         }
-        return filteredDevices;
+        binding.unknownDevicesTextView.setText(builder.toString());
     }
 
     private void addMarker(ElocDeviceInfo device) {
-        OpenLocationCode.CodeArea decodedVal = OpenLocationCode.decode(device.plusCode);
+        OpenLocationCode.CodeArea decodedVal = null;
+        try {
+            decodedVal = OpenLocationCode.decode(device.plusCode);
+        } catch (IllegalArgumentException ignore) {
+
+        }
+
+        // If location code is invalid, add to unknown list and skip
+        if (decodedVal == null) {
+            unknowDevices.add(device.name);
+            showUnknownDevices();
+            expandUnknownDevices();
+            updateUnknownDevices();
+            return;
+        }
+
         LatLng location = new LatLng(decodedVal.getCenterLatitude(), decodedVal.getCenterLongitude());
         String stringifiedLocation = location.latitude + ":" + location.longitude;
         double offset = -1;
@@ -232,13 +264,11 @@ public class MapActivity extends AppCompatActivity {
         if (clusterManager != null) {
             String snippet = "Last Update: " + device.time + "\n" +
                     "\n" +
-                    "GPS Accuracy: " + getPretty(2, device.accuracy) + "\n" +
+                    "GPS Accuracy: " + getPretty(device.accuracy) + "\n" +
                     "\n" +
-                    "Battery volts: " + getPretty(2, device.batteryVolts) + "\n" +
+                    "Battery volts: " + getPretty(device.batteryVolts) + "\n" +
                     "\n" +
-                    "Ranger: " + device.ranger + "\n" +
-                    "\n" +
-                    "Rec Time: " + getPretty(2, device.recTime);
+                    "Rec Time: " + getPretty(device.recTime);
             if (offset > 0) {
                 snippet += String.format(Locale.ENGLISH, "\n\n(Offset by ~ %.2fm)", offset);
             }
@@ -249,8 +279,8 @@ public class MapActivity extends AppCompatActivity {
         }
     }
 
-    private String getPretty(int decimalPlaces, double value) {
-        String formatString = "%." + decimalPlaces + "f";
+    private String getPretty(double value) {
+        String formatString = "%.2f";
         return String.format(Locale.ENGLISH, formatString, value);
     }
 }
