@@ -54,6 +54,7 @@ import de.eloc.eloc_control_panel.helpers.Helper;
 import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 import de.eloc.eloc_control_panel.BuildConfig;
 import de.eloc.eloc_control_panel.helpers.Helper;
+import de.eloc.eloc_control_panel.ng.models.AppPreferenceManager;
 
 public class TerminalActivity extends AppCompatActivity implements ServiceConnection, SerialListener {
     private ActivityTerminalBinding binding;
@@ -423,7 +424,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         // Save device settings; but we can see that tthe value was actually saved. So maybe the firmware need to do a follow
         // let check the old project.
         if (msg.startsWith("#")) {
-            saveSettings(MainSettingsActivity.DATA_KEY, msg);
+            AppPreferenceManager.INSTANCE.setDeviceSettings(msg);
         } else if (msg.startsWith("please check")) {
             hasSDCardError = true;
             showSDCardError();
@@ -666,14 +667,14 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                             Locale.ENGLISH,
                             "#%s#%s#%s",
                             sampleRate, secondsString, fileHeader);
-                    saveSettings(MainSettingsActivity.DATA_KEY, settings);
+                    AppPreferenceManager.INSTANCE.setDeviceSettings(settings);
                 }
                 if ((micGain != null) && (micType != null)) {
                     String settings = String.format(
                             Locale.ENGLISH,
                             "#%s#%s",
                             micType, micGain);
-                    saveSettings(MainSettingsActivity.MIC_DATA_KEY, settings);
+                    AppPreferenceManager.INSTANCE.setMicrophoneSettings(settings);
                 }
             }
         }
