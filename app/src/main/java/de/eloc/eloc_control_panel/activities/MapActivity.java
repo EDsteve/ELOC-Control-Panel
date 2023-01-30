@@ -46,9 +46,9 @@ public class MapActivity extends AppCompatActivity {
     15: Streets
     20: Buildings
      */
-    private static final int MARKER_ZOOM = 18;
+    private static final int MARKER_ZOOM = 12;
     private static final int INITIAL_ZOOM = 10; // City level
-    private int customZoom = -1;
+    private int customZoom = 2;
     private ArrayList<String> unknowDevices = new ArrayList<>();
     private ActivityMapBinding binding;
     private GoogleMap map = null;

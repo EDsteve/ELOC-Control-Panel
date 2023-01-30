@@ -104,15 +104,7 @@ public class PermissionsActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             boolean hasFineLocationPermission = (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED);
             boolean hasCoarseLocationPermission = (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED);
-            return hasFineLocationPermission && hasCoarseLocationPermission && hasBackgroundLocationPermission();
-        } else {
-            return true;
-        }
-    }
-
-    private boolean hasBackgroundLocationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            return (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED);
+            return hasFineLocationPermission && hasCoarseLocationPermission;
         } else {
             return true;
         }
@@ -158,10 +150,6 @@ public class PermissionsActivity extends AppCompatActivity {
                 boolean showCoarseLocationRationale = shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION);
 
                 boolean showRationale = showCoarseLocationRationale || showFineLocationRationale;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    boolean showBackgroundLocationRationale = shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
-                    showRationale = showRationale || showBackgroundLocationRationale;
-                }
                 if (showRationale) {
                     String message = "This app needs to use the device location for recording coordinates.\n\nDo you want to grant the permissions now?";
                     new AlertDialog.Builder(this)
@@ -191,12 +179,7 @@ public class PermissionsActivity extends AppCompatActivity {
     }
 
     private void askLocationPermissions() {
-        String[] permissions = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ?
-                new String[]{
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-                } : new String[]{
+        String[] permissions = new String[]{
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION,
         };

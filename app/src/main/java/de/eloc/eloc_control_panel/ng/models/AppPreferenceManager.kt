@@ -13,6 +13,7 @@ object AppPreferenceManager {
     private const val PREF_RANGER_NAME = "rangerName"
     private const val PREF_ELAPSED_TIME_AT_GOOGLE_TIMESTAMP = "elapsedTimeAtGoogleTimestamp"
     private const val PREF_LAST_GOOGLE_TIMESTAMP = "lastGoogleTimestamp"
+    private const val PREF_DISABLE_LOCATION_PROMPT = "disableLocationPrompt"
 
     fun setRangerName(name: String) {
         preferences.edit()
@@ -80,5 +81,11 @@ object AppPreferenceManager {
 
     fun getLastGoogleTimestamp(): Long =
         preferences.getLong(PREF_LAST_GOOGLE_TIMESTAMP, 0)
+
+    fun isLocationPromptDisabled(): Boolean =
+        preferences.getBoolean(PREF_DISABLE_LOCATION_PROMPT, false)
+
+    fun setLocationPromptDisabled() =
+        preferences.edit().putBoolean(PREF_DISABLE_LOCATION_PROMPT, true).apply()
 
 }

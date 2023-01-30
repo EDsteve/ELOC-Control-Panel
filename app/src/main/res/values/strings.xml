@@ -91,4 +91,6 @@
     <string name="bluetooth_content_description">Bluetooth permission needed</string>
     <string name="refresh">Refresh</string>
     <string name="elocs_with_unknown_location">ELOCS with unknown location</string>
+    <string name="location_service_usage_title">Location Service Usage</string>
+    <string name="location_service_usage_message">Note that %s collects location data\nto enable the maps feature.</string>
 </resources>

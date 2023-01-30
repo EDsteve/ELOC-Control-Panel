@@ -13,6 +13,7 @@ import android.os.SystemClock;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,6 +33,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import de.eloc.eloc_control_panel.databinding.LayoutLocationPromptBinding;
 import de.eloc.eloc_control_panel.ng.App;
 import de.eloc.eloc_control_panel.BuildConfig;
 import de.eloc.eloc_control_panel.R;
@@ -41,6 +43,7 @@ import de.eloc.eloc_control_panel.databinding.ActivityMainBinding;
 import de.eloc.eloc_control_panel.databinding.PopupWindowBinding;
 import de.eloc.eloc_control_panel.helpers.BluetoothHelper;
 import de.eloc.eloc_control_panel.helpers.Helper;
+import de.eloc.eloc_control_panel.ng.models.AppPreferenceManager;
 import de.eloc.eloc_control_panel.receivers.BluetoothScanReceiver;
 
 public class MainActivity extends AppCompatActivity {
@@ -74,6 +77,10 @@ public class MainActivity extends AppCompatActivity {
         onListUpdated(hasNoDevices, false);
         if (hasNoDevices) {
             setBluetoothStatus(BluetoothHelper.getInstance().isAdapterOn());
+        }
+        if (!AppPreferenceManager.INSTANCE.isLocationPromptDisabled()) {
+            // NOTE: Comment line below to disable the popup
+            // showPopup();
         }
     }
 
@@ -129,15 +136,9 @@ public class MainActivity extends AppCompatActivity {
         if (showScanUI) {
             binding.devicesListView.setVisibility(View.GONE);
             binding.initLayout.setVisibility(View.VISIBLE);
-            binding.uploadElocStatusButton.setVisibility(View.GONE);
-            binding.refreshListButton.setVisibility(View.GONE);
-            binding.findElocButton.setVisibility(View.GONE);
         } else {
             binding.devicesListView.setVisibility(View.VISIBLE);
             binding.initLayout.setVisibility(View.GONE);
-            binding.uploadElocStatusButton.setVisibility(View.VISIBLE);
-            binding.refreshListButton.setVisibility(View.VISIBLE);
-            binding.findElocButton.setVisibility(View.VISIBLE);
         }
         if (scanFinished) {
             if (BluetoothHelper.hasEmptyAdapter()) {
@@ -432,6 +433,21 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences.Editor mEditor = App.Companion.getInstance().getSharedPrefs().edit();
         mEditor.putString("elapsedTimeAtGoogleTimestamp", gCurrentElapsedTimeMS.toString()).apply();
         mEditor.putString("lastGoogleTimestamp", gLastGoogleSyncTimestampMS.toString()).apply();
+    }
+
+    private void showPopup() {
+        String appName = getString(R.string.app_name);
+        String message = getString(R.string.location_service_usage_message, appName);
+        LayoutInflater inflater = getLayoutInflater();
+        LayoutLocationPromptBinding locationPromptBinding = LayoutLocationPromptBinding.inflate(inflater);
+        locationPromptBinding.messageTextView.setText(message);
+        new AlertDialog.Builder(this)
+                .setView(locationPromptBinding.getRoot())
+                .setPositiveButton(android.R.string.ok, (dialog, i) -> {
+                    AppPreferenceManager.INSTANCE.setLocationPromptDisabled();
+                    dialog.dismiss();
+                })
+                .show();
     }
 
 
