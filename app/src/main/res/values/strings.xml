@@ -64,7 +64,6 @@
     <string name="session_id">Session ID</string>
     <string name="appversion">App Version</string>
     <string name="instructions">Instructions @ <u>wildlifebug.com</u></string>
-    <string name="instructions_url">https://wildlifebug.com</string>
     <string name="refresh_list">Refresh List</string>
     <string name="upload_eloc_status">Upload Eloc Status</string>
     <string name="connected">Connected</string>
@@ -82,4 +81,21 @@
     <string name="location_permission_required">Location permission required</string>
     <string name="bluetooth_content_description">Bluetooth permission needed</string>
     <string name="refresh">Refresh</string>
+    <string name="a_few_things_must_be_done_to_proceed">A few things must be done to proceed…</string>
+    <string name="set_location_permission">Set Location Permission</string>
+    <string name="enable_location">Enable Location</string>
+    <string name="set_bluetooth_permissions">Set Bluetooth Permissions</string>
+    <string name="unsupported_device">Unsupported device</string>
+    <string name="unsupported_device_message">This device does not support Bluetooth LE.\nTry running the app on a newer device</string>
+    <string name="enable_bluetooth">Enable bluetooth</string>
+    <string name="permission_required">Permission required</string>
+    <string name="location_service_rationale">%s needs to use location service to interact with bluetooth devices</string>
+    <string name="bluetooth_rationale">%s needs to connect with bluetooth devices</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="user_action_required">User action required</string>
+    <string name="manual_location">You must manually enable the location permission to use location for bluetooth devices</string>
+    <string name="manual_bluetooth">You must manually enable the bluetooth permissions to connect with bluetooth devices</string>
+    <string name="open_settings">Open settings</string>
+    <string name="stop">Stop (%d)</string>
+
 </resources>

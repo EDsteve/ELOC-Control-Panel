@@ -1,177 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
     android:padding="16dp"
     tools:context=".ng.activities.SetupActivity">
 
     <TextView
-        android:id="@+id/status"
+        android:id="@+id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/preparing"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="invisible" />
+        android:layout_marginTop="32dp"
+        android:text="@string/a_few_things_must_be_done_to_proceed" />
 
-    <com.google.android.material.progressindicator.LinearProgressIndicator
-        android:id="@+id/progress_horizontal"
-        android:layout_width="match_parent"
+    <Button
+        android:id="@+id/location_button"
+        style="@style/ButtonStyle"
+        android:layout_width="@dimen/setup_button_width"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:indeterminate="true"
-        app:layout_constraintTop_toBottomOf="@id/status"
-        tools:visibility="invisible" />
+        android:layout_marginTop="32dp"
+        android:text="@string/set_location_permission" />
 
-    <LinearLayout
-        android:id="@+id/no_bluetooth_layout"
-        android:layout_width="wrap_content"
+    <Button
+        android:id="@+id/location_state_button"
+        style="@style/ButtonStyle"
+        android:layout_width="@dimen/setup_button_width"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="invisible">
+        android:layout_marginTop="32dp"
+        android:text="@string/enable_location" />
 
-        <ImageView
-            android:layout_width="@dimen/setup_icon_size"
-            android:layout_height="@dimen/setup_icon_size"
-            android:contentDescription="@string/bluetooth_error"
-            android:src="@drawable/error" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:text="@string/no_bluetooth_adapter"
-            android:textAlignment="center" />
-
-        <Button
-            android:id="@+id/close_app_button"
-            style="@style/ButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="Close App" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/bluetooth_off_layout"
-        android:layout_width="wrap_content"
+    <Button
+        android:id="@+id/bluetooth_button"
+        style="@style/ButtonStyle"
+        android:layout_width="@dimen/setup_button_width"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="visible">
+        android:layout_marginTop="32dp"
+        android:text="@string/set_bluetooth_permissions" />
 
-        <ImageView
-            android:layout_width="@dimen/setup_icon_size"
-            android:layout_height="@dimen/setup_icon_size"
-            android:contentDescription="@string/bluetooth_disabled"
-            android:src="@drawable/bluetooth_disabled" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:text="@string/bluetooth_off_message"
-            android:textAlignment="center" />
-
-        <Button
-            android:id="@+id/turn_bluetooth_button"
-            style="@style/ButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="@string/turn_on" />
-
-        <Button
-            android:id="@+id/refresh_button"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="@string/refresh" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/manual_bluetooth_layout"
-        android:layout_width="wrap_content"
+    <Button
+        android:id="@+id/bluetooth_state_button"
+        style="@style/ButtonStyle"
+        android:layout_width="@dimen/setup_button_width"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="invisible">
+        android:layout_marginTop="32dp"
+        android:text="@string/enable_bluetooth" />
 
-        <ImageView
-            android:layout_width="@dimen/setup_icon_size"
-            android:layout_height="@dimen/setup_icon_size"
-            android:contentDescription="@string/bluetooth_content_description"
-            android:src="@drawable/bluetooth" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:text="@string/bluetooth_permission_required_message"
-            android:textAlignment="center" />
-
-        <Button
-            android:id="@+id/bluetooth_permissions_button"
-            style="@style/ButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="@string/enable" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/manual_location_layout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="invisible">
-
-        <ImageView
-            android:layout_width="@dimen/setup_icon_size"
-            android:layout_height="@dimen/setup_icon_size"
-            android:contentDescription="@string/location_permission_required"
-            android:src="@drawable/location" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:text="@string/location_permission_required_message"
-            android:textAlignment="center" />
-
-        <Button
-            android:id="@+id/location_permissions_button"
-            style="@style/ButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="@string/enable" />
-    </LinearLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

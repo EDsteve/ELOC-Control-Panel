@@ -17,10 +17,11 @@
  * limitations under the License.
  */
 package de.eloc.eloc_control_panel;
+
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
-import 	android.content.Context;
+import android.content.Context;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -30,8 +31,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+
 import android.content.SharedPreferences;
-import android.widget.Toast; 
+import android.widget.Toast;
+
 /**
  * {@hide}
  * <p>
@@ -45,10 +48,11 @@ import android.widget.Toast;
  * </pre>
  */
 public class SNTPClient {
-	//eloc stuff
-	public static Long gElapsedRealtimeAtLastGoogleSync=0L;
-	//end eloc
-   public interface Listener {
+    //eloc stuff
+    public static Long gElapsedRealtimeAtLastGoogleSync = 0L;
+
+    //end eloc
+    public interface Listener {
         void onTimeResponse(String rawDate, Date date, Long timestamp, Exception ex);
     }
 
@@ -102,7 +106,7 @@ public class SNTPClient {
 		
 		
 		
-	} */ 
+	} */
 
 
 
@@ -265,7 +269,7 @@ public class SNTPClient {
         buffer[offset++] = (byte) (Math.random() * 255.0);
     }
 
-    public static void getDate(TimeZone _timeZone, Listener _listener, int timeoutMS) {
+    public static void getDate(int timeoutMS, TimeZone _timeZone, Listener _listener) {
 
         new Thread(() -> {
 
@@ -274,7 +278,7 @@ public class SNTPClient {
             if (sntpClient.requestTime("time.google.com", timeoutMS)) {
 
                 long nowAsPerDeviceTimeZone = sntpClient.getNtpTime();
-				gElapsedRealtimeAtLastGoogleSync=SystemClock.elapsedRealtime();
+                gElapsedRealtimeAtLastGoogleSync = SystemClock.elapsedRealtime();
 
                 SIMPLE_DATE_FORMAT.setTimeZone(_timeZone);
                 String rawDate = SIMPLE_DATE_FORMAT.format(nowAsPerDeviceTimeZone);
@@ -282,9 +286,9 @@ public class SNTPClient {
                 try {
                     Date date = SIMPLE_DATE_FORMAT.parse(rawDate);
                     new Handler(Looper.getMainLooper()).post(() -> _listener.onTimeResponse(rawDate, date, nowAsPerDeviceTimeZone, null));
-					
-				} catch (ParseException e) {
-                    new Handler(Looper.getMainLooper()).post(() -> _listener.onTimeResponse(null, null,0L, e));
+
+                } catch (ParseException e) {
+                    new Handler(Looper.getMainLooper()).post(() -> _listener.onTimeResponse(null, null, 0L, e));
                 }
             }
         }).start();

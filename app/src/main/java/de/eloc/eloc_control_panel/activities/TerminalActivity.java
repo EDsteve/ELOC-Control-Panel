@@ -37,8 +37,8 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import de.eloc.eloc_control_panel.ng.App;
 import de.eloc.eloc_control_panel.OpenLocationCode;
+import de.eloc.eloc_control_panel.ng2.App;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.SerialListener;
 import de.eloc.eloc_control_panel.SerialServices;
@@ -47,13 +47,15 @@ import de.eloc.eloc_control_panel.SerialSocket;
 import de.eloc.eloc_control_panel.SimpleLocation;
 import de.eloc.eloc_control_panel.TextUtil;
 import de.eloc.eloc_control_panel.helpers.BluetoothHelper;
-import de.eloc.eloc_control_panel.helpers.Helper;
 import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 import de.eloc.eloc_control_panel.BuildConfig;
-import de.eloc.eloc_control_panel.helpers.Helper;
+import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
+import de.eloc.eloc_control_panel.ng.models.AppBluetoothManager;
 import de.eloc.eloc_control_panel.ng.models.AppPreferenceManager;
+import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 
 public class TerminalActivity extends AppCompatActivity implements ServiceConnection, SerialListener {
+    private PreferencesHelper preferencesHelper = PreferencesHelper.Companion.getInstance();
     private ActivityTerminalBinding binding;
     public static final String ARG_DEVICE = "device";
     private boolean refreshing = false;
@@ -128,7 +130,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         redColor = ContextCompat.getColor(this, R.color.off_color);
         yellowColor = ContextCompat.getColor(this, R.color.middle_color);
 
-        rangerName = AppPreferenceManager.INSTANCE.getRangerName();
+        rangerName = preferencesHelper.getRangerName();
 
         Log.i("elocApp", "terminal rangerName " + rangerName);
         Log.i("elocApp", "device address " + deviceAddress);
@@ -238,10 +240,10 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         }
 
         if (refreshing) {
-            Helper.showSnack(binding.coordinator, "Currently unavailable");
+            ActivityHelper.INSTANCE.showSnack(binding.coordinator, "Currently unavailable");
             return true;
         } else if (id == R.id.elocsettings) {
-           openSettings();
+            openSettings();
             return true;
         } else {
             return super.onOptionsItemSelected(item);
@@ -271,7 +273,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
      */
     @Override
     public void onSerialConnect() {
-        Helper.showSnack(binding.coordinator, getString(R.string.connected));
+        ActivityHelper.INSTANCE.showSnack(binding.coordinator, getString(R.string.connected));
         connected = Connected.True;
         //send("_setClk_"+getBestTimeEstimate());
         //send("settingsRequest");
@@ -280,7 +282,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     @Override
     public void onSerialConnectError(Exception e) {
         updateDeviceState(DeviceState.Ready, "Connection Lost");
-        Helper.showSnack(binding.coordinator, "Connection Lost");
+        ActivityHelper.INSTANCE.showSnack(binding.coordinator, "Connection Lost");
         updateRecordButton();
         // status("connection failed: " + e.getMessage()); // TODO: this message must be in a log
         disconnect();
@@ -294,7 +296,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     @Override
     public void onSerialIoError(Exception e) {
         updateDeviceState(DeviceState.Ready, "Connection Lost");
-        Helper.showSnack(binding.coordinator, "Connection Lost");
+        ActivityHelper.INSTANCE.showSnack(binding.coordinator, "Connection Lost");
         updateRecordButton();
         receiveText.setText("");
         //status("connection lost: " + e.getMessage()); //TODO: This message should be in some kind of log
@@ -313,7 +315,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     private void connect(boolean notify) {
 
         try {
-            BluetoothDevice device = BluetoothHelper.getInstance().getDevice(deviceAddress);
+            BluetoothDevice device = AppBluetoothManager.INSTANCE.getDevice(deviceAddress);
             // this line might have introduced a bug. This is bluetooth connection and not recording sttatus.
             //updateDeviceState(DeviceState.Recording, null);
             connected = Connected.Pending;
@@ -321,7 +323,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             services.connect(socket);
             boolean success = services.isConnected();
             if (notify && success) {
-                Helper.showSnack(binding.coordinator, getString(R.string.connected));
+                ActivityHelper.INSTANCE.showSnack(binding.coordinator, getString(R.string.connected));
             }
             binding.swipeRefreshLayout.setRefreshing(false);
         } catch (Exception e) {
@@ -346,6 +348,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         // and making scrolling broken
 
         binding.swipeRefreshLayout.setEnabled(false);
+
+        // todo: implement solution that will accept at least api 21.
         binding.scrollView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
             @Override
             public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
@@ -383,7 +387,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                                 if (resultMessage == null) {
                                     resultMessage = "Command sent successfully";
                                 }
-                                Helper.showSnack(binding.coordinator, resultMessage);
+                                ActivityHelper.INSTANCE.showSnack(binding.coordinator, resultMessage);
                             }
                         }
                     }
@@ -869,7 +873,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             }
         });
         binding.instructionsButton.setOnClickListener(view -> {
-            Helper.openInstructionsUrl(TerminalActivity.this);
+            ActivityHelper.INSTANCE.showInstructions();
         });
     }
 
@@ -923,7 +927,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void showSDCardError() {
         if (hasSDCardError) {
-            Helper.showAlert(this, "Check SD card!");
+            ActivityHelper.INSTANCE.showAlert("Check SD card!");
         }
     }
 

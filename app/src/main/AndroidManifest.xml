@@ -11,18 +11,19 @@
         android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    <uses-permission android:name="android.permission.INTERNET" />
 
+    <uses-feature
+        android:name="android.hardware.location"
+        android:required="true" />
     <uses-feature
         android:name="android.hardware.bluetooth"
         android:required="true" />
 
     <application
-        android:name=".ng.App"
+        android:name=".ng2.App"
         android:allowBackup="true"
         android:icon="@mipmap/app_logo"
         android:label="@string/app_name"
@@ -33,17 +34,29 @@
         tools:ignore="AllowBackup,GoogleAppIndexingWarning,LockedOrientationActivity"
         tools:targetApi="m">
         <activity
-            android:name=".ng.activities.SetupActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:name=".ng.activities.HomeActivity"
+            android:exported="false"
+            android:screenOrientation="sensorPortrait"
+            android:windowSoftInputMode="adjustPan">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
+        <activity
+            android:name=".ng2.activities.SetupActivity"
+            android:exported="true"
+            android:screenOrientation="sensorPortrait"
+            android:windowSoftInputMode="adjustPan">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
         <activity
             android:name=".activities.TerminalActivity"
             android:exported="false"
@@ -54,12 +67,6 @@
             android:exported="false"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan" />
-        <activity
-            android:name=".activities.MainActivity"
-            android:configChanges="orientation"
-            android:exported="false"
-            android:screenOrientation="sensorPortrait"
-            android:windowSoftInputMode="stateHidden|adjustResize" />
 
         <service android:name=".SerialServices" />
 
@@ -71,6 +78,14 @@
             android:name=".receivers.BluetoothScanReceiver"
             android:exported="false"
             tools:ignore="Instantiatable" />
+
+        <receiver
+            android:name=".ng2.receivers.BluetoothDeviceReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.bluetooth.device.action.ACTION_FOUND" />
+            </intent-filter>
+        </receiver>
 
         <meta-data
             android:name="preloaded_fonts"

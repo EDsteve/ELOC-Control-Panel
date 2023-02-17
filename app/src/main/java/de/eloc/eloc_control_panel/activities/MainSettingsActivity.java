@@ -16,7 +16,8 @@ import java.util.Locale;
 
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.databinding.ActivityMainSettingsBinding;
-import de.eloc.eloc_control_panel.helpers.Helper;
+import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
+import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
 import de.eloc.eloc_control_panel.ng.models.AppPreferenceManager;
 
 public class MainSettingsActivity extends AppCompatActivity {
@@ -42,7 +43,6 @@ public class MainSettingsActivity extends AppCompatActivity {
             }
         }
     }
-
 
 
     private String gPattern = "^[a-zA-Z0-9]+$"; // Pattern for filename
@@ -181,7 +181,7 @@ public class MainSettingsActivity extends AppCompatActivity {
         binding.fileheaderBtn.setOnClickListener(view -> runFileHeaderCommand());
         binding.hideAdvancedOptionsButton.setOnClickListener(view -> toggleOptions());
         binding.showAdvancedOptionsButton.setOnClickListener(view -> toggleOptions());
-        binding.instructionsButton.setOnClickListener(view -> Helper.openInstructionsUrl(MainSettingsActivity.this));
+        binding.instructionsButton.setOnClickListener(view -> ActivityHelper.INSTANCE.showInstructions());
     }
 
     private void toggleOptions() {
@@ -200,7 +200,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     }
 
     private void runCommand(String command) {
-        Helper.hideKeyboard(this);
+        ActivityHelper.INSTANCE.hideKeyboard(this);
         if (!command.startsWith("#settings#")) {
             command = "#settings#" + command; // This should make it easy to enter showrt commands without the prefix.
         }
@@ -213,7 +213,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     private void runCommandLine() {
         String command = getValue(binding.customCommandEt.getText());
         if (command.isEmpty()) {
-            Helper.showAlert(this, "You must enter a command to run!");
+            ActivityHelper.INSTANCE.showAlert("You must enter a command to run!");
             return;
         }
         runCommand(command);
@@ -222,7 +222,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     private void runFileHeaderCommand() {
         String command = getValue(binding.fileheaderEt.getText());
         if (command.isEmpty()) {
-            Helper.showAlert(this, "You must enter a Device Name!");
+            ActivityHelper.INSTANCE.showAlert("You must enter a Device Name!");
             return;
         }
         String suffix = "setname";
@@ -235,7 +235,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     private void runMicTypeCommand() {
         String type = getValue(binding.micTypeEt.getText());
         if (type.isEmpty()) {
-            Helper.showAlert(this, "You must enter a mic type to set!");
+            ActivityHelper.INSTANCE.showAlert("You must enter a mic type to set!");
             return;
         }
         String command = String.format(Locale.ENGLISH, "%ssettype", type);
@@ -254,10 +254,10 @@ public class MainSettingsActivity extends AppCompatActivity {
             gLocation = editable.toString().trim();
         }
         if (gLocation.isEmpty()) {
-            Helper.showAlert(this, "File header name is required!");
+            ActivityHelper.INSTANCE.showAlert("File header name is required!");
             return;
         } else if (!gLocation.matches(gPattern)) {
-            Helper.showAlert(this, "Invalid file header name!");
+            ActivityHelper.INSTANCE.showAlert("Invalid file header name!");
             return;
         }
 
