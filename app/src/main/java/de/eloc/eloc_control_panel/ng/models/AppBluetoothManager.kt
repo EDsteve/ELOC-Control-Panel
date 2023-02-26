@@ -38,6 +38,10 @@ object AppBluetoothManager {
         return adapter?.getRemoteDevice(address.uppercase(Locale.ENGLISH))
     }
 
+    fun hasEmptyAdapter(): Boolean {
+        return devices.isEmpty()
+    }
+
     fun isAdapterOn(): Boolean {
         return adapter?.state == BluetoothAdapter.STATE_ON
     }
@@ -92,9 +96,7 @@ object AppBluetoothManager {
             System.out.println("traceeeeeeeeADDCALLED" + devices.get(0).getName());
 
             // todo            listAdapter.notifyDataSetChanged();
-            if (callback != null) {
-                callback.handler(devices.isEmpty(), false);
-            }
+            callback.handler(devices.isEmpty(), false)
         }
     }
 
@@ -130,4 +132,7 @@ object AppBluetoothManager {
             }
         }
     }
+
+    fun clearDevices() = devices.clear()
+
 }

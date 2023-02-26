@@ -24,11 +24,11 @@ import java.util.Queue;
  * create notification and queue serial data while activity is not in the foreground
  * use listener chain: SerialSocket -> SerialService -> UI fragment
  */
-public class SerialServices extends Service implements SerialListener {
+public class SerialService extends Service implements SerialListener {
 
     public class SerialBinder extends Binder {
-        public SerialServices getService() {
-            return SerialServices.this;
+        public SerialService getService() {
+            return SerialService.this;
         }
     }
 
@@ -57,7 +57,7 @@ public class SerialServices extends Service implements SerialListener {
     /**
      * Lifecylce
      */
-    public SerialServices() {
+    public SerialService() {
         mainLooper = new Handler(Looper.getMainLooper());
         binder = new SerialBinder();
         queue1 = new LinkedList<>();

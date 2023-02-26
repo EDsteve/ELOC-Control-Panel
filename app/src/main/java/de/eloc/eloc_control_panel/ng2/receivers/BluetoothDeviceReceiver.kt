@@ -22,7 +22,7 @@ class BluetoothDeviceReceiver(handler: ElocCallback?) : BroadcastReceiver() {
                     intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
             if (device != null) {
                 addDevice(ElocInfo(device))
-                Log.d("TAG---------------------------", "onReceive: " + device.name)
+                Log.d("TAG", "onReceive: " + device.name)
             }
         }
     }

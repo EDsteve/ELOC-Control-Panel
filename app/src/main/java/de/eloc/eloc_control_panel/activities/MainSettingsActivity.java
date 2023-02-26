@@ -17,7 +17,6 @@ import java.util.Locale;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.databinding.ActivityMainSettingsBinding;
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
-import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
 import de.eloc.eloc_control_panel.ng.models.AppPreferenceManager;
 
 public class MainSettingsActivity extends AppCompatActivity {

@@ -49,6 +49,7 @@
     <string name="yes_permissions">yes, grant permissions</string>
     <string name="grant_permissions">Grant permissions</string>
     <string name="preparing">Preparing…</string>
+    <string name="checking_permissions">Checking permissions</string>
     <string name="rec_state_recording">STOP RECORDING</string>
     <string name="rec_state_ready">START RECORDING</string>
     <string name="rec_state_wait">Please wait…</string>

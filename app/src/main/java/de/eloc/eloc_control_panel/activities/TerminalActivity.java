@@ -38,15 +38,13 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 import de.eloc.eloc_control_panel.OpenLocationCode;
-import de.eloc.eloc_control_panel.ng2.App;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.SerialListener;
-import de.eloc.eloc_control_panel.SerialServices;
-import de.eloc.eloc_control_panel.SerialServices.SerialBinder;
+import de.eloc.eloc_control_panel.SerialService;
+import de.eloc.eloc_control_panel.SerialService.SerialBinder;
 import de.eloc.eloc_control_panel.SerialSocket;
 import de.eloc.eloc_control_panel.SimpleLocation;
 import de.eloc.eloc_control_panel.TextUtil;
-import de.eloc.eloc_control_panel.helpers.BluetoothHelper;
 import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 import de.eloc.eloc_control_panel.BuildConfig;
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
@@ -74,7 +72,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     //   final String gVersion = "AppBeta4.1";
     public ActivityResultLauncher<Intent> settingsLauncher;
     private String deviceAddress = "<no address>";
-    private SerialServices services;
+    private SerialService service;
     private Connected connected = Connected.False;
     private boolean initialStart = true;
     private final boolean hexEnabled = false;
@@ -106,7 +104,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         binding = ActivityTerminalBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        Intent bindIntent = new Intent(this, SerialServices.class);
+        Intent bindIntent = new Intent(this, SerialService.class);
         bindService(bindIntent, this, Context.BIND_AUTO_CREATE);
 
         setActionBar();
@@ -179,7 +177,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             updateRecordButton();
         }
 
-        if (initialStart && services != null) {
+        if (initialStart && service != null) {
             initialStart = false;
         }
         binding.gpsValueTv.setText(R.string.wait);
@@ -190,11 +188,11 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         super.onStart();
         Log.i("elocApp", "terminal onstart()");
         super.onStart();
-        if (services != null) {
-            services.attach(this);
+        if (service != null) {
+            service.attach(this);
         } else {
             // prevents service destroy on unbind from recreated activity caused by orientation change
-            startService(new Intent(this, SerialServices.class));
+            startService(new Intent(this, SerialService.class));
         }
     }
 
@@ -204,8 +202,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         handleStop();
         //theLocation.endUpdates();
 
-        if (services != null && !isChangingConfigurations()) {
-            services.detach();
+        if (service != null && !isChangingConfigurations()) {
+            service.detach();
         }
         super.onStop();
     }
@@ -219,7 +217,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         }
         if (connected != Connected.False)
             disconnect();
-        stopService(new Intent(this, SerialServices.class));
+        stopService(new Intent(this, SerialService.class));
         super.onDestroy();
     }
 
@@ -254,8 +252,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     public void onServiceConnected(ComponentName name, IBinder binder) {
         SerialBinder serialBinder = (SerialBinder) binder;
         if (serialBinder != null) {
-            services = serialBinder.getService();
-            services.attach(this);
+            service = serialBinder.getService();
+            service.attach(this);
             if (initialStart) {
                 initialStart = false;
                 runOnUiThread(() -> connect(false));
@@ -265,7 +263,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-        services = null;
+        service = null;
     }
 
     /*
@@ -320,8 +318,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             //updateDeviceState(DeviceState.Recording, null);
             connected = Connected.Pending;
             SerialSocket socket = new SerialSocket(getApplicationContext(), device);
-            services.connect(socket);
-            boolean success = services.isConnected();
+            service.connect(socket);
+            boolean success = service.isConnected();
             if (notify && success) {
                 ActivityHelper.INSTANCE.showSnack(binding.coordinator, getString(R.string.connected));
             }
@@ -338,7 +336,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void disconnect() {
         connected = Connected.False;
-        services.disconnect();
+        service.disconnect();
     }
 
     private void setupScrollHack() {
@@ -350,15 +348,12 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         binding.swipeRefreshLayout.setEnabled(false);
 
         // todo: implement solution that will accept at least api 21.
-        binding.scrollView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-            @Override
-            public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-                Log.d("TAG", "onScrollChange: " + scrollY);
-                if (scrollY <= 0) {
-                    binding.swipeRefreshLayout.setEnabled(true);
-                } else {
-                    binding.swipeRefreshLayout.setEnabled(false);
-                }
+        binding.scrollView.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+            Log.d("TAG", "onScrollChange: " + scrollY);
+            if (scrollY <= 0) {
+                binding.swipeRefreshLayout.setEnabled(true);
+            } else {
+                binding.swipeRefreshLayout.setEnabled(false);
             }
         });
     }
@@ -765,7 +760,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             //spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             //receiveText.append(spn); //mark
             appendReceiveText(msg + "\n");
-            services.write(data);
+            service.write(data);
             return null;
         } catch (Exception e) {
             onSerialIoError(e);
@@ -782,7 +777,6 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     private String getBestTimeEstimate() {
         //returns a string with the following:
         //X_Y_ZZZZZZZZZZZZZZZ
-
 
         //long googletimestamp=  Long.parseLong("0");
         long lastGoogleTimestamp = AppPreferenceManager.INSTANCE.getLastGoogleTimestamp();

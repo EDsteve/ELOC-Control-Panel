@@ -42,7 +42,7 @@ public class BluetoothScanReceiver extends BroadcastReceiver {
                     }
                 }
             } else if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
-                // todo: AppBluetoothManager.INSTANCE.clearDevices();
+                AppBluetoothManager.INSTANCE.clearDevices();
                 if (updateCallback != null) {
                     updateCallback.handler(true, false);
                 }
@@ -50,7 +50,7 @@ public class BluetoothScanReceiver extends BroadcastReceiver {
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 AppBluetoothManager.INSTANCE.setReadyToScan(true);
                 if (updateCallback != null) {
-                  // todo:  updateCallback.handler(AppBluetoothManager.INSTANCE.hasEmptyAdapter(), true);
+                  updateCallback.handler(AppBluetoothManager.INSTANCE.hasEmptyAdapter(), true);
                 }
                 Log.d("TAG", "Scanning completed "  );
             }

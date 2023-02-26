@@ -7,6 +7,10 @@
     android:layout_height="match_parent"
     tools:context=".activities.MainActivity">
 
+    <include
+        android:id="@+id/appbar"
+        layout="@layout/layout_appbar" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
