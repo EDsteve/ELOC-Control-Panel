@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -32,7 +31,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-import de.eloc.eloc_control_panel.App;
 import de.eloc.eloc_control_panel.BuildConfig;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.SNTPClient;
@@ -41,6 +39,9 @@ import de.eloc.eloc_control_panel.databinding.ActivityMainBinding;
 import de.eloc.eloc_control_panel.databinding.PopupWindowBinding;
 import de.eloc.eloc_control_panel.helpers.BluetoothHelper;
 import de.eloc.eloc_control_panel.helpers.Helper;
+import de.eloc.eloc_control_panel.ng.models.AppPreferenceManager;
+import de.eloc.eloc_control_panel.ng2.App;
+import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 import de.eloc.eloc_control_panel.receivers.BluetoothScanReceiver;
 
 public class MainActivity extends AppCompatActivity {
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private Long gLastTimeDifferenceMillisecond = 0L;
     private final String DEFAULT_RANGER_NAME = "notSet";
     private final BluetoothScanReceiver receiver = new BluetoothScanReceiver(this::onListUpdated);
+    private final PreferencesHelper preferencesHelper = PreferencesHelper.Companion.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -312,11 +314,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadRangerName() {
-        rangerName = App.getInstance().getSharedPrefs().getString("rangerName", DEFAULT_RANGER_NAME);
+        setRangerName();
     }
 
     private void setRangerName() {
-        rangerName = App.getInstance().getSharedPrefs().getString("rangerName", DEFAULT_RANGER_NAME);
+        rangerName = preferencesHelper.getRangerName();
         Log.i("elocApp", "ranger Name " + rangerName);
     }
 
@@ -385,45 +387,43 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void saveRangerName(String theName) {
-        SharedPreferences.Editor mEditor = App.getInstance().getSharedPrefs().edit();
-        mEditor.putString("rangerName", theName).apply();
+        preferencesHelper.setRangerName(theName);
         loadRangerName();
     }
 
     public void doSync(int timeoutMS, boolean showMessage) {
         //send("doing sync");
-        SNTPClient.getDate(Calendar.getInstance().getTimeZone(), (rawDate, date, googletimestamp, ex) -> {
+        SNTPClient.getDate(
+                timeoutMS,
+                Calendar.getInstance().getTimeZone(),
+                (rawDate, date, googletimestamp, ex) -> {
+                    if (googletimestamp == 0) {
+                        gUploadEnabled = false;
+                        invalidateOptionsMenu();
+                        Log.i("elocApp", "google sync failed");
 
-            if (googletimestamp == 0) {
+                        if (showMessage) {
+                            Helper.showSnack(binding.coordinator, "sync FAILED\nCheck internet connection");
+                        }
+                    } else {
+                        gLastTimeDifferenceMillisecond = System.currentTimeMillis() - googletimestamp;
+                        saveTimestamps(SystemClock.elapsedRealtime(), googletimestamp);
+                        gUploadEnabled = true;
+                        invalidateOptionsMenu();
+                        Log.i("elocApp", "google sync success");
+                        if (showMessage) {
+                            String message = getString(R.string.sync_template, gLastTimeDifferenceMillisecond);
+                            Helper.showSnack(binding.coordinator, message);
+                        }
+                    }
 
-                gUploadEnabled = false;
-                invalidateOptionsMenu();
-                Log.i("elocApp", "google sync failed");
-
-                if (showMessage) {
-                    Helper.showSnack(binding.coordinator, "sync FAILED\nCheck internet connection");
-                }
-            } else {
-                gLastTimeDifferenceMillisecond = System.currentTimeMillis() - googletimestamp;
-                saveTimestamps(SystemClock.elapsedRealtime(), googletimestamp);
-                gUploadEnabled = true;
-                invalidateOptionsMenu();
-                Log.i("elocApp", "google sync success");
-                if (showMessage) {
-                    String message = getString(R.string.sync_template, gLastTimeDifferenceMillisecond);
-                    Helper.showSnack(binding.coordinator, message);
-                }
-            }
-
-        }, timeoutMS);
+                });
         //send("testing latency");
     }
 
 
     public void saveTimestamps(Long gCurrentElapsedTimeMS, Long gLastGoogleSyncTimestampMS) {
-        SharedPreferences.Editor mEditor = App.getInstance().getSharedPrefs().edit();
-        mEditor.putString("elapsedTimeAtGoogleTimestamp", gCurrentElapsedTimeMS.toString()).apply();
-        mEditor.putString("lastGoogleTimestamp", gLastGoogleSyncTimestampMS.toString()).apply();
+        AppPreferenceManager.INSTANCE.saveTimestamps(gCurrentElapsedTimeMS, gLastGoogleSyncTimestampMS);
     }
 
 

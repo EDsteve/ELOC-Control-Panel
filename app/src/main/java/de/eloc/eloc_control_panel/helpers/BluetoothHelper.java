@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,9 +17,8 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 import java.util.concurrent.Executors;
 
 import de.eloc.eloc_control_panel.databinding.DeviceListItemBinding;
@@ -78,8 +76,7 @@ public class BluetoothHelper {
         if (deviceName == null) {
             deviceName = "";
         }
-        //return deviceName.toLowerCase().startsWith("eloc");
-        return true;
+        return deviceName.toLowerCase().startsWith("eloc");
     }
 
     @SuppressLint("MissingPermission")
@@ -103,13 +100,7 @@ public class BluetoothHelper {
                 return a.getAddress().compareTo(b.getAddress());
             };
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                devices.sort(comparator);
-            } else {
-                BluetoothDevice[] array = devices.toArray(new BluetoothDevice[]{});
-                Arrays.sort(array, comparator);
-                devices = new ArrayList<>(List.of(array));
-            }
+            Collections.sort(devices, comparator);
             System.out.println("traceeeeeeeeADDCALLED" + devices.get(0).getName());
 
             listAdapter.notifyDataSetChanged();
@@ -120,12 +111,16 @@ public class BluetoothHelper {
     }
 
     public static ArrayAdapter<BluetoothDevice> initializeListAdapter(Context context, ListAdapterCallback callback) {
-        listAdapter = new ArrayAdapter<>(context, 0, BluetoothHelper.devices) {
+        listAdapter = new ArrayAdapter<BluetoothDevice>(context, 0, BluetoothHelper.devices) {
             @NonNull
             @Override
             public View getView(int position, View view, @NonNull ViewGroup parent) {
                 LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-                DeviceListItemBinding itemBinding = DeviceListItemBinding.inflate(inflater, parent, false);
+                DeviceListItemBinding itemBinding =
+                        (view != null) ?
+                                DeviceListItemBinding.bind(view) :
+                                DeviceListItemBinding.inflate(inflater, parent, false);
+
                 DeviceInfo info = getDeviceInfo(position);
                 itemBinding.text1.setText(info.name);
                 itemBinding.text2.setText(info.address);
@@ -177,10 +172,6 @@ public class BluetoothHelper {
         return DeviceInfo.getDefault();
     }
 
-    public static void clearDevices() {
-        devices.clear();
-    }
-
     @SuppressLint("MissingPermission")
     public static void scanAsync(Context context, BooleanCallback callback) {
         // Don't start scanning until 'readyToScan' is true
@@ -211,9 +202,6 @@ public class BluetoothHelper {
         });
     }
 
-    // I have an appointment in 10 minutes. If you still want to try the last change. You can do. But i will take a shower if that's ok :)
-    //yes, that is fine.
-    // Actually, let me save and we can do this tomorrow. I will grab a copy of the repo.
     public static boolean stopScan(Context context) {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
             // Permissions are checked by caller activity

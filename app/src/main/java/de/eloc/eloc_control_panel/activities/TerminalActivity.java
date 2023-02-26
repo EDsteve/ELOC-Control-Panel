@@ -1,13 +1,11 @@
 package de.eloc.eloc_control_panel.activities;
 
 import android.app.AlertDialog;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -39,7 +37,6 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import de.eloc.eloc_control_panel.App;
 import de.eloc.eloc_control_panel.OpenLocationCode;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.SerialListener;
@@ -48,13 +45,15 @@ import de.eloc.eloc_control_panel.SerialService.SerialBinder;
 import de.eloc.eloc_control_panel.SerialSocket;
 import de.eloc.eloc_control_panel.SimpleLocation;
 import de.eloc.eloc_control_panel.TextUtil;
-import de.eloc.eloc_control_panel.helpers.BluetoothHelper;
-import de.eloc.eloc_control_panel.helpers.Helper;
 import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 import de.eloc.eloc_control_panel.BuildConfig;
-import de.eloc.eloc_control_panel.helpers.Helper;
+import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
+import de.eloc.eloc_control_panel.ng.models.AppBluetoothManager;
+import de.eloc.eloc_control_panel.ng.models.AppPreferenceManager;
+import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 
 public class TerminalActivity extends AppCompatActivity implements ServiceConnection, SerialListener {
+    private PreferencesHelper preferencesHelper = PreferencesHelper.Companion.getInstance();
     private ActivityTerminalBinding binding;
     public static final String ARG_DEVICE = "device";
     private boolean refreshing = false;
@@ -129,8 +128,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         redColor = ContextCompat.getColor(this, R.color.off_color);
         yellowColor = ContextCompat.getColor(this, R.color.middle_color);
 
-        SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
-        rangerName = mPrefs.getString("rangerName", "notSet");
+        rangerName = preferencesHelper.getRangerName();
 
         Log.i("elocApp", "terminal rangerName " + rangerName);
         Log.i("elocApp", "device address " + deviceAddress);
@@ -240,10 +238,10 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         }
 
         if (refreshing) {
-            Helper.showSnack(binding.coordinator, "Currently unavailable");
+            ActivityHelper.INSTANCE.showSnack(binding.coordinator, "Currently unavailable");
             return true;
         } else if (id == R.id.elocsettings) {
-           openSettings();
+            openSettings();
             return true;
         } else {
             return super.onOptionsItemSelected(item);
@@ -273,7 +271,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
      */
     @Override
     public void onSerialConnect() {
-        Helper.showSnack(binding.coordinator, getString(R.string.connected));
+        ActivityHelper.INSTANCE.showSnack(binding.coordinator, getString(R.string.connected));
         connected = Connected.True;
         //send("_setClk_"+getBestTimeEstimate());
         //send("settingsRequest");
@@ -282,7 +280,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     @Override
     public void onSerialConnectError(Exception e) {
         updateDeviceState(DeviceState.Ready, "Connection Lost");
-        Helper.showSnack(binding.coordinator, "Connection Lost");
+        ActivityHelper.INSTANCE.showSnack(binding.coordinator, "Connection Lost");
         updateRecordButton();
         // status("connection failed: " + e.getMessage()); // TODO: this message must be in a log
         disconnect();
@@ -296,7 +294,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     @Override
     public void onSerialIoError(Exception e) {
         updateDeviceState(DeviceState.Ready, "Connection Lost");
-        Helper.showSnack(binding.coordinator, "Connection Lost");
+        ActivityHelper.INSTANCE.showSnack(binding.coordinator, "Connection Lost");
         updateRecordButton();
         receiveText.setText("");
         //status("connection lost: " + e.getMessage()); //TODO: This message should be in some kind of log
@@ -315,7 +313,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     private void connect(boolean notify) {
 
         try {
-            BluetoothDevice device = BluetoothHelper.getInstance().getDevice(deviceAddress);
+            BluetoothDevice device = AppBluetoothManager.INSTANCE.getDevice(deviceAddress);
             // this line might have introduced a bug. This is bluetooth connection and not recording sttatus.
             //updateDeviceState(DeviceState.Recording, null);
             connected = Connected.Pending;
@@ -323,7 +321,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             service.connect(socket);
             boolean success = service.isConnected();
             if (notify && success) {
-                Helper.showSnack(binding.coordinator, getString(R.string.connected));
+                ActivityHelper.INSTANCE.showSnack(binding.coordinator, getString(R.string.connected));
             }
             binding.swipeRefreshLayout.setRefreshing(false);
         } catch (Exception e) {
@@ -348,15 +346,14 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         // and making scrolling broken
 
         binding.swipeRefreshLayout.setEnabled(false);
-        binding.scrollView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-            @Override
-            public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-                Log.d("TAG", "onScrollChange: " + scrollY);
-                if (scrollY <= 0) {
-                    binding.swipeRefreshLayout.setEnabled(true);
-                } else {
-                    binding.swipeRefreshLayout.setEnabled(false);
-                }
+
+        // todo: implement solution that will accept at least api 21.
+        binding.scrollView.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+            Log.d("TAG", "onScrollChange: " + scrollY);
+            if (scrollY <= 0) {
+                binding.swipeRefreshLayout.setEnabled(true);
+            } else {
+                binding.swipeRefreshLayout.setEnabled(false);
             }
         });
     }
@@ -385,7 +382,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                                 if (resultMessage == null) {
                                     resultMessage = "Command sent successfully";
                                 }
-                                Helper.showSnack(binding.coordinator, resultMessage);
+                                ActivityHelper.INSTANCE.showSnack(binding.coordinator, resultMessage);
                             }
                         }
                     }
@@ -422,7 +419,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         // Save device settings; but we can see that tthe value was actually saved. So maybe the firmware need to do a follow
         // let check the old project.
         if (msg.startsWith("#")) {
-            saveSettings(MainSettingsActivity.DATA_KEY, msg);
+            AppPreferenceManager.INSTANCE.setDeviceSettings(msg);
         } else if (msg.startsWith("please check")) {
             hasSDCardError = true;
             showSDCardError();
@@ -458,8 +455,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                 .replace("!14!", "Last GPS Location:  ")
                 .replace("!15!", "Last GPS Accuracy:  ")
                 .replace("!16!", "Session ID:  ");
-        SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
-        long lastGoogleTimestamp = Long.parseLong(mPrefs.getString("lastGoogleTimestamp", "0"));
+
+        long lastGoogleTimestamp = AppPreferenceManager.INSTANCE.getLastGoogleTimestamp();
         data = data.trim() + "\nApp last time sync:  " + Long.toString(((System.currentTimeMillis() - lastGoogleTimestamp) / 1000l / 60l)) + " min\n";
         data = data + "App Version:  " + gVersion;
 
@@ -504,8 +501,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void setDeviceInfo(String msg) {
         // Set data from prefs
-        SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
-        long lastGoogleTimestamp = Long.parseLong(mPrefs.getString("lastGoogleTimestamp", "0"));
+
+        long lastGoogleTimestamp = AppPreferenceManager.INSTANCE.getLastGoogleTimestamp();
         double millisPerHour = 1000 * 3600;
         double hoursSinceLastSync = (System.currentTimeMillis() - lastGoogleTimestamp) / millisPerHour;
         binding.timeSyncValueTv.setText(String.format(Locale.ENGLISH, "%.2f h", hoursSinceLastSync));
@@ -665,14 +662,15 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                             Locale.ENGLISH,
                             "#%s#%s#%s",
                             sampleRate, secondsString, fileHeader);
-                    saveSettings(MainSettingsActivity.DATA_KEY, settings);
+                    AppPreferenceManager.INSTANCE.setDeviceSettings(settings);
+
                 }
                 if ((micGain != null) && (micType != null)) {
                     String settings = String.format(
                             Locale.ENGLISH,
                             "#%s#%s",
                             micType, micGain);
-                    saveSettings(MainSettingsActivity.MIC_DATA_KEY, settings);
+                    AppPreferenceManager.INSTANCE.setMicrophoneSettings(settings);
                 }
             }
         }
@@ -780,11 +778,9 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         //returns a string with the following:
         //X_Y_ZZZZZZZZZZZZZZZ
 
-        SharedPreferences mPrefs = App.getInstance().getSharedPrefs();
-
         //long googletimestamp=  Long.parseLong("0");
-        long lastGoogleTimestamp = Long.parseLong(mPrefs.getString("lastGoogleTimestamp", "0"));
-        long previouselapsedtime = Long.parseLong(mPrefs.getString("elapsedTimeAtGoogleTimestamp", "0"));
+        long lastGoogleTimestamp = AppPreferenceManager.INSTANCE.getLastGoogleTimestamp();
+        long previouselapsedtime = AppPreferenceManager.INSTANCE.getCurrentElapsedTime();
         long currentElapsedTime = SystemClock.elapsedRealtime();
         long elapsedTimeDifferenceMinutes = (currentElapsedTime - previouselapsedtime) / 1000L / 60L;
         long elapsedTimeDifferenceMS = (currentElapsedTime - previouselapsedtime);
@@ -838,12 +834,6 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         updateRecordButton();
     }
 
-    private void saveSettings(String key, String settings) {
-        SharedPreferences.Editor editor = App.getInstance().getSharedPrefs().edit();
-        editor.putString(key, settings);
-        editor.apply();
-    }
-
     private void updateRecordButton() {
         int text = R.string.rec_state_ready;
         int color = greenColor;
@@ -877,7 +867,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             }
         });
         binding.instructionsButton.setOnClickListener(view -> {
-            Helper.openInstructionsUrl(TerminalActivity.this);
+            ActivityHelper.INSTANCE.showInstructions();
         });
     }
 
@@ -931,7 +921,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void showSDCardError() {
         if (hasSDCardError) {
-            Helper.showAlert(this, "Check SD card!");
+            ActivityHelper.INSTANCE.showAlert("Check SD card!");
         }
     }
 
