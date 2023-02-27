@@ -1,11 +1,14 @@
 package de.eloc.eloc_control_panel.ng2.receivers
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.util.Log
 import de.eloc.eloc_control_panel.ng2.interfaces.ElocCallback
+import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import de.eloc.eloc_control_panel.ng2.models.ElocInfo
 
 class BluetoothDeviceReceiver(handler: ElocCallback?) : BroadcastReceiver() {
@@ -14,7 +17,7 @@ class BluetoothDeviceReceiver(handler: ElocCallback?) : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (BluetoothDevice.ACTION_FOUND == intent?.action) {
             @Suppress("DEPRECATION") val device =
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                     intent.getParcelableExtra(
                         BluetoothDevice.EXTRA_DEVICE,
                         BluetoothDevice::class.java
@@ -22,12 +25,15 @@ class BluetoothDeviceReceiver(handler: ElocCallback?) : BroadcastReceiver() {
                     intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
             if (device != null) {
                 addDevice(ElocInfo(device))
-                Log.d("TAG", "onReceive: " + device.name)
+                @SuppressLint("MissingPermission")
+                if (BluetoothHelper.instance.hasConnectPermission()) {
+                    Log.d("TAG", "onReceive: " + device.address)
+                }
             }
         }
     }
 
-    fun addDevice(info: ElocInfo) {
+    private fun addDevice(info: ElocInfo) {
         callback?.handler(info)
     }
 }

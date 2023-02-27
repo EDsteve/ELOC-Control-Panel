@@ -13,9 +13,10 @@
     <!-- New BT permissions -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <!-- App must only run on devices that have a bluetooth radio -->
     <uses-feature
@@ -31,8 +32,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
-        tools:ignore="AllowBackup,GoogleAppIndexingWarning,LockedOrientationActivity"
-        tools:targetApi="m">
+        tools:ignore="AllowBackup,GoogleAppIndexingWarning">
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}" />
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
         <activity
             android:name=".ng.activities.HomeActivity"
             android:exported="false"
@@ -68,6 +75,11 @@
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan" />
         <activity
+            android:name=".activities.MapActivity"
+            android:exported="false"
+            android:screenOrientation="sensorPortrait"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
             android:name=".activities.MainActivity"
             android:configChanges="orientation"
             android:exported="false"
@@ -81,6 +93,7 @@
             android:name=".receivers.BluetoothStateReceiver"
             android:exported="false"
             tools:ignore="Instantiatable" />
+
         <receiver
             android:name=".receivers.BluetoothScanReceiver"
             android:exported="false"
@@ -88,7 +101,8 @@
 
         <receiver
             android:name=".ng2.receivers.BluetoothDeviceReceiver"
-            android:exported="false">
+            android:exported="false"
+            tools:ignore="Instantiatable">
             <intent-filter>
                 <action android:name="android.bluetooth.device.action.ACTION_FOUND" />
             </intent-filter>

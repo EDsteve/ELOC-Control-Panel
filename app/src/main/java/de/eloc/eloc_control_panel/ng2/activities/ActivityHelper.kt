@@ -36,11 +36,10 @@ object ActivityHelper {
             .show()
     }
 
-    fun showSnack(coordinator: CoordinatorLayout, message: String) {
+    fun showSnack(coordinator: CoordinatorLayout, message: String) =
         Snackbar
             .make(coordinator, message, Snackbar.LENGTH_LONG)
             .show()
-    }
 
     fun hideKeyboard(activity: AppCompatActivity) {
         try {

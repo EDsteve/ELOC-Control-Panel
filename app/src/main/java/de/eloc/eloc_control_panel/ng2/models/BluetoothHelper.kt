@@ -1,7 +1,9 @@
 package de.eloc.eloc_control_panel.ng2.models
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
@@ -11,7 +13,9 @@ import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import de.eloc.eloc_control_panel.ng.models.DeviceInfo
 import de.eloc.eloc_control_panel.ng2.App
 import de.eloc.eloc_control_panel.ng2.interfaces.ElocCallback
 import de.eloc.eloc_control_panel.ng2.interfaces.IntCallback
@@ -24,6 +28,29 @@ class BluetoothHelper {
     private var scannerElapsed = 0
     private val bluetoothManager: BluetoothManager? =
         App.instance.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?
+
+    val needsBluetoothPermissions: Boolean
+        get() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                for (permission in bluetoothPermissions) {
+                    val status = ContextCompat.checkSelfPermission(App.instance, permission)
+                    if (status != PackageManager.PERMISSION_GRANTED) {
+                        return true
+                    }
+                }
+            }
+            return false
+        }
+
+    val bluetoothPermissions: Array<String>
+        get() {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+                arrayOf(
+                    Manifest.permission.BLUETOOTH_SCAN,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                )
+            else arrayOf()
+        }
 
     val enablingIntent: Intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
     val broadcastFilter: IntentFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
@@ -38,6 +65,10 @@ class BluetoothHelper {
         get() {
             return bluetoothManager?.adapter?.isEnabled ?: false
         }
+
+    fun isAdapterOn(): Boolean {
+        return bluetoothManager?.adapter?.state == BluetoothAdapter.STATE_ON
+    }
 
     val isScanning: Boolean
         get() {
@@ -84,6 +115,26 @@ class BluetoothHelper {
             startBluetoothScan(callback, handler)
     }
 
+    fun hasConnectPermission(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val status = ActivityCompat.checkSelfPermission(
+                App.instance,
+                Manifest.permission.BLUETOOTH_CONNECT
+            )
+            return (status == PackageManager.PERMISSION_GRANTED)
+        }
+        return true
+    }
+
+    fun isElocDevice(device: BluetoothDevice): Boolean {
+        var deviceName = ""
+        @SuppressLint("MissingPermission")
+        if (hasConnectPermission()) {
+            deviceName = device.name ?: DeviceInfo.DEFAULT_NAME
+        }
+        return deviceName.trim().lowercase().contains("eloc")
+    }
+
     private fun startBluetoothScan(callback: IntCallback, handler: ElocCallback): String? {
         val adapter = bluetoothManager?.adapter
         if (adapter != null) {
@@ -121,7 +172,7 @@ class BluetoothHelper {
         return null
     }
 
-     fun stopScan(callback: IntCallback): String? {
+    fun stopScan(callback: IntCallback): String? {
         if (ContextCompat.checkSelfPermission(
                 App.instance,
                 Manifest.permission.BLUETOOTH_SCAN
