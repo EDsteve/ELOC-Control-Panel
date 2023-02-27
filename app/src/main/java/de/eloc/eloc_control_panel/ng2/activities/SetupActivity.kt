@@ -53,30 +53,6 @@ class SetupActivity : AppCompatActivity() {
     private val mustTurnOnBluetooth: Boolean
         get() = !bluetoothHelper.isBluetoothOn
 
-    private val bluetoothPermissions: Array<String>
-        get() {
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-                arrayOf(
-                    Manifest.permission.BLUETOOTH_SCAN,
-                    Manifest.permission.BLUETOOTH_CONNECT
-                )
-            else arrayOf()
-
-        }
-
-    private val needsBluetoothPermissions: Boolean
-        get() {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                for (permission in bluetoothPermissions) {
-                    val status = ContextCompat.checkSelfPermission(this, permission)
-                    if (status != PackageManager.PERMISSION_GRANTED) {
-                        return true
-                    }
-                }
-            }
-            return false
-        }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySetupBinding.inflate(layoutInflater)
@@ -163,7 +139,7 @@ class SetupActivity : AppCompatActivity() {
     private fun doRequestBluetoothPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             preferencesHelper.setBluetoothRequested()
-            requestPermissions(bluetoothPermissions, 0)
+            requestPermissions(BluetoothHelper.instance.bluetoothPermissions, 0)
         }
     }
 
@@ -182,7 +158,7 @@ class SetupActivity : AppCompatActivity() {
                             showActions(
                                 needsLocationPermission,
                                 mustTurnOnLocationService,
-                                needsBluetoothPermissions,
+                                BluetoothHelper.instance.needsBluetoothPermissions,
                                 mustTurnOnBluetooth
                             )
                         }
@@ -205,7 +181,7 @@ class SetupActivity : AppCompatActivity() {
                                 showActions(
                                     needsLocationPermission,
                                     mustTurnOnLocationService,
-                                    needsBluetoothPermissions,
+                                    BluetoothHelper.instance.needsBluetoothPermissions,
                                     mustTurnOnBluetooth
                                 )
                             }
@@ -225,7 +201,7 @@ class SetupActivity : AppCompatActivity() {
     private fun askBluetoothPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             var showRationale = false
-            for (permission in bluetoothPermissions) {
+            for (permission in BluetoothHelper.instance.bluetoothPermissions) {
                 if (shouldShowRequestPermissionRationale(permission)) {
                     showRationale = true
                     break
@@ -244,7 +220,7 @@ class SetupActivity : AppCompatActivity() {
                             showActions(
                                 needsLocationPermission,
                                 mustTurnOnLocationService,
-                                needsBluetoothPermissions,
+                                BluetoothHelper.instance.needsBluetoothPermissions,
                                 mustTurnOnBluetooth
                             )
                         }
@@ -267,7 +243,7 @@ class SetupActivity : AppCompatActivity() {
                                 showActions(
                                     needsLocationPermission,
                                     mustTurnOnLocationService,
-                                    needsBluetoothPermissions,
+                                    BluetoothHelper.instance.needsBluetoothPermissions,
                                     mustTurnOnBluetooth
                                 )
                             }
@@ -302,10 +278,10 @@ class SetupActivity : AppCompatActivity() {
             showActions(
                 locationPermission = false,
                 locationOff = true,
-                needsBluetoothPermissions,
+                BluetoothHelper.instance.needsBluetoothPermissions,
                 mustTurnOnBluetooth
             )
-        } else if (needsBluetoothPermissions) {
+        } else if (BluetoothHelper.instance.needsBluetoothPermissions) {
             askBluetoothPermissions()
         } else if (mustTurnOnBluetooth) {
             showActions(

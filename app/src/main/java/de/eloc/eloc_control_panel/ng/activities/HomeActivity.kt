@@ -17,11 +17,10 @@ import de.eloc.eloc_control_panel.BuildConfig
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.SNTPClient
 import de.eloc.eloc_control_panel.UploadFileAsync
+import de.eloc.eloc_control_panel.activities.MapActivity
 import de.eloc.eloc_control_panel.activities.TerminalActivity
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.PopupWindowBinding
-import de.eloc.eloc_control_panel.ng.models.AppBluetoothManager
-import de.eloc.eloc_control_panel.ng.models.AppPreferenceManager
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import de.eloc.eloc_control_panel.ng2.models.ElocInfoAdapter
@@ -48,26 +47,23 @@ class HomeActivity : AppCompatActivity() {
         initialize()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        super.onCreateOptionsMenu(menu)
-        menuInflater.inflate(R.menu.menu_devices, menu)
-        val aboutItem = menu?.findItem(R.id.about)
-        aboutItem?.title = BuildConfig.VERSION_NAME
-        if (!bluetoothHelper.hasAdapter) {
-            menu?.findItem(R.id.bt_settings)?.isEnabled = false
-        }
-        return true
-    }
-
     override fun onResume() {
         super.onResume()
         checkRangerName()
 
         val hasNoDevices = binding.devicesRecyclerView.adapter?.itemCount == 0
-        onListUpdated(hasNoDevices, false)
         if (hasNoDevices) {
-            setBluetoothStatus(AppBluetoothManager.isAdapterOn())
+            startScan()
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        super.onCreateOptionsMenu(menu)
+        menuInflater.inflate(R.menu.menu_devices, menu)
+        val aboutItem = menu?.findItem(R.id.about)
+        aboutItem?.title = BuildConfig.VERSION_NAME
+        menu?.findItem(R.id.bt_settings)?.isEnabled = bluetoothHelper.hasAdapter
+        return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -80,9 +76,13 @@ class HomeActivity : AppCompatActivity() {
         return true
     }
 
+    override fun onStop() {
+        super.onStop()
+        bluetoothHelper.stopScan(this::scanUpdate)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        bluetoothHelper.stopScan(this::scanUpdate)
         unregisterReceiver(elocReceiver)
     }
 
@@ -98,6 +98,7 @@ class HomeActivity : AppCompatActivity() {
         binding.instructionsButton.setOnClickListener { ActivityHelper.showInstructions() }
         binding.refreshListButton.setOnClickListener { startScan() }
         binding.uploadElocStatusButton.setOnClickListener { uploadElocStatus() }
+        binding.findElocButton.setOnClickListener { showMap() }
     }
 
     private fun setActionBar() {
@@ -105,7 +106,7 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun loadRangerName() {
-        rangerName = preferencesHelper.getRangerName()
+        rangerName = preferencesHelper.getRangerName().trim()
     }
 
     private fun setupListView() {
@@ -151,10 +152,21 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun startScan() {
+        val isOn = BluetoothHelper.instance.isAdapterOn()
+        binding.status.text =
+            if (isOn)
+                getString(R.string.scanning_eloc_devices)
+            else
+                "<bluetooth is disabled>"
+        if (!isOn) {
+            return
+        }
+
         if (!bluetoothHelper.isScanning) {
             elocAdapter.clear()
         }
 
+        onListUpdated(false)
         val error = bluetoothHelper.startScan(this::scanUpdate, elocAdapter::add)
         if (!TextUtils.isEmpty(error)) {
             ActivityHelper.showSnack(binding.coordinator, error!!)
@@ -166,81 +178,72 @@ class HomeActivity : AppCompatActivity() {
             var label = getString(R.string.refresh)
             if (remaining > 0) {
                 label = getString(R.string.stop, remaining)
+            } else {
+                onListUpdated(scanFinished = true)
             }
             binding.refreshListButton.text = label
-
         }
     }
 
-    private fun setBluetoothStatus(isOn: Boolean) {
-        var statusMessage = "<bluetooth is disabled>"
-        if (isOn) {
-            statusMessage = "<scanning for eloc devices>"
-            startScan()
-        }
-        binding.status.text = statusMessage
-    }
-
-    private fun onListUpdated(isEmpty: Boolean, scanFinished: Boolean) {
-
+    private fun onListUpdated(scanFinished: Boolean) {
         runOnUiThread {
-            var showScanUI = isEmpty
+            val hasEmptyAdapter = binding.devicesRecyclerView.adapter?.itemCount == 0
+            binding.refreshListButton.visibility = View.VISIBLE
+            binding.devicesRecyclerView.visibility =
+                if (hasEmptyAdapter) View.GONE else View.VISIBLE
             if (scanFinished) {
-                showScanUI = false
-            }
-            if (showScanUI) {
-                binding.devicesRecyclerView.visibility = View.GONE
-                binding.initLayout.visibility = View.VISIBLE
-                binding.uploadElocStatusButton.visibility = View.GONE
-                binding.refreshListButton.visibility = View.GONE
-            } else {
-                binding.devicesRecyclerView.visibility = View.VISIBLE
-                binding.initLayout.visibility = View.GONE
                 binding.uploadElocStatusButton.visibility = View.VISIBLE
-                binding.refreshListButton.visibility = View.VISIBLE
-            }
-            if (scanFinished) {
-
-                val hasEmptyAdapter = binding.devicesRecyclerView.adapter?.itemCount == 0
+                binding.findElocButton.visibility = View.VISIBLE
                 if (hasEmptyAdapter) {
-                    AlertDialog.Builder(this)
-                        .setCancelable(false)
-                        .setTitle("Scan results")
-                        .setMessage("No devices were found!")
-                        .setNegativeButton(android.R.string.ok) { dialog, _ -> dialog.dismiss() }
-                        .show()
+                    binding.statusLayout.visibility = View.VISIBLE
+                    binding.status.visibility = View.VISIBLE
+                    binding.status.text = getString(R.string.no_devices_found)
+                    binding.progressHorizontal.visibility = View.INVISIBLE
+                } else {
+                    binding.statusLayout.visibility = View.GONE
                 }
+            } else {
+                binding.statusLayout.visibility = View.VISIBLE
+                binding.status.visibility = View.VISIBLE
+                binding.status.text = getString(R.string.scanning_eloc_devices)
+                binding.progressHorizontal.visibility = View.VISIBLE
+                binding.uploadElocStatusButton.visibility = View.GONE
+                binding.findElocButton.visibility = View.GONE
             }
         }
     }
 
     private fun fileToString(file: File): String {
         val text = StringBuilder()
+        var br: BufferedReader? = null
         try {
-            val br = BufferedReader(FileReader(file))
+            br = BufferedReader(FileReader(file))
             while (true) {
                 try {
-                    val line = br.readLine()
+                    val line = br.readLine() ?: break
                     text.append(line)
                     text.append('\n')
                 } catch (_: IOException) {
                     break
                 }
             }
-            br.close()
         } catch (_: IOException) {
+        } finally {
+            br?.close()
         }
         return text.toString()
     }
 
     private fun uploadElocStatus() {
+        var filecounter = 0
+        loadRangerName()
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
+        val filestring = "update " + sdf.format(Date()) + ".upd"
+
+        var fileout: OutputStreamWriter? = null
         try {
             val files = filesDir.listFiles()
-            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
-            loadRangerName()
-            val filestring = "update " + sdf.format(Date()) + ".upd"
-            val fileout = OutputStreamWriter(openFileOutput(filestring, Context.MODE_PRIVATE))
-            var filecounter = 0
+            fileout = OutputStreamWriter(openFileOutput(filestring, Context.MODE_PRIVATE))
             if (files != null) {
                 for (file in files) {
                     if (!file.isDirectory) {
@@ -250,28 +253,29 @@ class HomeActivity : AppCompatActivity() {
                         }
                     }
                 }
-
                 fileout.write("\n\n\n end of updates")
-                fileout.close()
-                if (filecounter > 0) {
-                    val filename = filesDir.absolutePath + "/" + filestring
-                    UploadFileAsync.run(filename, filesDir) { message ->
-                        runOnUiThread {
-                            if (message.trim().isNotEmpty()) {
-                                ActivityHelper.showSnack(binding.coordinator, message)
-                            }
-                        }
-                    }
-                } else {
-                    ActivityHelper.showSnack(binding.coordinator, "Nothing to Upload!")
-                }
             }
         } catch (_: Exception) {
+        } finally {
+            fileout?.close()
+        }
+
+        if (filecounter > 0) {
+            val filename = filesDir.absolutePath + "/" + filestring
+            UploadFileAsync.run(filename, filesDir) { message ->
+                runOnUiThread {
+                    if (message.trim().isNotEmpty()) {
+                        ActivityHelper.showSnack(binding.coordinator, message)
+                    }
+                }
+            }
+        } else {
+            ActivityHelper.showSnack(binding.coordinator, "Nothing to Upload!")
         }
     }
 
     private fun showDevice(address: String) {
-        AppBluetoothManager.stopScan()
+        BluetoothHelper.instance.stopScan(this::scanUpdate)
         val intent = Intent(this, TerminalActivity::class.java)
         intent.putExtra(TerminalActivity.ARG_DEVICE, address)
         startActivity(intent)
@@ -298,7 +302,7 @@ class HomeActivity : AppCompatActivity() {
                     }
                 } else {
                     gLastTimeDifferenceMillisecond = System.currentTimeMillis() - googletimestamp
-                    AppPreferenceManager.saveTimestamps(
+                    PreferencesHelper.instance.saveTimestamps(
                         SystemClock.elapsedRealtime(),
                         googletimestamp
                     )
@@ -312,5 +316,10 @@ class HomeActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun showMap() {
+        val intent = Intent(this, MapActivity::class.java)
+        startActivity(intent)
     }
 }

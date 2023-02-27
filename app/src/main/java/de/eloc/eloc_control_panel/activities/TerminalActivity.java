@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.SystemClock;
@@ -28,7 +29,10 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.multidex.BuildConfig;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import com.google.openlocationcode.OpenLocationCode;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +41,6 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import de.eloc.eloc_control_panel.OpenLocationCode;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.SerialListener;
 import de.eloc.eloc_control_panel.SerialService;
@@ -46,14 +49,12 @@ import de.eloc.eloc_control_panel.SerialSocket;
 import de.eloc.eloc_control_panel.SimpleLocation;
 import de.eloc.eloc_control_panel.TextUtil;
 import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
-import de.eloc.eloc_control_panel.BuildConfig;
+import de.eloc.eloc_control_panel.ng.models.BluetoothHelperOld;
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
-import de.eloc.eloc_control_panel.ng.models.AppBluetoothManager;
-import de.eloc.eloc_control_panel.ng.models.AppPreferenceManager;
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 
 public class TerminalActivity extends AppCompatActivity implements ServiceConnection, SerialListener {
-    private PreferencesHelper preferencesHelper = PreferencesHelper.Companion.getInstance();
+    private final PreferencesHelper preferencesHelper = PreferencesHelper.Companion.getInstance();
     private ActivityTerminalBinding binding;
     public static final String ARG_DEVICE = "device";
     private boolean refreshing = false;
@@ -313,7 +314,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     private void connect(boolean notify) {
 
         try {
-            BluetoothDevice device = AppBluetoothManager.INSTANCE.getDevice(deviceAddress);
+            BluetoothDevice device = BluetoothHelperOld.INSTANCE.getDevice(deviceAddress);
             // this line might have introduced a bug. This is bluetooth connection and not recording sttatus.
             //updateDeviceState(DeviceState.Recording, null);
             connected = Connected.Pending;
@@ -346,16 +347,12 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         // and making scrolling broken
 
         binding.swipeRefreshLayout.setEnabled(false);
-
-        // todo: implement solution that will accept at least api 21.
-        binding.scrollView.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-            Log.d("TAG", "onScrollChange: " + scrollY);
-            if (scrollY <= 0) {
-                binding.swipeRefreshLayout.setEnabled(true);
-            } else {
-                binding.swipeRefreshLayout.setEnabled(false);
-            }
-        });
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            binding.scrollView.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+                Log.d("TAG", "onScrollChange: " + scrollY);
+                binding.swipeRefreshLayout.setEnabled(scrollY <= 0);
+            });
+        }
     }
 
     private void setActionBar() {
@@ -419,7 +416,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         // Save device settings; but we can see that tthe value was actually saved. So maybe the firmware need to do a follow
         // let check the old project.
         if (msg.startsWith("#")) {
-            AppPreferenceManager.INSTANCE.setDeviceSettings(msg);
+            preferencesHelper.setDeviceSettings(msg);
         } else if (msg.startsWith("please check")) {
             hasSDCardError = true;
             showSDCardError();
@@ -456,7 +453,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                 .replace("!15!", "Last GPS Accuracy:  ")
                 .replace("!16!", "Session ID:  ");
 
-        long lastGoogleTimestamp = AppPreferenceManager.INSTANCE.getLastGoogleTimestamp();
+        long lastGoogleTimestamp = preferencesHelper.getLastGoogleTimestamp();
         data = data.trim() + "\nApp last time sync:  " + Long.toString(((System.currentTimeMillis() - lastGoogleTimestamp) / 1000l / 60l)) + " min\n";
         data = data + "App Version:  " + gVersion;
 
@@ -467,11 +464,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         //status(msg);
         receiveText.setText(spanWhite(data.trim()));
 
-        receiveText.post(new Runnable() { //always first one fails
-            public void run() {
-                receiveText.scrollTo(0, 0);
-            }
-        });
+        //always first one fails
+        receiveText.post(() -> receiveText.scrollTo(0, 0));
 
         //String lines[] = msg.split("\\r?\\n");
         String temp = deviceAddress.replace(":", "-");
@@ -501,8 +495,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void setDeviceInfo(String msg) {
         // Set data from prefs
-
-        long lastGoogleTimestamp = AppPreferenceManager.INSTANCE.getLastGoogleTimestamp();
+        long lastGoogleTimestamp = preferencesHelper.getLastGoogleTimestamp();
         double millisPerHour = 1000 * 3600;
         double hoursSinceLastSync = (System.currentTimeMillis() - lastGoogleTimestamp) / millisPerHour;
         binding.timeSyncValueTv.setText(String.format(Locale.ENGLISH, "%.2f h", hoursSinceLastSync));
@@ -662,15 +655,14 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                             Locale.ENGLISH,
                             "#%s#%s#%s",
                             sampleRate, secondsString, fileHeader);
-                    AppPreferenceManager.INSTANCE.setDeviceSettings(settings);
-
+                    preferencesHelper.setDeviceSettings(settings);
                 }
                 if ((micGain != null) && (micType != null)) {
                     String settings = String.format(
                             Locale.ENGLISH,
                             "#%s#%s",
                             micType, micGain);
-                    AppPreferenceManager.INSTANCE.setMicrophoneSettings(settings);
+                    preferencesHelper.setMicrophoneSettings(settings);
                 }
             }
         }
@@ -779,8 +771,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         //X_Y_ZZZZZZZZZZZZZZZ
 
         //long googletimestamp=  Long.parseLong("0");
-        long lastGoogleTimestamp = AppPreferenceManager.INSTANCE.getLastGoogleTimestamp();
-        long previouselapsedtime = AppPreferenceManager.INSTANCE.getCurrentElapsedTime();
+        long lastGoogleTimestamp = preferencesHelper.getLastGoogleTimestamp();
+        long previouselapsedtime = preferencesHelper.getCurrentElapsedTime();
         long currentElapsedTime = SystemClock.elapsedRealtime();
         long elapsedTimeDifferenceMinutes = (currentElapsedTime - previouselapsedtime) / 1000L / 60L;
         long elapsedTimeDifferenceMS = (currentElapsedTime - previouselapsedtime);
@@ -860,15 +852,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         binding.sdCardValueTv.setOnClickListener(view -> showSDCardError());
         binding.sdCardErrorBtn.setOnClickListener(view -> showSDCardError());
         binding.recBtn.setOnClickListener(view -> recordButtonClicked());
-        binding.swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                refresh();
-            }
-        });
-        binding.instructionsButton.setOnClickListener(view -> {
-            ActivityHelper.INSTANCE.showInstructions();
-        });
+        binding.swipeRefreshLayout.setOnRefreshListener(this::refresh);
+        binding.instructionsButton.setOnClickListener(view -> ActivityHelper.INSTANCE.showInstructions());
     }
 
     private void refresh() {

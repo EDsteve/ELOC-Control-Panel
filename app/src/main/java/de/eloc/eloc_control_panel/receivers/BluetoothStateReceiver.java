@@ -5,8 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import de.eloc.eloc_control_panel.helpers.BluetoothHelper;
-import de.eloc.eloc_control_panel.ng.models.AppBluetoothManager;
+import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper;
 
 public class BluetoothStateReceiver extends BroadcastReceiver {
     interface StateChangedCallback {
@@ -24,7 +23,7 @@ public class BluetoothStateReceiver extends BroadcastReceiver {
         String action = intent.getAction();
         boolean stateChanged = BluetoothAdapter.ACTION_STATE_CHANGED.equals(action);
         if (stateChanged) {
-            boolean isOn = AppBluetoothManager.INSTANCE.isAdapterOn();
+            boolean isOn = BluetoothHelper.Companion.getInstance().isAdapterOn();
             if (callback != null) {
                 callback.handler(isOn);
             }

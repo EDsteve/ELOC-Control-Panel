@@ -71,6 +71,13 @@
     <string name="refreshing">Refreshing…</string>
     <string name="advanced_options">Advanced options</string>
     <string name="scan_error">Something went wrong.\n\nFailed to scan for bluetooth devices!</string>
+    <string name="loading_map">Loading map…</string>
+    <string name="filter">Filter</string>
+    <string name="filter_by_ranger">Filter by ranger</string>
+    <string name="hide_filter">Hide filter</string>
+    <string name="find_your_elocs">Find your ELOCs</string>
+    <string name="show_all_elocs">Show all ELOCs</string>
+    <string name="map_button_text">FIND MY ELOC</string>
     <string name="no_bluetooth_adapter">A bluetooth adapter was not found on this device.\n\nTry using a device that has a bluetooth adapter.</string>
     <string name="bluetooth_error">Bluetooth error</string>
     <string name="bluetooth_off_message">You must turn on bluetooth\nto proceed</string>
@@ -82,6 +89,9 @@
     <string name="location_permission_required">Location permission required</string>
     <string name="bluetooth_content_description">Bluetooth permission needed</string>
     <string name="refresh">Refresh</string>
+    <string name="elocs_with_unknown_location">ELOCS with unknown location</string>
+    <string name="location_service_usage_title">Location Service Usage</string>
+    <string name="location_service_usage_message">Note that %s collects location data\nto enable the maps feature.</string>
     <string name="a_few_things_must_be_done_to_proceed">A few things must be done to proceed…</string>
     <string name="set_location_permission">Set Location Permission</string>
     <string name="enable_location">Enable Location</string>
@@ -98,5 +108,6 @@
     <string name="manual_bluetooth">You must manually enable the bluetooth permissions to connect with bluetooth devices</string>
     <string name="open_settings">Open settings</string>
     <string name="stop">Stop (%d)</string>
-
+    <string name="no_devices_found">No devices were found!</string>
+    <string name="scanning_eloc_devices"><![CDATA[<scanning for eloc devices>]]></string>
 </resources>

@@ -1,9 +1,5 @@
 package de.eloc.eloc_control_panel.activities;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -12,15 +8,20 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.RadioGroup;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.util.Locale;
 
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.databinding.ActivityMainSettingsBinding;
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
-import de.eloc.eloc_control_panel.ng.models.AppPreferenceManager;
+import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 
 public class MainSettingsActivity extends AppCompatActivity {
     ActivityMainSettingsBinding binding;
+    private final PreferencesHelper preferencesManager = PreferencesHelper.Companion.getInstance();
 
     private enum GainType {
         High(11), // Old forest  (HIGH)
@@ -42,7 +43,6 @@ public class MainSettingsActivity extends AppCompatActivity {
             }
         }
     }
-
 
     private String gPattern = "^[a-zA-Z0-9]+$"; // Pattern for filename
     private String gLocation = "";
@@ -84,7 +84,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     }
 
     private void setMicData() {
-        String data = AppPreferenceManager.INSTANCE.getMicData();
+        String data = preferencesManager.getMicData();
         String[] separated = data.split("#");
         if (separated.length < 2) {
             return;
@@ -112,7 +112,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     }
 
     private void setData() {
-        String data = AppPreferenceManager.INSTANCE.getDeviceSettings();
+        String data = preferencesManager.getDeviceSettings();
         //gInitialSettings=true;
         //
         // #16000 sample rate /0

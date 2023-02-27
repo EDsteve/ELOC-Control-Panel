@@ -6,11 +6,14 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import de.eloc.eloc_control_panel.databinding.LayoutElocInfoBinding
 import de.eloc.eloc_control_panel.ng2.interfaces.AdapterItemCallback
-import de.eloc.eloc_control_panel.ng2.interfaces.ListUpdateCallback
+import de.eloc.eloc_control_panel.ng2.interfaces.BooleanCallback
 
 import java.util.ArrayList
 
-class ElocInfoAdapter(val callback: ListUpdateCallback, private val itemCallback: AdapterItemCallback) :
+class ElocInfoAdapter(
+    val callback: BooleanCallback,
+    private val itemCallback: AdapterItemCallback
+) :
     RecyclerView.Adapter<ElocInfoViewHolder>() {
     private val deviceInfos = ArrayList<ElocInfo>()
 
@@ -34,11 +37,11 @@ class ElocInfoAdapter(val callback: ListUpdateCallback, private val itemCallback
     }
 
     fun add(info: ElocInfo) {
-        if (info.isValidDevice) {
+        if (BluetoothHelper.instance.isElocDevice(info.device)) {
             if (!deviceInfos.contains(info)) {
                 deviceInfos.add(info)
                 notifyItemInserted(deviceInfos.size - 1)
-                callback.handler(deviceInfos.isEmpty(), false)
+                callback.handler(false)
             }
         }
     }

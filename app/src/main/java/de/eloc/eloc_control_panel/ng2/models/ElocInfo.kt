@@ -1,33 +1,19 @@
 package de.eloc.eloc_control_panel.ng2.models
 
-import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.core.app.ActivityCompat
-import de.eloc.eloc_control_panel.ng2.App
 
-class ElocInfo(private val device: BluetoothDevice) {
+class ElocInfo(val device: BluetoothDevice) {
     val name: String
+        @SuppressLint("MissingPermission")
         get() {
-            if (ActivityCompat.checkSelfPermission(
-                    App.instance,
-                    Manifest.permission.BLUETOOTH_CONNECT
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    return DEFAULT_NAME
-                }
+            if (!BluetoothHelper.instance.hasConnectPermission()) {
+                return DEFAULT_NAME
             }
             return device.name ?: DEFAULT_NAME
         }
 
     val address: String = device.address
-
-    val isValidDevice: Boolean
-        get() {
-            return name.lowercase().contains("eloc")
-        }
 
     override fun equals(other: Any?): Boolean {
         if (other is ElocInfo) {
