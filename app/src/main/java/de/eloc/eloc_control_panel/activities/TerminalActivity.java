@@ -569,10 +569,15 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                     updateRecordButton();
                     setRecordingTime();
                 } else if (l.startsWith("!8!")) {
-                    String recordingTime = l.replace("!8!", "").toUpperCase().trim();
-                    boolean hasTime = recordingTime.contains(":") || (!recordingTime.toLowerCase().contains("on"));
-                    binding.btRecordingValueTv.setText(recordingTime);
-                    //binding.btRecordingValueTv.setTextColor(hasTime ? greenColor : redColor);
+                    Double currentRecordingTime = parseDouble(recordingTime);
+                    if (currentRecordingTime == null) {
+                        String newRecordingTime = l.replace("!8!", "").toUpperCase().trim();
+                        if (newRecordingTime.equalsIgnoreCase("on")) {
+                            // Set to zero if for some weird reason recording time was not yet already received
+                            recordingTime = "0.00";
+                            setRecordingTime();
+                        }
+                    }
                 } else if (l.startsWith("!9!")) {
                     sampleRate = l.replace("!9!", "").trim();
                     Double rate = parseDouble(sampleRate);
@@ -675,38 +680,47 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     }
 
     private Double parseDouble(String rawValue) {
-        Double result = null;
         if (rawValue == null) {
             rawValue = "";
         }
+        StringBuilder buffer = new StringBuilder();
+        for (int i = 0; i < rawValue.length(); i++) {
+            char c = rawValue.charAt(i);
+            if (Character.isDigit(c) || (c == '.')) {
+                buffer.append(c);
+            }
+        }
+        Double result = null;
         try {
-            result = Double.parseDouble(rawValue.trim());
+            result = Double.parseDouble(buffer.toString().trim());
         } catch (NumberFormatException ignore) {
         }
         return result;
     }
 
     private void setTime(TextView textView, String time) {
+        textView.setTextColor(redColor);
+        String prettyTime = getString(R.string.off);
         if (time != null && (!time.contains("0.00"))) {
-            textView.setText(time.trim());
-            textView.setTextColor(greenColor);
-        } else {
-            textView.setText("OFF");
-            textView.setTextColor(redColor);
+            Double tmp = parseDouble(time);
+            if (tmp != null) {
+                prettyTime = ActivityHelper.INSTANCE.getPrettifiedDuration(tmp);
+                textView.setTextColor(greenColor);
+            }
         }
+        textView.setText(prettyTime);
     }
 
     private void setRecordingTime() {
-        String text;
+        String text = getString(R.string.off);
         int color = redColor;
-        if (recordingTime != null && (!recordingTime.contains("0.00"))) {
-            text = recordingTime.trim();
+        Double duration = parseDouble(recordingTime);
+        if (deviceState == DeviceState.Stopping) {
+            duration = Double.valueOf("0");
+        }
+        if (duration != null) {
+            text = ActivityHelper.INSTANCE.getPrettifiedDuration(duration);
             color = greenColor;
-        } else if (deviceState == DeviceState.Recording) {
-            text = "0:00 h";
-            color = greenColor;
-        } else {
-            text = "OFF";
         }
         binding.recordingValueTv.setText(text);
         binding.recordingValueTv.setTextColor(color);
