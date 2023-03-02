@@ -494,18 +494,6 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     }
 
     private void setDeviceInfo(String msg) {
-        // Set data from prefs
-        long lastGoogleTimestamp = preferencesHelper.getLastGoogleTimestamp();
-        double millisPerHour = 1000 * 3600;
-        double hoursSinceLastSync = (System.currentTimeMillis() - lastGoogleTimestamp) / millisPerHour;
-        binding.timeSyncValueTv.setText(String.format(Locale.ENGLISH, "%.2f h", hoursSinceLastSync));
-        int syncColor = redColor;
-        if (hoursSinceLastSync < 48) {
-            syncColor = greenColor;
-        }
-        binding.timeSyncValueTv.setTextColor(syncColor);
-
-
         msg = msg.replace("_@b$_", rangerName);
 
         writeToFile(msg);
