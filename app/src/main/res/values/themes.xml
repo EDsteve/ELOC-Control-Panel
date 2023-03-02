@@ -1,8 +1,17 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
     <style name="AppTheme" parent="Theme.MaterialComponents.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="fontFamily">@font/quicksand</item>
+    </style>
+
+    <style name="ButtonStyle" parent="AppTheme">
+        <item name="android:textColor">#fff</item>
+        <item name="textAllCaps">true</item>
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerRadius">50dp</item>
     </style>
 </resources>
 

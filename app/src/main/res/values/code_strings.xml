@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="status_updates_url">http://128.199.206.198/ELOC/files/?C=M;O=D</string>
+    <string name="instructions_url">https://wildlifebug.com</string>
+</resources>
