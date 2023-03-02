@@ -162,10 +162,6 @@ class BluetoothHelper {
                     1,
                     TimeUnit.SECONDS
                 )
-
-            for (device in adapter.bondedDevices) {
-                handler.handler(ElocInfo(device))
-            }
             adapter.cancelDiscovery()
             adapter.startDiscovery()
         }
