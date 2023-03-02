@@ -26,8 +26,8 @@ object ActivityHelper {
         App.instance.startActivity(intent)
     }
 
-    fun showAlert(message: String) {
-        AlertDialog.Builder(App.instance)
+    fun showAlert(activity: AppCompatActivity, message: String) {
+        AlertDialog.Builder(activity)
             .setCancelable(true)
             .setMessage(message)
             .setPositiveButton(android.R.string.ok) { dialog, _ ->

@@ -906,7 +906,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void showSDCardError() {
         if (hasSDCardError) {
-            ActivityHelper.INSTANCE.showAlert("Check SD card!");
+            ActivityHelper.INSTANCE.showAlert(this, "Check SD card!");
         }
     }
 
