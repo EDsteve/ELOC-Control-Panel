@@ -11,8 +11,8 @@ android {
         applicationId "de.eloc.eloc_control_panel"
         minSdk 19
         targetSdk 33
-        versionCode 25
-        versionName '4.65'
+        versionCode 27
+        versionName '4.67'
         versionNameSuffix 'AppBeta'
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
