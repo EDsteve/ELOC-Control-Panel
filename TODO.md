@@ -20,7 +20,6 @@ Status page:
 	- It does refresh the SD card but not the recording or other values from the EP32? A manual reconnect refreshes all.
 	- refresh only possible after scrolled down first.
 - Show possible recording time (calculating from Sample rate and SD space available)
-- Bluetooth Recording (On / OFF) not showing but i think my friend who programs the firmware changed something there. Will ask him about it
 
 Settings page:
 - Under Advanced Options: Current "Device Name" should show in the "Change Device Name" input field
