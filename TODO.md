@@ -1,4 +1,4 @@
- ##Bugs:
+ ## Bugs:
  
  Status page
 - Recording shows <1min even when not recording.
@@ -12,7 +12,7 @@
 
 
 
-##To-Do:
+## To-Do:
 
 Start Page
 - Map feature: It should zoom to all the ELOC markers automatically - If too complicated. Forget it :)
