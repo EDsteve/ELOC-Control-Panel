@@ -7,11 +7,6 @@
 - the link on the bottom (wildlifebug.com) crashes the app
 
  
- - Low priority - // todo: fix view binding issue; Why can't it see the toolbar
-
-
-
-
 
 ## To-Do:
 
@@ -30,3 +25,6 @@ Status page:
 Settings page:
 - Under Advanced Options: Current "Device Name" should show in the "Change Device Name" input field
 - Add an "Update firmware" button to advanced menu which sends the command #settings#update with a popup saying: Are you sure? etc... Cancel... OK
+
+## General
+ - Low priority - // todo: fix view binding issue; Why can't it see the toolbar
