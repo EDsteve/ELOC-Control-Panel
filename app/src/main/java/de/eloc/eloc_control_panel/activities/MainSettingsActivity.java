@@ -212,7 +212,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     private void runCommandLine() {
         String command = getValue(binding.customCommandEt.getText());
         if (command.isEmpty()) {
-            ActivityHelper.INSTANCE.showAlert("You must enter a command to run!");
+            ActivityHelper.INSTANCE.showAlert(this,"You must enter a command to run!");
             return;
         }
         runCommand(command);
@@ -221,7 +221,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     private void runFileHeaderCommand() {
         String command = getValue(binding.fileheaderEt.getText());
         if (command.isEmpty()) {
-            ActivityHelper.INSTANCE.showAlert("You must enter a Device Name!");
+            ActivityHelper.INSTANCE.showAlert(this,"You must enter a Device Name!");
             return;
         }
         String suffix = "setname";
@@ -234,7 +234,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     private void runMicTypeCommand() {
         String type = getValue(binding.micTypeEt.getText());
         if (type.isEmpty()) {
-            ActivityHelper.INSTANCE.showAlert("You must enter a mic type to set!");
+            ActivityHelper.INSTANCE.showAlert(this, "You must enter a mic type to set!");
             return;
         }
         String command = String.format(Locale.ENGLISH, "%ssettype", type);
@@ -253,10 +253,10 @@ public class MainSettingsActivity extends AppCompatActivity {
             gLocation = editable.toString().trim();
         }
         if (gLocation.isEmpty()) {
-            ActivityHelper.INSTANCE.showAlert("File header name is required!");
+            ActivityHelper.INSTANCE.showAlert(this,"File header name is required!");
             return;
         } else if (!gLocation.matches(gPattern)) {
-            ActivityHelper.INSTANCE.showAlert("Invalid file header name!");
+            ActivityHelper.INSTANCE.showAlert(this,"Invalid file header name!");
             return;
         }
 

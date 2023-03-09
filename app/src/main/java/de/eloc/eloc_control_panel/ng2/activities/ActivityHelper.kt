@@ -10,6 +10,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.snackbar.Snackbar
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.ng2.App
+import kotlin.system.measureNanoTime
 
 object ActivityHelper {
     fun showStatusUpdates() {
@@ -26,8 +27,8 @@ object ActivityHelper {
         App.instance.startActivity(intent)
     }
 
-    fun showAlert(message: String) {
-        AlertDialog.Builder(App.instance)
+    fun showAlert(activity: AppCompatActivity, message: String) {
+        AlertDialog.Builder(activity)
             .setCancelable(true)
             .setMessage(message)
             .setPositiveButton(android.R.string.ok) { dialog, _ ->
@@ -53,5 +54,35 @@ object ActivityHelper {
             // It an error occurs trying to hide the keyboard,
             // just ignore the error without crashing app.
         }
+    }
+
+    fun getPrettifiedDuration(duration: Double) : String{
+        val hoursPerDay = 24
+        val hours = (duration % hoursPerDay).toInt()
+        val days = ((duration - hours) / hoursPerDay).toInt()
+        val minutes = ((duration - (days * hoursPerDay) - hours) * 60).toInt()
+        var prettyDays = ""
+        if (days == 1) {
+            prettyDays = "1 day"
+        } else if (days > 1) {
+             prettyDays = "$days days"
+         }
+        var prettyHours = ""
+        if (hours == 1) {
+            prettyHours =  "1 hr"
+        } else if (hours > 1) {
+            prettyHours =  "$hours hrs"
+        }
+        var prettyMinutes = ""
+        if (minutes == 1) {
+            prettyMinutes = "1 min"
+        } else if (minutes > 1) {
+            prettyMinutes =  "$minutes mins"
+        }
+        var result =  "$prettyDays $prettyHours $prettyMinutes".trim()
+        if (result.isEmpty()) {
+            result = "< 1 mins"
+        }
+        return result
     }
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#d84315</color>
+    <color name="colorPrimary">#bf360c</color>
     <color name="colorPrimaryDark">#bf360c</color>
     <color name="colorAccent">#ff6e40</color>
 
@@ -12,7 +12,7 @@
     <color name="on_color">#5eb65f</color>
     <color name="middle_color">#FFDB58</color>
 
-    <color name="divider">#191919</color>
+    <color name="divider">#252525</color>
     <color name="cardview">#1E1E1E</color>
 
 </resources>

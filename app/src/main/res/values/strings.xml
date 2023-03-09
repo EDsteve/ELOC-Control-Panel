@@ -7,9 +7,9 @@
     <string name="sd_card">SD Card</string>
     <string name="space_available">Space available</string>
     <string name="battery_level">Battery Level</string>
-    <string name="gps_location">GPS Location</string>
-    <string name="accuracy">Accuracy</string>
-    <string name="hours_since_recording_started">Hours since recording started</string>
+    <string name="gps_location">GPS Accuracy</string>
+    <string name="accuracy"> </string>
+    <string name="hours_since_recording_started">Current recording time</string>
     <string name="last_time_sync">Last Time Sync</string>
     <string name="hours_since_last_sync">Hours since last sync</string>
     <string name="settings">Settings</string>
@@ -20,7 +20,7 @@
     <string name="gps">gps</string>
     <string name="firmware">Firmware</string>
     <string name="uptime">Uptime</string>
-    <string name="rec_time_since_boot">Rec Time Since Boot</string>
+    <string name="rec_time_since_boot">Rec Since Boot</string>
     <string name="bluetooth_recording">Bluetooth Recording</string>
     <string name="last_gps_accuracy">Last GPS Accuracy</string>
     <string name="last_gps_location">Last GPS Location</string>
@@ -110,4 +110,5 @@
     <string name="stop">Stop (%d)</string>
     <string name="no_devices_found">No devices were found!</string>
     <string name="scanning_eloc_devices"><![CDATA[<scanning for eloc devices>]]></string>
+    <string name="off">OFF</string>
 </resources>
