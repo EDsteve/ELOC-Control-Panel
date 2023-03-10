@@ -1,11 +1,3 @@
- ## Bugs:
- 
- Status page
-- 
-- the link on the bottom (wildlifebug.com) crashes the app
-
- 
-
 ## To-Do:
 
 Start Page
