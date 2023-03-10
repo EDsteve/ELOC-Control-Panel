@@ -19,10 +19,7 @@ class App : Application() {
             }
 
         val version: String
-            get() {
-                val versionName = BuildConfig.VERSION_NAME
-                return versionName
-            }
+            get() = BuildConfig.VERSION_NAME
     }
 
 }

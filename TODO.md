@@ -1,7 +1,7 @@
  ## Bugs:
  
  Status page
-- Bluetooth Recording ON/OFF doesn't show
+- 
 - the link on the bottom (wildlifebug.com) crashes the app
 
  

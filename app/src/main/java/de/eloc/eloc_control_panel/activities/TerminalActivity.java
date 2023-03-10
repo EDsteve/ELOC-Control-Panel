@@ -811,17 +811,20 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             case Recording:
                 binding.statusTv.setText(R.string.connected);
                 binding.statusIcon.setImageResource(R.drawable.connected);
+                binding.btRecordingValueTv.setText(R.string.on);
                 break;
             case Ready:
-                binding.statusTv.setText("Ready");
+                binding.statusTv.setText(R.string.ready);
                 binding.statusIcon.setImageBitmap(null);
                 if (elocSettingsItem != null) {
                     elocSettingsItem.setEnabled(true);
                 }
+                binding.btRecordingValueTv.setText(R.string.off);
                 break;
             case Stopping:
-                binding.statusTv.setText("Please wait...");
+                binding.statusTv.setText(R.string.please_wait);
                 binding.statusIcon.setImageResource(R.drawable.connecting);
+                binding.btRecordingValueTv.setText(R.string.stopping);
                 break;
         }
         if (errorMessage != null) {
