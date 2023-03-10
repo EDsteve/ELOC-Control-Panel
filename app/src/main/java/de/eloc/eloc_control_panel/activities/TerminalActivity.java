@@ -714,13 +714,15 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     private void setRecordingTime() {
         String text = getString(R.string.off);
         int color = redColor;
-        Double duration = parseDouble(recordingTime);
-        if (deviceState == DeviceState.Stopping) {
-            duration = Double.valueOf("0");
-        }
-        if (duration != null) {
-            text = ActivityHelper.INSTANCE.getPrettifiedDuration(duration);
-            color = greenColor;
+        if (deviceState == DeviceState.Recording) {
+            Double duration = parseDouble(recordingTime);
+            if (deviceState == DeviceState.Stopping) {
+                duration = Double.valueOf("0");
+            }
+            if (duration != null) {
+                text = ActivityHelper.INSTANCE.getPrettifiedDuration(duration);
+                color = greenColor;
+            }
         }
         binding.recordingValueTv.setText(text);
         binding.recordingValueTv.setTextColor(color);
