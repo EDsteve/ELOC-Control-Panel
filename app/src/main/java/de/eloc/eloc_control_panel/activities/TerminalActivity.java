@@ -50,6 +50,7 @@ import de.eloc.eloc_control_panel.SimpleLocation;
 import de.eloc.eloc_control_panel.TextUtil;
 import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 import de.eloc.eloc_control_panel.ng.models.BluetoothHelperOld;
+import de.eloc.eloc_control_panel.ng2.App;
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 
@@ -69,8 +70,6 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         Ready,
     }
 
-    final String gVersion = BuildConfig.VERSION_NAME;
-    //   final String gVersion = "AppBeta4.1";
     public ActivityResultLauncher<Intent> settingsLauncher;
     private String deviceAddress = "<no address>";
     private SerialService service;
@@ -139,8 +138,10 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         receiveText = binding.receiveText;                          // TextView performance decreases with number of spans
         receiveText.setTextColor(getResources().getColor(R.color.colorRecieveText)); // set as default color to reduce number of spans
         receiveText.setMovementMethod(ScrollingMovementMethod.getInstance());
-        //marker
-        appendReceiveText("\nEloc App version: " + gVersion + "\n");
+
+        String appVersion = App.Companion.getVersion();
+        appendReceiveText("\nEloc App version: " + appVersion + "\n");
+        binding.appversionValueTv.setText(appVersion);
 
         startLocation();
     }
@@ -455,7 +456,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
         long lastGoogleTimestamp = preferencesHelper.getLastGoogleTimestamp();
         data = data.trim() + "\nApp last time sync:  " + Long.toString(((System.currentTimeMillis() - lastGoogleTimestamp) / 1000l / 60l)) + " min\n";
-        data = data + "App Version:  " + gVersion;
+        data = data + "App Version:  " + App.Companion.getVersion();
 
 
         //msg=top+msg;
@@ -507,10 +508,10 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         String micGain = null;
         String micType = null;
         String sessionID = null;
-        Integer recON = 0;
 
-        if (lines.length > 0) { // got an update this time
-            binding.appversionValueTv.setText(gVersion);
+        if (lines.length > 0) { //
+            int recON = 0;
+            // got an update this time
             for (String l : lines) {
                 if (l.startsWith("Ranger:")) {
                     String rangerName = l.replace("Ranger:", "").trim();

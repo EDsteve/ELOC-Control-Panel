@@ -1,7 +1,6 @@
  ## Bugs:
  
- Status page 
-- App version doesn't show under MISC
+ Status page
 - Bluetooth Recording ON/OFF doesn't show
 - the link on the bottom (wildlifebug.com) crashes the app
 
