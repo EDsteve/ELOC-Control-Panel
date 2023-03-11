@@ -10,7 +10,6 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.snackbar.Snackbar
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.ng2.App
-import kotlin.system.measureNanoTime
 
 object ActivityHelper {
     fun showStatusUpdates() {
@@ -22,32 +21,36 @@ object ActivityHelper {
     }
 
     private fun openUrl(address: String) {
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.data = Uri.parse(address)
-        App.instance.startActivity(intent)
+        try {
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.data = Uri.parse(address)
+            App.instance.startActivity(intent)
+        } catch (_: Exception) {
+
+        }
     }
 
     fun showAlert(activity: AppCompatActivity, message: String) {
         AlertDialog.Builder(activity)
-            .setCancelable(true)
-            .setMessage(message)
-            .setPositiveButton(android.R.string.ok) { dialog, _ ->
-                dialog.dismiss()
-            }
-            .show()
+                .setCancelable(true)
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok) { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .show()
     }
 
     fun showSnack(coordinator: CoordinatorLayout, message: String) =
-        Snackbar
-            .make(coordinator, message, Snackbar.LENGTH_LONG)
-            .show()
+            Snackbar
+                    .make(coordinator, message, Snackbar.LENGTH_LONG)
+                    .show()
 
     fun hideKeyboard(activity: AppCompatActivity) {
         try {
             val binder = activity.currentFocus?.windowToken
             if (binder != null) {
                 val manager =
-                    activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
+                        activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
                 manager?.hideSoftInputFromWindow(binder, 0)
             }
         } catch (_: Exception) {
@@ -56,7 +59,7 @@ object ActivityHelper {
         }
     }
 
-    fun getPrettifiedDuration(duration: Double) : String{
+    fun getPrettifiedDuration(duration: Double): String {
         val hoursPerDay = 24
         val hours = (duration % hoursPerDay).toInt()
         val days = ((duration - hours) / hoursPerDay).toInt()
@@ -65,21 +68,21 @@ object ActivityHelper {
         if (days == 1) {
             prettyDays = "1 day"
         } else if (days > 1) {
-             prettyDays = "$days days"
-         }
+            prettyDays = "$days days"
+        }
         var prettyHours = ""
         if (hours == 1) {
-            prettyHours =  "1 hr"
+            prettyHours = "1 hr"
         } else if (hours > 1) {
-            prettyHours =  "$hours hrs"
+            prettyHours = "$hours hrs"
         }
         var prettyMinutes = ""
         if (minutes == 1) {
             prettyMinutes = "1 min"
         } else if (minutes > 1) {
-            prettyMinutes =  "$minutes mins"
+            prettyMinutes = "$minutes mins"
         }
-        var result =  "$prettyDays $prettyHours $prettyMinutes".trim()
+        var result = "$prettyDays $prettyHours $prettyMinutes".trim()
         if (result.isEmpty()) {
             result = "< 1 mins"
         }
