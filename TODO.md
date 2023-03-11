@@ -18,4 +18,4 @@ Settings page:
 
 ## General
  - Low priority - // todo: fix view binding issue; Why can't it see the toolbar
- Git test
+
