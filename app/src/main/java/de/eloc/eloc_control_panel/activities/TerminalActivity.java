@@ -6,7 +6,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -28,9 +27,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-import androidx.multidex.BuildConfig;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.openlocationcode.OpenLocationCode;
 
@@ -52,6 +48,7 @@ import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 import de.eloc.eloc_control_panel.ng.models.BluetoothHelperOld;
 import de.eloc.eloc_control_panel.ng2.App;
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
+import de.eloc.eloc_control_panel.ng2.models.LabelColor;
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 
 public class TerminalActivity extends AppCompatActivity implements ServiceConnection, SerialListener {
@@ -93,9 +90,6 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     public SimpleLocation theLocation;
     public String rangerName;
-    private int redColor = Color.WHITE;
-    private int greenColor = Color.WHITE;
-    private int yellowColor = Color.WHITE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,10 +118,6 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             return;
         }
 
-        greenColor = ContextCompat.getColor(this, R.color.on_color);
-        redColor = ContextCompat.getColor(this, R.color.off_color);
-        yellowColor = ContextCompat.getColor(this, R.color.middle_color);
-
         rangerName = preferencesHelper.getRangerName();
 
         Log.i("elocApp", "terminal rangerName " + rangerName);
@@ -136,7 +126,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         //startLocation();
 
         receiveText = binding.receiveText;                          // TextView performance decreases with number of spans
-        receiveText.setTextColor(getResources().getColor(R.color.colorRecieveText)); // set as default color to reduce number of spans
+        receiveText.setTextColor(getResources().getColor(R.color.colorReceiveText)); // set as default color to reduce number of spans
         receiveText.setMovementMethod(ScrollingMovementMethod.getInstance());
 
         String appVersion = App.Companion.getVersion();
@@ -536,13 +526,13 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                     }
                     binding.batteryValueTv.setText(batteryLevel);
                     String tmp = batteryLevel.toLowerCase();
-                    int batteryValueColor = yellowColor;
+                    LabelColor batteryValueColor = LabelColor.middle;
                     if (tmp.contains("low")) {
-                        batteryValueColor = redColor;
+                        batteryValueColor = LabelColor.off;
                     } else if (tmp.contains("full")) {
-                        batteryValueColor = greenColor;
+                        batteryValueColor = LabelColor.on;
                     }
-                    binding.batteryValueTv.setTextColor(batteryValueColor);
+                    setLabelColor(binding.batteryValueTv, batteryValueColor, true);
 
                     if (parts.length >= 1) {
                         binding.batteryVoltageValueTv.setText(parts[0].trim());
@@ -602,7 +592,13 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                     hasSDCardError = (usedGB == null) || usedGB <= 0;
                     binding.sdCardErrorBtn.setVisibility(hasSDCardError ? View.VISIBLE : View.GONE);
                     binding.sdCardValueTv.setText(String.format("%s GB", gb));
-                    binding.sdCardValueTv.setTextColor(usedGB < 40 ? redColor : greenColor);
+                    if (usedGB != null) {
+                        setLabelColor(
+                                binding.sdCardValueTv,
+                                usedGB < 40 ? LabelColor.off : LabelColor.on,
+                                true
+                        );
+                    }
                 } else if (l.startsWith("!12!")) {
                     micType = l.replace("!12!", "").trim();
                     binding.microphoneValueTv.setText(micType);
@@ -626,13 +622,15 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                     String prettyAccuracy = "Unknown";
                     if (accuracy != null) {
                         prettyAccuracy = formatNumber(accuracy, "m");
+                        final LabelColor labelColor;
                         if (accuracy < 5) {
-                            binding.gpsValueTv.setTextColor(greenColor);
+                            labelColor = LabelColor.on;
                         } else if (accuracy < 10) {
-                            binding.gpsValueTv.setTextColor(yellowColor);
+                            labelColor = LabelColor.middle;
                         } else {
-                            binding.gpsValueTv.setTextColor(redColor);
+                            labelColor = LabelColor.off;
                         }
+                        setLabelColor(binding.gpsValueTv, labelColor, true);
                     }
                     binding.lastAccuracyValueTv.setText(prettyAccuracy);
                 } else if (l.startsWith("!16!")) {
@@ -700,13 +698,11 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     }
 
     private void setTime(TextView textView, String time) {
-        textView.setTextColor(redColor);
         String prettyTime = getString(R.string.off);
         if (time != null && (!time.contains("0.00"))) {
             Double tmp = parseDouble(time);
             if (tmp != null) {
                 prettyTime = ActivityHelper.INSTANCE.getPrettifiedDuration(tmp);
-                textView.setTextColor(greenColor);
             }
         }
         textView.setText(prettyTime);
@@ -714,7 +710,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void setRecordingTime() {
         String text = getString(R.string.off);
-        int color = redColor;
+        LabelColor color = LabelColor.off;
         if (deviceState == DeviceState.Recording) {
             Double duration = parseDouble(recordingTime);
             if (deviceState == DeviceState.Stopping) {
@@ -722,11 +718,11 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             }
             if (duration != null) {
                 text = ActivityHelper.INSTANCE.getPrettifiedDuration(duration);
-                color = greenColor;
+                color = LabelColor.on;
             }
         }
         binding.recordingValueTv.setText(text);
-        binding.recordingValueTv.setTextColor(color);
+        setLabelColor(binding.recordingValueTv, color, true);
     }
 
     private String formatNumber(double number, String units) {
@@ -753,9 +749,6 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                 msg = str;
                 data = (str + newline).getBytes();
             }
-            //SpannableStringBuilder spn = new SpannableStringBuilder(msg + '\n');
-            //spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            //receiveText.append(spn); //mark
             appendReceiveText(msg + "\n");
             service.write(data);
             return null;
@@ -775,7 +768,6 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         //returns a string with the following:
         //X_Y_ZZZZZZZZZZZZZZZ
 
-        //long googletimestamp=  Long.parseLong("0");
         long lastGoogleTimestamp = preferencesHelper.getLastGoogleTimestamp();
         long previouselapsedtime = preferencesHelper.getCurrentElapsedTime();
         long currentElapsedTime = SystemClock.elapsedRealtime();
@@ -783,22 +775,15 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         long elapsedTimeDifferenceMS = (currentElapsedTime - previouselapsedtime);
         String X, Y, timestamp;
 
-        if (true || (lastGoogleTimestamp == 0L) || (elapsedTimeDifferenceMinutes > (48 * 60))) {
+        if ((lastGoogleTimestamp == 0L) || (elapsedTimeDifferenceMinutes > (48 * 60))) {
             X = "P";
-
             Y = Long.toString(elapsedTimeDifferenceMinutes);
-            timestamp = X + "__" + Y + "___" + Long.toString(System.currentTimeMillis());
-            //Toast toast = Toast.makeText( context, " other thing", 8000);
-            //toast.show();
+            timestamp = X + "__" + Y + "___" + System.currentTimeMillis();
         } else {
             X = "G";
             Y = Long.toString(elapsedTimeDifferenceMinutes);
-            timestamp = X + "__" + Y + "___" + Long.toString((lastGoogleTimestamp + elapsedTimeDifferenceMS));
-            //Toast toast = Toast.makeText( context, "elapsed time diff: "+Long.toString(elapsedTimeDifferenceMinutes)+" min", 8000);
-            //toast.show();
+            timestamp = X + "__" + Y + "___" + (lastGoogleTimestamp + elapsedTimeDifferenceMS);
         }
-        //Toast toast = Toast.makeText( context, timestamp, 8000);
-        //toast.show();
         return (timestamp);
     }
 
@@ -836,23 +821,22 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void updateRecordButton() {
         int text = R.string.rec_state_ready;
-        int color = greenColor;
+        LabelColor color = LabelColor.on;
         switch (deviceState) {
             case Recording:
                 text = R.string.rec_state_recording;
-                color = redColor; // Red when recording
+                color = LabelColor.off; // Red when recording
                 break;
             case Stopping:
                 text = R.string.rec_state_wait;
-                color = yellowColor;
+                color = LabelColor.middle;
                 break;
             case Ready:
-                text = R.string.rec_state_ready;
-                color = greenColor; // Green when ready
+            default:
                 break;
         }
         binding.recBtn.setText(text);
-        binding.recBtn.setBackgroundColor(color);
+        setLabelColor(binding.recBtn, color, false);
     }
 
     private void setListeners() {
@@ -865,7 +849,6 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     }
 
     private void refresh() {
-
         binding.refreshLayout.setVisibility(View.VISIBLE);
         binding.infoLayout.setVisibility(View.GONE);
         refreshing = true;
@@ -900,8 +883,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     }
 
     private void startRecording() {
-        binding.recBtn.setText("please wait...");
-        send("setGPS^" + locationCode + "#" + Float.toString(locationAccuracy));
+        binding.recBtn.setText(R.string.please_wait);
+        send("setGPS^" + locationCode + "#" + locationAccuracy);
         //sendDelayed("_record_",1700);
         handleStop();
     }
@@ -935,6 +918,16 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                 .show();
     }
 
+    void setLabelColor(TextView label, LabelColor color, boolean foreground) {
+        if (label != null) {
+            if (foreground) {
+                label.setTextColor(color.getColor());
+            } else {
+                label.setBackgroundColor(color.getColor());
+            }
+        }
+    }
+
     private void startLocation() {
         //It really depends on the way you call that constructor. Make sure not to enable passive mode while using a network/coarse location.
         //Passive mode is only available for GPS/fine location.
@@ -952,34 +945,28 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
             public void onPositionChanged() {
                 //Log.i("elocApp", "position changed");
-                //my house balcony +- 2m in locus is 6MJWMRHV+9Q
                 locationAccuracy = theLocation.getAccuracy();
-
                 theCode = new OpenLocationCode(theLocation.getLatitude(), theLocation.getLongitude());
                 locationCode = theCode.getCode();
-                Log.i("elocApp", "code: " + locationCode + "  lat: " + Double.toString(theLocation.getLatitude()) + "   lon: " + Double.toString(theLocation.getLongitude()) + "   alt: " + Double.toString(theLocation.getAltitude()) + "   acc: " + Float.toString(locationAccuracy));
+                Log.i(
+                        "elocApp",
+                        "code: " + locationCode +
+                                "\nlat: " + theLocation.getLatitude() +
+                                "\nlon: " + theLocation.getLongitude() +
+                                "\nalt: " + theLocation.getAltitude() +
+                                "\nacc: " + locationAccuracy);
                 String prettyAccuracy = formatNumber(locationAccuracy, "m");
+                final LabelColor labelColor;
                 if (locationAccuracy < 8) {
-                    binding.gpsValueTv.setTextColor(greenColor);
+                    labelColor = LabelColor.on;
                 } else if (locationAccuracy < 12) {
-                    binding.gpsValueTv.setTextColor(yellowColor);
+                    labelColor = LabelColor.middle;
                 } else {
-                    binding.gpsValueTv.setTextColor(redColor);
+                    labelColor = LabelColor.off;
                 }
-
+                setLabelColor(binding.gpsValueTv, labelColor, true);
                 binding.gpsValueTv.setText(prettyAccuracy);
-
-                // if (recBtn.getText().toString().startsWith("START RECORDING")) recBtn.setBackgroundColor(0xFFFF0000);
-                if (locationAccuracy < 12.0) {
-
-
-                }
-
             }
-
         });
-
-        //theLocation.beginUpdates();
-
     }
 }
