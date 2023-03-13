@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.ng.activities
+package de.eloc.eloc_control_panel.ng2.activities
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
@@ -21,7 +21,6 @@ import de.eloc.eloc_control_panel.activities.MapActivity
 import de.eloc.eloc_control_panel.activities.TerminalActivity
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.PopupWindowBinding
-import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import de.eloc.eloc_control_panel.ng2.models.ElocInfoAdapter
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper
@@ -274,10 +273,11 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun showDevice(address: String) {
+    private fun showDevice(name: String, address: String) {
         BluetoothHelper.instance.stopScan(this::scanUpdate)
         val intent = Intent(this, TerminalActivity::class.java)
         intent.putExtra(TerminalActivity.ARG_DEVICE, address)
+        intent.putExtra(TerminalActivity.ARG_DEVICE_NAME, name)
         startActivity(intent)
     }
 

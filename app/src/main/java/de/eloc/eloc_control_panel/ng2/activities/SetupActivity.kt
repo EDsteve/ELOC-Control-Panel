@@ -15,7 +15,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivitySetupBinding
-import de.eloc.eloc_control_panel.ng.activities.HomeActivity
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper
 import de.eloc.eloc_control_panel.ng2.receivers.BluetoothWatcher

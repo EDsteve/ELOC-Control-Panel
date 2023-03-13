@@ -55,6 +55,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     private final PreferencesHelper preferencesHelper = PreferencesHelper.Companion.getInstance();
     private ActivityTerminalBinding binding;
     public static final String ARG_DEVICE = "device";
+    public static final String ARG_DEVICE_NAME = "device_name";
     private boolean refreshing = false;
 
     private enum Connected {False, Pending, True}
@@ -216,13 +217,12 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_terminal, menu);
-        elocSettingsItem = menu.findItem(R.id.elocsettings);
+        elocSettingsItem = menu.findItem(R.id.eloc_settings);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         int id = item.getItemId();
         if (id == android.R.id.home) {
             finish();
@@ -232,7 +232,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         if (refreshing) {
             ActivityHelper.INSTANCE.showSnack(binding.coordinator, "Currently unavailable");
             return true;
-        } else if (id == R.id.elocsettings) {
+        } else if (id == R.id.eloc_settings) {
             openSettings();
             return true;
         } else {
@@ -350,8 +350,17 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         setSupportActionBar(binding.appbar.toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
+            String title = "";
             actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setTitle("");
+            Bundle extras = getIntent().getExtras();
+            if (extras != null) {
+                title = extras.getString(ARG_DEVICE_NAME);
+            }
+            if (title == null) {
+                title = "";
+            }
+            title = title.trim();
+            actionBar.setTitle(title);
         }
     }
 
@@ -484,6 +493,13 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         return (spn);
     }
 
+    private void setActionBarText(String text) {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setTitle(text);
+        }
+    }
+
     private void setDeviceInfo(String msg) {
         msg = msg.replace("_@b$_", rangerName);
 
@@ -508,7 +524,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
                     binding.rangerNameTv.setText(rangerName);
                 } else if (l.startsWith("!0!")) {
                     String deviceName = l.replace("!0!", "").trim();
-                    binding.elocTv.setText(deviceName);
+                    setActionBarText(deviceName);
                 } else if (l.startsWith("!1!")) {
                     String firmware = l.replace("!1!", "").trim();
                     binding.firmwareValueTv.setText(firmware);
@@ -789,21 +805,17 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void updateDeviceState(DeviceState state, String errorMessage) {
         deviceState = state;
-        if (elocSettingsItem != null) {
-            elocSettingsItem.setEnabled(false);
-        }
+        elocSettingsItem.setEnabled(true);
         switch (state) {
             case Recording:
                 binding.statusTv.setText(R.string.connected);
-                binding.statusIcon.setImageResource(R.drawable.connected);
+                binding.statusIcon.setImageResource(R.drawable.connectivity);
                 binding.btRecordingValueTv.setText(R.string.on);
+                elocSettingsItem.setEnabled(false);
                 break;
             case Ready:
                 binding.statusTv.setText(R.string.ready);
-                binding.statusIcon.setImageBitmap(null);
-                if (elocSettingsItem != null) {
-                    elocSettingsItem.setEnabled(true);
-                }
+                binding.statusIcon.setImageResource(R.drawable.connected);
                 binding.btRecordingValueTv.setText(R.string.off);
                 break;
             case Stopping:
@@ -891,7 +903,6 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void handleStop() {
         locationCode = "UNKNOWN";
-        locationAccuracy = 99.0f;
         theLocation.endUpdates();
     }
 

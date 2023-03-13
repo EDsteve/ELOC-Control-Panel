@@ -15,6 +15,6 @@ class ElocInfoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     fun setInfo(info: ElocInfo, callback: AdapterItemCallback) {
         binding.nameTextView.text = info.name
         binding.addressTextView.text = info.address
-        binding.root.setOnClickListener { callback.handler(info.address) }
+        binding.root.setOnClickListener { callback.handler(info.name, info.address) }
     }
 }

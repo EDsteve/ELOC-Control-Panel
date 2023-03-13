@@ -47,7 +47,7 @@ object BluetoothHelperOld {
                     binding.text1.text = info.name
                     binding.text2.text = "fix this : " + info.address
                     binding.root.setOnClickListener {
-                        callback?.handler(info.address)
+                        callback?.handler(info.name, info.address)
                     }
                     return binding.root
                 }

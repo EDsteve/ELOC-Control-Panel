@@ -10,9 +10,9 @@
         app:showAsAction="always" /> -->
 
     <item
-        android:id="@+id/elocsettings"
+        android:id="@+id/eloc_settings"
         android:enabled="true"
-        android:title="ELOC Settings"
+        android:title="@string/eloc_settings"
         android:visible="true"
         app:showAsAction="always" />
 <!--
