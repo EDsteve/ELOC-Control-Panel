@@ -3,6 +3,7 @@ package de.eloc.eloc_control_panel.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -44,7 +45,7 @@ public class MainSettingsActivity extends AppCompatActivity {
         }
     }
 
-    private String gPattern = "^[a-zA-Z0-9]+$"; // Pattern for filename
+    private final String gPattern = "^[a-zA-Z0-9]+$"; // Pattern for filename
     private String gLocation = "";
     private String gSecondsPerFile = "";
     private String gSamplesPerSec = "";
@@ -57,6 +58,7 @@ public class MainSettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityMainSettingsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        setDeviceName();
         setData();
         setMicData();
         setToolbar();
@@ -72,6 +74,16 @@ public class MainSettingsActivity extends AppCompatActivity {
             return true;
         }
         return false;
+    }
+
+    private void setDeviceName() {
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            String deviceName = extras.getString(TerminalActivity.EXTRA_DEVICE_NAME);
+            if (!TextUtils.isEmpty(deviceName)) {
+                binding.deviceNameEditText.setText(deviceName.trim());
+            }
+        }
     }
 
     private void setToolbar() {
@@ -219,7 +231,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     }
 
     private void runFileHeaderCommand() {
-        String command = getValue(binding.fileheaderEt.getText());
+        String command = getValue(binding.deviceNameEditText.getText());
         if (command.isEmpty()) {
             ActivityHelper.INSTANCE.showAlert(this,"You must enter a Device Name!");
             return;

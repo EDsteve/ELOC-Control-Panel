@@ -54,8 +54,8 @@ import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 public class TerminalActivity extends AppCompatActivity implements ServiceConnection, SerialListener {
     private final PreferencesHelper preferencesHelper = PreferencesHelper.Companion.getInstance();
     private ActivityTerminalBinding binding;
-    public static final String ARG_DEVICE = "device";
-    public static final String ARG_DEVICE_NAME = "device_name";
+    public static final String EXTRA_DEVICE = "device";
+    public static final String EXTRA_DEVICE_NAME = "device_name";
     private boolean refreshing = false;
 
     private enum Connected {False, Pending, True}
@@ -70,6 +70,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     public ActivityResultLauncher<Intent> settingsLauncher;
     private String deviceAddress = "<no address>";
+    private String deviceName = "";
     private SerialService service;
     private Connected connected = Connected.False;
     private boolean initialStart = true;
@@ -110,8 +111,8 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         Bundle extras = getIntent().getExtras();
         boolean hasDevice = false;
         if (extras != null) {
-            hasDevice = extras.containsKey(ARG_DEVICE);
-            deviceAddress = extras.getString(ARG_DEVICE, "<no address found>");
+            hasDevice = extras.containsKey(EXTRA_DEVICE);
+            deviceAddress = extras.getString(EXTRA_DEVICE, "<no address found>");
         }
 
         if (!hasDevice) {
@@ -295,7 +296,9 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void openSettings() {
         if (deviceState == DeviceState.Ready) {
-            settingsLauncher.launch(new Intent(TerminalActivity.this, MainSettingsActivity.class));
+            Intent intent = new Intent(TerminalActivity.this, MainSettingsActivity.class);
+            intent.putExtra(EXTRA_DEVICE_NAME, deviceName);
+            settingsLauncher.launch(intent);
         }
     }
 
@@ -350,17 +353,16 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         setSupportActionBar(binding.appbar.toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            String title = "";
             actionBar.setDisplayHomeAsUpEnabled(true);
             Bundle extras = getIntent().getExtras();
             if (extras != null) {
-                title = extras.getString(ARG_DEVICE_NAME);
+                deviceName = extras.getString(EXTRA_DEVICE_NAME);
             }
-            if (title == null) {
-                title = "";
+            if (deviceName == null) {
+                deviceName = "";
             }
-            title = title.trim();
-            actionBar.setTitle(title);
+            deviceName = deviceName.trim();
+            actionBar.setTitle(deviceName);
         }
     }
 

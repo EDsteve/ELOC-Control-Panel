@@ -276,8 +276,8 @@ class HomeActivity : AppCompatActivity() {
     private fun showDevice(name: String, address: String) {
         BluetoothHelper.instance.stopScan(this::scanUpdate)
         val intent = Intent(this, TerminalActivity::class.java)
-        intent.putExtra(TerminalActivity.ARG_DEVICE, address)
-        intent.putExtra(TerminalActivity.ARG_DEVICE_NAME, name)
+        intent.putExtra(TerminalActivity.EXTRA_DEVICE, address)
+        intent.putExtra(TerminalActivity.EXTRA_DEVICE_NAME, name)
         startActivity(intent)
     }
 

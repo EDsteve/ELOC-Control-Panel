@@ -23,9 +23,9 @@
         android:textAlignment="center" />
 
     <ScrollView
-        android:layout_marginBottom="@dimen/bottom_bar_size"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginBottom="@dimen/bottom_bar_size"
         android:padding="16dp"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
@@ -336,10 +336,12 @@
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="@string/device_name">
+                        android:hint="@string/device_name"
+                        app:counterEnabled="true"
+                        app:counterMaxLength="30">
 
                         <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/fileheader_et"
+                            android:id="@+id/device_name_edit_text"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
