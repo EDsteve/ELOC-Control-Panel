@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.ng.activities
+package de.eloc.eloc_control_panel.ng2.activities
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
@@ -21,7 +21,6 @@ import de.eloc.eloc_control_panel.activities.MapActivity
 import de.eloc.eloc_control_panel.activities.TerminalActivity
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.PopupWindowBinding
-import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import de.eloc.eloc_control_panel.ng2.models.ElocInfoAdapter
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper
@@ -69,7 +68,7 @@ class HomeActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.browseStatusUpdates -> ActivityHelper.showStatusUpdates()
-            R.id.timeSync -> doSync(5000, true)
+            R.id.timeSync -> doSync()
             R.id.setRangerName -> editRangerName()
             R.id.bt_settings -> bluetoothHelper.openSettings(this)
         }
@@ -112,7 +111,7 @@ class HomeActivity : AppCompatActivity() {
     private fun setupListView() {
         binding.devicesRecyclerView.adapter = elocAdapter
         binding.devicesRecyclerView.layoutManager =
-            LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+                LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
     }
 
     private fun checkRangerName() {
@@ -135,29 +134,29 @@ class HomeActivity : AppCompatActivity() {
         val popupWindowBinding = PopupWindowBinding.inflate(layoutInflater)
         popupWindowBinding.rangerName.setText(rangerName)
         AlertDialog.Builder(this)
-            .setCancelable(false)
-            .setTitle("Input Your Ranger ID")
-            .setView(popupWindowBinding.root)
-            .setPositiveButton("SAVE") { dialog, _ ->
-                run {
-                    val editable = popupWindowBinding.rangerName.text
-                    if (editable != null) {
-                        dialog.dismiss()
-                        val name = editable.toString().trim()
-                        validateRangerName(name)
+                .setCancelable(false)
+                .setTitle("Input Your Ranger ID")
+                .setView(popupWindowBinding.root)
+                .setPositiveButton("SAVE") { dialog, _ ->
+                    run {
+                        val editable = popupWindowBinding.rangerName.text
+                        if (editable != null) {
+                            dialog.dismiss()
+                            val name = editable.toString().trim()
+                            validateRangerName(name)
+                        }
                     }
                 }
-            }
-            .show()
+                .show()
     }
 
     private fun startScan() {
         val isOn = BluetoothHelper.instance.isAdapterOn()
         binding.status.text =
-            if (isOn)
-                getString(R.string.scanning_eloc_devices)
-            else
-                "<bluetooth is disabled>"
+                if (isOn)
+                    getString(R.string.scanning_eloc_devices)
+                else
+                    "<bluetooth is disabled>"
         if (!isOn) {
             return
         }
@@ -167,7 +166,7 @@ class HomeActivity : AppCompatActivity() {
         }
 
         onListUpdated(false)
-        val error = bluetoothHelper.startScan(this::scanUpdate, elocAdapter::add)
+        val error = bluetoothHelper.startScan(this::scanUpdate)
         if (!TextUtils.isEmpty(error)) {
             ActivityHelper.showSnack(binding.coordinator, error!!)
         }
@@ -190,7 +189,7 @@ class HomeActivity : AppCompatActivity() {
             val hasEmptyAdapter = binding.devicesRecyclerView.adapter?.itemCount == 0
             binding.refreshListButton.visibility = View.VISIBLE
             binding.devicesRecyclerView.visibility =
-                if (hasEmptyAdapter) View.GONE else View.VISIBLE
+                    if (hasEmptyAdapter) View.GONE else View.VISIBLE
             if (scanFinished) {
                 binding.uploadElocStatusButton.visibility = View.VISIBLE
                 binding.findElocButton.visibility = View.VISIBLE
@@ -274,17 +273,20 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun showDevice(address: String) {
+    private fun showDevice(name: String, address: String) {
         BluetoothHelper.instance.stopScan(this::scanUpdate)
         val intent = Intent(this, TerminalActivity::class.java)
-        intent.putExtra(TerminalActivity.ARG_DEVICE, address)
+        intent.putExtra(TerminalActivity.EXTRA_DEVICE, address)
+        intent.putExtra(TerminalActivity.EXTRA_DEVICE_NAME, name)
         startActivity(intent)
     }
 
-    private fun doSync(timeoutMS: Int, showMessage: Boolean) {
+    private fun doSync() {
+        val timeoutMS = 5000
+        val showMessage = true
         SNTPClient.getDate(
-            timeoutMS,
-            Calendar.getInstance().timeZone
+                timeoutMS,
+                Calendar.getInstance().timeZone
         ) { _,
             _,
             googletimestamp,
@@ -296,21 +298,21 @@ class HomeActivity : AppCompatActivity() {
                     invalidateOptionsMenu()
                     if (showMessage) {
                         ActivityHelper.showSnack(
-                            binding.coordinator,
-                            "sync FAILED\nCheck internet connection"
+                                binding.coordinator,
+                                "sync FAILED\nCheck internet connection"
                         )
                     }
                 } else {
                     gLastTimeDifferenceMillisecond = System.currentTimeMillis() - googletimestamp
                     PreferencesHelper.instance.saveTimestamps(
-                        SystemClock.elapsedRealtime(),
-                        googletimestamp
+                            SystemClock.elapsedRealtime(),
+                            googletimestamp
                     )
                     gUploadEnabled = true
                     invalidateOptionsMenu()
                     if (showMessage) {
                         val message =
-                            getString(R.string.sync_template, gLastTimeDifferenceMillisecond)
+                                getString(R.string.sync_template, gLastTimeDifferenceMillisecond)
                         ActivityHelper.showSnack(binding.coordinator, message)
                     }
                 }

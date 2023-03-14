@@ -13,5 +13,36 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerRadius">50dp</item>
     </style>
+
+    <style name="InfoTextView" parent="AppTheme">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="SectionTitle" parent="InfoTextView">
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">#E6FE5F00</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TitleDescription" parent="InfoTextView">
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="TileTitle" parent="InfoTextView">
+        <item name="android:layout_marginTop">4dp</item>
+    </style>
+
+    <style name="IndentedTileTitle" parent="TileTitle">
+        <item name="android:layout_marginLeft">16dp</item>
+    </style>
+
+    <style name="TileValue" parent="InfoTextView">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:layout_marginEnd">16dp</item>
+    </style>
 </resources>
 

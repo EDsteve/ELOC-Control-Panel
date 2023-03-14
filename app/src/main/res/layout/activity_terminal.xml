@@ -61,10 +61,11 @@
                 app:layout_constraintStart_toStartOf="parent"
                 tools:ignore="TouchTargetSizeCheck" />
 
-            <TextView android:layout_marginBottom="16dp"
+            <TextView
                 android:id="@+id/recBtn"
                 android:layout_width="match_parent"
                 android:layout_height="?actionBarSize"
+                android:layout_marginBottom="16dp"
                 android:layout_weight="0.2"
                 android:background="#232323"
                 android:clickable="true"
@@ -75,7 +76,7 @@
                 android:textAlignment="center"
                 android:textAllCaps="true"
                 android:textColor="#FFFFFFFF"
-                android:textSize="25sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toTopOf="@id/instructions_button" />
 
@@ -93,73 +94,34 @@
 
                     <TextView
                         android:id="@+id/status_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginLeft="8dp"
-                        android:layout_marginTop="28dp"
+                        style="@style/SectionTitle"
+                        android:layout_marginTop="16dp"
                         android:text="@string/status"
-                        android:textAllCaps="true"
-                        android:textColor="#E6FE5F00"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="0dp"
-                        android:orientation="horizontal"
-                        app:layout_constraintStart_toStartOf="@id/status_title"
-                        app:layout_constraintTop_toBottomOf="@id/status_title"
-                        tools:ignore="UseCompoundDrawables">
-
-                        <ImageView
-                            android:id="@+id/status_icon"
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:src="@drawable/connected"
-                            tools:ignore="ContentDescription" />
-
-                        <TextView
-                            android:id="@+id/status_tv"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:textAlignment="center"
-                            android:textSize="11sp"
-                            tools:text="Connecting..." />
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/eloc_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="15dp"
-                        android:textAllCaps="true"
-                        android:textSize="28sp"
-                        android:textStyle="bold"
+                    <ImageView
+                        android:id="@+id/status_icon"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:src="@drawable/connecting"
+                        app:layout_constraintBottom_toBottomOf="@id/status_title"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        tools:text="eloc 24" />
+                        app:layout_constraintTop_toTopOf="@id/status_title"
+                        tools:ignore="ContentDescription" />
 
                     <TextView
-                        android:id="@+id/ranger_name_tv"
+                        android:id="@+id/status_tv"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="16sp"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
-                        app:layout_constraintTop_toBottomOf="@id/eloc_tv"
-                        tools:text="Alex" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="4dp"
-                        android:text="@string/ranger"
-                        android:textSize="16sp"
-                        app:layout_constraintEnd_toStartOf="@id/ranger_name_tv"
-                        app:layout_constraintTop_toTopOf="@id/ranger_name_tv" />
+                        android:layout_marginEnd="8dp"
+                        android:gravity="center"
+                        android:textAlignment="center"
+                        app:layout_constraintBottom_toBottomOf="@id/status_title"
+                        app:layout_constraintEnd_toStartOf="@id/status_icon"
+                        app:layout_constraintTop_toTopOf="@id/status_title"
+                        android:text="Connecting..." />
 
                     <View
                         android:id="@+id/divider1"
@@ -167,38 +129,45 @@
                         android:layout_height="2dp"
                         android:layout_marginVertical="8dp"
                         android:background="@color/divider"
-                        app:layout_constraintTop_toBottomOf="@id/ranger_name_tv" />
+                        app:layout_constraintTop_toBottomOf="@id/status_title" />
 
                     <TextView
-                        android:id="@+id/sd_card_title_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="20dp"
-                        android:layout_marginTop="4dp"
-                        android:text="@string/sd_card"
-                        android:textSize="22sp"
+                        android:id="@+id/ranger_title_tv"
+                        style="@style/IndentedTileTitle"
+                        android:text="@string/ranger"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider1" />
 
                     <TextView
-                        android:id="@+id/sd_card_desc_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/space_available"
-                        app:layout_constraintStart_toStartOf="@id/sd_card_title_tv"
-                        app:layout_constraintTop_toBottomOf="@id/sd_card_title_tv" />
+                        android:id="@+id/ranger_name_tv"
+                        style="@style/TileValue"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/ranger_title_tv"
+                        tools:text="Alex" />
+
+                    <View
+                        android:id="@+id/divider1_1"
+                        android:layout_width="match_parent"
+                        android:layout_height="2dp"
+                        android:layout_marginVertical="8dp"
+                        android:background="@color/divider"
+                        app:layout_constraintTop_toBottomOf="@id/ranger_title_tv" />
+
+                    <TextView
+                        android:id="@+id/sd_card_title_tv"
+                        style="@style/IndentedTileTitle"
+                        android:text="@string/sd_card_space"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/divider1_1" />
 
                     <TextView
                         android:id="@+id/sd_card_value_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        style="@style/TileValue"
                         android:clickable="true"
                         android:focusable="true"
                         android:textColor="@color/on_color"
-                        android:textSize="28sp"
-                        android:textStyle="bold"
-                        app:layout_constraintBottom_toBottomOf="@id/sd_card_desc_tv"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                        app:layout_constraintBottom_toBottomOf="@id/sd_card_title_tv"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/sd_card_title_tv"
                         tools:ignore="TouchTargetSizeCheck"
                         tools:text="119GB" />
@@ -225,36 +194,21 @@
                         android:layout_height="2dp"
                         android:layout_marginVertical="8dp"
                         android:background="@color/divider"
-                        app:layout_constraintTop_toBottomOf="@id/sd_card_desc_tv" />
+                        app:layout_constraintTop_toBottomOf="@id/sd_card_title_tv" />
 
                     <TextView
                         android:id="@+id/battery_title_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="20dp"
-                        android:layout_marginTop="4dp"
+                        style="@style/IndentedTileTitle"
                         android:text="@string/battery_level"
-                        android:textSize="22sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider2" />
 
                     <TextView
-                        android:id="@+id/battery_desc_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=""
-                        app:layout_constraintStart_toStartOf="@id/battery_title_tv"
-                        app:layout_constraintTop_toBottomOf="@id/battery_title_tv" />
-
-                    <TextView
                         android:id="@+id/battery_value_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        style="@style/TileValue"
                         android:textColor="@color/on_color"
-                        android:textSize="28sp"
-                        android:textStyle="bold"
-                        app:layout_constraintBottom_toBottomOf="@id/battery_desc_tv"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                        app:layout_constraintBottom_toBottomOf="@id/battery_title_tv"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/battery_title_tv"
                         tools:text="100%" />
 
@@ -264,36 +218,21 @@
                         android:layout_height="2dp"
                         android:layout_marginVertical="8dp"
                         android:background="@color/divider"
-                        app:layout_constraintTop_toBottomOf="@id/battery_desc_tv" />
+                        app:layout_constraintTop_toBottomOf="@id/battery_title_tv" />
 
                     <TextView
                         android:id="@+id/gps_title_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="20dp"
-                        android:layout_marginTop="4dp"
+                        style="@style/IndentedTileTitle"
                         android:text="@string/gps_location"
-                        android:textSize="22sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider3" />
 
                     <TextView
-                        android:id="@+id/gps_desc_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/accuracy"
-                        app:layout_constraintStart_toStartOf="@id/gps_title_tv"
-                        app:layout_constraintTop_toBottomOf="@id/gps_title_tv" />
-
-                    <TextView
                         android:id="@+id/gps_value_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        style="@style/TileValue"
                         android:textColor="@color/off_color"
-                        android:textSize="28sp"
-                        android:textStyle="bold"
-                        app:layout_constraintBottom_toBottomOf="@id/gps_desc_tv"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                        app:layout_constraintBottom_toBottomOf="@id/gps_title_tv"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/gps_title_tv"
                         tools:text=">99m" />
 
@@ -303,37 +242,21 @@
                         android:layout_height="2dp"
                         android:layout_marginVertical="8dp"
                         android:background="@color/divider"
-                        app:layout_constraintTop_toBottomOf="@id/gps_desc_tv" />
+                        app:layout_constraintTop_toBottomOf="@id/gps_title_tv" />
 
                     <TextView
                         android:id="@+id/recording_title_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginTop="4dp"
-                        android:text="@string/recording"
-                        android:textSize="22sp"
+                        style="@style/IndentedTileTitle"
+                        android:text="@string/current_recording_time"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider4" />
 
                     <TextView
-                        android:id="@+id/recording_desc_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/hours_since_recording_started"
-                        app:layout_constraintStart_toStartOf="@id/recording_title_tv"
-                        app:layout_constraintTop_toBottomOf="@id/recording_title_tv" />
-
-                    <TextView
                         android:id="@+id/recording_value_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        style="@style/TileValue"
                         android:textColor="@color/on_color"
-                        android:textSize="28sp"
-                        android:textStyle="bold"
-                        app:layout_constraintBottom_toBottomOf="@id/recording_desc_tv"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                        app:layout_constraintBottom_toBottomOf="@id/recording_title_tv"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/recording_title_tv"
                         tools:text="255h" />
 
@@ -343,7 +266,7 @@
                         android:layout_height="2dp"
                         android:layout_marginVertical="8dp"
                         android:background="@color/divider"
-                        app:layout_constraintTop_toBottomOf="@id/recording_desc_tv" />
+                        app:layout_constraintTop_toBottomOf="@id/recording_title_tv" />
 
                     <View
                         android:id="@+id/divider6"
@@ -351,29 +274,23 @@
                         android:layout_height="2dp"
                         android:layout_marginVertical="8dp"
                         android:background="@color/divider"
-                        app:layout_constraintTop_toBottomOf="@id/recording_desc_tv" />
+                        app:layout_constraintTop_toBottomOf="@id/recording_title_tv" />
 
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:id="@+id/settings_section"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="40dp"
+                        android:layout_marginTop="16dp"
                         android:clickable="true"
                         android:focusable="true"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="@id/status_title"
                         app:layout_constraintTop_toBottomOf="@id/divider6">
 
                         <TextView
                             android:id="@+id/settings_title"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="10dp"
+                            style="@style/SectionTitle"
                             android:text="@string/settings"
-                            android:textAllCaps="true"
-                            android:textColor="#fe5f00"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
                             app:layout_constraintTop_toTopOf="parent" />
 
                         <View
@@ -386,21 +303,14 @@
 
                         <TextView
                             android:id="@+id/sample_rate_title_tv"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="20dp"
-                            android:layout_marginTop="8dp"
+                            style="@style/TileTitle"
                             android:text="@string/sample_rate"
-                            android:textSize="20sp"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toBottomOf="@id/divider7" />
 
                         <TextView
                             android:id="@+id/sample_rate_value_tv"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
+                            style="@style/TileValue"
                             app:layout_constraintBottom_toBottomOf="@id/sample_rate_title_tv"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="@id/sample_rate_title_tv"
@@ -416,21 +326,14 @@
 
                         <TextView
                             android:id="@+id/hours_per_file_title_tv"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="20dp"
-                            android:layout_marginTop="8dp"
+                            style="@style/TileTitle"
                             android:text="@string/hours_per_file"
-                            android:textSize="20sp"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toBottomOf="@id/divider8" />
 
                         <TextView
                             android:id="@+id/hours_per_file_value_tv"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
+                            style="@style/TileValue"
                             app:layout_constraintBottom_toBottomOf="@id/hours_per_file_title_tv"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="@id/hours_per_file_title_tv"
@@ -446,21 +349,14 @@
 
                         <TextView
                             android:id="@+id/gain_title_tv"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="20dp"
-                            android:layout_marginTop="8dp"
+                            style="@style/TileTitle"
                             android:text="@string/gain"
-                            android:textSize="20sp"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toBottomOf="@id/divider9" />
 
                         <TextView
                             android:id="@+id/gain_value_tv"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
+                            style="@style/TileValue"
                             app:layout_constraintBottom_toBottomOf="@id/gain_title_tv"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="@id/gain_title_tv"
@@ -477,15 +373,9 @@
 
                     <TextView
                         android:id="@+id/misc"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
-                        android:layout_marginTop="40dp"
+                        style="@style/SectionTitle"
+                        android:layout_marginTop="16dp"
                         android:text="Misc"
-                        android:textAllCaps="true"
-                        android:textColor="#fe5f00"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider10" />
 
@@ -499,24 +389,16 @@
 
                     <TextView
                         android:id="@+id/last_accuracy_title_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginTop="8dp"
+                        style="@style/IndentedTileTitle"
                         android:text="@string/last_gps_accuracy"
-                        android:textSize="20sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider11" />
 
                     <TextView
                         android:id="@+id/last_accuracy_value_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
+                        style="@style/TileValue"
                         app:layout_constraintBottom_toBottomOf="@id/last_accuracy_title_tv"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/last_accuracy_title_tv"
                         tools:text="56m" />
 
@@ -530,24 +412,16 @@
 
                     <TextView
                         android:id="@+id/uptime_title_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginTop="8dp"
+                        style="@style/IndentedTileTitle"
                         android:text="@string/uptime"
-                        android:textSize="20sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider12" />
 
                     <TextView
                         android:id="@+id/uptime_value_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
+                        style="@style/TileValue"
                         app:layout_constraintBottom_toBottomOf="@id/uptime_title_tv"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/uptime_title_tv"
                         tools:text="35 h" />
 
@@ -561,24 +435,16 @@
 
                     <TextView
                         android:id="@+id/recording_boot_title_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginTop="8dp"
+                        style="@style/IndentedTileTitle"
                         android:text="@string/rec_time_since_boot"
-                        android:textSize="20sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider13" />
 
                     <TextView
                         android:id="@+id/recording_boot_value_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
+                        style="@style/TileValue"
                         app:layout_constraintBottom_toBottomOf="@id/recording_boot_title_tv"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/recording_boot_title_tv"
                         tools:text="255h" />
 
@@ -592,24 +458,16 @@
 
                     <TextView
                         android:id="@+id/bt_recording_title_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginTop="8dp"
+                        style="@style/IndentedTileTitle"
                         android:text="@string/bluetooth_recording"
-                        android:textSize="20sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider14" />
 
                     <TextView
                         android:id="@+id/bt_recording_value_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
+                        style="@style/TileValue"
                         app:layout_constraintBottom_toBottomOf="@id/bt_recording_title_tv"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/bt_recording_title_tv"
                         tools:text="OFF" />
 
@@ -623,24 +481,16 @@
 
                     <TextView
                         android:id="@+id/microphone_title_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginTop="8dp"
+                        style="@style/IndentedTileTitle"
                         android:text="@string/microphone_type"
-                        android:textSize="20sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider15" />
 
                     <TextView
                         android:id="@+id/microphone_value_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
+                        style="@style/TileValue"
                         app:layout_constraintBottom_toBottomOf="@id/microphone_title_tv"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/microphone_title_tv"
                         tools:text="ns" />
 
@@ -654,24 +504,16 @@
 
                     <TextView
                         android:id="@+id/last_location_title_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginTop="8dp"
+                        style="@style/IndentedTileTitle"
                         android:text="@string/last_gps_location"
-                        android:textSize="20sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider16" />
 
                     <TextView
                         android:id="@+id/last_location_value_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
+                        style="@style/TileValue"
                         app:layout_constraintBottom_toBottomOf="@id/last_location_title_tv"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/last_location_title_tv"
                         tools:text="4534985893+QR" />
 
@@ -685,24 +527,16 @@
 
                     <TextView
                         android:id="@+id/batttery_voltage_title_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginTop="8dp"
+                        style="@style/IndentedTileTitle"
                         android:text="@string/battery_voltage"
-                        android:textSize="20sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider17" />
 
                     <TextView
                         android:id="@+id/battery_voltage_value_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
+                        style="@style/TileValue"
                         app:layout_constraintBottom_toBottomOf="@id/batttery_voltage_title_tv"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/batttery_voltage_title_tv"
                         tools:text="3.4V" />
 
@@ -716,24 +550,16 @@
 
                     <TextView
                         android:id="@+id/firmware_title_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginTop="8dp"
+                        style="@style/IndentedTileTitle"
                         android:text="@string/firmware"
-                        android:textSize="20sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider18" />
 
                     <TextView
                         android:id="@+id/firmware_value_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
+                        style="@style/TileValue"
                         app:layout_constraintBottom_toBottomOf="@id/firmware_title_tv"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/firmware_title_tv"
                         tools:text="3.5" />
 
@@ -750,24 +576,16 @@
 
                     <TextView
                         android:id="@+id/appversion_title_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginTop="8dp"
+                        style="@style/IndentedTileTitle"
                         android:text="@string/appversion"
-                        android:textSize="20sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider19" />
 
                     <TextView
                         android:id="@+id/appversion_value_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
+                        style="@style/TileValue"
                         app:layout_constraintBottom_toBottomOf="@id/appversion_title_tv"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/appversion_title_tv"
                         tools:text="3.5" />
 
@@ -785,27 +603,16 @@
 
                     <TextView
                         android:id="@+id/session_id_title_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginTop="8dp"
+                        style="@style/IndentedTileTitle"
                         android:text="@string/session_id"
-                        android:textSize="20sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider24" />
 
                     <TextView
                         android:id="@+id/session_id_value_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginTop="8dp"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/session_id_title_tv"
+                        style="@style/IndentedTileTitle"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/session_id_title_tv"
                         tools:text="xxx000" />
 
 
@@ -823,24 +630,16 @@
 
                     <TextView
                         android:id="@+id/file_header_name_title_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginTop="20dp"
+                        style="@style/IndentedTileTitle"
                         android:text="@string/file_header"
-                        android:textSize="20sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider21" />
 
                     <TextView
                         android:id="@+id/file_header_name_value_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
+                        style="@style/TileValue"
                         app:layout_constraintBottom_toBottomOf="@id/file_header_name_title_tv"
-                        app:layout_constraintEnd_toEndOf="@id/eloc_tv"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@id/file_header_name_title_tv"
                         tools:text="xxx000" />
 

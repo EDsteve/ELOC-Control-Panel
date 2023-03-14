@@ -6,63 +6,63 @@ import androidx.preference.PreferenceManager
 
 class PreferencesHelper {
     private val preferences: SharedPreferences =
-        PreferenceManager.getDefaultSharedPreferences(App.instance)
+            PreferenceManager.getDefaultSharedPreferences(App.instance)
 
     fun isLocationPromptDisabled(): Boolean =
-        preferences.getBoolean(PREF_DISABLE_LOCATION_PROMPT, false)
+            preferences.getBoolean(PREF_DISABLE_LOCATION_PROMPT, false)
 
     fun getLastGoogleTimestamp(): Long =
-        preferences.getLong(PREF_LAST_GOOGLE_TIMESTAMP, 0)
+            preferences.getLong(PREF_LAST_GOOGLE_TIMESTAMP, 0)
 
     fun getCurrentElapsedTime(): Long =
-        preferences.getLong(PREF_ELAPSED_TIME_AT_GOOGLE_TIMESTAMP, 0)
+            preferences.getLong(PREF_ELAPSED_TIME_AT_GOOGLE_TIMESTAMP, 0)
 
     fun getPromptedBluetooth(): Boolean =
-        preferences.getBoolean(PREF_PROMPTED_BLUETOOTH, false)
+            preferences.getBoolean(PREF_PROMPTED_BLUETOOTH, false)
 
     fun getMicData(): String = preferences.getString(PREF_MICROPHONE_SETTINGS, "") ?: ""
 
     fun getPromptedLocation(): Boolean =
-        preferences.getBoolean(PREF_PROMPTED_LOCATION, false)
+            preferences.getBoolean(PREF_PROMPTED_LOCATION, false)
 
     fun getBluetoothRequested(): Boolean = preferences.getBoolean(PREF_BLUETOOTH_REQUESTED, false)
 
     fun getLocationRequested(): Boolean = preferences.getBoolean(PREF_LOCATION_REQUESTED, false)
 
     fun getRangerName(): String = preferences.getString(PREF_RANGER_NAME, DEFAULT_RANGER_NAME)
-        ?: DEFAULT_RANGER_NAME
+            ?: DEFAULT_RANGER_NAME
 
     fun getDeviceSettings(): String = preferences.getString(PREF_DEVICE_SETTINGS, "") ?: ""
 
     fun setBluetoothRequested() =
-        preferences.edit().putBoolean(PREF_BLUETOOTH_REQUESTED, true).apply()
+            preferences.edit().putBoolean(PREF_BLUETOOTH_REQUESTED, true).apply()
 
     fun setLocationRequested() =
-        preferences.edit().putBoolean(PREF_LOCATION_REQUESTED, true).apply()
+            preferences.edit().putBoolean(PREF_LOCATION_REQUESTED, true).apply()
 
     fun setRangerName(name: String) =
-        preferences.edit().putString(PREF_RANGER_NAME, name.trim()).apply()
+            preferences.edit().putString(PREF_RANGER_NAME, name.trim()).apply()
 
     fun setDeviceSettings(data: String) =
-        preferences.edit().putString(PREF_DEVICE_SETTINGS, data).apply()
+            preferences.edit().putString(PREF_DEVICE_SETTINGS, data).apply()
 
     fun setCurrentElapsedTime(elapsed: Long) =
-        preferences.edit().putLong(PREF_ELAPSED_TIME_AT_GOOGLE_TIMESTAMP, elapsed).apply()
+            preferences.edit().putLong(PREF_ELAPSED_TIME_AT_GOOGLE_TIMESTAMP, elapsed).apply()
 
     private fun setLastGoogleTimestamp(ts: Long) =
-        preferences.edit().putLong(PREF_LAST_GOOGLE_TIMESTAMP, ts).apply()
+            preferences.edit().putLong(PREF_LAST_GOOGLE_TIMESTAMP, ts).apply()
 
     fun setLocationPromptDisabled() =
-        preferences.edit().putBoolean(PREF_DISABLE_LOCATION_PROMPT, true).apply()
+            preferences.edit().putBoolean(PREF_DISABLE_LOCATION_PROMPT, true).apply()
 
     fun setPromptedLocation() =
-        preferences.edit().putBoolean(PREF_PROMPTED_LOCATION, true).apply()
+            preferences.edit().putBoolean(PREF_PROMPTED_LOCATION, true).apply()
 
     fun setPromptedBluetooth() =
-        preferences.edit().putBoolean(PREF_PROMPTED_BLUETOOTH, true).apply()
+            preferences.edit().putBoolean(PREF_PROMPTED_BLUETOOTH, true).apply()
 
     fun setMicrophoneSettings(data: String) =
-        preferences.edit().putString(PREF_MICROPHONE_SETTINGS, data).apply()
+            preferences.edit().putString(PREF_MICROPHONE_SETTINGS, data).apply()
 
     fun saveTimestamps(currentElapsedTimeMS: Long, lastGoogleSyncTimestampMS: Long) {
         setCurrentElapsedTime(currentElapsedTimeMS)
