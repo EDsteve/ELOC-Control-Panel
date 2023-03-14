@@ -10,8 +10,7 @@ Status page:
 	- refresh only possible after scrolled down first.
 - Show possible recording time (calculating from Sample rate and SD space available)
 
-Settings page:
-- Add an "Update firmware" button to advanced menu which sends the command #settings#update with a popup saying: Are you sure? etc... Cancel... OK
+Settings page: 
 - Turn ON/OFF bluetooth doesn't work
 
 ## General

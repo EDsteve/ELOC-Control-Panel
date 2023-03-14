@@ -105,7 +105,8 @@
     <string name="turn_on">Turn on</string>
     <string name="unsupported_device_message">This device does not support Bluetooth LE.\nTry running the app on a newer device</string>
     <string name="unsupported_device">Unsupported device</string>
-    <string name="update_reboot_upgrade_firmware">Update (reboot + upgrade firmware)</string>
+    <string name="update_firmware">Update Firmware</string>
+    <string name="reboot_update_firmware">Reboot and update firmware</string>
     <string name="update_settings">Update Settings</string>
     <string name="upload_eloc_status">Upload Eloc Status</string>
     <string name="uptime">Uptime</string>
@@ -113,4 +114,7 @@
     <string name="wait">Wait…</string>
     <string name="yes_permissions">yes, grant permissions</string>
     <string name="eloc_settings">ELOC Settings</string>
+    <string name="confirm_update">Confirm update</string>
+    <string name="update_rationale">Are you sure you want to update the firmware for %s?</string>
+    <string name="yes_update_now">Yes, Update now</string>
 </resources>

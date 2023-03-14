@@ -17,7 +17,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import de.eloc.eloc_control_panel.ng.models.DeviceInfo
 import de.eloc.eloc_control_panel.ng2.App
-import de.eloc.eloc_control_panel.ng2.interfaces.ElocCallback
 import de.eloc.eloc_control_panel.ng2.interfaces.IntCallback
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
@@ -27,7 +26,7 @@ class BluetoothHelper {
 
     private var scannerElapsed = 0
     private val bluetoothManager: BluetoothManager? =
-        App.instance.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?
+            App.instance.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?
 
     val needsBluetoothPermissions: Boolean
         get() {
@@ -46,8 +45,8 @@ class BluetoothHelper {
         get() {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
                 arrayOf(
-                    Manifest.permission.BLUETOOTH_SCAN,
-                    Manifest.permission.BLUETOOTH_CONNECT
+                        Manifest.permission.BLUETOOTH_SCAN,
+                        Manifest.permission.BLUETOOTH_CONNECT
                 )
             else arrayOf()
         }
@@ -81,9 +80,9 @@ class BluetoothHelper {
             val adapter = bluetoothManager?.adapter
             if (adapter != null) {
                 if (ContextCompat.checkSelfPermission(
-                        App.instance,
-                        Manifest.permission.BLUETOOTH_SCAN
-                    ) == PackageManager.PERMISSION_GRANTED
+                                App.instance,
+                                Manifest.permission.BLUETOOTH_SCAN
+                        ) == PackageManager.PERMISSION_GRANTED
                 ) {
                     scanning = adapter.isDiscovering
                 }
@@ -108,18 +107,18 @@ class BluetoothHelper {
         executorHandle = null
     }
 
-    fun startScan(callback: IntCallback, handler: ElocCallback): String? {
+    fun startScan(callback: IntCallback): String? {
         return if (isScanning)
             stopScan(callback)
         else
-            startBluetoothScan(callback, handler)
+            startBluetoothScan(callback)
     }
 
     fun hasConnectPermission(): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val status = ActivityCompat.checkSelfPermission(
-                App.instance,
-                Manifest.permission.BLUETOOTH_CONNECT
+                    App.instance,
+                    Manifest.permission.BLUETOOTH_CONNECT
             )
             return (status == PackageManager.PERMISSION_GRANTED)
         }
@@ -135,13 +134,13 @@ class BluetoothHelper {
         return deviceName.trim().lowercase().contains("eloc")
     }
 
-    private fun startBluetoothScan(callback: IntCallback, handler: ElocCallback): String? {
+    private fun startBluetoothScan(callback: IntCallback): String? {
         val adapter = bluetoothManager?.adapter
         if (adapter != null) {
             if (ContextCompat.checkSelfPermission(
-                    App.instance,
-                    Manifest.permission.BLUETOOTH_SCAN
-                ) != PackageManager.PERMISSION_GRANTED
+                            App.instance,
+                            Manifest.permission.BLUETOOTH_SCAN
+                    ) != PackageManager.PERMISSION_GRANTED
             ) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     return "Set bluetooth permissions in app settings!"
@@ -149,19 +148,19 @@ class BluetoothHelper {
             }
             scannerElapsed = 0
             executorHandle =
-                Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-                    {
-                        if (scannerElapsed >= SCAN_DURATION) {
-                            stopScan(callback)
-                        }
-                        scannerElapsed++
-                        callback.handler(SCAN_DURATION - scannerElapsed)
-                        Log.d("TAG", "startBluetoothScan: " + scannerElapsed)
-                    },
-                    0,
-                    1,
-                    TimeUnit.SECONDS
-                )
+                    Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+                            {
+                                if (scannerElapsed >= SCAN_DURATION) {
+                                    stopScan(callback)
+                                }
+                                scannerElapsed++
+                                callback.handler(SCAN_DURATION - scannerElapsed)
+                                Log.d("TAG", "startBluetoothScan: " + scannerElapsed)
+                            },
+                            0,
+                            1,
+                            TimeUnit.SECONDS
+                    )
             adapter.cancelDiscovery()
             adapter.startDiscovery()
         }
@@ -170,9 +169,9 @@ class BluetoothHelper {
 
     fun stopScan(callback: IntCallback): String? {
         if (ContextCompat.checkSelfPermission(
-                App.instance,
-                Manifest.permission.BLUETOOTH_SCAN
-            ) != PackageManager.PERMISSION_GRANTED
+                        App.instance,
+                        Manifest.permission.BLUETOOTH_SCAN
+                ) != PackageManager.PERMISSION_GRANTED
         ) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 return "Set bluetooth permissions in app settings!"

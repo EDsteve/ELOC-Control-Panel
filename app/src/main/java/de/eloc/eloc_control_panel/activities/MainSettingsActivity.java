@@ -11,6 +11,7 @@ import android.widget.RadioGroup;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Locale;
@@ -23,12 +24,13 @@ import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 public class MainSettingsActivity extends AppCompatActivity {
     ActivityMainSettingsBinding binding;
     private final PreferencesHelper preferencesManager = PreferencesHelper.Companion.getInstance();
+    private String deviceName = "";
 
     private enum GainType {
         High(11), // Old forest  (HIGH)
         Low(14); // Old mahout (LOW)
 
-        private int intValue;
+        private final int intValue;
 
         GainType(int i) {
             intValue = i;
@@ -45,12 +47,10 @@ public class MainSettingsActivity extends AppCompatActivity {
         }
     }
 
-    private final String gPattern = "^[a-zA-Z0-9]+$"; // Pattern for filename
     private String gLocation = "";
     private String gSecondsPerFile = "";
     private String gSamplesPerSec = "";
     public static final String COMMAND = "command";
-    private String micType = "";
     private GainType micGain = GainType.High;
 
     @Override
@@ -79,7 +79,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     private void setDeviceName() {
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            String deviceName = extras.getString(TerminalActivity.EXTRA_DEVICE_NAME);
+            deviceName = extras.getString(TerminalActivity.EXTRA_DEVICE_NAME);
             if (!TextUtils.isEmpty(deviceName)) {
                 binding.deviceNameEditText.setText(deviceName.trim());
             }
@@ -102,7 +102,7 @@ public class MainSettingsActivity extends AppCompatActivity {
             return;
         }
 
-        micType = separated[1].trim();
+        final String micType = separated[1].trim();
         binding.micTypeEt.setText(micType);
 
         String gain = separated[2].trim();
@@ -193,6 +193,7 @@ public class MainSettingsActivity extends AppCompatActivity {
         binding.hideAdvancedOptionsButton.setOnClickListener(view -> toggleOptions());
         binding.showAdvancedOptionsButton.setOnClickListener(view -> toggleOptions());
         binding.instructionsButton.setOnClickListener(view -> ActivityHelper.INSTANCE.showInstructions());
+        binding.updateFirmwareButton.setOnClickListener(view -> confirmUpdateFirmware());
     }
 
     private void toggleOptions() {
@@ -224,7 +225,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     private void runCommandLine() {
         String command = getValue(binding.customCommandEt.getText());
         if (command.isEmpty()) {
-            ActivityHelper.INSTANCE.showAlert(this,"You must enter a command to run!");
+            ActivityHelper.INSTANCE.showAlert(this, "You must enter a command to run!");
             return;
         }
         runCommand(command);
@@ -233,7 +234,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     private void runFileHeaderCommand() {
         String command = getValue(binding.deviceNameEditText.getText());
         if (command.isEmpty()) {
-            ActivityHelper.INSTANCE.showAlert(this,"You must enter a Device Name!");
+            ActivityHelper.INSTANCE.showAlert(this, "You must enter a Device Name!");
             return;
         }
         String suffix = "setname";
@@ -261,14 +262,15 @@ public class MainSettingsActivity extends AppCompatActivity {
 
     private void runRecordingCommand() {
         Editable editable = binding.elocBtNameEt.getText();
+        final String gPattern = "^[a-zA-Z\\d]+$";
         if (editable != null) {
             gLocation = editable.toString().trim();
         }
         if (gLocation.isEmpty()) {
-            ActivityHelper.INSTANCE.showAlert(this,"File header name is required!");
+            ActivityHelper.INSTANCE.showAlert(this, "File header name is required!");
             return;
         } else if (!gLocation.matches(gPattern)) {
-            ActivityHelper.INSTANCE.showAlert(this,"Invalid file header name!");
+            ActivityHelper.INSTANCE.showAlert(this, "Invalid file header name!");
             return;
         }
 
@@ -285,69 +287,54 @@ public class MainSettingsActivity extends AppCompatActivity {
     }
 
     public void samplesPeSecChanged(RadioGroup group, int checkedId) {
-        // checkedId is the RadioButton selected
-        //if (gInitialSettings) return;
-        // if (!group.isPressed())
-        // {
-
-        // return;
-        // }
         Log.i("elocApp", "samplerate buttonpress");
-
-        switch (checkedId) {
-            case R.id.rad8k:
-                gSamplesPerSec = "8000";
-                break;
-            case R.id.rad16k:
-                gSamplesPerSec = "16000";
-                break;
-            case R.id.rad22k:
-                gSamplesPerSec = "22050";
-                break;
-            case R.id.rad32k:
-                gSamplesPerSec = "32000";
-                break;
-
-            case R.id.rad44k:
-                gSamplesPerSec = "44100";
-                break;
+        if (checkedId == R.id.rad8k) {
+            gSamplesPerSec = "8000";
+        } else if (checkedId == R.id.rad16k) {
+            gSamplesPerSec = "16000";
+        } else if (checkedId == R.id.rad22k) {
+            gSamplesPerSec = "22050";
+        } else if (checkedId == R.id.rad32k) {
+            gSamplesPerSec = "32000";
+        } else if (checkedId == R.id.rad44k) {
+            gSamplesPerSec = "44100";
         }
-
-        //sendText.setText(String.valueOf(checkedId));
     }
 
     public void secPerFileChanged(RadioGroup group, int checkedId) {
-
         Log.i("elocApp", "secperfile buttonpress");
-        switch (checkedId) {
-            case R.id.rad10s:
-                gSecondsPerFile = "10";
-                break;
-            case R.id.rad1m:
-                gSecondsPerFile = "60";
-                break;
-            case R.id.rad1h:
-                gSecondsPerFile = "3600";
-                break;
-            case R.id.rad4h:
-                gSecondsPerFile = "14400";
-                break;
-            case R.id.rad12h:
-                gSecondsPerFile = "43200";
-                break;
+        if (checkedId == R.id.rad10s) {
+            gSecondsPerFile = "10";
+        } else if (checkedId == R.id.rad1m) {
+            gSecondsPerFile = "60";
+        } else if (checkedId == R.id.rad1h) {
+            gSecondsPerFile = "3600";
+        } else if (checkedId == R.id.rad4h) {
+            gSecondsPerFile = "14400";
+        } else if (checkedId == R.id.rad12h) {
+            gSecondsPerFile = "43200";
         }
     }
 
     public void gainChanged(RadioGroup group, int checkedId) {
-
         Log.i("elocApp", "micgain buttonpress");
-        switch (checkedId) {
-            case R.id.radHigh:
-                micGain = GainType.High;
-                break;
-            case R.id.radLow:
-                micGain = GainType.Low;
-                break;
+        if (checkedId == R.id.radHigh) {
+            micGain = GainType.High;
+        } else if (checkedId == R.id.radLow) {
+            micGain = GainType.Low;
         }
+    }
+
+    private void confirmUpdateFirmware() {
+        String message = getString(R.string.update_rationale, deviceName);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.confirm_update)
+                .setMessage(message)
+                .setNegativeButton(android.R.string.cancel, (dialog, i) -> dialog.dismiss())
+                .setPositiveButton(R.string.yes_update_now, (dialog, i) -> {
+                    dialog.dismiss();
+                    runCommand("update");
+                })
+                .show();
     }
 }
