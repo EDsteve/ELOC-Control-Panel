@@ -13,6 +13,7 @@ import android.os.SystemClock;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
@@ -77,7 +78,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     private final boolean hexEnabled = false;
     private boolean pendingNewline = false;
     private final String newline = TextUtil.newline_crlf;
-    private TextView receiveText;
+    private TextView receiveText; // todo: where is this used?
     private TextView sendText;
     private TextUtil.HexWatcher hexWatcher;
     private final boolean gInitialSettings = false;
@@ -772,7 +773,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             return null;
         } catch (Exception e) {
             onSerialIoError(e);
-            return "Command not sent- error occurred!";
+            return "Command not sent - error occurred!";
         }
     }
 
@@ -898,9 +899,33 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
 
     private void startRecording() {
         binding.recBtn.setText(R.string.please_wait);
-        send("setGPS^" + locationCode + "#" + locationAccuracy);
-        //sendDelayed("_record_",1700);
-        handleStop();
+
+        // Respect the bt recording state setting
+        boolean btOnWhenRecording = preferencesHelper.getBluetoothRecordingState();
+        String error = "";
+       /* if (btOnWhenRecording) {
+            error = send("#settings#btoff");
+        } else {
+            error = send("#settings#bton");
+        }
+        if (error  == null)  {
+            error = "";
+        }
+        error = error.trim();
+        if (error.isEmpty()) { */
+      error =  send("#settings#bton");
+            send("setGPS^" + locationCode + "#" + locationAccuracy);
+            //sendDelayed("_record_",1700);
+            handleStop();
+/*
+            // If bt on eloc must be off, it mean app will lose connection
+            // so go back to main screen
+            if (btOnWhenRecording) {
+                finish();
+            }
+        } else {
+            ActivityHelper.INSTANCE.showSnack(binding.coordinator, error);
+        }*/
     }
 
     private void handleStop() {

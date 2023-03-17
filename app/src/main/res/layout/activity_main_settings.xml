@@ -89,6 +89,7 @@
                             android:imeOptions="actionNext"
                             android:importantForAutofill="no"
                             android:inputType="text"
+                            tools:ignore="TouchTargetSizeCheck,DuplicateSpeakableTextCheck"
                             tools:text="ELOC18" />
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -215,7 +216,8 @@
                 android:layout_marginVertical="16dp"
                 android:drawableEnd="@drawable/keyboard_arrow_down"
                 android:text="@string/advanced_options"
-                android:textColor="#fff" />
+                android:textColor="#fff"
+                tools:ignore="DuplicateSpeakableTextCheck" />
 
             <Button
                 android:id="@+id/hide_advanced_options_button"
@@ -283,6 +285,7 @@
                             android:imeOptions="actionNext"
                             android:importantForAutofill="no"
                             android:inputType="text"
+                            tools:ignore="TouchTargetSizeCheck"
                             tools:text="ELOC18" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
@@ -346,6 +349,7 @@
                             android:imeOptions="actionNext"
                             android:importantForAutofill="no"
                             android:inputType="text"
+                            tools:ignore="TouchTargetSizeCheck"
                             tools:text="ELOC18" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
@@ -503,7 +507,7 @@
                     android:text="@string/bluetooth_state_when_recording" />
 
                 <ToggleButton
-                    android:id="@+id/bt_state_btn"
+                    android:id="@+id/bt_recording_state_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
