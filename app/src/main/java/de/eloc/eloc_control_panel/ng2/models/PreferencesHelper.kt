@@ -34,6 +34,11 @@ class PreferencesHelper {
 
     fun getDeviceSettings(): String = preferences.getString(PREF_DEVICE_SETTINGS, "") ?: ""
 
+    // Assume default state to be ON (i.e., return true), because that is default behavior when the preference
+    // has not yet been set
+    fun getBluetoothRecordingState() : Boolean = preferences.getBoolean(
+        PREF_BLUETOOTH_RECORDING_STATE, true)
+
     fun setBluetoothRequested() =
             preferences.edit().putBoolean(PREF_BLUETOOTH_REQUESTED, true).apply()
 
@@ -64,6 +69,9 @@ class PreferencesHelper {
     fun setMicrophoneSettings(data: String) =
             preferences.edit().putString(PREF_MICROPHONE_SETTINGS, data).apply()
 
+    fun setBluetoothRecordingState(btOn: Boolean) = preferences.edit().putBoolean(
+        PREF_BLUETOOTH_RECORDING_STATE, btOn).apply()
+
     fun saveTimestamps(currentElapsedTimeMS: Long, lastGoogleSyncTimestampMS: Long) {
         setCurrentElapsedTime(currentElapsedTimeMS)
         setLastGoogleTimestamp(lastGoogleSyncTimestampMS)
@@ -81,6 +89,7 @@ class PreferencesHelper {
         private const val PREF_ELAPSED_TIME_AT_GOOGLE_TIMESTAMP = "elapsedTimeAtGoogleTimestamp"
         private const val PREF_LAST_GOOGLE_TIMESTAMP = "lastGoogleTimestamp"
         private const val PREF_DISABLE_LOCATION_PROMPT = "disableLocationPrompt"
+        private const val PREF_BLUETOOTH_RECORDING_STATE = "bluetooth_recording_state"
         const val DEFAULT_RANGER_NAME = "notSet"
 
         val instance: PreferencesHelper

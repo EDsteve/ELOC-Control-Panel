@@ -7,6 +7,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.RadioGroup;
 
 import androidx.annotation.NonNull;
@@ -25,6 +26,7 @@ public class MainSettingsActivity extends AppCompatActivity {
     ActivityMainSettingsBinding binding;
     private final PreferencesHelper preferencesManager = PreferencesHelper.Companion.getInstance();
     private String deviceName = "";
+    private boolean paused= true;
 
     private enum GainType {
         High(11), // Old forest  (HIGH)
@@ -64,6 +66,20 @@ public class MainSettingsActivity extends AppCompatActivity {
         setToolbar();
         setListeners();
         toggleOptions();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        boolean savedBtRecordingState = preferencesManager.getBluetoothRecordingState();
+        binding.btRecordingStateButton.setChecked(savedBtRecordingState);
+        paused = false;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        paused = true;
     }
 
     @Override
@@ -194,6 +210,14 @@ public class MainSettingsActivity extends AppCompatActivity {
         binding.showAdvancedOptionsButton.setOnClickListener(view -> toggleOptions());
         binding.instructionsButton.setOnClickListener(view -> ActivityHelper.INSTANCE.showInstructions());
         binding.updateFirmwareButton.setOnClickListener(view -> confirmUpdateFirmware());
+        binding.btRecordingStateButton.setOnCheckedChangeListener(this::toggleBtRecordingState);
+    }
+
+    private void toggleBtRecordingState(CompoundButton ignore, boolean btOn) {
+        if (!paused) {
+            preferencesManager.setBluetoothRecordingState(btOn);
+            finish();
+        }
     }
 
     private void toggleOptions() {
