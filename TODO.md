@@ -1,3 +1,7 @@
+## Bugs:
+- Links wont open a browser (wildlifebug.com or Brows ELOC status
+- "Find my ELOC" crashes the app (not on all phones)
+
 ## To-Do:
 
 Start Page
