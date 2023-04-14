@@ -126,7 +126,16 @@ public class MapActivity extends AppCompatActivity {
         int delayMillis = 1200;
         Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(
-                () -> map.animateCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.builder().zoom(zoomLevel).target(position).build()))
+                () -> {
+                    if (map == null) {
+                        return;
+                    }
+                    CameraPosition cameraPosition = CameraPosition.builder()
+                            .zoom(zoomLevel)
+                            .target(position)
+                            .build();
+                    map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                }
                 , delayMillis
         );
 
@@ -164,35 +173,40 @@ public class MapActivity extends AppCompatActivity {
 
     @SuppressLint("MissingPermission")
     private void showMap() {
-        if (map == null || devices == null) {
-            return;
-        }
+        synchronized (map) {
+            if (map == null || devices == null) {
+                return;
+            }
 
-        runOnUiThread(() -> {
-            // Note: No need for permission check here
-            // because PermissionsActivity ensures that app will only launch
-            // when all required permission are granted, including location.
-
-            map.setMyLocationEnabled(true);
-            map.getUiSettings().setMapToolbarEnabled(false);
-            binding.mapView.setVisibility(View.VISIBLE);
-            binding.loadingLayout.setVisibility(View.GONE);
-
-            clusterManager = new ClusterManager<>(this, map);
-            clusterManager.getMarkerCollection().setInfoWindowAdapter(infoWindowAdapter);
-            clusterManager.setOnClusterClickListener(cluster -> {
-                // Changing the zoom level on each tap so that map keeps zooming in.
-                if (customZoom < INITIAL_ZOOM) {
-                    customZoom = INITIAL_ZOOM;
-                } else {
-                    customZoom += 5;
+            runOnUiThread(() -> {
+                if (map == null) {
+                    return;
                 }
-                zoomTo(customZoom, cluster.getPosition());
-                return true;
+                // Note: No need for permission check here
+                // because PermissionsActivity ensures that app will only launch
+                // when all required permission are granted, including location.
+
+                map.setMyLocationEnabled(true);
+                map.getUiSettings().setMapToolbarEnabled(false);
+                binding.mapView.setVisibility(View.VISIBLE);
+                binding.loadingLayout.setVisibility(View.GONE);
+
+                clusterManager = new ClusterManager<>(this, map);
+                clusterManager.getMarkerCollection().setInfoWindowAdapter(infoWindowAdapter);
+                clusterManager.setOnClusterClickListener(cluster -> {
+                    // Changing the zoom level on each tap so that map keeps zooming in.
+                    if (customZoom < INITIAL_ZOOM) {
+                        customZoom = INITIAL_ZOOM;
+                    } else {
+                        customZoom += 5;
+                    }
+                    zoomTo(customZoom, cluster.getPosition());
+                    return true;
+                });
+                map.setOnCameraIdleListener(clusterManager);
+                showDevices();
             });
-            map.setOnCameraIdleListener(clusterManager);
-            showDevices();
-        });
+        }
     }
 
 
@@ -257,7 +271,9 @@ public class MapActivity extends AppCompatActivity {
         } else {
             mapBounds = mapBounds.including(location);
         }
-        map.setLatLngBoundsForCameraTarget(mapBounds);
+        if (map != null) {
+            map.setLatLngBoundsForCameraTarget(mapBounds);
+        }
 
         if (clusterManager != null) {
             String snippet = "Last Update: " + device.time + "\n" +

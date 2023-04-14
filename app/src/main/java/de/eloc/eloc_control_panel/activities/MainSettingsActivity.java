@@ -208,7 +208,7 @@ public class MainSettingsActivity extends AppCompatActivity {
         binding.fileheaderBtn.setOnClickListener(view -> runFileHeaderCommand());
         binding.hideAdvancedOptionsButton.setOnClickListener(view -> toggleOptions());
         binding.showAdvancedOptionsButton.setOnClickListener(view -> toggleOptions());
-        binding.instructionsButton.setOnClickListener(view -> ActivityHelper.INSTANCE.showInstructions());
+        binding.instructionsButton.setOnClickListener(view -> ActivityHelper.INSTANCE.showInstructions(MainSettingsActivity.this));
         binding.updateFirmwareButton.setOnClickListener(view -> confirmUpdateFirmware());
         binding.btRecordingStateButton.setOnCheckedChangeListener(this::toggleBtRecordingState);
     }

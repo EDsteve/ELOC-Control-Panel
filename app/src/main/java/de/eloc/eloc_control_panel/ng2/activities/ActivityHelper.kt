@@ -3,6 +3,7 @@ package de.eloc.eloc_control_panel.ng2.activities
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -12,21 +13,22 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.ng2.App
 
 object ActivityHelper {
-    fun showStatusUpdates() {
-        openUrl(App.instance.getString(R.string.status_updates_url))
+    fun showStatusUpdates( activity: AppCompatActivity) {
+        openUrl(App.instance.getString(R.string.status_updates_url), activity)
     }
 
-    fun showInstructions() {
-        openUrl(App.instance.getString(R.string.instructions_url))
+    fun showInstructions( activity: AppCompatActivity) {
+        openUrl(App.instance.getString(R.string.instructions_url), activity)
     }
 
-    private fun openUrl(address: String) {
+    private fun openUrl(address: String, activity: AppCompatActivity) {
+        // Note: startActivity() is called outside an Activity
+        // be sure you are using the contect from an Activity.
         try {
             val intent = Intent(Intent.ACTION_VIEW)
             intent.data = Uri.parse(address)
-            App.instance.startActivity(intent)
+            activity.startActivity(intent)
         } catch (_: Exception) {
-
         }
     }
 

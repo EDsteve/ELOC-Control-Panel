@@ -1,3 +1,8 @@
+## Bugs:
+- Links wont open a browser (wildlifebug.com or Brows ELOC status
+- "Find my ELOC" crashes the app (not on all phones)
+- Can't record. Sample rate, recording time sets to 0 ??
+
 ## To-Do:
 
 Start Page
@@ -15,6 +20,7 @@ Settings page:
 
 ## General
  - Low priority - // todo: fix view binding issue; Why can't it see the toolbar
+ - Google maps crashes on some devices see maps.log for details
 
 
 

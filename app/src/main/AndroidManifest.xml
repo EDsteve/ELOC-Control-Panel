@@ -8,17 +8,13 @@
         android:maxSdkVersion="30" />
     <uses-permission
         android:name="android.permission.BLUETOOTH_ADMIN"
-        android:maxSdkVersion="30" />
-
-    <!-- New BT permissions -->
+        android:maxSdkVersion="30" /> <!-- New BT permissions -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- App must only run on devices that have a bluetooth radio -->
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- App must only run on devices that have a bluetooth radio -->
     <uses-feature
         android:name="android.hardware.bluetooth"
         android:required="true" />
@@ -33,6 +29,15 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
+        <activity android:label="@string/preferences"
+            android:name=".ng2.activities.UserPrefsActivity"
+            android:exported="false"
+            android:parentActivityName=".ng2.activities.HomeActivity">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />
@@ -86,12 +91,10 @@
             android:name=".receivers.BluetoothStateReceiver"
             android:exported="false"
             tools:ignore="Instantiatable" />
-
         <receiver
             android:name=".receivers.BluetoothScanReceiver"
             android:exported="false"
             tools:ignore="Instantiatable" />
-
         <receiver
             android:name=".ng2.receivers.BluetoothDeviceReceiver"
             android:exported="false"

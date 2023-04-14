@@ -117,4 +117,9 @@
     <string name="confirm_update">Confirm update</string>
     <string name="update_rationale">Are you sure you want to update the firmware for %s?</string>
     <string name="yes_update_now">Yes, Update now</string>
+    <string name="font_size">Font size</string>
+    <string name="small">Small</string>
+    <string name="medium">Medium</string>
+    <string name="large">Large</string>
+    <string name="preferences">Preferences</string>
 </resources>
