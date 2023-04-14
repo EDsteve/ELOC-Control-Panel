@@ -860,7 +860,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         binding.sdCardErrorBtn.setOnClickListener(view -> showSDCardError());
         binding.recBtn.setOnClickListener(view -> recordButtonClicked());
         binding.swipeRefreshLayout.setOnRefreshListener(this::refresh);
-        binding.instructionsButton.setOnClickListener(view -> ActivityHelper.INSTANCE.showInstructions());
+        binding.instructionsButton.setOnClickListener(view -> ActivityHelper.INSTANCE.showInstructions(TerminalActivity.this));
     }
 
     private void refresh() {

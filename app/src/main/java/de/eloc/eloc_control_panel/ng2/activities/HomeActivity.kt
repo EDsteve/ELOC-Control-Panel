@@ -67,7 +67,7 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.browseStatusUpdates -> ActivityHelper.showStatusUpdates()
+            R.id.browseStatusUpdates -> ActivityHelper.showStatusUpdates(this@HomeActivity)
             R.id.timeSync -> doSync()
             R.id.setRangerName -> editRangerName()
             R.id.bt_settings -> bluetoothHelper.openSettings(this)
@@ -94,7 +94,9 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setListeners() {
-        binding.instructionsButton.setOnClickListener { ActivityHelper.showInstructions() }
+
+        // oops... i am still new to kotlin and I have to look up somethihing haha
+        binding.instructionsButton.setOnClickListener { ActivityHelper.showInstructions(this@HomeActivity) }
         binding.refreshListButton.setOnClickListener { startScan() }
         binding.uploadElocStatusButton.setOnClickListener { uploadElocStatus() }
         binding.findElocButton.setOnClickListener { showMap() }
