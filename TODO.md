@@ -20,6 +20,7 @@ Settings page:
 
 ## General
  - Low priority - // todo: fix view binding issue; Why can't it see the toolbar
+ - Google maps crashes on some devices see maps.log for details
 
 
 
