@@ -51,6 +51,7 @@ import de.eloc.eloc_control_panel.ng2.App;
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
 import de.eloc.eloc_control_panel.ng2.models.LabelColor;
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
+import de.eloc.eloc_control_panel.ng2.models.PreferredFontSize;
 
 public class TerminalActivity extends AppCompatActivity implements ServiceConnection, SerialListener {
     private final PreferencesHelper preferencesHelper = PreferencesHelper.Companion.getInstance();
@@ -58,6 +59,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     public static final String EXTRA_DEVICE = "device";
     public static final String EXTRA_DEVICE_NAME = "device_name";
     private boolean refreshing = false;
+    private PreferredFontSize preferredFontSize = PreferredFontSize.small;
 
     private enum Connected {False, Pending, True}
 
@@ -142,6 +144,10 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     @Override
     protected void onResume() {
         super.onResume();
+
+        int fontSize = preferencesHelper.getPreferredFontSize();
+        preferredFontSize = PreferredFontSize.fromInt(fontSize);
+        Log.d("TAG", "onResume: apply font size " + fontSize);
 
         binding.refreshLayout.setVisibility(View.GONE);
         binding.infoLayout.setVisibility(View.VISIBLE);
@@ -397,7 +403,6 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
             receiveText.append(TextUtil.toHexString(data) + '\n');
         } else {
             String msg = new String(data);
-
 
             if (newline.equals(TextUtil.newline_crlf) && msg.length() > 0) {
                 // don't show CR as ^M if directly before LF
@@ -913,10 +918,10 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         }
         error = error.trim();
         if (error.isEmpty()) { */
-      error =  send("#settings#bton");
-            send("setGPS^" + locationCode + "#" + locationAccuracy);
-            //sendDelayed("_record_",1700);
-            handleStop();
+        // error =  send("#settings#bton");
+        send("setGPS^" + locationCode + "#" + locationAccuracy);
+        //sendDelayed("_record_",1700);
+        handleStop();
 /*
             // If bt on eloc must be off, it mean app will lose connection
             // so go back to main screen
