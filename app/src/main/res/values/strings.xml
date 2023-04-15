@@ -122,4 +122,10 @@
     <string name="medium">Medium</string>
     <string name="large">Large</string>
     <string name="preferences">Preferences</string>
+    <string name="input_your_ranger_id">Set your ranger ID</string>
+    <string name="save">SAVE</string>
+    <string name="misc">Misc</string>
+    <string name="connecting">Connecting…</string>
+    <string name="app_restart_required">App restart required</string>
+    <string name="app_restart_message">A different font size was set.\nYou must restart the app to apply the requested font size.</string>
 </resources>

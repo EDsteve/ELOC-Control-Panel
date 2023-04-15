@@ -11,7 +11,6 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -33,9 +32,10 @@ import de.eloc.eloc_control_panel.databinding.ActivityMapBinding;
 import de.eloc.eloc_control_panel.databinding.WindowLayoutBinding;
 import de.eloc.eloc_control_panel.models.ElocDeviceInfo;
 import de.eloc.eloc_control_panel.models.ElocMarker;
+import de.eloc.eloc_control_panel.ng2.activities.ThemableActivity;
 import de.eloc.eloc_control_panel.ng2.models.HttpHelper;
 
-public class MapActivity extends AppCompatActivity {
+public class MapActivity extends ThemableActivity {
     /*
     For reference, use the info below to help set default zoom level for when a marker is tapped:
     1: World
@@ -108,10 +108,9 @@ public class MapActivity extends AppCompatActivity {
     }
 
     private void setToolbar() {
-        binding.appbar.toolbar.setTitle(R.string.find_your_elocs);
-        setSupportActionBar(binding.appbar.toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
+            actionBar.setTitle(R.string.find_your_elocs);
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
     }
