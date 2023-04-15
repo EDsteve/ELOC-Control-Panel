@@ -12,11 +12,11 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import de.eloc.eloc_control_panel.ng.models.DeviceInfo
 import de.eloc.eloc_control_panel.ng2.App
+import de.eloc.eloc_control_panel.ng2.activities.ThemableActivity
 import de.eloc.eloc_control_panel.ng2.interfaces.IntCallback
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
@@ -90,7 +90,7 @@ class BluetoothHelper {
             return scanning
         }
 
-    fun openSettings(activity: AppCompatActivity) {
+    fun openSettings(activity: ThemableActivity) {
         val intent = Intent()
         intent.action = Settings.ACTION_BLUETOOTH_SETTINGS
         activity.startActivity(intent)

@@ -3,25 +3,23 @@ package de.eloc.eloc_control_panel.ng2.activities
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import android.view.inputmethod.InputMethodManager
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.ng2.App
 
 object ActivityHelper {
-    fun showStatusUpdates( activity: AppCompatActivity) {
+    fun showStatusUpdates(activity: ThemableActivity) {
         openUrl(App.instance.getString(R.string.status_updates_url), activity)
     }
 
-    fun showInstructions( activity: AppCompatActivity) {
+    fun showInstructions(activity: ThemableActivity) {
         openUrl(App.instance.getString(R.string.instructions_url), activity)
     }
 
-    private fun openUrl(address: String, activity: AppCompatActivity) {
+    private fun openUrl(address: String, activity: ThemableActivity) {
         // Note: startActivity() is called outside an Activity
         // be sure you are using the contect from an Activity.
         try {
@@ -32,8 +30,8 @@ object ActivityHelper {
         }
     }
 
-    fun showAlert(activity: AppCompatActivity, message: String) {
-        AlertDialog.Builder(activity)
+    fun showAlert(activity: ThemableActivity, message: String) {
+        MaterialAlertDialogBuilder(activity)
                 .setCancelable(true)
                 .setMessage(message)
                 .setPositiveButton(android.R.string.ok) { dialog, _ ->
@@ -47,7 +45,7 @@ object ActivityHelper {
                     .make(coordinator, message, Snackbar.LENGTH_LONG)
                     .show()
 
-    fun hideKeyboard(activity: AppCompatActivity) {
+    fun hideKeyboard(activity: ThemableActivity) {
         try {
             val binder = activity.currentFocus?.windowToken
             if (binder != null) {

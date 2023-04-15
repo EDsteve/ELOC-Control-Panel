@@ -1,19 +1,23 @@
 package de.eloc.eloc_control_panel.ng2.activities;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.widget.CompoundButton;
+import android.view.MenuItem;
 
 import de.eloc.eloc_control_panel.databinding.ActivityUserPrefsBinding;
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 import de.eloc.eloc_control_panel.ng2.models.PreferredFontSize;
 
-public class UserPrefsActivity extends AppCompatActivity {
+public class UserPrefsActivity extends ThemableActivity {
+    public static final String EXTRA_FONT_SIZE_CHANGED = "extra_font_size_changed";
+
     private ActivityUserPrefsBinding binding;
     private PreferredFontSize preferredFontSize = PreferredFontSize.small;
-    private PreferencesHelper helper = PreferencesHelper.Companion.getInstance();
+    private PreferredFontSize oldPreferredFontSize = PreferredFontSize.small;
+    private final PreferencesHelper helper = PreferencesHelper.Companion.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,8 +29,29 @@ public class UserPrefsActivity extends AppCompatActivity {
         setListeners();
     }
 
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (oldPreferredFontSize != preferredFontSize) {
+            Intent data = new Intent();
+            data.putExtra(EXTRA_FONT_SIZE_CHANGED, true);
+            setResult(RESULT_OK, data);
+        } else {
+            setResult(RESULT_CANCELED);
+        }
+        super.onBackPressed();
+    }
+
     private void setToolBar() {
-        setSupportActionBar(binding.appbar.toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
@@ -36,28 +61,24 @@ public class UserPrefsActivity extends AppCompatActivity {
     private void setListeners() {
         binding.radFontSmall.setOnCheckedChangeListener((compoundButton, checked) -> {
             if (checked) {
-                preferredFontSize = PreferredFontSize.small;
-                setPreferredFont();
+                setPreferredFont(PreferredFontSize.small);
             }
         });
         binding.radFontMedium.setOnCheckedChangeListener((compoundButton, checked) -> {
             if (checked) {
-                preferredFontSize = PreferredFontSize.medium;
-                setPreferredFont();
+                setPreferredFont(PreferredFontSize.medium);
             }
         });
         binding.radFontLarge.setOnCheckedChangeListener((compoundButton, checked) -> {
             if (checked) {
-                preferredFontSize = PreferredFontSize.large;
-                setPreferredFont();
+                setPreferredFont(PreferredFontSize.large);
             }
         });
     }
 
     private void loadPrefs() {
-
         int fontSize = helper.getPreferredFontSize();
-        preferredFontSize = PreferredFontSize.fromInt(fontSize);
+        oldPreferredFontSize = preferredFontSize = PreferredFontSize.fromInt(fontSize);
         switch (preferredFontSize) {
             case small:
                 binding.radFontSmall.setChecked(true);
@@ -70,7 +91,8 @@ public class UserPrefsActivity extends AppCompatActivity {
         }
     }
 
-    private void setPreferredFont() {
+    private void setPreferredFont(PreferredFontSize newFontSize) {
+        preferredFontSize = newFontSize;
         helper.setPreferredFontSize(preferredFontSize.getSize());
     }
 }

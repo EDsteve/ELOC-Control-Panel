@@ -12,10 +12,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <include
-            android:id="@+id/appbar"
-            layout="@layout/layout_appbar" />
-
         <LinearLayout
             android:id="@+id/refresh_layout"
             android:layout_width="match_parent"
@@ -76,7 +72,6 @@
                 android:textAlignment="center"
                 android:textAllCaps="true"
                 android:textColor="#FFFFFFFF"
-                android:textSize="16sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toTopOf="@id/instructions_button" />
 
@@ -117,11 +112,11 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
                         android:gravity="center"
+                        android:text="@string/connecting"
                         android:textAlignment="center"
                         app:layout_constraintBottom_toBottomOf="@id/status_title"
                         app:layout_constraintEnd_toStartOf="@id/status_icon"
-                        app:layout_constraintTop_toTopOf="@id/status_title"
-                        android:text="Connecting..." />
+                        app:layout_constraintTop_toTopOf="@id/status_title" />
 
                     <View
                         android:id="@+id/divider1"
@@ -290,7 +285,9 @@
                         <TextView
                             android:id="@+id/settings_title"
                             style="@style/SectionTitle"
+                            android:layout_marginStart="0dp"
                             android:text="@string/settings"
+                            app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
 
                         <View
@@ -375,7 +372,7 @@
                         android:id="@+id/misc"
                         style="@style/SectionTitle"
                         android:layout_marginTop="16dp"
-                        android:text="Misc"
+                        android:text="@string/misc"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider10" />
 
@@ -643,7 +640,6 @@
                         app:layout_constraintTop_toTopOf="@id/file_header_name_title_tv"
                         tools:text="xxx000" />
 
-
                     <View
                         android:id="@+id/divider23"
                         android:layout_width="match_parent"
@@ -664,7 +660,7 @@
                         <EditText
                             android:id="@+id/locationText"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="0dp"
                             android:layout_weight="8"
                             android:inputType="text|textNoSuggestions"
                             android:singleLine="true"
@@ -676,7 +672,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:paddingLeft="35dp"
+                            android:paddingStart="35dp"
                             android:paddingTop="5dp"
 
                             android:paddingBottom="25dp">
@@ -686,7 +682,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="12h"
+                                android:text="@string/_12h"
                                 android:textColor="#B5FFFFFF" />
 
                             <RadioButton
@@ -694,7 +690,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="4h"
+                                android:text="@string/_4h"
                                 android:textColor="#B5FFFFFF" />
 
                             <RadioButton
@@ -702,7 +698,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="1h"
+                                android:text="@string/_1h"
                                 android:textColor="#B5FFFFFF" />
 
                             <RadioButton
@@ -710,7 +706,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="1m"
+                                android:text="@string/_1m"
                                 android:textColor="#B5FFFFFF" />
 
 
@@ -735,7 +731,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:paddingLeft="35dp"
+                            android:paddingStart="35dp"
                             android:paddingTop="5dp"
                             android:paddingBottom="25dp">
 
@@ -744,7 +740,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="44k"
+                                android:text="@string/_44k"
                                 android:textColor="#B0FFFFFF" />
 
                             <RadioButton
@@ -752,7 +748,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="32k"
+                                android:text="@string/_32k"
                                 android:textColor="#B0FFFFFF" />
 
                             <RadioButton
@@ -760,7 +756,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="22k"
+                                android:text="@string/_22k"
                                 android:textColor="#B0FFFFFF" />
 
                             <RadioButton
@@ -768,7 +764,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="16K"
+                                android:text="@string/_16k"
                                 android:textColor="#B0FFFFFF" />
 
                             <RadioButton
@@ -776,7 +772,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="8k"
+                                android:text="@string/_8k"
                                 android:textColor="#B0FFFFFF" />
 
                         </RadioGroup>

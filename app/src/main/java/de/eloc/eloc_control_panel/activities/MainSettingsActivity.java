@@ -12,21 +12,22 @@ import android.widget.RadioGroup;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.Locale;
 
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.databinding.ActivityMainSettingsBinding;
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
+import de.eloc.eloc_control_panel.ng2.activities.ThemableActivity;
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 
-public class MainSettingsActivity extends AppCompatActivity {
+public class MainSettingsActivity extends ThemableActivity {
     ActivityMainSettingsBinding binding;
     private final PreferencesHelper preferencesManager = PreferencesHelper.Companion.getInstance();
     private String deviceName = "";
-    private boolean paused= true;
+    private boolean paused = true;
 
     private enum GainType {
         High(11), // Old forest  (HIGH)
@@ -103,7 +104,6 @@ public class MainSettingsActivity extends AppCompatActivity {
     }
 
     private void setToolbar() {
-        setSupportActionBar(binding.appbar.toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setTitle("ELOC Settings");
@@ -351,7 +351,7 @@ public class MainSettingsActivity extends AppCompatActivity {
 
     private void confirmUpdateFirmware() {
         String message = getString(R.string.update_rationale, deviceName);
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.confirm_update)
                 .setMessage(message)
                 .setNegativeButton(android.R.string.cancel, (dialog, i) -> dialog.dismiss())

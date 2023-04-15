@@ -10,9 +10,8 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivitySetupBinding
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
@@ -22,7 +21,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
-class SetupActivity : AppCompatActivity() {
+class SetupActivity : ThemableActivity() {
     private var paused = false
     private lateinit var binding: ActivitySetupBinding
     private lateinit var checkerHandle: ScheduledFuture<*>
@@ -33,7 +32,7 @@ class SetupActivity : AppCompatActivity() {
     private val needsLocationPermission: Boolean
         get() {
             val fineLocationGranted =
-                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             return (fineLocationGranted != PackageManager.PERMISSION_GRANTED)
         }
 
@@ -56,16 +55,17 @@ class SetupActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivitySetupBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        supportActionBar?.hide()
         setListeners()
         registerReceiver(bluetoothWatcher, bluetoothHelper.broadcastFilter)
 
         checkerHandle = Executors.newSingleThreadScheduledExecutor()
-            .scheduleAtFixedRate(
-                { runOnUiThread(::runChecks) },
-                0,
-                500,
-                TimeUnit.MILLISECONDS
-            )
+                .scheduleAtFixedRate(
+                        { runOnUiThread(::runChecks) },
+                        0,
+                        500,
+                        TimeUnit.MILLISECONDS
+                )
     }
 
     override fun onPause() {
@@ -113,10 +113,10 @@ class SetupActivity : AppCompatActivity() {
     }
 
     private fun showActions(
-        locationPermission: Boolean,
-        locationOff: Boolean,
-        bluetoothPermission: Boolean,
-        bluetoothOff: Boolean
+            locationPermission: Boolean,
+            locationOff: Boolean,
+            bluetoothPermission: Boolean,
+            bluetoothOff: Boolean
     ) {
         if (!locationPermission && !locationOff && !bluetoothPermission && !bluetoothOff) {
             return
@@ -147,49 +147,49 @@ class SetupActivity : AppCompatActivity() {
             if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
                 val appName = getString(R.string.app_name)
                 val rationale = getString(R.string.location_service_rationale, appName)
-                AlertDialog.Builder(this)
-                    .apply {
-                        setCancelable(false)
-                        title = getString(R.string.permission_required)
-                        setMessage(rationale)
-                        setNegativeButton(android.R.string.cancel) { dialog, _ ->
-                            dialog.dismiss()
-                            showActions(
-                                needsLocationPermission,
-                                mustTurnOnLocationService,
-                                BluetoothHelper.instance.needsBluetoothPermissions,
-                                mustTurnOnBluetooth
-                            )
-                        }
-                        setPositiveButton(R.string.grant_permission) { dialog, _ ->
-                            dialog.dismiss()
-                            doRequestLocationPermission()
-                        }
-                    }
-                    .show()
-            } else {
-                val alreadyRequested = preferencesHelper.getLocationRequested()
-                if (alreadyRequested) {
-                    AlertDialog.Builder(this)
+                MaterialAlertDialogBuilder(this)
                         .apply {
-                            title = getString(R.string.user_action_required)
-                            setMessage(R.string.manual_location)
                             setCancelable(false)
+                            title = getString(R.string.permission_required)
+                            setMessage(rationale)
                             setNegativeButton(android.R.string.cancel) { dialog, _ ->
                                 dialog.dismiss()
                                 showActions(
-                                    needsLocationPermission,
-                                    mustTurnOnLocationService,
-                                    BluetoothHelper.instance.needsBluetoothPermissions,
-                                    mustTurnOnBluetooth
+                                        needsLocationPermission,
+                                        mustTurnOnLocationService,
+                                        BluetoothHelper.instance.needsBluetoothPermissions,
+                                        mustTurnOnBluetooth
                                 )
                             }
-                            setPositiveButton(R.string.open_settings) { dialog, _ ->
+                            setPositiveButton(R.string.grant_permission) { dialog, _ ->
                                 dialog.dismiss()
-                                openSystemAppSettings()
+                                doRequestLocationPermission()
                             }
                         }
                         .show()
+            } else {
+                val alreadyRequested = preferencesHelper.getLocationRequested()
+                if (alreadyRequested) {
+                    MaterialAlertDialogBuilder(this)
+                            .apply {
+                                title = getString(R.string.user_action_required)
+                                setMessage(R.string.manual_location)
+                                setCancelable(false)
+                                setNegativeButton(android.R.string.cancel) { dialog, _ ->
+                                    dialog.dismiss()
+                                    showActions(
+                                            needsLocationPermission,
+                                            mustTurnOnLocationService,
+                                            BluetoothHelper.instance.needsBluetoothPermissions,
+                                            mustTurnOnBluetooth
+                                    )
+                                }
+                                setPositiveButton(R.string.open_settings) { dialog, _ ->
+                                    dialog.dismiss()
+                                    openSystemAppSettings()
+                                }
+                            }
+                            .show()
                 } else {
                     doRequestLocationPermission()
                 }
@@ -209,49 +209,49 @@ class SetupActivity : AppCompatActivity() {
             if (showRationale) {
                 val appName = getString(R.string.app_name)
                 val message = getString(R.string.bluetooth_rationale, appName)
-                AlertDialog.Builder(this)
-                    .apply {
-                        setCancelable(false)
-                        title = getString(R.string.permission_required)
-                        setMessage(message)
-                        setNegativeButton(android.R.string.cancel) { dialog, _ ->
-                            dialog.dismiss()
-                            showActions(
-                                needsLocationPermission,
-                                mustTurnOnLocationService,
-                                BluetoothHelper.instance.needsBluetoothPermissions,
-                                mustTurnOnBluetooth
-                            )
-                        }
-                        setPositiveButton(R.string.grant_permission) { dialog, _ ->
-                            dialog.dismiss()
-                            doRequestBluetoothPermissions()
-                        }
-                    }
-                    .show()
-            } else {
-                val alreadyRequested = preferencesHelper.getBluetoothRequested()
-                if (alreadyRequested) {
-                    AlertDialog.Builder(this)
+                MaterialAlertDialogBuilder(this)
                         .apply {
                             setCancelable(false)
-                            title = getString(R.string.user_action_required)
-                            setMessage(R.string.manual_bluetooth)
+                            title = getString(R.string.permission_required)
+                            setMessage(message)
                             setNegativeButton(android.R.string.cancel) { dialog, _ ->
                                 dialog.dismiss()
                                 showActions(
-                                    needsLocationPermission,
-                                    mustTurnOnLocationService,
-                                    BluetoothHelper.instance.needsBluetoothPermissions,
-                                    mustTurnOnBluetooth
+                                        needsLocationPermission,
+                                        mustTurnOnLocationService,
+                                        BluetoothHelper.instance.needsBluetoothPermissions,
+                                        mustTurnOnBluetooth
                                 )
                             }
-                            setPositiveButton(R.string.open_settings) { dialog, _ ->
+                            setPositiveButton(R.string.grant_permission) { dialog, _ ->
                                 dialog.dismiss()
-                                openSystemAppSettings()
+                                doRequestBluetoothPermissions()
                             }
                         }
                         .show()
+            } else {
+                val alreadyRequested = preferencesHelper.getBluetoothRequested()
+                if (alreadyRequested) {
+                    MaterialAlertDialogBuilder(this)
+                            .apply {
+                                setCancelable(false)
+                                title = getString(R.string.user_action_required)
+                                setMessage(R.string.manual_bluetooth)
+                                setNegativeButton(android.R.string.cancel) { dialog, _ ->
+                                    dialog.dismiss()
+                                    showActions(
+                                            needsLocationPermission,
+                                            mustTurnOnLocationService,
+                                            BluetoothHelper.instance.needsBluetoothPermissions,
+                                            mustTurnOnBluetooth
+                                    )
+                                }
+                                setPositiveButton(R.string.open_settings) { dialog, _ ->
+                                    dialog.dismiss()
+                                    openSystemAppSettings()
+                                }
+                            }
+                            .show()
                 } else {
                     doRequestBluetoothPermissions()
                 }
@@ -275,19 +275,19 @@ class SetupActivity : AppCompatActivity() {
             askLocationPermission()
         } else if (mustTurnOnLocationService) {
             showActions(
-                locationPermission = false,
-                locationOff = true,
-                BluetoothHelper.instance.needsBluetoothPermissions,
-                mustTurnOnBluetooth
+                    locationPermission = false,
+                    locationOff = true,
+                    BluetoothHelper.instance.needsBluetoothPermissions,
+                    mustTurnOnBluetooth
             )
         } else if (BluetoothHelper.instance.needsBluetoothPermissions) {
             askBluetoothPermissions()
         } else if (mustTurnOnBluetooth) {
             showActions(
-                locationPermission = false,
-                locationOff = false,
-                bluetoothPermission = false,
-                bluetoothOff = true
+                    locationPermission = false,
+                    locationOff = false,
+                    bluetoothPermission = false,
+                    bluetoothOff = true
             )
         } else {
             openScanner()

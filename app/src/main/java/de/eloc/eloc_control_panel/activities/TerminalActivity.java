@@ -1,6 +1,5 @@
 package de.eloc.eloc_control_panel.activities;
 
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Context;
@@ -13,7 +12,6 @@ import android.os.SystemClock;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
-import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
@@ -27,8 +25,8 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.openlocationcode.OpenLocationCode;
 
 import java.io.File;
@@ -49,11 +47,12 @@ import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 import de.eloc.eloc_control_panel.ng.models.BluetoothHelperOld;
 import de.eloc.eloc_control_panel.ng2.App;
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
+import de.eloc.eloc_control_panel.ng2.activities.ThemableActivity;
 import de.eloc.eloc_control_panel.ng2.models.LabelColor;
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 import de.eloc.eloc_control_panel.ng2.models.PreferredFontSize;
 
-public class TerminalActivity extends AppCompatActivity implements ServiceConnection, SerialListener {
+public class TerminalActivity extends ThemableActivity implements ServiceConnection, SerialListener {
     private final PreferencesHelper preferencesHelper = PreferencesHelper.Companion.getInstance();
     private ActivityTerminalBinding binding;
     public static final String EXTRA_DEVICE = "device";
@@ -101,6 +100,22 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
         super.onCreate(savedInstanceState);
         Log.i("elocApp", "terminal onCreate");
         binding = ActivityTerminalBinding.inflate(getLayoutInflater());
+
+
+//        for(int i = 0; i < binding.getRoot().getChildCount(); i++) {
+//            View child = binding.getRoot().getChildAt(i);
+//            if (child instanceof ViewGroup) {
+//                Log.d("", "onCreate: ViewGroup");
+//            } else {
+//                // Text widgets used in this app (EditText, Button, TextInputEditText)
+//                // are all superclases of TextView
+//                if (child instanceof TextView) {
+//                    Log.d("", "onCreate: set font");
+//                    child.texts
+//                }
+//            }
+//        }
+
         setContentView(binding.getRoot());
 
         Intent bindIntent = new Intent(this, SerialService.class);
@@ -357,7 +372,6 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     }
 
     private void setActionBar() {
-        setSupportActionBar(binding.appbar.toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
@@ -945,7 +959,7 @@ public class TerminalActivity extends AppCompatActivity implements ServiceConnec
     }
 
     private void popUpRecord() {
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle("")
                 .setMessage("Please wait for better GPS accuracy < 8 m")
                 .setPositiveButton("Record Anyway", (dialog, which) -> {

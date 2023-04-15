@@ -10,9 +10,11 @@ import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import de.eloc.eloc_control_panel.BuildConfig
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.SNTPClient
@@ -21,7 +23,6 @@ import de.eloc.eloc_control_panel.activities.MapActivity
 import de.eloc.eloc_control_panel.activities.TerminalActivity
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.PopupWindowBinding
-import de.eloc.eloc_control_panel.ng2.activities.UserPrefsActivity
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import de.eloc.eloc_control_panel.ng2.models.ElocInfoAdapter
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper
@@ -30,7 +31,7 @@ import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-class HomeActivity : AppCompatActivity() {
+class HomeActivity : ThemableActivity() {
     private lateinit var binding: ActivityHomeBinding
     private val preferencesHelper = PreferencesHelper.instance
     private val bluetoothHelper = BluetoothHelper.instance
@@ -39,6 +40,7 @@ class HomeActivity : AppCompatActivity() {
     private val elocReceiver = BluetoothDeviceReceiver(elocAdapter::add)
     private var gUploadEnabled = false
     private var gLastTimeDifferenceMillisecond = 0L
+    private lateinit var preferencesLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,15 +91,35 @@ class HomeActivity : AppCompatActivity() {
 
     private fun openUserPrefs() {
         val intent = Intent(this, UserPrefsActivity::class.java)
-        startActivity(intent)
+        preferencesLauncher.launch(intent)
     }
 
     private fun initialize() {
         registerReceiver(elocReceiver, IntentFilter(BluetoothDevice.ACTION_FOUND))
-        setActionBar()
+        setLaunchers()
         setListeners()
         setupListView()
         loadRangerName()
+    }
+
+    private fun setLaunchers() {
+        preferencesLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+            if (result.resultCode == RESULT_OK) {
+                val fontSizeChanged = result.data?.getBooleanExtra(UserPrefsActivity.EXTRA_FONT_SIZE_CHANGED, false)
+                        ?: false
+                if (fontSizeChanged) {
+                    MaterialAlertDialogBuilder(this)
+                            .setCancelable(false)
+                            .setTitle(R.string.app_restart_required)
+                            .setMessage(R.string.app_restart_message)
+                            .setPositiveButton(android.R.string.ok) { dialog, _ ->
+                                dialog.dismiss()
+                                finish()
+                            }
+                            .show()
+                }
+            }
+        }
     }
 
     private fun setListeners() {
@@ -109,10 +131,6 @@ class HomeActivity : AppCompatActivity() {
         binding.findElocButton.setOnClickListener { showMap() }
     }
 
-    private fun setActionBar() {
-        setSupportActionBar(binding.appbar.toolbar)
-    }
-
     private fun loadRangerName() {
         rangerName = preferencesHelper.getRangerName().trim()
     }
@@ -120,7 +138,7 @@ class HomeActivity : AppCompatActivity() {
     private fun setupListView() {
         binding.devicesRecyclerView.adapter = elocAdapter
         binding.devicesRecyclerView.layoutManager =
-            LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+                LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
     }
 
     private fun checkRangerName() {
@@ -142,30 +160,30 @@ class HomeActivity : AppCompatActivity() {
     private fun editRangerName() {
         val popupWindowBinding = PopupWindowBinding.inflate(layoutInflater)
         popupWindowBinding.rangerName.setText(rangerName)
-        AlertDialog.Builder(this)
-            .setCancelable(false)
-            .setTitle("Input Your Ranger ID")
-            .setView(popupWindowBinding.root)
-            .setPositiveButton("SAVE") { dialog, _ ->
-                run {
-                    val editable = popupWindowBinding.rangerName.text
-                    if (editable != null) {
-                        dialog.dismiss()
-                        val name = editable.toString().trim()
-                        validateRangerName(name)
+        MaterialAlertDialogBuilder(this)
+                .setCancelable(false)
+                .setTitle(R.string.input_your_ranger_id)
+                .setView(popupWindowBinding.root)
+                .setPositiveButton(R.string.save) { dialog, _ ->
+                    run {
+                        val editable = popupWindowBinding.rangerName.text
+                        if (editable != null) {
+                            dialog.dismiss()
+                            val name = editable.toString().trim()
+                            validateRangerName(name)
+                        }
                     }
                 }
-            }
-            .show()
+                .show()
     }
 
     private fun startScan() {
         val isOn = BluetoothHelper.instance.isAdapterOn()
         binding.status.text =
-            if (isOn)
-                getString(R.string.scanning_eloc_devices)
-            else
-                "<bluetooth is disabled>"
+                if (isOn)
+                    getString(R.string.scanning_eloc_devices)
+                else
+                    "<bluetooth is disabled>"
         if (!isOn) {
             return
         }
@@ -198,7 +216,7 @@ class HomeActivity : AppCompatActivity() {
             val hasEmptyAdapter = binding.devicesRecyclerView.adapter?.itemCount == 0
             binding.refreshListButton.visibility = View.VISIBLE
             binding.devicesRecyclerView.visibility =
-                if (hasEmptyAdapter) View.GONE else View.VISIBLE
+                    if (hasEmptyAdapter) View.GONE else View.VISIBLE
             if (scanFinished) {
                 binding.uploadElocStatusButton.visibility = View.VISIBLE
                 binding.findElocButton.visibility = View.VISIBLE
@@ -294,8 +312,8 @@ class HomeActivity : AppCompatActivity() {
         val timeoutMS = 5000
         val showMessage = true
         SNTPClient.getDate(
-            timeoutMS,
-            Calendar.getInstance().timeZone
+                timeoutMS,
+                Calendar.getInstance().timeZone
         ) { _,
             _,
             googletimestamp,
@@ -307,21 +325,21 @@ class HomeActivity : AppCompatActivity() {
                     invalidateOptionsMenu()
                     if (showMessage) {
                         ActivityHelper.showSnack(
-                            binding.coordinator,
-                            "sync FAILED\nCheck internet connection"
+                                binding.coordinator,
+                                "sync FAILED\nCheck internet connection"
                         )
                     }
                 } else {
                     gLastTimeDifferenceMillisecond = System.currentTimeMillis() - googletimestamp
                     PreferencesHelper.instance.saveTimestamps(
-                        SystemClock.elapsedRealtime(),
-                        googletimestamp
+                            SystemClock.elapsedRealtime(),
+                            googletimestamp
                     )
                     gUploadEnabled = true
                     invalidateOptionsMenu()
                     if (showMessage) {
                         val message =
-                            getString(R.string.sync_template, gLastTimeDifferenceMillisecond)
+                                getString(R.string.sync_template, gLastTimeDifferenceMillisecond)
                         ActivityHelper.showSnack(binding.coordinator, message)
                     }
                 }
