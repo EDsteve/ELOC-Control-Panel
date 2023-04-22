@@ -7,7 +7,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.text.Editable;
 import android.text.Spannable;
@@ -35,6 +37,8 @@ import java.io.OutputStreamWriter;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.SerialListener;
@@ -59,6 +63,10 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     public static final String EXTRA_DEVICE_NAME = "device_name";
     private boolean refreshing = false;
     private PreferredFontSize preferredFontSize = PreferredFontSize.small;
+    private final double MINUTE = 1.0 / 60; // 1 minute in hrs.
+    private final int UPDATE_INTERVAL_MILLIS = 60 * 1000; // Update after each minute.
+    private ExecutorService timeMonitor = Executors.newSingleThreadExecutor();
+    private boolean runTimeMonitor = false;
 
     private enum Connected {False, Pending, True}
 
@@ -88,7 +96,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     private String locationCode;
     public float locationAccuracy;
     private DeviceState deviceState = DeviceState.Ready;
-    private String recordingTime = "0:00 h";
+    private double recordingTime = 0;
     private boolean hasSDCardError = false;
     private MenuItem elocSettingsItem;
 
@@ -154,6 +162,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         binding.appversionValueTv.setText(appVersion);
 
         startLocation();
+
     }
 
     @Override
@@ -197,6 +206,30 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
             initialStart = false;
         }
         binding.gpsValueTv.setText(R.string.wait);
+        runTimeMonitor = true;
+        timeMonitor.execute(() -> {
+            while(runTimeMonitor) {
+                try {
+                    Thread.sleep(UPDATE_INTERVAL_MILLIS);
+                } catch (InterruptedException ignore) {
+
+                }
+                runOnUiThread(() -> {
+                    updateRecordingTime();
+                });
+            }
+        });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        runTimeMonitor = false;
+    }
+
+    private void updateRecordingTime() {
+        recordingTime += MINUTE;
+        setRecordingTime();
     }
 
     @Override
@@ -585,7 +618,8 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
                     String recordBootTime = l.replace("!5!", "").trim();
                     setTime(binding.recordingBootValueTv, recordBootTime);
                 } else if (l.startsWith("!6!")) {
-                    recordingTime = l.replace("!6!", "").trim();
+                    String tmp = l.replace("!6!", "").trim();
+                    recordingTime = parseDouble(tmp);
                     setRecordingTime();
                 } else if (l.startsWith("!7!")) {
                     if (l.contains("1")) {
@@ -598,12 +632,15 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
                     updateRecordButton();
                     setRecordingTime();
                 } else if (l.startsWith("!8!")) {
-                    Double currentRecordingTime = parseDouble(recordingTime);
-                    if (currentRecordingTime == null) {
+                    // !8! tell the state of bluetooth when recording, so I do not understand while
+                    // we are changing/resetting the recording time to zero here
+                    // I will just leave this block of code here, in case it fixed some logic issue
+                    // I cannot figure out right now.
+                    if (recordingTime <= 0) {
                         String newRecordingTime = l.replace("!8!", "").toUpperCase().trim();
                         if (newRecordingTime.equalsIgnoreCase("on")) {
                             // Set to zero if for some weird reason recording time was not yet already received
-                            recordingTime = "0.00";
+                            recordingTime = 0;
                             setRecordingTime();
                         }
                     }
@@ -750,7 +787,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         String text = getString(R.string.off);
         LabelColor color = LabelColor.off;
         if (deviceState == DeviceState.Recording) {
-            Double duration = parseDouble(recordingTime);
+            Double duration = recordingTime;
             if (deviceState == DeviceState.Stopping) {
                 duration = Double.valueOf("0");
             }
@@ -844,6 +881,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
                 binding.statusTv.setText(R.string.please_wait);
                 binding.statusIcon.setImageResource(R.drawable.connecting);
                 binding.btRecordingValueTv.setText(R.string.stopping);
+                recordingTime = 0;
                 break;
         }
         if (errorMessage != null) {
