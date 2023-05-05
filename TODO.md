@@ -5,6 +5,22 @@
 
 ## To-Do:
 
+User Accounts
+ - Sign up with 
+ 	- email/password
+ 	- Google
+ - Sign in with
+ 	- email/password
+ 	- Google
+ - User profile
+ 	- Set profile picture
+ 	- Set display name
+ 	- Set ranger ID to be used with ELOC device
+ - Management
+ 	- Change email
+ 	- Change password
+ 	- Delete account
+
 Start Page
 - Map feature: It should zoom to all the ELOC markers automatically - If too complicated. Forget it :)
 - "Please update your ELOC Controll Panel app. Your version is not supported any more" - This should show when i choose so in the code (Not a priority and maybe never needed hopefully)
