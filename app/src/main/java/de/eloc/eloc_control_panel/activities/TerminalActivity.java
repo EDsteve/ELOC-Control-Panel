@@ -208,7 +208,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         binding.gpsValueTv.setText(R.string.wait);
         runTimeMonitor = true;
         timeMonitor.execute(() -> {
-            while(runTimeMonitor) {
+            while (runTimeMonitor) {
                 try {
                     Thread.sleep(UPDATE_INTERVAL_MILLIS);
                 } catch (InterruptedException ignore) {
@@ -959,30 +959,14 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
 
         // Respect the bt recording state setting
         boolean btOnWhenRecording = preferencesHelper.getBluetoothRecordingState();
-        String error = "";
-       /* if (btOnWhenRecording) {
-            error = send("#settings#btoff");
-        } else {
-            error = send("#settings#bton");
-        }
-        if (error  == null)  {
-            error = "";
-        }
-        error = error.trim();
-        if (error.isEmpty()) { */
-        // error =  send("#settings#bton");
         send("setGPS^" + locationCode + "#" + locationAccuracy);
-        //sendDelayed("_record_",1700);
         handleStop();
-/*
-            // If bt on eloc must be off, it mean app will lose connection
-            // so go back to main screen
-            if (btOnWhenRecording) {
-                finish();
-            }
-        } else {
-            ActivityHelper.INSTANCE.showSnack(binding.coordinator, error);
-        }*/
+
+        // If bt on ELOC must be off, it means app will lose connection; go back to main screen
+        if (!btOnWhenRecording) {
+            String message = getString(R.string.connection_close_message);
+            ActivityHelper.INSTANCE.showAlert(this, message, false, this::onBackPressed);
+        }
     }
 
     private void handleStop() {

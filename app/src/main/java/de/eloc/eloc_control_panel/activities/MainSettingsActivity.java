@@ -216,6 +216,10 @@ public class MainSettingsActivity extends ThemableActivity {
     private void toggleBtRecordingState(CompoundButton ignore, boolean btOn) {
         if (!paused) {
             preferencesManager.setBluetoothRecordingState(btOn);
+            Intent data = new Intent();
+            String command = btOn ? "#settings#bton" : "#settings#btoff";
+            data.putExtra(COMMAND, command);
+            setResult(RESULT_OK, data);
             finish();
         }
     }

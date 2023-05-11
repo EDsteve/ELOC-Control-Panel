@@ -9,6 +9,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.ng2.App
+import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback
 
 object ActivityHelper {
     fun showStatusUpdates(activity: ThemableActivity) {
@@ -28,6 +29,17 @@ object ActivityHelper {
             activity.startActivity(intent)
         } catch (_: Exception) {
         }
+    }
+
+    fun showAlert(activity: ThemableActivity, message: String, cancelable: Boolean = true, callback: VoidCallback?) {
+        MaterialAlertDialogBuilder(activity)
+                .setCancelable(cancelable)
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok) { dialog, _ ->
+                    callback?.handler()
+                    dialog.dismiss()
+                }
+                .show()
     }
 
     fun showAlert(activity: ThemableActivity, message: String) {

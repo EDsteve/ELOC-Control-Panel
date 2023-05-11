@@ -128,4 +128,5 @@
     <string name="connecting">Connecting…</string>
     <string name="app_restart_required">App restart required</string>
     <string name="app_restart_message">A different font size was set.\nYou must restart the app to apply the requested font size.</string>
+    <string name="connection_close_message">The ELOC is set to turn off bluetooth while recording.\n\nThe bluetooth connection will be closed.</string>
 </resources>
