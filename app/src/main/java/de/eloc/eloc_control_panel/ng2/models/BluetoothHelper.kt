@@ -131,7 +131,8 @@ class BluetoothHelper {
         if (hasConnectPermission()) {
             deviceName = device.name ?: DeviceInfo.DEFAULT_NAME
         }
-        return deviceName.trim().lowercase().contains("eloc")
+        // return deviceName.trim().lowercase().contains("eloc")
+        return true
     }
 
     private fun startBluetoothScan(callback: IntCallback): String? {
