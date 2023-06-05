@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical"
+    tools:context=".activities.ChangeEmailAddressActivity">
+
+    <TextView
+        android:layout_width="@dimen/auth_input_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="16dp"
+        android:text="@string/current_email_address" />
+
+    <TextView
+        android:id="@+id/current_email_address_text_view"
+        android:layout_width="@dimen/auth_input_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        tools:text="monkey_d_luffy@gmail.com" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/text_edit_layout"
+        style="@style/Widget.Material3.TextInputLayout.FilledBox"
+        android:layout_width="@dimen/auth_input_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginVertical="16dp"
+        android:hint="@string/new_email_address"
+        app:counterEnabled="true"
+        app:counterMaxLength="@integer/auth_input_max_length"
+        app:errorEnabled="true">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:imeOptions="actionNext"
+            android:inputType="text"
+            android:maxLength="@integer/auth_input_max_length"
+            tools:text="Roronoa Zoro" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/password_layout"
+        style="@style/Widget.Material3.TextInputLayout.FilledBox"
+        android:layout_width="@dimen/auth_input_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="8dp"
+        android:maxLength="@integer/auth_input_max_length"
+        app:boxBackgroundColor="@android:color/transparent"
+        app:counterEnabled="true"
+        app:counterMaxLength="@integer/auth_input_max_length"
+        app:errorEnabled="true"
+        app:passwordToggleEnabled="true">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/password_text_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusableInTouchMode="true"
+            android:hint="@string/password"
+            android:imeOptions="actionDone"
+            android:inputType="textPassword"
+            android:maxLength="@integer/auth_input_max_length" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/submit_button"
+        android:layout_width="@dimen/auth_input_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginVertical="16dp"
+        android:text="@string/submit" />
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/progress_horizontal"
+        android:layout_width="@dimen/auth_input_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="16dp"
+        android:indeterminate="true" />
+
+</LinearLayout>

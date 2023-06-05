@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true"
+    tools:context=".activities.SetupActivity">
+
+    <TextView
+        android:id="@+id/title_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="@string/profile_setup"
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <FrameLayout
+        android:id="@+id/avatar_frame_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/circular_border"
+        android:padding="1dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title_text_view">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="144dp"
+            android:layout_height="144dp"
+            android:background="@drawable/circular_border"
+            app:cardCornerRadius="72dp"
+            app:cardElevation="0dp">
+
+            <ImageView
+                android:id="@+id/avatar_image_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/profile_picture"
+                android:scaleType="centerCrop"
+                android:src="@drawable/person" />
+        </androidx.cardview.widget.CardView>
+    </FrameLayout>
+
+    <ImageView
+        android:id="@+id/camera_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginHorizontal="16dp"
+        android:background="?selectableItemBackground"
+        android:clickable="true"
+        android:contentDescription="@string/open_camera"
+        android:focusable="true"
+        android:src="@drawable/camera"
+        app:layout_constraintBottom_toBottomOf="@id/avatar_frame_layout"
+        app:layout_constraintEnd_toStartOf="@id/avatar_frame_layout"
+        app:tint="#fff" />
+
+    <ImageView
+        android:id="@+id/gallery_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginHorizontal="16dp"
+        android:background="?selectableItemBackground"
+        android:clickable="true"
+        android:contentDescription="@string/open_photo_gallery"
+        android:focusable="true"
+        android:src="@drawable/photo_library"
+        app:layout_constraintBottom_toBottomOf="@id/avatar_frame_layout"
+        app:layout_constraintStart_toEndOf="@id/avatar_frame_layout"
+        app:tint="#fff" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/user_id_layout"
+        style="@style/Widget.Material3.TextInputLayout.FilledBox"
+        android:layout_width="@dimen/auth_input_width"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:boxBackgroundColor="@android:color/transparent"
+        app:counterEnabled="true"
+        app:counterMaxLength="@integer/user_id_max_length"
+        app:errorEnabled="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/avatar_frame_layout">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/user_id_text_input"
+            android:layout_width="@dimen/auth_input_width"
+            android:layout_height="wrap_content"
+            android:hint="@string/desired_user_id"
+            android:imeOptions="actionDone"
+            android:inputType="text"
+            android:maxLength="@integer/user_id_max_length" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:alpha="0.75"
+        android:text="@string/user_id_rules"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/user_id_layout" />
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/progress_horizontal"
+        android:layout_width="@dimen/auth_input_width"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        app:layout_constraintBottom_toBottomOf="@id/done_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/done_button" />
+
+    <Button
+        android:id="@+id/done_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:drawableEnd="@drawable/check"
+        android:text="@string/done"
+        app:drawableTint="#fff"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

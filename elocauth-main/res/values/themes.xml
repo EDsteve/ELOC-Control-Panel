@@ -1,0 +1,71 @@
+<resources>
+
+    <style name="AppTheme" parent="Theme.Material3.Dark">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="fontFamily">@font/quicksand</item>
+        <item name="materialButtonStyle">@style/AppBaseButtonStyle</item>
+        <item name="materialAlertDialogTheme">@style/MaterialAlertDialogTheme</item>
+        <item name="actionBarStyle">@style/ActionBarStyle</item>
+        <item name="colorOnSurface">#fff</item>
+    </style>
+
+    <style name="AppThemeMedium" parent="AppTheme">
+        <item name="android:textSize">18sp</item>
+        <item name="android:labelTextSize">18sp</item>
+    </style>
+
+    <style name="AppThemeLarge" parent="AppTheme">
+        <item name="android:textSize">22sp</item>
+        <item name="android:labelTextSize">22sp</item>
+    </style>
+
+
+
+    <style name="ActionBarStyle" parent="Widget.Material3.ActionBar.Solid">
+        <item name="background">@drawable/actionbar_background</item>
+        <item name="android:tint">#fff</item>
+    </style>
+
+    <style name="MaterialAlertDialogTheme" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="buttonBarPositiveButtonStyle">@style/MaterialAlerDialogButtonStyle</item>
+        <item name="buttonBarNegativeButtonStyle">@style/MaterialAlerDialogButtonStyle</item>
+        <item name="buttonBarNeutralButtonStyle">@style/MaterialAlerDialogButtonStyle</item>
+    </style>
+
+    <style name="MaterialAlerDialogButtonStyle" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">#fff</item>
+        <item name="fontWeight">600</item>
+        <item name="android:backgroundTint">@android:color/transparent</item>
+    </style>
+
+    <style name="InfoTextView" parent="AppTheme">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="SectionTitle" parent="InfoTextView">
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">#E6FE5F00</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TitleDescription" parent="InfoTextView">
+        <item name="android:textAppearance">@style/TextAppearance.Material3.BodySmall</item>
+    </style>
+
+    <style name="TileTitle" parent="InfoTextView">
+        <item name="android:layout_marginTop">4dp</item>
+    </style>
+
+    <style name="IndentedTileTitle" parent="TileTitle">
+        <item name="android:layout_marginLeft">16dp</item>
+    </style>
+
+    <style name="TileValue" parent="InfoTextView">
+        <item name="android:layout_marginEnd">16dp</item>
+    </style>
+</resources>
+

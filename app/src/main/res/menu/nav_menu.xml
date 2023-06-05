@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:id="@+id/group1">
+        <item
+            android:id="@+id/mnu_edit_profile"
+            android:icon="@drawable/edit"
+            android:title="@string/edit_profile" />
+    </group>
+    <group android:id="@+id/group2">
+        <item
+            android:id="@+id/mnu_find_my_eloc"
+            android:icon="@drawable/map"
+            android:title="@string/find_my_eloc" />
+        <item
+            android:id="@+id/mnu_browse_eloc_status"
+            android:icon="@drawable/world"
+            android:title="@string/browse_eloc_status" />
+        <item
+            android:id="@+id/mnu_upload_eloc_status"
+            android:icon="@drawable/cloud_upload"
+            android:title="@string/upload_eloc_status" />
+        <item
+            android:id="@+id/mnu_sync_clock"
+            android:icon="@drawable/access_time"
+            android:title="@string/synchronize_clock" />
+    </group>
+
+    <group android:id="@+id/group3">
+        <item
+            android:id="@+id/mnu_preferences"
+            android:icon="@drawable/settings"
+            android:title="@string/preferences" />
+        <item
+            android:id="@+id/mnu_bluetooth_settings"
+            android:icon="@drawable/bluetooth"
+            android:title="@string/bluetooth_settings" />
+        <item
+            android:id="@+id/mnu_account"
+            android:icon="@drawable/person"
+            android:title="@string/account_settings" />
+    </group>
+    <group android:id="@+id/group4">
+        <item
+            android:id="@+id/mnu_about"
+            android:icon="@drawable/info"
+            android:title="@string/about_app" />
+    </group>
+    <item
+        android:id="@+id/mnu_sign_out"
+        android:icon="@drawable/logout"
+        android:title="@string/sign_out" />
+</menu>
