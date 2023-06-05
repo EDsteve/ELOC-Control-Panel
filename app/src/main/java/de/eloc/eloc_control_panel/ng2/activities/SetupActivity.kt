@@ -259,8 +259,8 @@ class SetupActivity : ThemableActivity() {
         }
     }
 
-    private fun openScanner() {
-        val intent = Intent(this, HomeActivity::class.java)
+    private fun checkAccountEmailVerification() {
+        val intent = Intent(this, VerifyEmailActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
@@ -290,7 +290,7 @@ class SetupActivity : ThemableActivity() {
                     bluetoothOff = true
             )
         } else {
-            openScanner()
+            checkAccountEmailVerification()
         }
     }
 }

@@ -9,11 +9,9 @@ import java.io.FileInputStream;
 import java.net.URL;
 import java.util.concurrent.Executors;
 
-public class UploadFileAsync {
+import de.eloc.eloc_control_panel.ng2.interfaces.StringCallback;
 
-    public interface StringCallback {
-        void handle(String s);
-    }
+public class UploadFileAsync {
 
     private static String filename = "";
     private static File filesDir;
@@ -98,7 +96,7 @@ public class UploadFileAsync {
         if (success) {
             Log.i("elocApp", "upload SUCCESS ");
             if (snackHandler != null) {
-                snackHandler.handle("Upload Success");
+                snackHandler.handler("Upload Success");
             }
             // recursiveDelete(mDirectory1);
             deleteAllWithExtension(".txt");
@@ -106,7 +104,7 @@ public class UploadFileAsync {
         } else {
             Log.i("elocApp", "upload FAIL ");
             if (snackHandler != null) {
-                snackHandler.handle("Upload FAIL");
+                snackHandler.handler("Upload FAIL");
             }
         }
     }

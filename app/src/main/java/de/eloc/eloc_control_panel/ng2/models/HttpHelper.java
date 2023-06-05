@@ -1,6 +1,12 @@
 package de.eloc.eloc_control_panel.ng2.models;
 
+import android.graphics.Bitmap;
+
+import androidx.annotation.Nullable;
+import androidx.collection.LruCache;
+
 import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -14,6 +20,8 @@ public class HttpHelper {
     private final RequestQueue mRequestQueue;
     private static HttpHelper instance;
 
+    private final ImageLoader imageLoader;
+
     public static HttpHelper getInstance() {
         if (instance == null) {
             instance = new HttpHelper();
@@ -23,6 +31,23 @@ public class HttpHelper {
 
     private HttpHelper() {
         mRequestQueue = Volley.newRequestQueue(App.Companion.getInstance());
+        ImageLoader.ImageCache cache = new ImageLoader.ImageCache() {
+            // 100MB cache size
+            private final LruCache<String, Bitmap> bitmapCache = new LruCache<>(100 * 1024 * 1024);
+
+            @Nullable
+            @Override
+            public Bitmap getBitmap(String url) {
+                return bitmapCache.get(url);
+            }
+
+            @Override
+            public void putBitmap(String url, Bitmap bitmap) {
+                bitmapCache.put(url, bitmap);
+            }
+        };
+        RequestQueue requestQueue = Volley.newRequestQueue(App.Companion.getInstance());
+        imageLoader = new ImageLoader(requestQueue, cache);
     }
 
     public void getElocDevicesAsync(ElocDeviceInfoListCallback callback) {
@@ -46,4 +71,7 @@ public class HttpHelper {
         mRequestQueue.start();
     }
 
+    public ImageLoader getImageLoader() {
+        return imageLoader;
+    }
 }

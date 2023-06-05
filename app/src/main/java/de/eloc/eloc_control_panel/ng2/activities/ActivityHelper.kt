@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.view.inputmethod.InputMethodManager
+import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -12,6 +13,7 @@ import de.eloc.eloc_control_panel.ng2.App
 import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback
 
 object ActivityHelper {
+
     fun showStatusUpdates(activity: ThemableActivity) {
         openUrl(App.instance.getString(R.string.status_updates_url), activity)
     }
@@ -42,6 +44,7 @@ object ActivityHelper {
                 .show()
     }
 
+    // todo: replace with showDialog(), which shows a Material3 UI alert
     fun showAlert(activity: ThemableActivity, message: String) {
         MaterialAlertDialogBuilder(activity)
                 .setCancelable(true)

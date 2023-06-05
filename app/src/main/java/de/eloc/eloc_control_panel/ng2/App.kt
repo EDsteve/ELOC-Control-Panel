@@ -1,6 +1,7 @@
 package de.eloc.eloc_control_panel.ng2
 
 import android.app.Application
+import com.google.firebase.FirebaseApp
 import de.eloc.eloc_control_panel.BuildConfig
 
 class App : Application() {
@@ -8,6 +9,7 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         cInstance = this
+        FirebaseApp.initializeApp(this)
     }
 
     companion object {
