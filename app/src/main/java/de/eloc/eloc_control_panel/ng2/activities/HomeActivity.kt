@@ -4,54 +4,83 @@ import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.os.Bundle
 import android.os.SystemClock
 import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.SNTPClient
 import de.eloc.eloc_control_panel.UploadFileAsync
-import de.eloc.eloc_control_panel.activities.MapActivity
 import de.eloc.eloc_control_panel.activities.TerminalActivity
+import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
-import de.eloc.eloc_control_panel.databinding.PopupWindowBinding
+import de.eloc.eloc_control_panel.databinding.LayoutNavHeaderBinding
 import de.eloc.eloc_control_panel.ng2.App
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import de.eloc.eloc_control_panel.ng2.models.ElocInfoAdapter
+import de.eloc.eloc_control_panel.ng2.models.HttpHelper
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper
 import de.eloc.eloc_control_panel.ng2.receivers.BluetoothDeviceReceiver
-import java.io.*
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileReader
+import java.io.IOException
+import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+
+// todo: use cached profile picture
 
 class HomeActivity : ThemableActivity() {
     private lateinit var binding: ActivityHomeBinding
-    private val preferencesHelper = PreferencesHelper.instance
+    private lateinit var leftHeaderBinding: LayoutNavHeaderBinding
+    private lateinit var rightHeaderBinding: LayoutNavHeaderBinding
+    private lateinit var viewModel: UserAccountViewModel
+    private lateinit var userId: String
     private val bluetoothHelper = BluetoothHelper.instance
-    private var rangerName = preferencesHelper.getRangerName()
     private val elocAdapter = ElocInfoAdapter(this::onListUpdated, this::showDevice)
     private val elocReceiver = BluetoothDeviceReceiver(elocAdapter::add)
     private var gUploadEnabled = false
+    private var mainMenuButton: MenuItem? = null
     private var gLastTimeDifferenceMillisecond = 0L
     private lateinit var preferencesLauncher: ActivityResultLauncher<Intent>
+    private val backPressedHandler = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            backPressed()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setViewModel()
         initialize()
+        closeDrawer()
+
+        binding.swipeRefreshLayout.setColorSchemeColors(Color.WHITE)
+        binding.swipeRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.colorPrimary)
     }
 
     override fun onResume() {
         super.onResume()
-        checkRangerName()
+
+        viewModel.getProfile()
+        setToolbar()
 
         val hasNoDevices = binding.devicesRecyclerView.adapter?.itemCount == 0
         if (hasNoDevices) {
@@ -61,22 +90,27 @@ class HomeActivity : ThemableActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         super.onCreateOptionsMenu(menu)
-        menuInflater.inflate(R.menu.menu_devices, menu)
-        val aboutItem = menu?.findItem(R.id.about)
-        aboutItem?.title = App.version
-        menu?.findItem(R.id.bt_settings)?.isEnabled = bluetoothHelper.hasAdapter
+        menuInflater.inflate(R.menu.main_menu, menu)
+        mainMenuButton = menu?.findItem(R.id.mnu_main)
+        setToolbar()
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.browseStatusUpdates -> ActivityHelper.showStatusUpdates(this@HomeActivity)
-            R.id.timeSync -> doSync()
-            R.id.setRangerName -> editRangerName()
-            R.id.bt_settings -> bluetoothHelper.openSettings(this)
-            R.id.userPrefs -> openUserPrefs()
+            android.R.id.home -> toggleDrawer()
+            R.id.mnu_main -> openDrawer()
         }
         return true
+    }
+
+    private fun backPressed() {
+        if (drawerOpen()) {
+            closeDrawer()
+        } else {
+            backPressedHandler.isEnabled = false
+            onBackPressedDispatcher.onBackPressed()
+        }
     }
 
     override fun onStop() {
@@ -99,7 +133,61 @@ class HomeActivity : ThemableActivity() {
         setLaunchers()
         setListeners()
         setupListView()
-        loadRangerName()
+        onBackPressedDispatcher.addCallback(backPressedHandler)
+    }
+
+    private fun drawerOpen(): Boolean {
+        return binding.drawer.isDrawerOpen(GravityCompat.START) ||
+                binding.drawer.isDrawerOpen(GravityCompat.END)
+    }
+
+    private fun toggleDrawer() {
+        if (drawerOpen()) {
+            closeDrawer()
+        } else {
+            openDrawer()
+        }
+    }
+
+    private fun closeDrawer() {
+        if (binding.drawer.isDrawerOpen(GravityCompat.START)) {
+            restoreMenuIcon()
+            binding.drawer.closeDrawer(GravityCompat.START)
+        } else if (binding.drawer.isDrawerOpen(GravityCompat.END)) {
+            binding.drawer.closeDrawer(GravityCompat.END)
+        }
+    }
+
+    private fun openDrawer() {
+        supportActionBar?.hide()
+        if (!drawerOpen()) {
+            supportActionBar?.setHomeAsUpIndicator(0) // Show the 'Back/up' arrow
+            supportActionBar?.setHomeActionContentDescription(R.string.close_drawer_menu)
+            val direction = if (PreferencesHelper.instance.isMainMenuOnLeft())
+                GravityCompat.START
+            else
+                GravityCompat.END
+            binding.drawer.openDrawer(direction)
+            backPressedHandler.isEnabled = true
+        }
+    }
+
+    private fun restoreMenuIcon() {
+        supportActionBar?.show()
+        supportActionBar?.setHomeAsUpIndicator(R.drawable.menu)
+        supportActionBar?.setHomeActionContentDescription(R.string.open_drawer_menu)
+    }
+
+    private fun setToolbar() {
+        if (PreferencesHelper.instance.isMainMenuOnLeft()) {
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            supportActionBar?.setHomeAsUpIndicator(R.drawable.menu)
+            supportActionBar?.setHomeActionContentDescription(R.string.open_drawer_menu)
+            mainMenuButton?.isVisible = false
+        } else {
+            supportActionBar?.setDisplayHomeAsUpEnabled(false)
+            mainMenuButton?.isVisible = true
+        }
     }
 
     private fun setLaunchers() {
@@ -123,16 +211,49 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun setListeners() {
-
-        // oops... i am still new to kotlin and I have to look up somethihing haha
         binding.instructionsButton.setOnClickListener { ActivityHelper.showInstructions(this@HomeActivity) }
         binding.refreshListButton.setOnClickListener { startScan() }
-        binding.uploadElocStatusButton.setOnClickListener { uploadElocStatus() }
-        binding.findElocButton.setOnClickListener { showMap() }
+        binding.swipeRefreshLayout.setOnRefreshListener { startScan() }
+
+        val leftHeader = binding.leftDrawer.getHeaderView(0)
+        val rightHeader = binding.rightDrawer.getHeaderView(0)
+        leftHeaderBinding = LayoutNavHeaderBinding.bind(leftHeader)
+        rightHeaderBinding = LayoutNavHeaderBinding.bind(rightHeader)
+        leftHeaderBinding.editButton.setOnClickListener { editProfile() }
+        rightHeaderBinding.editButton.setOnClickListener { editProfile() }
+
+        binding.drawer.addDrawerListener(object : DrawerLayout.SimpleDrawerListener() {
+            override fun onDrawerClosed(drawerView: View) {
+                super.onDrawerClosed(drawerView)
+                restoreMenuIcon()
+            }
+        })
+        binding.leftDrawer.setNavigationItemSelectedListener { onNavItemSelected(it) }
+        binding.rightDrawer.setNavigationItemSelectedListener { onNavItemSelected(it) }
     }
 
-    private fun loadRangerName() {
-        rangerName = preferencesHelper.getRangerName().trim()
+    private fun setViewModel() {
+        viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
+        viewModel.watchProfile().observe(this) {
+            leftHeaderBinding.profilePictureImageView.setImageUrl(
+                    it.profilePictureUrl,
+                    HttpHelper.getInstance().imageLoader
+            )
+            rightHeaderBinding.profilePictureImageView.setImageUrl(
+                    it.profilePictureUrl,
+                    HttpHelper.getInstance().imageLoader
+            )
+            userId = it.userId
+            leftHeaderBinding.userIdTextView.text = it.userId
+            rightHeaderBinding.userIdTextView.text = it.userId
+            leftHeaderBinding.emailAddressTextView.text = it.emailAddress
+            rightHeaderBinding.emailAddressTextView.text = it.emailAddress
+        }
+    }
+
+    private fun editProfile() {
+        closeDrawer()
+        JavaActivityHelper.open(this, ProfileActivity::class.java, false)
     }
 
     private fun setupListView() {
@@ -141,45 +262,11 @@ class HomeActivity : ThemableActivity() {
                 LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
     }
 
-    private fun checkRangerName() {
-        loadRangerName()
-        if (TextUtils.isEmpty(rangerName) || rangerName == PreferencesHelper.DEFAULT_RANGER_NAME) {
-            editRangerName()
-        }
-    }
-
-    private fun validateRangerName(name: String) {
-        preferencesHelper.setRangerName(name.trim())
-        loadRangerName()
-        if (TextUtils.isEmpty(rangerName)) {
-            checkRangerName()
-        }
-        ActivityHelper.hideKeyboard(this)
-    }
-
-    private fun editRangerName() {
-        val popupWindowBinding = PopupWindowBinding.inflate(layoutInflater)
-        popupWindowBinding.rangerName.setText(rangerName)
-        MaterialAlertDialogBuilder(this)
-                .setCancelable(false)
-                .setTitle(R.string.input_your_ranger_id)
-                .setView(popupWindowBinding.root)
-                .setPositiveButton(R.string.save) { dialog, _ ->
-                    run {
-                        val editable = popupWindowBinding.rangerName.text
-                        if (editable != null) {
-                            dialog.dismiss()
-                            val name = editable.toString().trim()
-                            validateRangerName(name)
-                        }
-                    }
-                }
-                .show()
-    }
-
     private fun startScan() {
+        closeDrawer()
+        binding.swipeRefreshLayout.isRefreshing = true
         val isOn = BluetoothHelper.instance.isAdapterOn()
-        binding.status.text =
+        binding.statusTextView.text =
                 if (isOn)
                     getString(R.string.scanning_eloc_devices)
                 else
@@ -218,23 +305,16 @@ class HomeActivity : ThemableActivity() {
             binding.devicesRecyclerView.visibility =
                     if (hasEmptyAdapter) View.GONE else View.VISIBLE
             if (scanFinished) {
-                binding.uploadElocStatusButton.visibility = View.VISIBLE
-                binding.findElocButton.visibility = View.VISIBLE
+                binding.swipeRefreshLayout.isRefreshing = false
                 if (hasEmptyAdapter) {
-                    binding.statusLayout.visibility = View.VISIBLE
-                    binding.status.visibility = View.VISIBLE
-                    binding.status.text = getString(R.string.no_devices_found)
-                    binding.progressHorizontal.visibility = View.INVISIBLE
+                    binding.statusTextView.visibility = View.VISIBLE
+                    binding.statusTextView.text = getString(R.string.no_devices_found)
                 } else {
-                    binding.statusLayout.visibility = View.GONE
+                    binding.statusTextView.visibility = View.GONE
                 }
             } else {
-                binding.statusLayout.visibility = View.VISIBLE
-                binding.status.visibility = View.VISIBLE
-                binding.status.text = getString(R.string.scanning_eloc_devices)
-                binding.progressHorizontal.visibility = View.VISIBLE
-                binding.uploadElocStatusButton.visibility = View.GONE
-                binding.findElocButton.visibility = View.GONE
+                binding.statusTextView.visibility = View.VISIBLE
+                binding.statusTextView.text = getString(R.string.scanning_eloc_devices)
             }
         }
     }
@@ -262,7 +342,6 @@ class HomeActivity : ThemableActivity() {
 
     private fun uploadElocStatus() {
         var filecounter = 0
-        loadRangerName()
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
         val filestring = "update " + sdf.format(Date()) + ".upd"
 
@@ -303,12 +382,13 @@ class HomeActivity : ThemableActivity() {
     private fun showDevice(name: String, address: String) {
         BluetoothHelper.instance.stopScan(this::scanUpdate)
         val intent = Intent(this, TerminalActivity::class.java)
+        intent.putExtra(TerminalActivity.EXTRA_RANGER_NAME, userId)
         intent.putExtra(TerminalActivity.EXTRA_DEVICE, address)
         intent.putExtra(TerminalActivity.EXTRA_DEVICE_NAME, name)
         startActivity(intent)
     }
 
-    private fun doSync() {
+    private fun synchronizeClock() {
         val timeoutMS = 5000
         val showMessage = true
         SNTPClient.getDate(
@@ -349,6 +429,83 @@ class HomeActivity : ThemableActivity() {
 
     private fun showMap() {
         val intent = Intent(this, MapActivity::class.java)
+        intent.putExtra(MapActivity.EXTRA_RANGER_NAME, userId)
         startActivity(intent)
+    }
+
+    private fun onNavItemSelected(item: MenuItem): Boolean {
+        closeDrawer()
+        return onMenuItemSelected(item)
+    }
+
+    private fun onMenuItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+
+            R.id.mnu_sign_out -> {
+                signOut()
+                return true
+            }
+
+            R.id.mnu_sync_clock -> {
+                synchronizeClock()
+                return true
+            }
+
+            R.id.mnu_preferences -> {
+                openUserPrefs()
+                return true
+            }
+
+            R.id.mnu_bluetooth_settings -> {
+                bluetoothHelper.openSettings(this)
+                return true
+            }
+
+            R.id.mnu_account -> {
+                editAccount()
+                return true
+            }
+
+            R.id.mnu_about -> {
+                showAboutApp()
+                return true
+            }
+
+            R.id.mnu_upload_eloc_status -> {
+                uploadElocStatus()
+                return true
+            }
+
+            R.id.mnu_find_my_eloc -> {
+                showMap()
+                return true
+            }
+
+            R.id.mnu_browse_eloc_status -> {
+                ActivityHelper.showStatusUpdates(this@HomeActivity)
+                return true
+            }
+        }
+
+        return false
+    }
+
+    private fun signOut() {
+        viewModel.signOut()
+        onSignOut()
+    }
+
+    private fun onSignOut() {
+        JavaActivityHelper.open(this, LoginActivity::class.java, true)
+    }
+
+    private fun editAccount() {
+        JavaActivityHelper.open(this, AccountActivity::class.java, false)
+    }
+
+    private fun showAboutApp() {
+        val title = getString(R.string.app_name)
+        val message = getString(R.string.version_template, App.versionName)
+        JavaActivityHelper.showModalAlert(this, title, message)
     }
 }

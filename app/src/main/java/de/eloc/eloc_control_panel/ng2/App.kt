@@ -4,11 +4,16 @@ import android.app.Application
 import com.google.firebase.FirebaseApp
 
 class App : Application() {
+    private lateinit var appVersionName: String
+    private lateinit var appPackageName: String
 
     override fun onCreate() {
         super.onCreate()
         cInstance = this
         FirebaseApp.initializeApp(this)
+        val info = packageManager.getPackageInfo(packageName, 0)
+        appVersionName = info.versionName
+        appPackageName = info.packageName
     }
 
     companion object {
@@ -19,17 +24,11 @@ class App : Application() {
                 return cInstance!!
             }
 
-        val version: String
-            get() {
-                val info = cInstance!!.applicationInfo
-                return info.name
-            }
+        val versionName: String
+            get() = cInstance!!.appVersionName
 
         val applicationId: String
-            get() {
-                val info = cInstance!!.applicationInfo
-                return info.packageName
-            }
+            get() = cInstance!!.appPackageName
     }
 
 }

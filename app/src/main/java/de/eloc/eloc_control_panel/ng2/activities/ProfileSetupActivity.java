@@ -195,7 +195,7 @@ public class ProfileSetupActivity extends NoActionBarActivity implements MediaAc
     private void onProfileUploadCompleted(boolean success) {
         updateUI(false);
         if (success) {
-            JavaActivityHelper.open(this, LandingActivity.class, true);
+            JavaActivityHelper.open(this, HomeActivity.class, true);
         } else {
             JavaActivityHelper.showModalAlert(this, getString(R.string.oops), getString(R.string.something_went_wrong));
         }

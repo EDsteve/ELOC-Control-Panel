@@ -83,7 +83,7 @@ public class LoginActivity extends NoActionBarActivity {
             if (viewModel.isEmailVerified()) {
                 viewModel.hasProfile(profileFound -> {
                     if (profileFound) {
-                        JavaActivityHelper.open(LoginActivity.this, LandingActivity.class, true);
+                        JavaActivityHelper.open(LoginActivity.this, HomeActivity.class, true);
                     } else {
                         JavaActivityHelper.open(LoginActivity.this, ProfileSetupActivity.class, true);
                     }

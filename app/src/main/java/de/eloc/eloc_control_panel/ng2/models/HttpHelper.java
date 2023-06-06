@@ -50,12 +50,11 @@ public class HttpHelper {
         imageLoader = new ImageLoader(requestQueue, cache);
     }
 
-    public void getElocDevicesAsync(ElocDeviceInfoListCallback callback) {
+    public void getElocDevicesAsync(String rangerName, ElocDeviceInfoListCallback callback) {
         // Volley will do request on background thread... no need for an executor.
         // But that also means remember to use the callback!
         String address = "http://128.199.206.198/ELOC/map/appmap.php";
         StringRequest request = new StringRequest(address, response -> {
-            String rangerName = PreferencesHelper.Companion.getInstance().getRangerName();
             ArrayList<ElocDeviceInfo> deviceInfos = ElocDeviceInfo.parseForRanger(response, rangerName);
             if (callback != null) {
                 callback.handler(deviceInfos);

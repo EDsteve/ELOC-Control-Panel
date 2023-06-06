@@ -5,4 +5,5 @@
     <dimen name="setup_button_width">280dp</dimen>
     <dimen name="button_height">56dp</dimen>
     <dimen name="auth_input_width">240dp</dimen>
+    <dimen name="drawer_width">280dp</dimen>
 </resources>

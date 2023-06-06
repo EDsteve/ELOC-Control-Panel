@@ -5,7 +5,7 @@
     android:id="@+id/coordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.ProfileActivity">
+    tools:context=".ng2.activities.ProfileActivity">
 
     <LinearLayout
         android:id="@+id/progress_layout"
@@ -70,6 +70,7 @@
                         android:layout_width="144dp"
                         android:layout_height="144dp"
                         android:background="@drawable/circular_border"
+                        android:padding="5dp"
                         app:cardCornerRadius="72dp"
                         app:cardElevation="0dp">
 
@@ -79,7 +80,8 @@
                             android:layout_height="match_parent"
                             android:contentDescription="@string/profile_picture"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/person" />
+                            android:src="@drawable/person"
+                            tools:src="@tools:sample/avatars" />
                     </androidx.cardview.widget.CardView>
                 </FrameLayout>
 

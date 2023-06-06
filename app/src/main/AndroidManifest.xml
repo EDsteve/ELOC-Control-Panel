@@ -5,6 +5,9 @@
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
+    <uses-feature
+        android:name="android.hardware.bluetooth"
+        android:required="true" />
 
     <uses-permission android:name="android.permission.CAMERA" />
 
@@ -21,9 +24,6 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" /> <!-- App must only run on devices that have a bluetooth radio -->
-    <uses-feature
-        android:name="android.hardware.bluetooth"
-        android:required="true" />
 
     <application
         android:name=".ng2.App"
@@ -34,10 +34,12 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
-        tools:ignore="AllowBackup,GoogleAppIndexingWarning">
-        <activity android:label="@string/preferences"
+        tools:ignore="AllowBackup,GoogleAppIndexingWarning"
+        tools:targetApi="m">
+        <activity
             android:name=".ng2.activities.UserPrefsActivity"
             android:exported="false"
+            android:label="@string/preferences"
             android:parentActivityName=".ng2.activities.HomeActivity">
             <meta-data
                 android:name="android.app.lib_name"
@@ -55,7 +57,8 @@
             android:name=".ng2.activities.HomeActivity"
             android:exported="false"
             android:screenOrientation="sensorPortrait"
-            android:windowSoftInputMode="adjustPan">
+            android:windowSoftInputMode="adjustPan"
+            tools:ignore="LockedOrientationActivity">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
@@ -64,7 +67,8 @@
             android:name=".ng2.activities.PermissionsSetupActivity"
             android:exported="true"
             android:screenOrientation="sensorPortrait"
-            android:windowSoftInputMode="adjustPan">
+            android:windowSoftInputMode="adjustPan"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -79,17 +83,20 @@
             android:name=".activities.TerminalActivity"
             android:exported="false"
             android:screenOrientation="sensorPortrait"
-            android:windowSoftInputMode="adjustPan" />
+            android:windowSoftInputMode="adjustPan"
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".activities.MainSettingsActivity"
             android:exported="false"
             android:screenOrientation="sensorPortrait"
-            android:windowSoftInputMode="adjustPan" />
+            android:windowSoftInputMode="adjustPan"
+            tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".activities.MapActivity"
+            android:name=".ng2.activities.MapActivity"
             android:exported="false"
             android:screenOrientation="sensorPortrait"
-            android:windowSoftInputMode="adjustPan" />
+            android:windowSoftInputMode="adjustPan"
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".ng2.activities.DeleteAccountActivity"
             android:exported="false"
@@ -138,18 +145,13 @@
             android:name=".ng2.activities.VerifyEmailActivity"
             android:exported="true"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"/>
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".ng2.activities.RegisterActivity"
             android:exported="false"
             android:noHistory="true"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
-            tools:ignore="LockedOrientationActivity" />
-        <activity
-            android:name=".ng2.activities.LandingActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".ng2.activities.LoginActivity"
@@ -192,7 +194,7 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
-       <!-- Trigger Google Play services to install the backported photo picker module. -->
+        <!-- Trigger Google Play services to install the backported photo picker module. -->
         <service
             android:name="com.google.android.gms.metadata.ModuleDependencies"
             android:enabled="false"

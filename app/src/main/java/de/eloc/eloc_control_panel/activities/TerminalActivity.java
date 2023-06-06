@@ -7,9 +7,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.SystemClock;
 import android.text.Editable;
 import android.text.Spannable;
@@ -51,6 +49,7 @@ import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 import de.eloc.eloc_control_panel.ng.models.BluetoothHelperOld;
 import de.eloc.eloc_control_panel.ng2.App;
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
+import de.eloc.eloc_control_panel.ng2.activities.JavaActivityHelper;
 import de.eloc.eloc_control_panel.ng2.activities.ThemableActivity;
 import de.eloc.eloc_control_panel.ng2.models.LabelColor;
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
@@ -61,6 +60,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     private ActivityTerminalBinding binding;
     public static final String EXTRA_DEVICE = "device";
     public static final String EXTRA_DEVICE_NAME = "device_name";
+    public static final String EXTRA_RANGER_NAME = "ranger_name";
     private boolean refreshing = false;
     private PreferredFontSize preferredFontSize = PreferredFontSize.small;
     private final double MINUTE = 1.0 / 60; // 1 minute in hrs.
@@ -79,7 +79,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     }
 
     public ActivityResultLauncher<Intent> settingsLauncher;
-    private String deviceAddress = "<no address>";
+    private String deviceAddress = "";
     private String deviceName = "";
     private SerialService service;
     private Connected connected = Connected.False;
@@ -109,21 +109,6 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         Log.i("elocApp", "terminal onCreate");
         binding = ActivityTerminalBinding.inflate(getLayoutInflater());
 
-
-//        for(int i = 0; i < binding.getRoot().getChildCount(); i++) {
-//            View child = binding.getRoot().getChildAt(i);
-//            if (child instanceof ViewGroup) {
-//                Log.d("", "onCreate: ViewGroup");
-//            } else {
-//                // Text widgets used in this app (EditText, Button, TextInputEditText)
-//                // are all superclases of TextView
-//                if (child instanceof TextView) {
-//                    Log.d("", "onCreate: set font");
-//                    child.texts
-//                }
-//            }
-//        }
-
         setContentView(binding.getRoot());
 
         Intent bindIntent = new Intent(this, SerialService.class);
@@ -134,19 +119,8 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         setLaunchers();
         setupScrollHack();
 
-        Bundle extras = getIntent().getExtras();
-        boolean hasDevice = false;
-        if (extras != null) {
-            hasDevice = extras.containsKey(EXTRA_DEVICE);
-            deviceAddress = extras.getString(EXTRA_DEVICE, "<no address found>");
-        }
-
-        if (!hasDevice) {
-            finish();
-            return;
-        }
-
-        rangerName = preferencesHelper.getRangerName();
+        setDeviceAddress();
+        setRangerName();
 
         Log.i("elocApp", "terminal rangerName " + rangerName);
         Log.i("elocApp", "device address " + deviceAddress);
@@ -157,12 +131,50 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         receiveText.setTextColor(getResources().getColor(R.color.colorReceiveText)); // set as default color to reduce number of spans
         receiveText.setMovementMethod(ScrollingMovementMethod.getInstance());
 
-        String appVersion = App.Companion.getVersion();
+        String appVersion = App.Companion.getVersionName();
         appendReceiveText("\nEloc App version: " + appVersion + "\n");
         binding.appversionValueTv.setText(appVersion);
 
         startLocation();
 
+    }
+
+    private void setRangerName() {
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            rangerName = extras.getString(EXTRA_RANGER_NAME, "");
+        }
+        if (rangerName == null) {
+            rangerName = "";
+        }
+        rangerName = rangerName.trim();
+        if (rangerName.isEmpty()) {
+            JavaActivityHelper.showModalAlert(
+                    this,
+                    getString(R.string.required),
+                    getString(R.string.ranger_name_required),
+                    this::onBackPressed
+            );
+        }
+    }
+
+    private void setDeviceAddress() {
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            deviceAddress = extras.getString(EXTRA_DEVICE, "");
+        }
+        if (deviceAddress == null) {
+            deviceAddress = "";
+        }
+        deviceAddress = deviceAddress.trim();
+        if (deviceAddress.isEmpty()) {
+            JavaActivityHelper.showModalAlert(
+                    this,
+                    getString(R.string.required),
+                    getString(R.string.device_address_required),
+                    this::onBackPressed
+            );
+        }
     }
 
     @Override
@@ -510,7 +522,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
 
         long lastGoogleTimestamp = preferencesHelper.getLastGoogleTimestamp();
         data = data.trim() + "\nApp last time sync:  " + Long.toString(((System.currentTimeMillis() - lastGoogleTimestamp) / 1000l / 60l)) + " min\n";
-        data = data + "App Version:  " + App.Companion.getVersion();
+        data = data + "App Version:  " + App.Companion.getVersionName();
 
 
         //msg=top+msg;

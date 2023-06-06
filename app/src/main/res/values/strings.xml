@@ -121,7 +121,6 @@
     <string name="medium">Medium</string>
     <string name="large">Large</string>
     <string name="preferences">Preferences</string>
-    <string name="input_your_ranger_id">Set your ranger ID</string>
     <string name="misc">Misc</string>
     <string name="connecting">Connecting…</string>
     <string name="app_restart_required">App restart required</string>
@@ -219,4 +218,14 @@
     <string name="stop_label">Stop</string>
     <string name="about_app">About app</string>
     <string name="version_template">Version: %s</string>
+    <string name="snippet_template">Last Update: %s\n\nGPS Accuracy: %s\n\nBattery volts: %s\n\nRec Time: %s</string>
+    <string name="pretty_double_template">%.2f</string>
+    <string name="main_menu_position">Main menu position</string>
+    <string name="top_left">Top Left</string>
+    <string name="top_right">Top Right</string>
+    <string name="menu">Menu</string>
+    <string name="ranger_name_required">Ranger name (user ID) is required!</string>
+    <string name="device_address_required">Device address is required!</string>
+    <string name="bluetooth">Bluetooth</string>
+    <string name="show_all_bt_scanning">Show all bluetooth devices when scanning</string>
 </resources>

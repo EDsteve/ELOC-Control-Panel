@@ -14,8 +14,10 @@ import android.provider.Settings
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.ng.models.DeviceInfo
 import de.eloc.eloc_control_panel.ng2.App
+import de.eloc.eloc_control_panel.ng2.activities.JavaActivityHelper
 import de.eloc.eloc_control_panel.ng2.activities.ThemableActivity
 import de.eloc.eloc_control_panel.ng2.interfaces.IntCallback
 import java.util.concurrent.Executors
@@ -91,9 +93,17 @@ class BluetoothHelper {
         }
 
     fun openSettings(activity: ThemableActivity) {
-        val intent = Intent()
-        intent.action = Settings.ACTION_BLUETOOTH_SETTINGS
-        activity.startActivity(intent)
+        if (hasAdapter) {
+            val intent = Intent()
+            intent.action = Settings.ACTION_BLUETOOTH_SETTINGS
+            activity.startActivity(intent)
+        } else {
+            JavaActivityHelper.showModalAlert(
+                    activity,
+                    activity.getString(R.string.bluetooth),
+                    activity.getString(R.string.no_bluetooth_adapter)
+            )
+        }
     }
 
     protected fun finalize() {
@@ -126,13 +136,16 @@ class BluetoothHelper {
     }
 
     fun isElocDevice(device: BluetoothDevice): Boolean {
-        var deviceName = ""
-        @SuppressLint("MissingPermission")
-        if (hasConnectPermission()) {
-            deviceName = device.name ?: DeviceInfo.DEFAULT_NAME
+        return if (PreferencesHelper.instance.showingAllBluetoothDevices()) {
+            true
+        } else {
+            var deviceName = ""
+            @SuppressLint("MissingPermission")
+            if (hasConnectPermission()) {
+                deviceName = device.name ?: DeviceInfo.DEFAULT_NAME
+            }
+            deviceName.trim().lowercase().contains("eloc")
         }
-        // return deviceName.trim().lowercase().contains("eloc")
-        return true
     }
 
     private fun startBluetoothScan(callback: IntCallback): String? {

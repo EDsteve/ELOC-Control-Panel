@@ -1,12 +1,13 @@
 package de.eloc.eloc_control_panel.ng2.activities;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+
+import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.databinding.ActivityUserPrefsBinding;
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 import de.eloc.eloc_control_panel.ng2.models.PreferredFontSize;
@@ -25,8 +26,13 @@ public class UserPrefsActivity extends ThemableActivity {
         binding = ActivityUserPrefsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         setToolBar();
-        loadPrefs();
         setListeners();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadPrefs();
     }
 
     @Override
@@ -59,6 +65,7 @@ public class UserPrefsActivity extends ThemableActivity {
     }
 
     private void setListeners() {
+        binding.btDevicesSwitch.setOnCheckedChangeListener((compoundButton, checked) -> helper.setShowAllBluetoothDevices(checked));
         binding.radFontSmall.setOnCheckedChangeListener((compoundButton, checked) -> {
             if (checked) {
                 setPreferredFont(PreferredFontSize.small);
@@ -74,9 +81,26 @@ public class UserPrefsActivity extends ThemableActivity {
                 setPreferredFont(PreferredFontSize.large);
             }
         });
+        binding.menuPositionChipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            boolean leftSide = (checkedIds.get(0) == R.id.left_chip);
+            helper.setMainMenuPosition(leftSide);
+            if (leftSide) {
+                binding.leftChip.setChipBackgroundColorResource(R.color.colorPrimary);
+                binding.rightChip.setChipBackgroundColorResource(R.color.colorPrimaryTranslucent);
+            } else {
+                binding.leftChip.setChipBackgroundColorResource(R.color.colorPrimaryTranslucent);
+                binding.rightChip.setChipBackgroundColorResource(R.color.colorPrimary);
+            }
+        });
     }
 
     private void loadPrefs() {
+        binding.btDevicesSwitch.setChecked(helper.showingAllBluetoothDevices());
+        if (helper.isMainMenuOnLeft()) {
+            binding.leftChip.setChecked(true);
+        } else {
+            binding.rightChip.setChecked(true);
+        }
         int fontSize = helper.getPreferredFontSize();
         oldPreferredFontSize = preferredFontSize = PreferredFontSize.fromInt(fontSize);
         switch (preferredFontSize) {

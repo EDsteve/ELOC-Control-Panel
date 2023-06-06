@@ -50,7 +50,7 @@ public class VerifyEmailActivity extends NoActionBarActivity {
 
     private void onHasProfileCompleted(boolean hasProfile) {
         if (hasProfile) {
-            JavaActivityHelper.open(this, LandingActivity.class, true);
+            JavaActivityHelper.open(this, HomeActivity.class, true);
         } else {
             JavaActivityHelper.open(this, ProfileSetupActivity.class, true);
         }
