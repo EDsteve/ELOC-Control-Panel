@@ -61,7 +61,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".ng2.activities.SetupActivity"
+            android:name=".ng2.activities.PermissionsSetupActivity"
             android:exported="true"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan">

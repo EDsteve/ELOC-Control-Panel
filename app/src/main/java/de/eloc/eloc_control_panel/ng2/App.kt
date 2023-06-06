@@ -2,7 +2,6 @@ package de.eloc.eloc_control_panel.ng2
 
 import android.app.Application
 import com.google.firebase.FirebaseApp
-import de.eloc.eloc_control_panel.BuildConfig
 
 class App : Application() {
 
@@ -21,7 +20,16 @@ class App : Application() {
             }
 
         val version: String
-            get() = BuildConfig.VERSION_NAME
+            get() {
+                val info = cInstance!!.applicationInfo
+                return info.name
+            }
+
+        val applicationId: String
+            get() {
+                val info = cInstance!!.applicationInfo
+                return info.packageName
+            }
     }
 
 }

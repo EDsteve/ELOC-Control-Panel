@@ -85,7 +85,7 @@ public class LoginActivity extends NoActionBarActivity {
                     if (profileFound) {
                         JavaActivityHelper.open(LoginActivity.this, LandingActivity.class, true);
                     } else {
-                        JavaActivityHelper.open(LoginActivity.this, SetupActivity.class, true);
+                        JavaActivityHelper.open(LoginActivity.this, ProfileSetupActivity.class, true);
                     }
                 });
             } else {

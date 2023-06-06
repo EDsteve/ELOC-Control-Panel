@@ -15,7 +15,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import de.eloc.eloc_control_panel.BuildConfig
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.SNTPClient
 import de.eloc.eloc_control_panel.UploadFileAsync
@@ -23,6 +22,7 @@ import de.eloc.eloc_control_panel.activities.MapActivity
 import de.eloc.eloc_control_panel.activities.TerminalActivity
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.PopupWindowBinding
+import de.eloc.eloc_control_panel.ng2.App
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import de.eloc.eloc_control_panel.ng2.models.ElocInfoAdapter
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper
@@ -63,7 +63,7 @@ class HomeActivity : ThemableActivity() {
         super.onCreateOptionsMenu(menu)
         menuInflater.inflate(R.menu.menu_devices, menu)
         val aboutItem = menu?.findItem(R.id.about)
-        aboutItem?.title = BuildConfig.VERSION_NAME
+        aboutItem?.title = App.version
         menu?.findItem(R.id.bt_settings)?.isEnabled = bluetoothHelper.hasAdapter
         return true
     }
@@ -203,7 +203,7 @@ class HomeActivity : ThemableActivity() {
         runOnUiThread {
             var label = getString(R.string.refresh)
             if (remaining > 0) {
-                label = getString(R.string.stop, remaining)
+                label = getString(R.string.stop_template, remaining)
             } else {
                 onListUpdated(scanFinished = true)
             }

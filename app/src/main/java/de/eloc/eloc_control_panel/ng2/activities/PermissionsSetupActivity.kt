@@ -21,7 +21,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
-class SetupActivity : ThemableActivity() {
+class PermissionsSetupActivity : ThemableActivity() {
     private var paused = false
     private lateinit var binding: ActivitySetupBinding
     private lateinit var checkerHandle: ScheduledFuture<*>

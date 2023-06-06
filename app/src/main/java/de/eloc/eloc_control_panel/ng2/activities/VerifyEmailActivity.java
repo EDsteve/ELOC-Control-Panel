@@ -52,7 +52,7 @@ public class VerifyEmailActivity extends NoActionBarActivity {
         if (hasProfile) {
             JavaActivityHelper.open(this, LandingActivity.class, true);
         } else {
-            JavaActivityHelper.open(this, SetupActivity.class, true);
+            JavaActivityHelper.open(this, ProfileSetupActivity.class, true);
         }
     }
 

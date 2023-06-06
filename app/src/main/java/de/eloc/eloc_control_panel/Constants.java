@@ -1,14 +1,17 @@
 package de.eloc.eloc_control_panel;
 
+import de.eloc.eloc_control_panel.ng2.App;
+
 class Constants {
 
     // values have to be globally unique
-    static final String INTENT_ACTION_DISCONNECT = BuildConfig.APPLICATION_ID + ".Disconnect";
-    static final String NOTIFICATION_CHANNEL = BuildConfig.APPLICATION_ID + ".Channel";
-    static final String INTENT_CLASS_MAIN_ACTIVITY = BuildConfig.APPLICATION_ID + ".MainActivity";
+    static final String INTENT_ACTION_DISCONNECT = App.Companion.getApplicationId() + ".Disconnect";
+    static final String NOTIFICATION_CHANNEL = App.Companion.getApplicationId() + ".Channel";
+    static final String INTENT_CLASS_MAIN_ACTIVITY = App.Companion.getApplicationId() + ".MainActivity";
 
     // values have to be unique within each app
     static final int NOTIFY_MANAGER_START_FOREGROUND_SERVICE = 1001;
 
-    private Constants() {}
+    private Constants() {
+    }
 }
