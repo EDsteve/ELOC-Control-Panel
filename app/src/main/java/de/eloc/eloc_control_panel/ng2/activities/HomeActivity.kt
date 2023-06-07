@@ -159,7 +159,6 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun openDrawer() {
-        supportActionBar?.hide()
         if (!drawerOpen()) {
             supportActionBar?.setHomeAsUpIndicator(0) // Show the 'Back/up' arrow
             supportActionBar?.setHomeActionContentDescription(R.string.close_drawer_menu)
@@ -173,7 +172,6 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun restoreMenuIcon() {
-        supportActionBar?.show()
         supportActionBar?.setHomeAsUpIndicator(R.drawable.menu)
         supportActionBar?.setHomeActionContentDescription(R.string.open_drawer_menu)
     }

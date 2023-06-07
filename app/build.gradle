@@ -13,7 +13,7 @@ android {
         applicationId "de.eloc.eloc_control_panel"
         minSdk 21
         targetSdk 33
-        versionCode 27
+        versionCode 28
         versionName '4.67'
         versionNameSuffix 'AppBeta'
         multiDexEnabled true
