@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#4CAF50</color>
-    <color name="colorPrimaryTranslucent">#CDDC39</color>
-    <color name="colorPrimaryDark">#33691E</color>
-    <color name="colorAccent">#ff6e40</color>
+    <color name="colorPrimary">#69780F</color>
+    <color name="colorPrimaryTranslucent">#EFD177</color>
+    <color name="colorPrimaryDark">#4c5d0b</color>
+    <color name="colorAccent">#EBF26C10</color>
+    <color name="colorWindowBackground">#242424</color>
 
  <!--   <color name="colorPrimary">#bf360c</color>
     <color name="colorPrimaryTranslucent">#66bf360c</color>
@@ -14,12 +15,12 @@
     <color name="colorSendText">#82CAFF</color>
     <color name="colorStatusText">#FFDB58</color>
 
-    <color name="off_color">#c8322d</color>
-    <color name="on_color">#5eb65f</color>
+    <color name="off_color">#D32F2F</color>
+    <color name="on_color">#8EA213</color>
     <color name="middle_color">#FFDB58</color>
 
-    <color name="divider">#252525</color>
-    <color name="cardview">#1E1E1E</color>
-    <color name="white">#fff</color>
+    <color name="divider">#DF2C2C2C</color>
+    <color name="cardview">#323232</color>
+    <color name="white">#F5E2E2E2</color>
 
 </resources>

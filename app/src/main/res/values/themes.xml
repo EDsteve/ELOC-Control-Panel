@@ -8,6 +8,7 @@
         <item name="materialButtonStyle">@style/AppButtonStyle</item>
         <item name="materialAlertDialogTheme">@style/MaterialAlertDialogTheme</item>
         <item name="actionBarStyle">@style/ActionBarStyle</item>
+        <item name="android:windowBackground">@color/colorWindowBackground</item>
     </style>
 
     <style name="AppThemeMedium" parent="AppTheme">
@@ -21,7 +22,7 @@
     </style>
 
     <style name="AppButtonStyle" parent="Widget.Material3.Button.ElevatedButton">
-        <item name="android:textColor">#fff</item>
+        <item name="android:textColor">@color/white</item>
         <item name="textAllCaps">true</item>
         <item name="cornerFamily">rounded</item>
         <item name="cornerRadius">50dp</item>
@@ -44,7 +45,7 @@
     </style>
 
     <style name="MaterialAlerDialogButtonStyle" parent="Widget.Material3.Button.TextButton.Dialog">
-        <item name="android:textColor">#fff</item>
+        <item name="android:textColor">@color/white</item>
         <item name="fontWeight">600</item>
         <item name="android:backgroundTint">@android:color/transparent</item>
     </style>
@@ -57,7 +58,7 @@
     <style name="SectionTitle" parent="InfoTextView">
         <item name="android:layout_marginStart">16dp</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:textColor">#E6FE5F00</item>
+        <item name="android:textColor">@color/colorAccent</item>
         <item name="android:textStyle">bold</item>
     </style>
 
@@ -78,7 +79,7 @@
     </style>
 
     <style name="AppBaseButtonStyle" parent="Widget.Material3.Button.ElevatedButton">
-        <item name="android:textColor">#fff</item>
+        <item name="android:textColor">@color/white</item>
         <item name="android:textAllCaps">true</item>
         <item name="android:backgroundTint">@color/colorPrimary</item>
     </style>
