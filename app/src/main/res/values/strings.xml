@@ -63,8 +63,8 @@
     <string name="location_service_usage_message">Note that %s collects location data\nto enable the maps feature.</string>
     <string name="location_service_usage_title">Location Service Usage</string>
     <string name="low">Low</string>
-    <string name="manual_bluetooth">You must manually enable the bluetooth permissions to connect with bluetooth devices</string>
-    <string name="manual_location">You must manually enable the location permission to use location for bluetooth devices</string>
+    <string name="manual_bluetooth">You must manually enable the bluetooth permissions to connect with bluetooth devices.</string>
+    <string name="manual_location">You must manually enable the location permission to use location for bluetooth devices.</string>
     <string name="map_button_text">FIND MY ELOC</string>
     <string name="microphone_gain">Microphone gain</string>
     <string name="microphone_type">Microphone Type</string>
@@ -228,4 +228,13 @@
     <string name="device_address_required">Device address is required!</string>
     <string name="bluetooth">Bluetooth</string>
     <string name="show_all_bt_scanning">Show all bluetooth devices when scanning</string>
+    <string name="eloc_device_settings">ELOC device settings</string>
+    <string name="command_missing">You must enter a command to run!</string>
+    <string name="file_header_missing">File header name is required!</string>
+    <string name="invalid_file_header_name">Invalid file header name!</string>
+    <string name="invalid">Invalid</string>
+    <string name="mic_type_missing">You must enter a mic type to set!</string>
+    <string name="set_mic_type_template">%ssettype</string>
+    <string name="set_mic_gain_template">%dsetgain</string>
+    <string name="device_name_missing">You must enter a device name!</string>
 </resources>

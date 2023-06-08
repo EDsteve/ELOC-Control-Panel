@@ -3,6 +3,7 @@ package de.eloc.eloc_control_panel.ng2.models
 import de.eloc.eloc_control_panel.ng2.App
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
+import de.eloc.eloc_control_panel.R
 
 class PreferencesHelper {
     private val preferences: SharedPreferences =
@@ -79,7 +80,7 @@ class PreferencesHelper {
         setLastGoogleTimestamp(lastGoogleSyncTimestampMS)
     }
 
-    fun getPreferredFontSize(): Int =
+      fun getPreferredFontSizeValue(): Int =
             preferences.getInt(PREF_USER_FONT_SIZE, -1)
 
     fun setPreferredFontSize(size: Int) {
@@ -98,6 +99,16 @@ class PreferencesHelper {
 
     fun isMainMenuOnLeft(): Boolean {
         return preferences.getBoolean(PREF_MAIN_MENU_POSITION, false)
+    }
+
+    fun getPreferredFontThemeID(): Int {
+        val fontSize = getPreferredFontSizeValue()
+        return when (PreferredFontSize.fromInt(fontSize)) {
+            PreferredFontSize.small -> R.style.AppTheme
+            PreferredFontSize.medium -> R.style.AppThemeMedium
+            PreferredFontSize.large -> R.style.AppThemeLarge
+            null -> R.style.AppThemeMedium
+        }
     }
 
     companion object {
