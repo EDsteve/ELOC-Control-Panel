@@ -49,11 +49,11 @@ import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 import de.eloc.eloc_control_panel.ng.models.BluetoothHelperOld;
 import de.eloc.eloc_control_panel.ng2.App;
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
+import de.eloc.eloc_control_panel.ng2.activities.DeviceSettingsActivity;
 import de.eloc.eloc_control_panel.ng2.activities.JavaActivityHelper;
 import de.eloc.eloc_control_panel.ng2.activities.ThemableActivity;
 import de.eloc.eloc_control_panel.ng2.models.LabelColor;
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
-import de.eloc.eloc_control_panel.ng2.models.PreferredFontSize;
 
 public class TerminalActivity extends ThemableActivity implements ServiceConnection, SerialListener {
     private final PreferencesHelper preferencesHelper = PreferencesHelper.Companion.getInstance();
@@ -62,7 +62,6 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     public static final String EXTRA_DEVICE_NAME = "device_name";
     public static final String EXTRA_RANGER_NAME = "ranger_name";
     private boolean refreshing = false;
-    private PreferredFontSize preferredFontSize = PreferredFontSize.small;
     private final double MINUTE = 1.0 / 60; // 1 minute in hrs.
     private final int UPDATE_INTERVAL_MILLIS = 60 * 1000; // Update after each minute.
     private ExecutorService timeMonitor = Executors.newSingleThreadExecutor();
@@ -180,10 +179,6 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     @Override
     protected void onResume() {
         super.onResume();
-
-        int fontSize = preferencesHelper.getPreferredFontSize();
-        preferredFontSize = PreferredFontSize.fromInt(fontSize);
-        Log.d("TAG", "onResume: apply font size " + fontSize);
 
         binding.refreshLayout.setVisibility(View.GONE);
         binding.infoLayout.setVisibility(View.VISIBLE);
@@ -363,7 +358,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
 
     private void openSettings() {
         if (deviceState == DeviceState.Ready) {
-            Intent intent = new Intent(TerminalActivity.this, MainSettingsActivity.class);
+            Intent intent = new Intent(TerminalActivity.this, DeviceSettingsActivity.class);
             intent.putExtra(EXTRA_DEVICE_NAME, deviceName);
             settingsLauncher.launch(intent);
         }
@@ -441,7 +436,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
                     if (intent != null) {
                         Bundle extras = intent.getExtras();
                         if (extras != null) {
-                            String command = extras.getString(MainSettingsActivity.COMMAND, null);
+                            String command = extras.getString(DeviceSettingsActivity.COMMAND, null);
                             if (command != null) {
                                 String resultMessage = send(command);
                                 if (resultMessage == null) {

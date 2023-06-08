@@ -101,7 +101,7 @@ public class UserPrefsActivity extends ThemableActivity {
         } else {
             binding.rightChip.setChecked(true);
         }
-        int fontSize = helper.getPreferredFontSize();
+        int fontSize = helper.getPreferredFontSizeValue();
         oldPreferredFontSize = preferredFontSize = PreferredFontSize.fromInt(fontSize);
         switch (preferredFontSize) {
             case small:
