@@ -73,7 +73,7 @@
                 android:text="@string/please_wait"
                 android:textAlignment="center"
                 android:textAllCaps="true"
-                android:textColor="#FFFFFFFF"
+                android:textColor="@color/white"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toTopOf="@id/instructions_button" />
 
@@ -667,7 +667,7 @@
                             android:inputType="text|textNoSuggestions"
                             android:singleLine="true"
                             android:text=""
-                            android:textColor="#AAFFFFFF" />
+                            android:textColor="@color/white" />
 
                         <RadioGroup
                             android:id="@+id/radioGroupSecPerFile"
@@ -685,7 +685,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="@string/_12h"
-                                android:textColor="#B5FFFFFF" />
+                                android:textColor="@color/white" />
 
                             <RadioButton
                                 android:id="@+id/rad4h"
@@ -693,7 +693,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="@string/_4h"
-                                android:textColor="#B5FFFFFF" />
+                                android:textColor="@color/white" />
 
                             <RadioButton
                                 android:id="@+id/rad1h"
@@ -701,7 +701,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="@string/_1h"
-                                android:textColor="#B5FFFFFF" />
+                                android:textColor="@color/white" />
 
                             <RadioButton
                                 android:id="@+id/rad1m"
@@ -709,7 +709,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="@string/_1m"
-                                android:textColor="#B5FFFFFF" />
+                                android:textColor="@color/white" />
 
 
                             <RadioButton
@@ -718,7 +718,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="10s"
-                                android:textColor="#B5FFFFFF" />
+                                android:textColor="@color/white" />
 
                         </RadioGroup>
 

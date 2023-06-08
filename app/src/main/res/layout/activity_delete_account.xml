@@ -13,8 +13,9 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="32dp"
+        android:layout_gravity="center" android:textStyle="bold"
+        android:layout_marginVertical="32dp" android:textColor="#f00"
+        android:layout_marginHorizontal="16dp" android:textSize="18sp"
         android:gravity="center"
         android:text="@string/important_delete_prompt"
         android:textAlignment="center" />
