@@ -15,6 +15,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
@@ -99,7 +100,13 @@ class HomeActivity : ThemableActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             android.R.id.home -> toggleDrawer()
-            R.id.mnu_main -> openDrawer()
+            R.id.mnu_main -> {
+                if (drawerOpen()) {
+                    closeDrawer()
+                } else {
+                    openDrawer()
+                }
+            }
         }
         return true
     }
@@ -150,6 +157,7 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun closeDrawer() {
+        mainMenuButton?.setIcon(R.drawable.menu)
         if (binding.drawer.isDrawerOpen(GravityCompat.START)) {
             restoreMenuIcon()
             binding.drawer.closeDrawer(GravityCompat.START)
@@ -160,6 +168,9 @@ class HomeActivity : ThemableActivity() {
 
     private fun openDrawer() {
         if (!drawerOpen()) {
+            val forwardArrow = ContextCompat.getDrawable(this, R.drawable.arrow_forward)
+            forwardArrow?.setTint(Color.WHITE)
+            mainMenuButton?.icon = forwardArrow
             supportActionBar?.setHomeAsUpIndicator(0) // Show the 'Back/up' arrow
             supportActionBar?.setHomeActionContentDescription(R.string.close_drawer_menu)
             val direction = if (PreferencesHelper.instance.isMainMenuOnLeft())

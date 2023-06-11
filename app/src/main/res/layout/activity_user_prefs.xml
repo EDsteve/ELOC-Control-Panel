@@ -30,31 +30,11 @@
                 app:selectionRequired="true"
                 app:singleSelection="true">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/left_chip"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/top_left"
-                    android:textColor="@color/white"
-                    app:checkedIcon="@drawable/check"
-                    app:checkedIconEnabled="true"
-                    app:checkedIconTint="#fff"
-                    app:chipBackgroundColor="@color/colorPrimaryTranslucent" />
+                <include layout="@layout/layout_app_chip"
+                    android:id="@+id/left_chip_layout" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/right_chip"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="@string/top_right"
-                    android:textColor="@color/white"
-                    app:checkedIcon="@drawable/check"
-                    app:checkedIconEnabled="true"
-                    app:checkedIconTint="#fff"
-                    app:chipBackgroundColor="@color/colorPrimary"
-                    app:chipStrokeColor="@color/colorPrimary" />
+                <include layout="@layout/layout_app_chip"
+                    android:id="@+id/right_chip_layout" />
 
             </com.google.android.material.chip.ChipGroup>
 
@@ -68,33 +48,24 @@
                 android:layout_height="wrap_content"
                 android:text="@string/font_size" />
 
-            <RadioGroup
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/font_size_chip_group"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_marginVertical="8dp"
+                app:selectionRequired="true"
+                app:singleSelection="true">
 
-                <RadioButton
-                    android:id="@+id/radFontSmall"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:checked="true"
-                    android:text="@string/small" />
+                <include layout="@layout/layout_app_chip"
+                    android:id="@+id/small_font_chip_layout" />
 
-                <RadioButton
-                    android:id="@+id/radFontMedium"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/medium" />
+                <include layout="@layout/layout_app_chip"
+                    android:id="@+id/medium_font_chip_layout" />
 
-                <RadioButton
-                    android:id="@+id/radFontLarge"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/large" />
-            </RadioGroup>
+                <include layout="@layout/layout_app_chip"
+                    android:id="@+id/large_font_chip_layout" />
+
+            </com.google.android.material.chip.ChipGroup>
 
             <com.google.android.material.divider.MaterialDivider
                 android:layout_width="match_parent"

@@ -23,6 +23,7 @@
     <string name="bluetooth_rationale">%s needs to connect with bluetooth devices</string>
     <string name="bluetooth_recording">Bluetooth Recording</string>
     <string name="bluetooth_state_when_recording">Bluetooth state when recording</string>
+    <string name="bluetooth_state">Bluetooth state</string>
     <string name="checking_permissions">Checking permissions</string>
     <string name="command">Command</string>
     <string name="connected">Connected</string>

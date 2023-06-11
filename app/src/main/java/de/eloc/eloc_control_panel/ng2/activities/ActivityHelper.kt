@@ -4,11 +4,12 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.view.inputmethod.InputMethodManager
-import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.content.ContextCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.databinding.LayoutAppChipBinding
 import de.eloc.eloc_control_panel.ng2.App
 import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback
 
@@ -102,5 +103,17 @@ object ActivityHelper {
             result = "< 1 mins"
         }
         return result
+    }
+
+    fun setChipColors(context: Context, chipBinding: LayoutAppChipBinding) {
+        val colorTextOnPrimary = ContextCompat.getColor(context, R.color.colorTextOnPrimary)
+        val colorTextOnPrimaryTransclucent = ContextCompat.getColor(context, R.color.colorTextOnPrimaryTranslucent)
+        if (chipBinding.chip.isChecked) {
+            chipBinding.chip.setTextColor(colorTextOnPrimary)
+            chipBinding.chip.setChipBackgroundColorResource(R.color.colorPrimary)
+        } else {
+            chipBinding.chip.setTextColor(colorTextOnPrimaryTransclucent)
+            chipBinding.chip.setChipBackgroundColorResource(R.color.colorPrimaryTranslucent)
+        }
     }
 }

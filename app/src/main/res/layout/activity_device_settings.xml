@@ -81,7 +81,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:imeOptions="actionNext"
+                            android:imeOptions="actionDone"
                             android:importantForAutofill="no"
                             android:inputType="text"
                             tools:ignore="TouchTargetSizeCheck,DuplicateSpeakableTextCheck"
@@ -95,53 +95,34 @@
                         android:layout_marginTop="8dp"
                         android:text="@string/sample_rate" />
 
-                    <RadioGroup
-                        android:id="@+id/sample_rate_radio_group"
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/sample_rate_chip_group"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:layout_height="match_parent"
+                        app:selectionRequired="true"
+                        app:singleSelection="true">
 
-                        <RadioButton
-                            android:id="@+id/rad44k"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/_44k"
-                            android:textColor="@color/white"
-                            tools:checked="true" />
+                        <include
+                            android:id="@+id/rate_44k_layout"
+                            layout="@layout/layout_app_chip" />
 
-                        <RadioButton
-                            android:id="@+id/rad32k"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/_32k"
-                            android:textColor="@color/white" />
+                        <include
+                            android:id="@+id/rate_32k_layout"
+                            layout="@layout/layout_app_chip" />
 
-                        <RadioButton
-                            android:id="@+id/rad22k"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/_22k"
-                            android:textColor="@color/white" />
+                        <include
+                            android:id="@+id/rate_22k_layout"
+                            layout="@layout/layout_app_chip" />
 
-                        <RadioButton
-                            android:id="@+id/rad16k"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/_16k"
-                            android:textColor="@color/white" />
+                        <include
+                            android:id="@+id/rate_16k_layout"
+                            layout="@layout/layout_app_chip" />
 
-                        <RadioButton
-                            android:id="@+id/rad8k"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/_8k"
-                            android:textColor="@color/white" />
-                    </RadioGroup>
+                        <include
+                            android:id="@+id/rate_8k_layout"
+                            layout="@layout/layout_app_chip" />
+
+                    </com.google.android.material.chip.ChipGroup>
 
                     <TextView
                         android:id="@+id/recording_time_per_file_tv"
@@ -150,55 +131,34 @@
                         android:layout_marginTop="8dp"
                         android:text="@string/recording_time_per_file" />
 
-                    <RadioGroup
-                        android:id="@+id/seconds_per_file_radio_group"
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/file_time_chip_group"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:layout_height="match_parent"
+                        app:selectionRequired="true"
+                        app:singleSelection="true">
 
-                        <RadioButton
-                            android:id="@+id/rad12h"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/_12h"
-                            android:textColor="@color/white" />
+                        <include
+                            android:id="@+id/time_12h_layout"
+                            layout="@layout/layout_app_chip" />
 
-                        <RadioButton
-                            android:id="@+id/rad4h"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/_4h"
-                            android:textColor="@color/white" />
+                        <include
+                            android:id="@+id/time_4h_layout"
+                            layout="@layout/layout_app_chip" />
 
-                        <RadioButton
-                            android:id="@+id/rad1h"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/_1h"
-                            android:textColor="@color/white" />
+                        <include
+                            android:id="@+id/time_1h_layout"
+                            layout="@layout/layout_app_chip" />
 
-                        <RadioButton
-                            android:id="@+id/rad1m"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/_1m"
-                            android:textColor="@color/white"
-                            tools:checked="true" />
+                        <include
+                            android:id="@+id/time_1m_layout"
+                            layout="@layout/layout_app_chip" />
 
+                        <include
+                            android:id="@+id/time_10s_layout"
+                            layout="@layout/layout_app_chip" />
 
-                        <RadioButton
-                            android:id="@+id/rad10s"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/_10s"
-                            android:textColor="@color/white" />
-
-                    </RadioGroup>
+                    </com.google.android.material.chip.ChipGroup>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
@@ -273,7 +233,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:imeOptions="actionNext"
+                            android:imeOptions="actionDone"
                             android:importantForAutofill="no"
                             android:inputType="text"
                             tools:ignore="TouchTargetSizeCheck"
@@ -335,7 +295,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:imeOptions="actionNext"
+                            android:imeOptions="actionDone"
                             android:importantForAutofill="no"
                             android:inputType="text"
                             tools:ignore="TouchTargetSizeCheck"
@@ -394,7 +354,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:imeOptions="actionNext"
+                            android:imeOptions="actionDone"
                             android:importantForAutofill="no"
                             android:inputType="text"
                             tools:text="ns" />
@@ -443,62 +403,84 @@
 
                     </LinearLayout>
 
-                    <RadioGroup
-                        android:id="@+id/gain_radio_group"
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/mic_gain_chip_group"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:layout_height="match_parent"
+                        app:selectionRequired="true"
+                        app:singleSelection="true">
 
-                        <RadioButton
-                            android:id="@+id/radHigh"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/high"
-                            android:textColor="@color/white" />
+                        <include
+                            android:id="@+id/low_gain_layout"
+                            layout="@layout/layout_app_chip" />
 
-                        <RadioButton
-                            android:id="@+id/radLow"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/low"
-                            android:textColor="@color/white" />
+                        <include
+                            android:id="@+id/high_gain_layout"
+                            layout="@layout/layout_app_chip" />
 
-                    </RadioGroup>
+                    </com.google.android.material.chip.ChipGroup>
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <View
-                android:id="@+id/divider6"
-                android:layout_width="match_parent"
-                android:layout_height="4dp"
-                android:layout_marginVertical="8dp"
-                android:background="#535353" />
-
-            <LinearLayout
+            <androidx.cardview.widget.CardView
+                android:id="@+id/recording_bluetooth_state_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal">
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="@color/cardview"
+                app:cardCornerRadius="8dp"
+                app:contentPadding="8dp">
 
-                <TextView
-                    android:id="@+id/bt_recording_state_tv"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_weight="1"
-                    android:text="@string/bluetooth_state_when_recording" />
+                    android:orientation="vertical">
 
-                <ToggleButton
-                    android:id="@+id/bt_recording_state_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="@string/bluetooth_state_when_recording" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:orientation="horizontal">
 
-            </LinearLayout>
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/bluetooth_state_when_recording"
+                            android:textAllCaps="true"
+                            android:textStyle="bold" />
+
+                        <Button
+                            android:id="@+id/bluetooth_recording_state_button"
+                            style="@style/AppTextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/run"
+                            app:drawableEndCompat="@drawable/run"
+                            app:drawableTint="@color/colorPrimary" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/bt_state_chip_group"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:selectionRequired="true"
+                        app:singleSelection="true">
+
+                        <include
+                            android:id="@+id/bt_on_layout"
+                            layout="@layout/layout_app_chip" />
+
+                        <include
+                            android:id="@+id/bt_off_layout"
+                            layout="@layout/layout_app_chip" />
+
+                    </com.google.android.material.chip.ChipGroup>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
             <View
                 android:id="@+id/divider7"

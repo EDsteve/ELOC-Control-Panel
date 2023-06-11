@@ -3,6 +3,7 @@ package de.eloc.eloc_control_panel.ng2.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.widget.CompoundButton;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -15,6 +16,9 @@ import de.eloc.eloc_control_panel.ng2.models.PreferredFontSize;
 public class UserPrefsActivity extends ThemableActivity {
     public static final String EXTRA_FONT_SIZE_CHANGED = "extra_font_size_changed";
 
+    private static final String TAG_LEFT_MENU_CHIP = "left_menu_chip";
+    private static final String TAG_RIGHT_MENU_CHIP = "right_menu_chip";
+
     private ActivityUserPrefsBinding binding;
     private PreferredFontSize preferredFontSize = PreferredFontSize.small;
     private PreferredFontSize oldPreferredFontSize = PreferredFontSize.small;
@@ -26,6 +30,7 @@ public class UserPrefsActivity extends ThemableActivity {
         binding = ActivityUserPrefsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         setToolBar();
+        setChips();
         setListeners();
     }
 
@@ -64,59 +69,93 @@ public class UserPrefsActivity extends ThemableActivity {
         }
     }
 
+    private void setChips() {
+        binding.leftChipLayout.chip.setTag(TAG_LEFT_MENU_CHIP);
+        binding.leftChipLayout.chip.setText(R.string.top_left);
+        binding.leftChipLayout.chip.setChecked(false);
+        binding.leftChipLayout.chip.setOnCheckedChangeListener(this::menuPositionChanged);
+        ActivityHelper.INSTANCE.setChipColors(this, binding.leftChipLayout);
+
+        binding.rightChipLayout.chip.setTag(TAG_RIGHT_MENU_CHIP);
+        binding.rightChipLayout.chip.setText(R.string.top_right);
+        binding.rightChipLayout.chip.setChecked(false);
+        binding.rightChipLayout.chip.setOnCheckedChangeListener(this::menuPositionChanged);
+        ActivityHelper.INSTANCE.setChipColors(this, binding.rightChipLayout);
+
+        binding.smallFontChipLayout.chip.setText(R.string.small);
+        binding.smallFontChipLayout.chip.setChecked(false);
+        ActivityHelper.INSTANCE.setChipColors(this, binding.smallFontChipLayout);
+
+        binding.mediumFontChipLayout.chip.setText(R.string.medium);
+        binding.mediumFontChipLayout.chip.setChecked(false);
+        ActivityHelper.INSTANCE.setChipColors(this, binding.mediumFontChipLayout);
+
+        binding.largeFontChipLayout.chip.setText(R.string.large);
+        binding.largeFontChipLayout.chip.setChecked(false);
+        ActivityHelper.INSTANCE.setChipColors(this, binding.largeFontChipLayout);
+    }
+
     private void setListeners() {
         binding.btDevicesSwitch.setOnCheckedChangeListener((compoundButton, checked) -> helper.setShowAllBluetoothDevices(checked));
-        binding.radFontSmall.setOnCheckedChangeListener((compoundButton, checked) -> {
+
+        binding.smallFontChipLayout.chip.setOnCheckedChangeListener((compoundButton, checked) -> {
             if (checked) {
                 setPreferredFont(PreferredFontSize.small);
             }
         });
-        binding.radFontMedium.setOnCheckedChangeListener((compoundButton, checked) -> {
+        binding.mediumFontChipLayout.chip.setOnCheckedChangeListener((compoundButton, checked) -> {
             if (checked) {
                 setPreferredFont(PreferredFontSize.medium);
             }
         });
-        binding.radFontLarge.setOnCheckedChangeListener((compoundButton, checked) -> {
+        binding.largeFontChipLayout.chip.setOnCheckedChangeListener((compoundButton, checked) -> {
             if (checked) {
                 setPreferredFont(PreferredFontSize.large);
             }
         });
-        binding.menuPositionChipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            boolean leftSide = (checkedIds.get(0) == R.id.left_chip);
-            helper.setMainMenuPosition(leftSide);
-            if (leftSide) {
-                binding.leftChip.setChipBackgroundColorResource(R.color.colorPrimary);
-                binding.rightChip.setChipBackgroundColorResource(R.color.colorPrimaryTranslucent);
-            } else {
-                binding.leftChip.setChipBackgroundColorResource(R.color.colorPrimaryTranslucent);
-                binding.rightChip.setChipBackgroundColorResource(R.color.colorPrimary);
-            }
-        });
+    }
+
+    private void menuPositionChanged(CompoundButton chip, boolean checked) {
+        String tag = chip.getTag().toString();
+        boolean menuOnLeftSide;
+        if (TAG_LEFT_MENU_CHIP.equals(tag)) {
+            menuOnLeftSide = checked;
+        } else {
+            menuOnLeftSide = !checked;
+        }
+        if (checked) {
+            helper.setMainMenuPosition(menuOnLeftSide);
+        }
+        ActivityHelper.INSTANCE.setChipColors(this, binding.rightChipLayout);
+        ActivityHelper.INSTANCE.setChipColors(this, binding.leftChipLayout);
     }
 
     private void loadPrefs() {
         binding.btDevicesSwitch.setChecked(helper.showingAllBluetoothDevices());
         if (helper.isMainMenuOnLeft()) {
-            binding.leftChip.setChecked(true);
+            binding.leftChipLayout.chip.setChecked(true);
         } else {
-            binding.rightChip.setChecked(true);
+            binding.rightChipLayout.chip.setChecked(true);
         }
         int fontSize = helper.getPreferredFontSizeValue();
         oldPreferredFontSize = preferredFontSize = PreferredFontSize.fromInt(fontSize);
         switch (preferredFontSize) {
             case small:
-                binding.radFontSmall.setChecked(true);
+                binding.smallFontChipLayout.chip.setChecked(true);
                 break;
             case medium:
-                binding.radFontMedium.setChecked(true);
+                binding.mediumFontChipLayout.chip.setChecked(true);
                 break;
             case large:
-                binding.radFontLarge.setChecked(true);
+                binding.largeFontChipLayout.chip.setChecked(true);
         }
     }
 
     private void setPreferredFont(PreferredFontSize newFontSize) {
         preferredFontSize = newFontSize;
         helper.setPreferredFontSize(preferredFontSize.getSize());
+        ActivityHelper.INSTANCE.setChipColors(this, binding.smallFontChipLayout);
+        ActivityHelper.INSTANCE.setChipColors(this, binding.mediumFontChipLayout);
+        ActivityHelper.INSTANCE.setChipColors(this, binding.largeFontChipLayout);
     }
 }

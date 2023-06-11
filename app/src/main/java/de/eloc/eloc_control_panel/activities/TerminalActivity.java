@@ -359,6 +359,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     private void openSettings() {
         if (deviceState == DeviceState.Ready) {
             Intent intent = new Intent(TerminalActivity.this, DeviceSettingsActivity.class);
+            // todo: device name might be changed in DeviceSettingsActivity
             intent.putExtra(EXTRA_DEVICE_NAME, deviceName);
             settingsLauncher.launch(intent);
         }

@@ -2,6 +2,8 @@
 <resources>
     <color name="colorPrimary">#69780F</color>
     <color name="colorPrimaryTranslucent">#EFD177</color>
+    <color name="colorTextOnPrimary">#fff</color>
+    <color name="colorTextOnPrimaryTranslucent">#000</color>
     <color name="colorPrimaryDark">#4c5d0b</color>
     <color name="colorAccent">#EBF26C10</color>
     <color name="colorWindowBackground">#242424</color>

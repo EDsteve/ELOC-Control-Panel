@@ -16,10 +16,7 @@ class DeviceSettingsActivity : ThemableActivity() {
     private val preferencesManager = PreferencesHelper.instance
     private var paused = true
     private var deviceName = ""
-    private var sampleRate = 0
-    private var secondsPerFile = 0
     private var location = ""
-    private var micGain = GainType.High
 
     private companion object {
         const val COMMAND = "command"
@@ -31,12 +28,15 @@ class DeviceSettingsActivity : ThemableActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDeviceSettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setChips()
         setDeviceName()
         setData()
         setMicData()
+        setBtState()
         setToolbar()
         setListeners()
         hideAdvancedOperations()
+        setChipColors()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -54,8 +54,12 @@ class DeviceSettingsActivity : ThemableActivity() {
 
     override fun onResume() {
         super.onResume()
-        val savedBtRecordingState = preferencesManager.getBluetoothRecordingState()
-        binding.btRecordingStateButton.isChecked = savedBtRecordingState
+        val btOnWhenRecording = preferencesManager.getBluetoothRecordingState()
+        if (btOnWhenRecording) {
+            binding.btOnLayout.chip.isChecked = true
+        } else {
+            binding.btOffLayout.chip.isChecked = true
+        }
         paused = false
     }
 
@@ -65,6 +69,57 @@ class DeviceSettingsActivity : ThemableActivity() {
         if (deviceName.isNotEmpty()) {
             binding.deviceNameEditText.setText(deviceName.trim())
         }
+    }
+
+    private fun setBtState() {
+        binding.btOnLayout.chip.isChecked = false
+        binding.btOffLayout.chip.isChecked = false
+        // todo: must be obtained directly from firmware
+        if (preferencesManager.getBluetoothRecordingState()) {
+            binding.btOnLayout.chip.isChecked = true
+        } else {
+            binding.btOffLayout.chip.isChecked = true
+        }
+        setChipColors()
+    }
+
+    private fun setChipColors() {
+        ActivityHelper.setChipColors(this, binding.btOnLayout)
+        ActivityHelper.setChipColors(this, binding.btOffLayout)
+
+        ActivityHelper.setChipColors(this, binding.lowGainLayout)
+        ActivityHelper.setChipColors(this, binding.highGainLayout)
+
+        ActivityHelper.setChipColors(this, binding.time12hLayout)
+        ActivityHelper.setChipColors(this, binding.time4hLayout)
+        ActivityHelper.setChipColors(this, binding.time1hLayout)
+        ActivityHelper.setChipColors(this, binding.time1mLayout)
+        ActivityHelper.setChipColors(this, binding.time10sLayout)
+
+        ActivityHelper.setChipColors(this, binding.rate44kLayout)
+        ActivityHelper.setChipColors(this, binding.rate32kLayout)
+        ActivityHelper.setChipColors(this, binding.rate22kLayout)
+        ActivityHelper.setChipColors(this, binding.rate16kLayout)
+        ActivityHelper.setChipColors(this, binding.rate8kLayout)
+    }
+
+    private fun setChips() {
+        binding.btOnLayout.chip.setText(R.string.on)
+        binding.btOffLayout.chip.setText(R.string.off)
+        binding.lowGainLayout.chip.setText(R.string.low)
+        binding.highGainLayout.chip.setText(R.string.high)
+
+        binding.time12hLayout.chip.setText(R.string._12h)
+        binding.time4hLayout.chip.setText(R.string._4h)
+        binding.time1hLayout.chip.setText(R.string._1h)
+        binding.time1mLayout.chip.setText(R.string._1m)
+        binding.time10sLayout.chip.setText(R.string._10s)
+
+        binding.rate44kLayout.chip.setText(R.string._44k)
+        binding.rate32kLayout.chip.setText(R.string._32k)
+        binding.rate22kLayout.chip.setText(R.string._22k)
+        binding.rate16kLayout.chip.setText(R.string._16k)
+        binding.rate8kLayout.chip.setText(R.string._8k)
     }
 
     private fun setData() {
@@ -85,17 +140,22 @@ class DeviceSettingsActivity : ThemableActivity() {
             sampleRateObject = separated[0].toInt()
         } catch (_: NumberFormatException) {
         }
-        sampleRate = sampleRateObject ?: 16000
+        binding.rate44kLayout.chip.isChecked = false
+        binding.rate32kLayout.chip.isChecked = false
+        binding.rate22kLayout.chip.isChecked = false
+        binding.rate16kLayout.chip.isChecked = false
+        binding.rate8kLayout.chip.isChecked = false
+        val sampleRate = sampleRateObject ?: 16000
         if (sampleRate <= 8000) {
-            binding.rad8k.isChecked = true
+            binding.rate8kLayout.chip.isChecked = true
         } else if (sampleRate <= 16000) {
-            binding.rad16k.isChecked = true
+            binding.rate16kLayout.chip.isChecked = true
         } else if (sampleRate <= 22050) {
-            binding.rad22k.isChecked = true
+            binding.rate22kLayout.chip.isChecked = true
         } else if (sampleRate <= 32000) {
-            binding.rad32k.isChecked = true
+            binding.rate32kLayout.chip.isChecked = true
         } else if (sampleRate <= 44100) {
-            binding.rad44k.isChecked = true
+            binding.rate44kLayout.chip.isChecked = true
         }
 
         var secondsObject: Int? = null
@@ -103,17 +163,22 @@ class DeviceSettingsActivity : ThemableActivity() {
             secondsObject = separated[2].toInt()
         } catch (_: NumberFormatException) {
         }
-        secondsPerFile = secondsObject ?: 3600
+        val secondsPerFile = secondsObject ?: 3600
+        binding.time12hLayout.chip.isChecked = false
+        binding.time4hLayout.chip.isChecked = false
+        binding.time1hLayout.chip.isChecked = false
+        binding.time1mLayout.chip.isChecked = false
+        binding.time10sLayout.chip.isChecked = false
         if (secondsPerFile <= 10) {
-            binding.rad10s.isChecked = true
+            binding.time10sLayout.chip.isChecked = true
         } else if (secondsPerFile <= 60) {
-            binding.rad1m.isChecked = true
+            binding.time1mLayout.chip.isChecked = true
         } else if (secondsPerFile <= 3600) {
-            binding.rad1h.isChecked = true
+            binding.time1hLayout.chip.isChecked = true
         } else if (secondsPerFile <= 14400) {
-            binding.rad4h.isChecked = true
+            binding.time4hLayout.chip.isChecked = true
         } else if (secondsPerFile <= 43200) {
-            binding.rad12h.isChecked = true
+            binding.time12hLayout.chip.isChecked = true
         }
 
         location = separated[3].trim()
@@ -121,6 +186,7 @@ class DeviceSettingsActivity : ThemableActivity() {
     }
 
     private fun setMicData() {
+        // todo: must be obtained directly from firmware
         val data = preferencesManager.getMicData()
         val separated = data.split("#")
         if (separated.size < 2) {
@@ -131,13 +197,14 @@ class DeviceSettingsActivity : ThemableActivity() {
 
         var gainObject: Int? = null
         try {
-            gainObject = separated[2].trim().toInt()
+            gainObject = if (separated[2].trim().lowercase().contains("low")) 14 else 0
         } catch (_: NumberFormatException) {
         }
-        micGain = GainType.fromValue(gainObject)
-        when (micGain) {
-            GainType.Low -> binding.radLow.isChecked = true
-            GainType.High -> binding.radHigh.isChecked = true
+        binding.lowGainLayout.chip.isChecked = false
+        binding.highGainLayout.chip.isChecked = false
+        when (GainType.fromValue(gainObject)) {
+            GainType.Low -> binding.lowGainLayout.chip.isChecked = true
+            GainType.High -> binding.highGainLayout.chip.isChecked = true
         }
     }
 
@@ -147,9 +214,10 @@ class DeviceSettingsActivity : ThemableActivity() {
     }
 
     private fun setListeners() {
-        binding.sampleRateRadioGroup.setOnCheckedChangeListener { _, id -> sampleRateChanged(id) }
-        binding.secondsPerFileRadioGroup.setOnCheckedChangeListener { _, id -> secondsPerFileChanged(id) }
-        binding.gainRadioGroup.setOnCheckedChangeListener { _, id -> gainChanged(id) }
+        binding.sampleRateChipGroup.setOnCheckedStateChangeListener { _, _ -> setChipColors() }
+        binding.fileTimeChipGroup.setOnCheckedStateChangeListener { _, _ -> setChipColors() }
+        binding.micGainChipGroup.setOnCheckedStateChangeListener { _, _ -> setChipColors() }
+        binding.btStateChipGroup.setOnCheckedStateChangeListener { _, _ -> setChipColors() }
         binding.commandLineButton.setOnClickListener { runCommandLine() }
         binding.recordingButton.setOnClickListener { runRecordingCommand() }
         binding.microphoneTypeButton.setOnClickListener { runMicTypeCommand() }
@@ -159,7 +227,7 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding.showAdvancedOptionsButton.setOnClickListener { showAdvancedOperations() }
         binding.instructionsButton.setOnClickListener { ActivityHelper.showInstructions(this) }
         binding.updateFirmwareButton.setOnClickListener { confirmFirmwareUpdate() }
-        binding.btRecordingStateButton.setOnCheckedChangeListener { _, b -> toggleBtRecordingState(b) }
+        binding.bluetoothRecordingStateButton.setOnClickListener { saveBtRecordingState() }
     }
 
     private fun hideAdvancedOperations() {
@@ -192,30 +260,33 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
     }
 
-    private fun sampleRateChanged(id: Int) {
-        when (id) {
-            R.id.rad8k -> sampleRate = 8000
-            R.id.rad16k -> sampleRate = 16000
-            R.id.rad22k -> sampleRate = 22050
-            R.id.rad32k -> sampleRate = 32000
-            R.id.rad44k -> sampleRate = 44100
+    private fun getSampleRate(): Int {
+        return if (binding.rate44kLayout.chip.isChecked) {
+            44100
+        } else if (binding.rate32kLayout.chip.isChecked) {
+            32000
+        } else if (binding.rate22kLayout.chip.isChecked) {
+            22050
+        } else if (binding.rate16kLayout.chip.isChecked) {
+            16000
+        } else {
+            8000
         }
     }
 
-    private fun secondsPerFileChanged(id: Int) {
-        when (id) {
-            R.id.rad10s -> secondsPerFile = 10
-            R.id.rad1m -> secondsPerFile = 60
-            R.id.rad1h -> secondsPerFile = 3600
-            R.id.rad4h -> secondsPerFile = 14400
-            R.id.rad12h -> secondsPerFile = 43200
-        }
-    }
-
-    private fun gainChanged(id: Int) {
-        when (id) {
-            R.id.radHigh -> micGain = GainType.High
-            R.id.radLow -> micGain = GainType.Low
+    private fun getSecondsPerFile(): Int {
+        return if (binding.time12hLayout.chip.isChecked) {
+            43200
+        } else if (binding.time4hLayout.chip.isChecked) {
+            14400
+        } else if (binding.time1hLayout.chip.isChecked) {
+            3600
+        } else if (binding.time1mLayout.chip.isChecked) {
+            60
+        } else if (binding.time10sLayout.chip.isChecked) {
+            10
+        } else {
+            60
         }
     }
 
@@ -261,6 +332,8 @@ class DeviceSettingsActivity : ThemableActivity() {
                     getString(R.string.invalid_file_header_name)
             )
         } else {
+            val secondsPerFile = getSecondsPerFile()
+            val sampleRate = getSampleRate()
             val command = COMMAND_PREFIX + sampleRate + SEPARATOR + secondsPerFile + SEPARATOR + location
             runCommand(command)
         }
@@ -281,7 +354,12 @@ class DeviceSettingsActivity : ThemableActivity() {
     }
 
     private fun runMicGainCommand() {
-        val command = getString(R.string.set_mic_gain_template, micGain.value)
+        val gain = if (binding.lowGainLayout.chip.isChecked) {
+            GainType.Low
+        } else {
+            GainType.High
+        }
+        val command = getString(R.string.set_mic_gain_template, gain.value)
         runCommand(command)
     }
 
@@ -314,11 +392,12 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
     }
 
-    private fun toggleBtRecordingState(btOn: Boolean) {
+    private fun saveBtRecordingState() {
         if (!paused) {
-            preferencesManager.setBluetoothRecordingState(btOn)
             val intent = Intent()
-            val command = if (btOn) {
+            val btOnWhenRecording = binding.btOnLayout.chip.isChecked
+            preferencesManager.setBluetoothRecordingState(btOnWhenRecording)
+            val command = if (btOnWhenRecording) {
                 COMMAND_PREFIX + "bton"
             } else {
                 COMMAND_PREFIX + "btoff"
