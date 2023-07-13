@@ -6,3 +6,4 @@
 /build/
 /app/release/
 /tmp
+keystore.properties

@@ -38,14 +38,13 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.SerialListener;
 import de.eloc.eloc_control_panel.SerialService;
 import de.eloc.eloc_control_panel.SerialService.SerialBinder;
 import de.eloc.eloc_control_panel.SerialSocket;
 import de.eloc.eloc_control_panel.SimpleLocation;
 import de.eloc.eloc_control_panel.TextUtil;
-import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
+import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.ng.models.BluetoothHelperOld;
 import de.eloc.eloc_control_panel.ng2.App;
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
@@ -54,6 +53,7 @@ import de.eloc.eloc_control_panel.ng2.activities.JavaActivityHelper;
 import de.eloc.eloc_control_panel.ng2.activities.ThemableActivity;
 import de.eloc.eloc_control_panel.ng2.models.LabelColor;
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
+import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 
 public class TerminalActivity extends ThemableActivity implements ServiceConnection, SerialListener {
     private final PreferencesHelper preferencesHelper = PreferencesHelper.Companion.getInstance();

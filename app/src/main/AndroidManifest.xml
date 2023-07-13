@@ -26,7 +26,7 @@
     <uses-permission android:name="android.permission.INTERNET" /> <!-- App must only run on devices that have a bluetooth radio -->
 
     <application
-        android:name=".ng2.App"
+        android:name="de.eloc.eloc_control_panel.ng2.App"
         android:allowBackup="true"
         android:icon="@mipmap/app_logo"
         android:label="@string/app_name"
@@ -37,10 +37,10 @@
         tools:ignore="AllowBackup,GoogleAppIndexingWarning"
         tools:targetApi="m">
         <activity
-            android:name=".ng2.activities.UserPrefsActivity"
+            android:name="de.eloc.eloc_control_panel.ng2.activities.UserPrefsActivity"
             android:exported="false"
             android:label="@string/preferences"
-            android:parentActivityName=".ng2.activities.HomeActivity">
+            android:parentActivityName="de.eloc.eloc_control_panel.ng2.activities.HomeActivity">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
@@ -54,7 +54,7 @@
             android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name=".ng2.activities.HomeActivity"
+            android:name="de.eloc.eloc_control_panel.ng2.activities.HomeActivity"
             android:exported="false"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"
@@ -64,7 +64,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".ng2.activities.PermissionsSetupActivity"
+            android:name="de.eloc.eloc_control_panel.ng2.activities.PermissionsSetupActivity"
             android:exported="true"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"
@@ -80,99 +80,99 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".activities.TerminalActivity"
+            android:name="de.eloc.eloc_control_panel.activities.TerminalActivity"
             android:exported="false"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.DeviceSettingsActivity"
+            android:name="de.eloc.eloc_control_panel.ng2.activities.DeviceSettingsActivity"
             android:exported="false"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.MapActivity"
+            android:name="de.eloc.eloc_control_panel.ng2.activities.MapActivity"
             android:exported="false"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.DeleteAccountActivity"
+            android:name="de.eloc.eloc_control_panel.ng2.activities.DeleteAccountActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.ChangeEmailAddressActivity"
+            android:name="de.eloc.eloc_control_panel.ng2.activities.ChangeEmailAddressActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.ChangePasswordActivity"
+            android:name="de.eloc.eloc_control_panel.ng2.activities.ChangePasswordActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.ProfileActivity"
+            android:name="de.eloc.eloc_control_panel.ng2.activities.ProfileActivity"
             android:exported="false"
             android:label="@string/edit_profile"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.AccountActivity"
+            android:name="de.eloc.eloc_control_panel.ng2.activities.AccountActivity"
             android:exported="false"
             android:label="@string/edit_profile"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.PasswordResetActivity"
+            android:name="de.eloc.eloc_control_panel.ng2.activities.PasswordResetActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.ProfileSetupActivity"
+            android:name="de.eloc.eloc_control_panel.ng2.activities.ProfileSetupActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.VerifyEmailActivity"
+            android:name="de.eloc.eloc_control_panel.ng2.activities.VerifyEmailActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.RegisterActivity"
+            android:name="de.eloc.eloc_control_panel.ng2.activities.RegisterActivity"
             android:exported="false"
             android:noHistory="true"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.LoginActivity"
+            android:name="de.eloc.eloc_control_panel.ng2.activities.LoginActivity"
             android:exported="true"
             android:noHistory="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
 
-        <service android:name=".SerialService" />
+        <service android:name="de.eloc.eloc_control_panel.SerialService" />
 
         <receiver
-            android:name=".receivers.BluetoothStateReceiver"
+            android:name="de.eloc.eloc_control_panel.receivers.BluetoothStateReceiver"
             android:exported="false"
             tools:ignore="Instantiatable" />
         <receiver
-            android:name=".receivers.BluetoothScanReceiver"
+            android:name="de.eloc.eloc_control_panel.receivers.BluetoothScanReceiver"
             android:exported="false"
             tools:ignore="Instantiatable" />
         <receiver
-            android:name=".ng2.receivers.BluetoothDeviceReceiver"
+            android:name="de.eloc.eloc_control_panel.ng2.receivers.BluetoothDeviceReceiver"
             android:exported="false"
             tools:ignore="Instantiatable">
             <intent-filter>
@@ -195,6 +195,7 @@
         </provider>
 
         <!-- Trigger Google Play services to install the backported photo picker module. -->
+        <!--suppress AndroidDomInspection -->
         <service
             android:name="com.google.android.gms.metadata.ModuleDependencies"
             android:enabled="false"

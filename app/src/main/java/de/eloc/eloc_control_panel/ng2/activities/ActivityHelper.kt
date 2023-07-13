@@ -8,10 +8,10 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
-import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.databinding.LayoutAppChipBinding
 import de.eloc.eloc_control_panel.ng2.App
 import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback
+import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.databinding.LayoutAppChipBinding
 
 object ActivityHelper {
 

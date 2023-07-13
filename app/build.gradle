@@ -1,3 +1,5 @@
+def keystorePropertiesFile = rootProject('')
+
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
@@ -10,11 +12,11 @@ android {
     compileSdkPreview "UpsideDownCake"
 
     defaultConfig {
-        applicationId "de.eloc.eloc_control_panel"
+        applicationId "de.eloc.eloc_control_panel_2"
         minSdk 21
         targetSdk 33
-        versionCode 28
-        versionName '4.67'
+        versionCode 32
+        versionName '4.712'
         versionNameSuffix 'AppBeta'
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
