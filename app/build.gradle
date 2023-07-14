@@ -1,11 +1,13 @@
-def keystorePropertiesFile = rootProject('')
-
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
     id 'com.google.gms.google-services'
 }
+
+def keystorePropertiesFile = rootProject.file('C:\\Users\\ed\\StudioProjects\\ELOC-Control-Panel\\keystore.properties')
+def keystoreProperties = new Properties()
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
     compileSdk 33
@@ -22,12 +24,33 @@ android {
         vectorDrawables.useSupportLibrary = true
     }
 
+    signingConfigs {
+        release_config {
+            keyAlias 'upload'
+            keyPassword ''
+            storeFile file('G:\\Sync\\Projects\\ElocRemote\\upload.jks')
+            storePassword ''
+
+
+        }
+        debug_config {
+
+        }
+    }
+
     buildFeatures {
         viewBinding true
     }
 
     buildTypes {
         release {
+            minifyEnabled true
+            shrinkResources true
+            renderscriptDebuggable false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release_config
+        }
+        debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
