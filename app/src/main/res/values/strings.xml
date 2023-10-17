@@ -238,4 +238,6 @@
     <string name="set_mic_type_template">%ssettype</string>
     <string name="set_mic_gain_template">%dsetgain</string>
     <string name="device_name_missing">You must enter a device name!</string>
+    <string name="recorder">Recorder</string>
+    <string name="detector">Detector</string>
 </resources>

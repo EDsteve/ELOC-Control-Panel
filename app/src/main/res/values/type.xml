@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="TextAppearance.Eloc.HeadlineSmall" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.Eloc.TitleLarge" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textStyle">bold</item>
+    </style>
+</resources>

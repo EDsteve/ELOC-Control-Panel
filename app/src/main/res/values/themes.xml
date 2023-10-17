@@ -8,7 +8,8 @@
         <item name="materialButtonStyle">@style/AppButtonStyle</item>
         <item name="materialAlertDialogTheme">@style/MaterialAlertDialogTheme</item>
         <item name="actionBarStyle">@style/ActionBarStyle</item>
-        <item name="android:windowBackground">@color/colorWindowBackground</item>
+        <item name="android:windowBackground">@color/window</item>
+        <item name="android:textColor">@color/white</item>
     </style>
 
     <style name="AppThemeMedium" parent="AppTheme">
@@ -90,6 +91,5 @@
         <item name="android:background">?selectableItemBackground</item>
         <item name="android:textStyle">bold</item>
     </style>
-
 </resources>
 

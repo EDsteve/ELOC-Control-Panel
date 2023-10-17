@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="window">#2e2e2e</color>
+    <color name="actionbar">#44863f</color>
+    <color name="actionbar_icon">#284f25</color>
+    <color name="white">@android:color/white</color>
+    <color name="connected">#65d95b</color>
+    <color name="user_label">#cc9411</color>
+</resources>

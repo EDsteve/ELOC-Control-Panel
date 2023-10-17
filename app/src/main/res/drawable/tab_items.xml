@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <corners android:topLeftRadius="@dimen/tab_corner_radius" android:topRightRadius="@dimen/tab_corner_radius" />
+            <solid android:color="@color/color_active_tab" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:topLeftRadius="@dimen/tab_corner_radius" android:topRightRadius="@dimen/tab_corner_radius" />
+            <solid android:color="@color/color_inactive_tab" />
+        </shape>
+    </item>
+</selector>

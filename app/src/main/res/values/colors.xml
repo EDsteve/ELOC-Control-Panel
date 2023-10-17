@@ -6,12 +6,6 @@
     <color name="colorTextOnPrimaryTranslucent">#000</color>
     <color name="colorPrimaryDark">#4c5d0b</color>
     <color name="colorAccent">#f26c10</color>
-    <color name="colorWindowBackground">#10120C</color>
-
- <!--   <color name="colorPrimary">#bf360c</color>
-    <color name="colorPrimaryTranslucent">#66bf360c</color>
-    <color name="colorPrimaryDark">#bf360c</color>
-    <color name="colorAccent">#ff6e40</color>-->
 
     <color name="colorReceiveText">#00FF00</color>
     <color name="colorSendText">#82CAFF</color>
@@ -23,6 +17,13 @@
 
     <color name="divider">#DF2C2C2C</color>
     <color name="cardview">#323232</color>
-    <color name="white">#F5E2E2E2</color>
 
+
+    <color name="color_active_tab">#ff9d09</color>
+    <color name="color_on_active_tab">#4c3a1f</color>
+
+    <color name="color_inactive_tab">#435042</color>
+    <color name="color_on_inactive_tab">#8b938a</color>
+
+    <color name="color_pager">#2e2e2e</color>
 </resources>
