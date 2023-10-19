@@ -1,5 +1,7 @@
 package de.eloc.eloc_control_panel.activities;
 
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.showModalAlert;
+
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Context;
@@ -46,14 +48,14 @@ import de.eloc.eloc_control_panel.SimpleLocation;
 import de.eloc.eloc_control_panel.TextUtil;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.ng.models.BluetoothHelperOld;
-import de.eloc.eloc_control_panel.ng2.App;
+import de.eloc.eloc_control_panel.ng3.App;
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
 import de.eloc.eloc_control_panel.ng2.activities.DeviceSettingsActivity;
 import de.eloc.eloc_control_panel.ng2.activities.JavaActivityHelper;
-import de.eloc.eloc_control_panel.ng2.activities.ThemableActivity;
 import de.eloc.eloc_control_panel.ng2.models.LabelColor;
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
+import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
 
 public class TerminalActivity extends ThemableActivity implements ServiceConnection, SerialListener {
     private final PreferencesHelper preferencesHelper = PreferencesHelper.Companion.getInstance();
@@ -148,7 +150,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         }
         rangerName = rangerName.trim();
         if (rangerName.isEmpty()) {
-            JavaActivityHelper.showModalAlert(
+            showModalAlert(
                     this,
                     getString(R.string.required),
                     getString(R.string.ranger_name_required),
@@ -167,7 +169,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         }
         deviceAddress = deviceAddress.trim();
         if (deviceAddress.isEmpty()) {
-            JavaActivityHelper.showModalAlert(
+            showModalAlert(
                     this,
                     getString(R.string.required),
                     getString(R.string.device_address_required),

@@ -12,6 +12,7 @@ import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.databinding.ActivityUserPrefsBinding;
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 import de.eloc.eloc_control_panel.ng2.models.PreferredFontSize;
+import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
 
 public class UserPrefsActivity extends ThemableActivity {
     public static final String EXTRA_FONT_SIZE_CHANGED = "extra_font_size_changed";

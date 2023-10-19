@@ -28,12 +28,16 @@ import de.eloc.eloc_control_panel.activities.TerminalActivity
 import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.LayoutNavHeaderBinding
-import de.eloc.eloc_control_panel.ng2.App
+import de.eloc.eloc_control_panel.ng3.App
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import de.eloc.eloc_control_panel.ng2.models.ElocInfoAdapter
 import de.eloc.eloc_control_panel.ng2.models.HttpHelper
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper
 import de.eloc.eloc_control_panel.ng2.receivers.BluetoothDeviceReceiver
+import de.eloc.eloc_control_panel.ng3.activities.LoginActivity
+import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity
+import de.eloc.eloc_control_panel.ng3.activities.open
+import de.eloc.eloc_control_panel.ng3.activities.showModalAlert
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
@@ -200,12 +204,16 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun setLaunchers() {
-        preferencesLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-            if (result.resultCode == RESULT_OK) {
-                val fontSizeChanged = result.data?.getBooleanExtra(UserPrefsActivity.EXTRA_FONT_SIZE_CHANGED, false)
+        preferencesLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+                if (result.resultCode == RESULT_OK) {
+                    val fontSizeChanged = result.data?.getBooleanExtra(
+                        UserPrefsActivity.EXTRA_FONT_SIZE_CHANGED,
+                        false
+                    )
                         ?: false
-                if (fontSizeChanged) {
-                    MaterialAlertDialogBuilder(this)
+                    if (fontSizeChanged) {
+                        MaterialAlertDialogBuilder(this)
                             .setCancelable(false)
                             .setTitle(R.string.app_restart_required)
                             .setMessage(R.string.app_restart_message)
@@ -214,9 +222,9 @@ class HomeActivity : ThemableActivity() {
                                 finish()
                             }
                             .show()
+                    }
                 }
             }
-        }
     }
 
     private fun setListeners() {
@@ -245,12 +253,12 @@ class HomeActivity : ThemableActivity() {
         viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
         viewModel.watchProfile().observe(this) {
             leftHeaderBinding.profilePictureImageView.setImageUrl(
-                    it.profilePictureUrl,
-                    HttpHelper.getInstance().imageLoader
+                it.profilePictureUrl,
+                HttpHelper.getInstance().imageLoader
             )
             rightHeaderBinding.profilePictureImageView.setImageUrl(
-                    it.profilePictureUrl,
-                    HttpHelper.getInstance().imageLoader
+                it.profilePictureUrl,
+                HttpHelper.getInstance().imageLoader
             )
             userId = it.userId
             leftHeaderBinding.userIdTextView.text = it.userId
@@ -262,13 +270,13 @@ class HomeActivity : ThemableActivity() {
 
     private fun editProfile() {
         closeDrawer()
-        JavaActivityHelper.open(this, ProfileActivity::class.java, false)
+        open(ProfileActivity::class.java, false)
     }
 
     private fun setupListView() {
         binding.devicesRecyclerView.adapter = elocAdapter
         binding.devicesRecyclerView.layoutManager =
-                LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+            LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
     }
 
     private fun startScan() {
@@ -276,10 +284,10 @@ class HomeActivity : ThemableActivity() {
         binding.swipeRefreshLayout.isRefreshing = true
         val isOn = BluetoothHelper.instance.isAdapterOn()
         binding.statusTextView.text =
-                if (isOn)
-                    getString(R.string.scanning_eloc_devices)
-                else
-                    "<bluetooth is disabled>"
+            if (isOn)
+                getString(R.string.scanning_eloc_devices)
+            else
+                "<bluetooth is disabled>"
         if (!isOn) {
             return
         }
@@ -312,7 +320,7 @@ class HomeActivity : ThemableActivity() {
             val hasEmptyAdapter = binding.devicesRecyclerView.adapter?.itemCount == 0
             binding.refreshListButton.visibility = View.VISIBLE
             binding.devicesRecyclerView.visibility =
-                    if (hasEmptyAdapter) View.GONE else View.VISIBLE
+                if (hasEmptyAdapter) View.GONE else View.VISIBLE
             if (scanFinished) {
                 binding.swipeRefreshLayout.isRefreshing = false
                 if (hasEmptyAdapter) {
@@ -401,8 +409,8 @@ class HomeActivity : ThemableActivity() {
         val timeoutMS = 5000
         val showMessage = true
         SNTPClient.getDate(
-                timeoutMS,
-                Calendar.getInstance().timeZone
+            timeoutMS,
+            Calendar.getInstance().timeZone
         ) { _,
             _,
             googletimestamp,
@@ -414,21 +422,21 @@ class HomeActivity : ThemableActivity() {
                     invalidateOptionsMenu()
                     if (showMessage) {
                         ActivityHelper.showSnack(
-                                binding.coordinator,
-                                "sync FAILED\nCheck internet connection"
+                            binding.coordinator,
+                            "sync FAILED\nCheck internet connection"
                         )
                     }
                 } else {
                     gLastTimeDifferenceMillisecond = System.currentTimeMillis() - googletimestamp
                     PreferencesHelper.instance.saveTimestamps(
-                            SystemClock.elapsedRealtime(),
-                            googletimestamp
+                        SystemClock.elapsedRealtime(),
+                        googletimestamp
                     )
                     gUploadEnabled = true
                     invalidateOptionsMenu()
                     if (showMessage) {
                         val message =
-                                getString(R.string.sync_template, gLastTimeDifferenceMillisecond)
+                            getString(R.string.sync_template, gLastTimeDifferenceMillisecond)
                         ActivityHelper.showSnack(binding.coordinator, message)
                     }
                 }
@@ -505,16 +513,16 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun onSignOut() {
-        JavaActivityHelper.open(this, LoginActivity::class.java, true)
+        open(LoginActivity::class.java, true)
     }
 
     private fun editAccount() {
-        JavaActivityHelper.open(this, AccountActivity::class.java, false)
+        open(AccountActivity::class.java, false)
     }
 
     private fun showAboutApp() {
         val title = getString(R.string.app_name)
         val message = getString(R.string.version_template, App.versionName)
-        JavaActivityHelper.showModalAlert(this, title, message)
+        showModalAlert(title, message)
     }
 }

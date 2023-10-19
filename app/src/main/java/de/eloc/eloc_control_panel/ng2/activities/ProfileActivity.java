@@ -1,5 +1,7 @@
 package de.eloc.eloc_control_panel.ng2.activities;
 
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.showModalAlert;
+
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -24,6 +26,7 @@ import de.eloc.eloc_control_panel.data.UserProfile;
 import de.eloc.eloc_control_panel.databinding.ActivityProfileBinding;
 import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback;
 import de.eloc.eloc_control_panel.ng2.models.HttpHelper;
+import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
 
 public class ProfileActivity extends ThemableActivity implements MediaActivity {
     private ActivityProfileBinding binding;
@@ -94,7 +97,7 @@ public class ProfileActivity extends ThemableActivity implements MediaActivity {
 
     private void profilePictureUploadCompleted(String url) {
         if ((url == null) || url.isEmpty()) {
-            JavaActivityHelper.showModalAlert(
+            showModalAlert(
                     this,
                     getString(R.string.oops),
                     getString(R.string.upload_profile_picture_error),

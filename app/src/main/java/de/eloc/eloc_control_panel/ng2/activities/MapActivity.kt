@@ -23,6 +23,8 @@ import de.eloc.eloc_control_panel.databinding.WindowLayoutBinding
 import de.eloc.eloc_control_panel.models.ElocDeviceInfo
 import de.eloc.eloc_control_panel.models.ElocMarker
 import de.eloc.eloc_control_panel.ng2.models.HttpHelper
+import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity
+import de.eloc.eloc_control_panel.ng3.activities.showModalAlert
 import java.util.Locale
 
 class MapActivity : ThemableActivity() {
@@ -62,7 +64,8 @@ class MapActivity : ThemableActivity() {
             // so that when clusters are clicked on later, the map will not zoom too deep
             customZoom = INITIAL_ZOOM
             zoomTo(MARKER_ZOOM, marker.position)
-            val windowLayoutBinding: WindowLayoutBinding = WindowLayoutBinding.inflate(layoutInflater)
+            val windowLayoutBinding: WindowLayoutBinding =
+                WindowLayoutBinding.inflate(layoutInflater)
             windowLayoutBinding.titleTextView.text = marker.title
             windowLayoutBinding.snippetTextView.text = marker.snippet
             return windowLayoutBinding.root
@@ -80,17 +83,18 @@ class MapActivity : ThemableActivity() {
         hideUnknownDevices()
         if (hasRangerName()) {
 
-            val mapFragment = supportFragmentManager.findFragmentById(binding.mapView.id) as SupportMapFragment?
+            val mapFragment =
+                supportFragmentManager.findFragmentById(binding.mapView.id) as SupportMapFragment?
             mapFragment?.getMapAsync { googleMap: GoogleMap ->
                 map = googleMap
                 showMap()
             }
-            HttpHelper.getInstance().getElocDevicesAsync(rangerName) { info -> elocDeviceInfoReceived(info) }
+            HttpHelper.getInstance()
+                .getElocDevicesAsync(rangerName) { info -> elocDeviceInfoReceived(info) }
         } else {
-            JavaActivityHelper.showModalAlert(
-                    this,
-                    getString(R.string.required),
-                    getString(R.string.ranger_name_required)
+            showModalAlert(
+                getString(R.string.required),
+                getString(R.string.ranger_name_required)
             ) {
                 onBackPressedDispatcher.onBackPressed()
             }
@@ -153,16 +157,16 @@ class MapActivity : ThemableActivity() {
         val delayMillis = 1200
         val handler = Handler(Looper.getMainLooper())
         handler.postDelayed(
-                {
-                    if (map == null) {
-                        return@postDelayed
-                    }
-                    val cameraPosition = CameraPosition.builder()
-                            .zoom(zoomLevel.toFloat())
-                            .target(position)
-                            .build()
-                    map?.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
-                }, delayMillis
+            {
+                if (map == null) {
+                    return@postDelayed
+                }
+                val cameraPosition = CameraPosition.builder()
+                    .zoom(zoomLevel.toFloat())
+                    .target(position)
+                    .build()
+                map?.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+            }, delayMillis
                 .toLong()
         )
     }
@@ -221,11 +225,11 @@ class MapActivity : ThemableActivity() {
             val offsetLocation = LatLng(location.latitude + 0.00005, location.longitude)
             val distance = FloatArray(1)
             Location.distanceBetween(
-                    location.latitude,
-                    location.longitude,
-                    offsetLocation.latitude,
-                    offsetLocation.longitude,
-                    distance
+                location.latitude,
+                location.longitude,
+                offsetLocation.latitude,
+                offsetLocation.longitude,
+                distance
             )
             location = offsetLocation
             offset = distance[0].toDouble()
@@ -238,11 +242,11 @@ class MapActivity : ThemableActivity() {
         map?.setLatLngBoundsForCameraTarget(mapBounds)
         if (clusterManager != null) {
             var snippet = getString(
-                    R.string.snippet_template,
-                    device.time,
-                    getPretty(device.accuracy),
-                    getPretty(device.batteryVolts),
-                    getPretty(device.recTime)
+                R.string.snippet_template,
+                device.time,
+                getPretty(device.accuracy),
+                getPretty(device.batteryVolts),
+                getPretty(device.recTime)
             )
             if (offset > 0) {
                 snippet += String.format(Locale.ENGLISH, "\n\n(Offset by ~ %.2fm)", offset)

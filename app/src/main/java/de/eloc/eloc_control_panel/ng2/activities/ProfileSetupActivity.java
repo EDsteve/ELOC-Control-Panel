@@ -1,5 +1,9 @@
 package de.eloc.eloc_control_panel.ng2.activities;
 
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.hideKeyboard;
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.open;
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.showModalAlert;
+
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -80,7 +84,7 @@ public class ProfileSetupActivity extends NoActionBarActivity implements MediaAc
     private void setListeners() {
         binding.galleryButton.setOnClickListener(v -> pickImage());
         binding.cameraButton.setOnClickListener(v -> takePhoto());
-        binding.root.setOnClickListener(v -> ActivityHelper.INSTANCE.hideKeyboard(this));
+        binding.root.setOnClickListener(v -> hideKeyboard(this));
         binding.doneButton.setOnClickListener(v -> saveProfile());
     }
 
@@ -181,7 +185,7 @@ public class ProfileSetupActivity extends NoActionBarActivity implements MediaAc
         url = url.trim();
         if (url.isEmpty()) {
             updateUI(false);
-            JavaActivityHelper.showModalAlert(this, getString(R.string.oops), getString(R.string.profile_picture_upload_error));
+            showModalAlert(this, getString(R.string.oops), getString(R.string.profile_picture_upload_error));
             return;
         }
         profile.put(FirestoreHelper.FIELD_PROFILE_PICTURE, url);
@@ -195,9 +199,9 @@ public class ProfileSetupActivity extends NoActionBarActivity implements MediaAc
     private void onProfileUploadCompleted(boolean success) {
         updateUI(false);
         if (success) {
-            JavaActivityHelper.open(this, HomeActivity.class, true);
+            open(this, HomeActivity.class, true);
         } else {
-            JavaActivityHelper.showModalAlert(this, getString(R.string.oops), getString(R.string.something_went_wrong));
+            showModalAlert(this, getString(R.string.oops), getString(R.string.something_went_wrong));
         }
     }
 }

@@ -94,6 +94,7 @@
             android:id="@+id/user_id_text_input"
             android:layout_width="@dimen/auth_input_width"
             android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
             android:hint="@string/desired_user_id"
             android:imeOptions="actionDone"
             android:inputType="text"

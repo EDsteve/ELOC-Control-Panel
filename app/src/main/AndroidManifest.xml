@@ -24,7 +24,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:name=".ng2.App"
+        android:name=".ng3.App"
         android:allowBackup="true"
         android:icon="@mipmap/app_logo"
         android:label="@string/app_name"
@@ -40,12 +40,6 @@
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
@@ -78,20 +72,20 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".ng2.activities.PermissionsSetupActivity"
+            android:name=".ng3.activities.PermissionsSetupActivity"
             android:exported="true"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity">
-            <!--            <intent-filter>-->
-            <!--                <action android:name="android.intent.action.MAIN" />-->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
-            <!--                <category android:name="android.intent.category.LAUNCHER" />-->
-            <!--            </intent-filter>-->
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
 
-            <!--            <meta-data-->
-            <!--                android:name="android.app.lib_name"-->
-            <!--                android:value="" />-->
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
         </activity>
         <activity
             android:name=".activities.TerminalActivity"
@@ -144,7 +138,7 @@
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.PasswordResetActivity"
+            android:name=".ng3.activities.PasswordResetActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
@@ -156,7 +150,7 @@
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.VerifyEmailActivity"
+            android:name=".ng3.activities.VerifyEmailActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />
@@ -168,7 +162,7 @@
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.LoginActivity"
+            android:name=".ng3.activities.LoginActivity"
             android:exported="true"
             android:noHistory="false"
             android:screenOrientation="portrait"

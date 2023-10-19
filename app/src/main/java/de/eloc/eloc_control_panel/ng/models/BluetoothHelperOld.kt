@@ -15,7 +15,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.core.app.ActivityCompat
 import de.eloc.eloc_control_panel.databinding.DeviceListItemBinding
-import de.eloc.eloc_control_panel.ng2.App
+import de.eloc.eloc_control_panel.ng3.App
 import de.eloc.eloc_control_panel.ng2.interfaces.AdapterItemCallback
 import de.eloc.eloc_control_panel.ng2.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper

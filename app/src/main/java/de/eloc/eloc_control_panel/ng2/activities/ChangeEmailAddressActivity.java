@@ -1,5 +1,9 @@
 package de.eloc.eloc_control_panel.ng2.activities;
 
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.hideKeyboard;
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.open;
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.showModalAlert;
+
 import android.os.Bundle;
 import android.text.Editable;
 import android.view.MenuItem;
@@ -12,6 +16,8 @@ import androidx.lifecycle.ViewModelProvider;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.data.UserAccountViewModel;
 import de.eloc.eloc_control_panel.databinding.ActivityChangeEmailAddressBinding;
+import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
+import de.eloc.eloc_control_panel.ng3.activities.VerifyEmailActivity;
 
 public class ChangeEmailAddressActivity extends ThemableActivity {
 
@@ -64,14 +70,14 @@ public class ChangeEmailAddressActivity extends ThemableActivity {
     }
 
     private void setListeners() {
-        binding.root.setOnClickListener(v -> ActivityHelper.INSTANCE.hideKeyboard(this));
+        binding.root.setOnClickListener(v -> hideKeyboard(this));
         binding.submitButton.setOnClickListener(v -> submit());
         binding.editText.addTextChangedListener(new TextInputWatcher(binding.textEditLayout));
         binding.passwordTextInput.addTextChangedListener(new TextInputWatcher(binding.passwordLayout));
     }
 
     private void submit() {
-        ActivityHelper.INSTANCE.hideKeyboard(this);
+        hideKeyboard(this);
         binding.textEditLayout.setError(null);
         binding.passwordLayout.setError(null);
 
@@ -115,18 +121,18 @@ public class ChangeEmailAddressActivity extends ThemableActivity {
             message = error;
         }
         if (goBack) {
-            JavaActivityHelper.showModalAlert(
+            showModalAlert(
                     this,
                     title,
                     message,
-                    () -> JavaActivityHelper.open(
+                    () -> open(
                             ChangeEmailAddressActivity.this,
                             VerifyEmailActivity.class,
                             true
                     )
             );
         } else {
-            JavaActivityHelper.showModalAlert(this, title, message);
+            showModalAlert(this, title, message);
             updateUI(false);
         }
     }

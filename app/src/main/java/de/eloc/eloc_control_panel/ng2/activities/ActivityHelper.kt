@@ -3,15 +3,15 @@ package de.eloc.eloc_control_panel.ng2.activities
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.view.inputmethod.InputMethodManager
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
-import de.eloc.eloc_control_panel.ng2.App
+import de.eloc.eloc_control_panel.ng3.App
 import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.LayoutAppChipBinding
+import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity
 
 object ActivityHelper {
 
@@ -61,19 +61,7 @@ object ActivityHelper {
                     .make(coordinator, message, Snackbar.LENGTH_LONG)
                     .show()
 
-    fun hideKeyboard(activity: ThemableActivity) {
-        try {
-            val binder = activity.currentFocus?.windowToken
-            if (binder != null) {
-                val manager =
-                        activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
-                manager?.hideSoftInputFromWindow(binder, 0)
-            }
-        } catch (_: Exception) {
-            // It an error occurs trying to hide the keyboard,
-            // just ignore the error without crashing app.
-        }
-    }
+
 
     fun getPrettifiedDuration(duration: Double): String {
         val hoursPerDay = 24

@@ -1,5 +1,8 @@
 package de.eloc.eloc_control_panel.ng2.activities;
 
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.hideKeyboard;
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.showModalAlert;
+
 import android.os.Bundle;
 import android.text.Editable;
 import android.view.MenuItem;
@@ -12,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.data.UserAccountViewModel;
 import de.eloc.eloc_control_panel.databinding.ActivityChangePasswordBinding;
+import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
 
 public class ChangePasswordActivity extends ThemableActivity {
 
@@ -65,7 +69,7 @@ public class ChangePasswordActivity extends ThemableActivity {
     }
 
     private void setListeners() {
-        binding.root.setOnClickListener(v -> ActivityHelper.INSTANCE.hideKeyboard(this));
+        binding.root.setOnClickListener(v -> hideKeyboard(this));
         binding.submitButton.setOnClickListener(v -> submit());
 
         binding.currentPasswordTextInput.addTextChangedListener(new TextInputWatcher(binding.currentPasswordLayout));
@@ -75,7 +79,7 @@ public class ChangePasswordActivity extends ThemableActivity {
     }
 
     private void submit() {
-        ActivityHelper.INSTANCE.hideKeyboard(this);
+        hideKeyboard(this);
         binding.currentPasswordLayout.setError(null);
         binding.newPasswordLayout.setError(null);
         binding.verifyPasswordLayout.setError(null);
@@ -134,9 +138,9 @@ public class ChangePasswordActivity extends ThemableActivity {
             message = error;
         }
         if (goBack) {
-            JavaActivityHelper.showModalAlert(this, title, message, this::onBackPressed);
+            showModalAlert(this, title, message, this::onBackPressed);
         } else {
-            JavaActivityHelper.showModalAlert(this, title, message);
+            showModalAlert(this, title, message);
             updateUI(false);
         }
     }

@@ -7,7 +7,7 @@ import androidx.core.content.FileProvider;
 
 import java.io.File;
 
-import de.eloc.eloc_control_panel.ng2.App;
+import de.eloc.eloc_control_panel.ng3.App;
 
 public class DataHelper {
     private DataHelper() {

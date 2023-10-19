@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.ng2.activities
+package de.eloc.eloc_control_panel.ng3.activities
 
 import android.Manifest
 import android.content.Context
@@ -12,7 +12,7 @@ import android.provider.Settings
 import android.view.View
 import androidx.core.content.ContextCompat
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.databinding.ActivitySetupBinding
+import de.eloc.eloc_control_panel.databinding.ActivityPermissionsSetupBinding
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper
 import de.eloc.eloc_control_panel.ng2.receivers.BluetoothWatcher
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit
 
 class PermissionsSetupActivity : ThemableActivity() {
     private var paused = false
-    private lateinit var binding: ActivitySetupBinding
+    private lateinit var binding: ActivityPermissionsSetupBinding
     private lateinit var checkerHandle: ScheduledFuture<*>
     private val bluetoothWatcher = BluetoothWatcher(this::runChecks)
     private val bluetoothHelper = BluetoothHelper.instance
@@ -31,7 +31,7 @@ class PermissionsSetupActivity : ThemableActivity() {
     private val needsLocationPermission: Boolean
         get() {
             val fineLocationGranted =
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             return (fineLocationGranted != PackageManager.PERMISSION_GRANTED)
         }
 
@@ -52,19 +52,24 @@ class PermissionsSetupActivity : ThemableActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivitySetupBinding.inflate(layoutInflater)
+        binding = ActivityPermissionsSetupBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
         setListeners()
-        registerReceiver(bluetoothWatcher, bluetoothHelper.broadcastFilter)
+        ContextCompat.registerReceiver(
+            this,
+            bluetoothWatcher,
+            bluetoothHelper.broadcastFilter,
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
 
         checkerHandle = Executors.newSingleThreadScheduledExecutor()
-                .scheduleAtFixedRate(
-                        { runOnUiThread(::runChecks) },
-                        0,
-                        500,
-                        TimeUnit.MILLISECONDS
-                )
+            .scheduleAtFixedRate(
+                { runOnUiThread(::runChecks) },
+                0,
+                500,
+                TimeUnit.MILLISECONDS
+            )
     }
 
     override fun onPause() {
@@ -112,10 +117,10 @@ class PermissionsSetupActivity : ThemableActivity() {
     }
 
     private fun showActions(
-            locationPermission: Boolean,
-            locationOff: Boolean,
-            bluetoothPermission: Boolean,
-            bluetoothOff: Boolean
+        locationPermission: Boolean,
+        locationOff: Boolean,
+        bluetoothPermission: Boolean,
+        bluetoothOff: Boolean
     ) {
         if (!locationPermission && !locationOff && !bluetoothPermission && !bluetoothOff) {
             return
@@ -152,20 +157,18 @@ class PermissionsSetupActivity : ThemableActivity() {
                 }
                 val negativeCallback = {
                     showActions(
-                            needsLocationPermission,
-                            mustTurnOnLocationService,
-                            BluetoothHelper.instance.needsBluetoothPermissions,
-                            mustTurnOnBluetooth
+                        needsLocationPermission,
+                        mustTurnOnLocationService,
+                        BluetoothHelper.instance.needsBluetoothPermissions,
+                        mustTurnOnBluetooth
                     )
                 }
-                JavaActivityHelper.showModalOptionAlert(
-                        this,
-                        getString(R.string.permission_required),
-                        rationale,
-                        getString(R.string.grant_permission),
-                        "",
-                        positiveCallback,
-                        negativeCallback
+                showModalOptionAlert(
+                    title = getString(R.string.permission_required),
+                    message = rationale,
+                    positiveButtonLabel = getString(R.string.grant_permission),
+                    positiveCallback = positiveCallback,
+                    negativeCallback = negativeCallback
                 )
             } else {
                 val alreadyRequested = preferencesHelper.getLocationRequested()
@@ -176,20 +179,18 @@ class PermissionsSetupActivity : ThemableActivity() {
                     }
                     val negativeCallback = {
                         showActions(
-                                needsLocationPermission,
-                                mustTurnOnLocationService,
-                                BluetoothHelper.instance.needsBluetoothPermissions,
-                                mustTurnOnBluetooth
+                            needsLocationPermission,
+                            mustTurnOnLocationService,
+                            BluetoothHelper.instance.needsBluetoothPermissions,
+                            mustTurnOnBluetooth
                         )
                     }
-                    JavaActivityHelper.showModalOptionAlert(
-                            this,
-                            getString(R.string.user_action_required),
-                            getString(R.string.manual_location),
-                            getString(R.string.open_settings),
-                            "",
-                            positiveCallback,
-                            negativeCallback
+                    showModalOptionAlert(
+                        getString(R.string.user_action_required),
+                        getString(R.string.manual_location),
+                        getString(R.string.open_settings),
+                        positiveCallback = positiveCallback,
+                        negativeCallback = negativeCallback
                     )
                 } else {
                     doRequestLocationPermission()
@@ -216,20 +217,18 @@ class PermissionsSetupActivity : ThemableActivity() {
                 }
                 val negativeCallback = {
                     showActions(
-                            needsLocationPermission,
-                            mustTurnOnLocationService,
-                            BluetoothHelper.instance.needsBluetoothPermissions,
-                            mustTurnOnBluetooth
+                        needsLocationPermission,
+                        mustTurnOnLocationService,
+                        BluetoothHelper.instance.needsBluetoothPermissions,
+                        mustTurnOnBluetooth
                     )
                 }
-                JavaActivityHelper.showModalOptionAlert(
-                        this,
-                        getString(R.string.permission_required),
-                        message,
-                        getString(R.string.grant_permission),
-                        "",
-                        positiveCallback,
-                        negativeCallback
+                showModalOptionAlert(
+                    getString(R.string.permission_required),
+                    message,
+                    getString(R.string.grant_permission),
+                    positiveCallback = positiveCallback,
+                    negativeCallback = negativeCallback
                 )
             } else {
                 val alreadyRequested = preferencesHelper.getBluetoothRequested()
@@ -240,20 +239,18 @@ class PermissionsSetupActivity : ThemableActivity() {
                     }
                     val negativeCallback = {
                         showActions(
-                                needsLocationPermission,
-                                mustTurnOnLocationService,
-                                BluetoothHelper.instance.needsBluetoothPermissions,
-                                mustTurnOnBluetooth
+                            needsLocationPermission,
+                            mustTurnOnLocationService,
+                            BluetoothHelper.instance.needsBluetoothPermissions,
+                            mustTurnOnBluetooth
                         )
                     }
-                    JavaActivityHelper.showModalOptionAlert(
-                            this,
-                            getString(R.string.user_action_required),
-                            getString(R.string.manual_bluetooth),
-                            getString(R.string.open_settings),
-                            "",
-                            positiveCallback,
-                            negativeCallback
+                    showModalOptionAlert(
+                        getString(R.string.user_action_required),
+                        getString(R.string.manual_bluetooth),
+                        getString(R.string.open_settings),
+                        positiveCallback = positiveCallback,
+                        negativeCallback = negativeCallback
                     )
                 } else {
                     doRequestBluetoothPermissions()
@@ -278,19 +275,19 @@ class PermissionsSetupActivity : ThemableActivity() {
             askLocationPermission()
         } else if (mustTurnOnLocationService) {
             showActions(
-                    locationPermission = false,
-                    locationOff = true,
-                    BluetoothHelper.instance.needsBluetoothPermissions,
-                    mustTurnOnBluetooth
+                locationPermission = false,
+                locationOff = true,
+                BluetoothHelper.instance.needsBluetoothPermissions,
+                mustTurnOnBluetooth
             )
         } else if (BluetoothHelper.instance.needsBluetoothPermissions) {
             askBluetoothPermissions()
         } else if (mustTurnOnBluetooth) {
             showActions(
-                    locationPermission = false,
-                    locationOff = false,
-                    bluetoothPermission = false,
-                    bluetoothOff = true
+                locationPermission = false,
+                locationOff = false,
+                bluetoothPermission = false,
+                bluetoothOff = true
             )
         } else {
             checkAccountEmailVerification()

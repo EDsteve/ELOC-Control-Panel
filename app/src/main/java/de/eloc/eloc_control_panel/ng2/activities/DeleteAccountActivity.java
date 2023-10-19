@@ -1,5 +1,9 @@
 package de.eloc.eloc_control_panel.ng2.activities;
 
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.hideKeyboard;
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.open;
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.showModalAlert;
+
 import android.os.Bundle;
 import android.text.Editable;
 import android.view.MenuItem;
@@ -12,6 +16,8 @@ import androidx.lifecycle.ViewModelProvider;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.data.UserAccountViewModel;
 import de.eloc.eloc_control_panel.databinding.ActivityDeleteAccountBinding;
+import de.eloc.eloc_control_panel.ng3.activities.LoginActivity;
+import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
 
 public class DeleteAccountActivity extends ThemableActivity {
 
@@ -61,13 +67,13 @@ public class DeleteAccountActivity extends ThemableActivity {
     }
 
     private void setListeners() {
-        binding.root.setOnClickListener(v -> ActivityHelper.INSTANCE.hideKeyboard(this));
+        binding.root.setOnClickListener(v -> hideKeyboard(this));
         binding.submitButton.setOnClickListener(v -> submit());
         binding.passwordTextInput.addTextChangedListener(new TextInputWatcher(binding.passwordLayout));
     }
 
     private void submit() {
-        ActivityHelper.INSTANCE.hideKeyboard(this);
+        hideKeyboard(this);
         binding.passwordLayout.setError(null);
 
         String password = "";
@@ -92,7 +98,7 @@ public class DeleteAccountActivity extends ThemableActivity {
         if (error.isEmpty()) {
             viewModel.deleteRemoteFiles(this::onRemoteFilesDeleted);
         } else {
-            JavaActivityHelper.showModalAlert(
+            showModalAlert(
                     this,
                     getString(R.string.account),
                     error,
@@ -105,7 +111,7 @@ public class DeleteAccountActivity extends ThemableActivity {
         if (success) {
             viewModel.deleteProfile(this::onProfileDeleted);
         } else {
-            JavaActivityHelper.showModalAlert(
+            showModalAlert(
                     this,
                     getString(R.string.oops),
                     getString(R.string.failed_to_remove_remote_files),
@@ -118,7 +124,7 @@ public class DeleteAccountActivity extends ThemableActivity {
         if (success) {
             viewModel.deleteAuthAccount(this::onAuthAccountDeleted);
         } else {
-            JavaActivityHelper.showModalAlert(
+            showModalAlert(
                     this,
                     getString(R.string.oops),
                     getString(R.string.failed_to_clear_profile),
@@ -129,17 +135,17 @@ public class DeleteAccountActivity extends ThemableActivity {
 
     private void onAuthAccountDeleted(boolean success) {
         if (success) {
-            JavaActivityHelper.showModalAlert(
+            showModalAlert(
                     this,
                     getString(R.string.account),
                     "Your account has been deleted",
                     () -> {
                         viewModel.signOut();
-                        JavaActivityHelper.open(this, LoginActivity.class, true);
+                        open(this, LoginActivity.class, true);
                     }
             );
         } else {
-            JavaActivityHelper.showModalAlert(
+            showModalAlert(
                     this,
                     getString(R.string.oops),
                     getString(R.string.failed_to_remove_account),

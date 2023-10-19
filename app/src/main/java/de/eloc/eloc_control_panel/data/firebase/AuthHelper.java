@@ -17,7 +17,7 @@ import com.google.firebase.auth.GoogleAuthCredential;
 import com.google.firebase.auth.GoogleAuthProvider;
 
 import de.eloc.eloc_control_panel.R;
-import de.eloc.eloc_control_panel.ng2.App;
+import de.eloc.eloc_control_panel.ng3.App;
 import de.eloc.eloc_control_panel.ng2.interfaces.BooleanCallback;
 import de.eloc.eloc_control_panel.ng2.interfaces.StringCallback;
 

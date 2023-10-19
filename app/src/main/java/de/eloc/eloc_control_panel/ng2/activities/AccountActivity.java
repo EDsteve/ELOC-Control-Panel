@@ -1,5 +1,7 @@
 package de.eloc.eloc_control_panel.ng2.activities;
 
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.open;
+
 import android.os.Bundle;
 import android.view.MenuItem;
 
@@ -11,6 +13,7 @@ import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.data.UserAccountViewModel;
 import de.eloc.eloc_control_panel.data.UserProfile;
 import de.eloc.eloc_control_panel.databinding.ActivityAccountBinding;
+import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
 
 public class AccountActivity extends ThemableActivity {
     private ActivityAccountBinding binding;
@@ -75,14 +78,14 @@ public class AccountActivity extends ThemableActivity {
     }
 
     private void openEmailAddressEditor() {
-        JavaActivityHelper.open(this, ChangeEmailAddressActivity.class, false);
+        open(this, ChangeEmailAddressActivity.class, false);
     }
 
     private void openPasswordEditor() {
-        JavaActivityHelper.open(this, ChangePasswordActivity.class, false);
+        open(this, ChangePasswordActivity.class, false);
     }
 
     private void openAccountDeleter() {
-        JavaActivityHelper.open(this, DeleteAccountActivity.class, false);
+        open(this, DeleteAccountActivity.class, false);
     }
 }

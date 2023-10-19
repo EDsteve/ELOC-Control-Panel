@@ -1,6 +1,6 @@
 package de.eloc.eloc_control_panel.ng2.models
 
-import de.eloc.eloc_control_panel.ng2.App
+import de.eloc.eloc_control_panel.ng3.App
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
 import de.eloc.eloc_control_panel.R

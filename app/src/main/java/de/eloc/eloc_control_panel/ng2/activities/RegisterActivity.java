@@ -1,5 +1,9 @@
 package de.eloc.eloc_control_panel.ng2.activities;
 
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.hideKeyboard;
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.open;
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.showModalAlert;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -10,6 +14,8 @@ import androidx.lifecycle.ViewModelProvider;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.data.UserAccountViewModel;
 import de.eloc.eloc_control_panel.databinding.ActivityRegisterBinding;
+import de.eloc.eloc_control_panel.ng3.activities.LoginActivity;
+import de.eloc.eloc_control_panel.ng3.activities.VerifyEmailActivity;
 
 public class RegisterActivity extends NoActionBarActivity {
     private ActivityRegisterBinding binding;
@@ -38,7 +44,7 @@ public class RegisterActivity extends NoActionBarActivity {
         binding.backButton.setOnClickListener(v -> onBackPressed());
         binding.loginButton.setOnClickListener(v -> onBackPressed());
         binding.registerButton.setOnClickListener(v -> register());
-        binding.root.setOnClickListener(v -> ActivityHelper.INSTANCE.hideKeyboard(RegisterActivity.this));
+        binding.root.setOnClickListener(v -> hideKeyboard(RegisterActivity.this));
     }
 
     @Override
@@ -49,7 +55,7 @@ public class RegisterActivity extends NoActionBarActivity {
     }
 
     private void register() {
-        ActivityHelper.INSTANCE.hideKeyboard(this);
+        hideKeyboard(this);
         binding.emailAddressLayout.setError(null);
         binding.passwordLayout.setError(null);
         binding.verifyPasswordLayout.setError(null);
@@ -102,9 +108,9 @@ public class RegisterActivity extends NoActionBarActivity {
         }
         error = error.trim();
         if (error.isEmpty()) {
-            JavaActivityHelper.open(this, VerifyEmailActivity.class, true);
+            open(this, VerifyEmailActivity.class, true);
         } else {
-            JavaActivityHelper.showModalAlert(this, getString(R.string.oops), error);
+            showModalAlert(this, getString(R.string.oops), error);
         }
     }
 

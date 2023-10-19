@@ -9,6 +9,9 @@ import de.eloc.eloc_control_panel.activities.TerminalActivity
 import de.eloc.eloc_control_panel.databinding.ActivityDeviceSettingsBinding
 import de.eloc.eloc_control_panel.ng2.models.GainType
 import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper
+import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity
+import de.eloc.eloc_control_panel.ng3.activities.hideKeyboard
+import de.eloc.eloc_control_panel.ng3.activities.*
 import java.lang.NumberFormatException
 
 class DeviceSettingsActivity : ThemableActivity() {
@@ -291,7 +294,7 @@ class DeviceSettingsActivity : ThemableActivity() {
     }
 
     private fun runCommand(command: String) {
-        ActivityHelper.hideKeyboard(this)
+        hideKeyboard()
         val properCommand = if (command.startsWith(COMMAND_PREFIX)) {
             command
         } else {
@@ -306,10 +309,9 @@ class DeviceSettingsActivity : ThemableActivity() {
     private fun runCommandLine() {
         val command = binding.customCommandEditText.text?.toString()?.trim() ?: ""
         if (command.isEmpty()) {
-            JavaActivityHelper.showModalAlert(
-                    this,
-                    getString(R.string.required),
-                    getString(R.string.command_missing),
+            showModalAlert(
+                getString(R.string.required),
+                getString(R.string.command_missing),
             )
         } else {
             runCommand(command)
@@ -320,21 +322,20 @@ class DeviceSettingsActivity : ThemableActivity() {
         val regex = "^[a-zA-Z\\d]+$".toRegex()
         location = binding.elocBtNameEditText.text.toString().trim()
         if (location.isEmpty()) {
-            JavaActivityHelper.showModalAlert(
-                    this,
-                    getString(R.string.required),
-                    getString(R.string.file_header_missing)
+            showModalAlert(
+                getString(R.string.required),
+                getString(R.string.file_header_missing)
             )
         } else if (!location.matches(regex)) {
-            JavaActivityHelper.showModalAlert(
-                    this,
-                    getString(R.string.invalid),
-                    getString(R.string.invalid_file_header_name)
+            showModalAlert(
+                getString(R.string.invalid),
+                getString(R.string.invalid_file_header_name)
             )
         } else {
             val secondsPerFile = getSecondsPerFile()
             val sampleRate = getSampleRate()
-            val command = COMMAND_PREFIX + sampleRate + SEPARATOR + secondsPerFile + SEPARATOR + location
+            val command =
+                COMMAND_PREFIX + sampleRate + SEPARATOR + secondsPerFile + SEPARATOR + location
             runCommand(command)
         }
     }
@@ -342,10 +343,9 @@ class DeviceSettingsActivity : ThemableActivity() {
     private fun runMicTypeCommand() {
         val type = binding.micTypeEditText.text.toString().trim()
         if (type.isEmpty()) {
-            JavaActivityHelper.showModalAlert(
-                    this,
-                    getString(R.string.required),
-                    getString(R.string.mic_type_missing)
+            showModalAlert(
+                getString(R.string.required),
+                getString(R.string.mic_type_missing)
             )
         } else {
             val command = getString(R.string.set_mic_type_template, type)
@@ -366,10 +366,9 @@ class DeviceSettingsActivity : ThemableActivity() {
     private fun runFileHeaderCommand() {
         val name = binding.deviceNameEditText.text.toString().trim()
         if (name.isEmpty()) {
-            JavaActivityHelper.showModalAlert(
-                    this,
-                    getString(R.string.required),
-                    getString(R.string.device_name_missing)
+            showModalAlert(
+                getString(R.string.required),
+                getString(R.string.device_name_missing)
             )
         } else {
             val suffix = "setname"
@@ -383,10 +382,9 @@ class DeviceSettingsActivity : ThemableActivity() {
     }
 
     private fun confirmFirmwareUpdate() {
-        JavaActivityHelper.showModalOptionAlert(
-                this,
-                getString(R.string.confirm_update),
-                getString(R.string.update_rationale, deviceName)
+        showModalOptionAlert(
+            getString(R.string.confirm_update),
+            getString(R.string.update_rationale, deviceName)
         ) {
             runCommand("update")
         }

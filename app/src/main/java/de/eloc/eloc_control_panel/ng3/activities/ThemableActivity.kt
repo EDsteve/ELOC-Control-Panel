@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.ng2.activities
+package de.eloc.eloc_control_panel.ng3.activities
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity

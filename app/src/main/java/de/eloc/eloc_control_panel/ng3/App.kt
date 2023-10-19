@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.ng2
+package de.eloc.eloc_control_panel.ng3
 
 import android.app.Application
 import com.google.firebase.FirebaseApp
@@ -30,5 +30,4 @@ class App : Application() {
         val applicationId: String
             get() = cInstance!!.appPackageName
     }
-
 }

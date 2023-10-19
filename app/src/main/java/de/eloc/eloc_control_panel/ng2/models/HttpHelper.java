@@ -14,7 +14,7 @@ import java.util.ArrayList;
 
 import de.eloc.eloc_control_panel.models.ElocDeviceInfo;
 import de.eloc.eloc_control_panel.ng.interfaces.ElocDeviceInfoListCallback;
-import de.eloc.eloc_control_panel.ng2.App;
+import de.eloc.eloc_control_panel.ng3.App;
 
 public class HttpHelper {
     private final RequestQueue mRequestQueue;
