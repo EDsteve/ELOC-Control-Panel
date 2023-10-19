@@ -5,7 +5,7 @@ plugins {
     id 'com.google.gms.google-services'
 }
 
-def keystorePropertiesFile = rootProject.file('C:\\Users\\ed\\StudioProjects\\ELOC-Control-Panel\\keystore.properties')
+def keystorePropertiesFile = rootProject.file('/home/joseph/android/projects/general.keystore.properties')
 def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
@@ -28,10 +28,8 @@ android {
         release_config {
             keyAlias 'upload'
             keyPassword ''
-            storeFile file('G:\\Sync\\Projects\\ElocRemote\\upload.jks')
+            storeFile file('/home/joseph/android/projects/key.jks')
             storePassword ''
-
-
         }
         debug_config {
 

@@ -4,10 +4,11 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="fontFamily">@font/quicksand</item>
+        <item name="fontFamily">@font/montserrat</item>
         <item name="materialButtonStyle">@style/AppButtonStyle</item>
         <item name="materialAlertDialogTheme">@style/MaterialAlertDialogTheme</item>
         <item name="actionBarStyle">@style/ActionBarStyle</item>
+        <item name="android:statusBarColor">@color/actionbar</item>
         <item name="android:windowBackground">@color/window</item>
         <item name="android:textColor">@color/white</item>
     </style>

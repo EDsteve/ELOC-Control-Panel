@@ -1,4 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="eloc_user">USER: %s</string>
+    <string name="gauge_gps_distance">%dm</string>
+    <string name="gauge_gps_long_distance">&gt;%d</string>
+    <string name="gauge_battery_level">%d%%</string>
+    <string name="gauge_free_space">%d%%\nfree</string>
+    <string name="storage">Storage</string>
+    <string name="battery">Battery</string>
+    <string name="gps_accuracy">GPS Accuracy</string>
+    <string name="status">Status</string>
+    <string name="detecting_since">Detecting since</string>
+    <string name="recording">Recording</string>
+    <string name="off">OFF</string>
+    <string name="on">ON</string>
+    <string name="detector_settings">Detector Settings</string>
+    <string name="recorder_settings">Recorder Settings</string>
+    <string name="record_when_detected">Record when detected</string>
+    <string name="model">Model</string>
+    <string name="communication">Communication</string>
+    <string name="sample_rate">Sample rate</string>
+    <string name="gain">Gain</string>
+    <string name="hours_per_file">Hours per file</string>
+    <string name="misc">Misc</string>
+    <string name="session_id">Session ID</string>
+    <string name="start_recording">Start\nRecording</string>
+    <string name="start_detecting">Start\nDetecting</string>
 </resources>
