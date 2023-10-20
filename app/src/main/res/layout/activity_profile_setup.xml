@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:clickable="true"
     android:focusable="true"
-    tools:context=".activities.SetupActivity">
+    tools:context=".ng2.activities.ProfileSetupActivity">
 
     <TextView
         android:id="@+id/title_text_view"

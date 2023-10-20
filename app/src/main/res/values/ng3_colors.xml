@@ -17,6 +17,6 @@
     <color name="status_grey">#717171</color>
     <color name="status_field_green">#5ce051</color>
     <color name="status_field_red">#c60c0c</color>
-    <color name="detector_button">#CA7D08</color>
+    <color name="detector_button">#ca7d08</color>
     <color name="recorder_button">@color/colorPrimary</color>
 </resources>

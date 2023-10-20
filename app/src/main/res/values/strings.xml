@@ -100,7 +100,7 @@
     <string name="high">High</string>
 
     <string name="hours_since_last_sync">Hours since last sync</string>
-    <string name="important_delete_prompt"><u>IMPORTANT: This operation is NOT reversible!</u></string>
+
     <string name="initializing">Initializing…</string>
     <string name="instructions">Instructions @ <u>wildlifebug.com</u></string>
     <string name="invalid">Invalid</string>
