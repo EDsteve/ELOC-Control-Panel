@@ -14,8 +14,8 @@ import androidx.core.content.ContextCompat
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityPermissionsSetupBinding
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
-import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper
 import de.eloc.eloc_control_panel.ng2.receivers.BluetoothWatcher
+import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -54,7 +54,6 @@ class PermissionsSetupActivity : ThemableActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityPermissionsSetupBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        supportActionBar?.hide()
         setListeners()
         ContextCompat.registerReceiver(
             this,

@@ -93,15 +93,5 @@ object ActivityHelper {
         return result
     }
 
-    fun setChipColors(context: Context, chipBinding: LayoutAppChipBinding) {
-        val colorTextOnPrimary = ContextCompat.getColor(context, R.color.colorTextOnPrimary)
-        val colorTextOnPrimaryTransclucent = ContextCompat.getColor(context, R.color.colorTextOnPrimaryTranslucent)
-        if (chipBinding.chip.isChecked) {
-            chipBinding.chip.setTextColor(colorTextOnPrimary)
-            chipBinding.chip.setChipBackgroundColorResource(R.color.colorPrimary)
-        } else {
-            chipBinding.chip.setTextColor(colorTextOnPrimaryTransclucent)
-            chipBinding.chip.setChipBackgroundColorResource(R.color.colorPrimaryTranslucent)
-        }
-    }
+
 }

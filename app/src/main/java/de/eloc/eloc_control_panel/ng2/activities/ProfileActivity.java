@@ -21,12 +21,12 @@ import java.io.IOException;
 
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.data.DataHelper;
-import de.eloc.eloc_control_panel.data.UserAccountViewModel;
-import de.eloc.eloc_control_panel.data.UserProfile;
 import de.eloc.eloc_control_panel.databinding.ActivityProfileBinding;
 import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback;
 import de.eloc.eloc_control_panel.ng2.models.HttpHelper;
 import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
+import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel;
+import de.eloc.eloc_control_panel.ng3.data.UserProfile;
 
 public class ProfileActivity extends ThemableActivity implements MediaActivity {
     private ActivityProfileBinding binding;
@@ -121,7 +121,7 @@ public class ProfileActivity extends ThemableActivity implements MediaActivity {
 
     private void setViewModel() {
         viewModel = new ViewModelProvider(this).get(UserAccountViewModel.class);
-        viewModel.watchProfile().observe(this, this::setItemValues);
+        viewModel.getProfile().observe(this, this::setItemValues);
     }
 
     private void setItemTitles() {

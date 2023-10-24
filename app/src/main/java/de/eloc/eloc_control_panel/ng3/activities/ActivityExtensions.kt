@@ -6,9 +6,25 @@ import android.content.Intent
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOkBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOptionBinding
+import de.eloc.eloc_control_panel.databinding.LayoutAppChipBinding
 import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback
+
+fun AppCompatActivity.setChipColors(chipBinding: LayoutAppChipBinding) {
+    val colorTextOnPrimary = ContextCompat.getColor(this, R.color.colorTextOnPrimary)
+    val colorTextOnPrimaryTransclucent =
+        ContextCompat.getColor(this, R.color.colorTextOnPrimaryTranslucent)
+    if (chipBinding.chip.isChecked) {
+        chipBinding.chip.setTextColor(colorTextOnPrimary)
+        chipBinding.chip.setChipBackgroundColorResource(R.color.colorPrimary)
+    } else {
+        chipBinding.chip.setTextColor(colorTextOnPrimaryTransclucent)
+        chipBinding.chip.setChipBackgroundColorResource(R.color.colorPrimaryTranslucent)
+    }
+}
 
 fun AppCompatActivity.open(target: Class<*>, finishTask: Boolean = false) {
     val intent = Intent(this, target)

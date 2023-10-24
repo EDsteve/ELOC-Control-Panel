@@ -13,9 +13,9 @@ import androidx.appcompat.app.ActionBar;
 import androidx.lifecycle.ViewModelProvider;
 
 import de.eloc.eloc_control_panel.R;
-import de.eloc.eloc_control_panel.data.UserAccountViewModel;
 import de.eloc.eloc_control_panel.databinding.ActivityChangePasswordBinding;
 import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
+import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel;
 
 public class ChangePasswordActivity extends ThemableActivity {
 

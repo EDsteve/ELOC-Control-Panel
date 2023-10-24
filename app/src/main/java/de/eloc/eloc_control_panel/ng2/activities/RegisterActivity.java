@@ -12,12 +12,13 @@ import android.view.View;
 import androidx.lifecycle.ViewModelProvider;
 
 import de.eloc.eloc_control_panel.R;
-import de.eloc.eloc_control_panel.data.UserAccountViewModel;
 import de.eloc.eloc_control_panel.databinding.ActivityRegisterBinding;
 import de.eloc.eloc_control_panel.ng3.activities.LoginActivity;
+import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
 import de.eloc.eloc_control_panel.ng3.activities.VerifyEmailActivity;
+import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel;
 
-public class RegisterActivity extends NoActionBarActivity {
+public class RegisterActivity extends ThemableActivity {
     private ActivityRegisterBinding binding;
     private UserAccountViewModel viewModel;
 

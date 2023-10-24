@@ -23,11 +23,12 @@ import java.util.HashMap;
 
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.data.DataHelper;
-import de.eloc.eloc_control_panel.data.UserAccountViewModel;
 import de.eloc.eloc_control_panel.data.firebase.FirestoreHelper;
 import de.eloc.eloc_control_panel.databinding.ActivityProfileSetupBinding;
+import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
+import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel;
 
-public class ProfileSetupActivity extends NoActionBarActivity implements MediaActivity {
+public class ProfileSetupActivity extends ThemableActivity implements MediaActivity {
     private ActivityProfileSetupBinding binding;
     private ActivityResultLauncher<PickVisualMediaRequest> imagePicker;
     private ActivityResultLauncher<Intent> cameraLauncher;

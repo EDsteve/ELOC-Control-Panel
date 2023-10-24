@@ -6,9 +6,9 @@ import android.view.View
 import androidx.lifecycle.ViewModelProvider
 
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.databinding.ActivityPasswordResetBinding
 import de.eloc.eloc_control_panel.ng2.activities.TextInputWatcher
+import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel
 
 class PasswordResetActivity : ThemableActivity() {
     private lateinit var binding: ActivityPasswordResetBinding

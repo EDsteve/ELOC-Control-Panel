@@ -15,9 +15,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -25,19 +23,21 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.SNTPClient
 import de.eloc.eloc_control_panel.UploadFileAsync
 import de.eloc.eloc_control_panel.activities.TerminalActivity
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.LayoutNavHeaderBinding
 import de.eloc.eloc_control_panel.ng3.App
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import de.eloc.eloc_control_panel.ng2.models.ElocInfoAdapter
 import de.eloc.eloc_control_panel.ng2.models.HttpHelper
-import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper
 import de.eloc.eloc_control_panel.ng2.receivers.BluetoothDeviceReceiver
 import de.eloc.eloc_control_panel.ng3.activities.LoginActivity
 import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity
+import de.eloc.eloc_control_panel.ng3.activities.UserPrefsActivity
 import de.eloc.eloc_control_panel.ng3.activities.open
 import de.eloc.eloc_control_panel.ng3.activities.showModalAlert
+import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper
+import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel
+import de.eloc.eloc_control_panel.ng3.widgets.ElocAppBar
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
@@ -60,7 +60,6 @@ class HomeActivity : ThemableActivity() {
     private val elocAdapter = ElocInfoAdapter(this::onListUpdated, this::showDevice)
     private val elocReceiver = BluetoothDeviceReceiver(elocAdapter::add)
     private var gUploadEnabled = false
-    private var mainMenuButton: MenuItem? = null
     private var gLastTimeDifferenceMillisecond = 0L
     private lateinit var preferencesLauncher: ActivityResultLauncher<Intent>
     private val backPressedHandler = object : OnBackPressedCallback(true) {
@@ -84,8 +83,8 @@ class HomeActivity : ThemableActivity() {
     override fun onResume() {
         super.onResume()
 
-        viewModel.getProfile()
-        setToolbar()
+        viewModel.getProfileAsync()
+        setAppBar()
 
         val hasNoDevices = binding.devicesRecyclerView.adapter?.itemCount == 0
         if (hasNoDevices) {
@@ -96,8 +95,6 @@ class HomeActivity : ThemableActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         super.onCreateOptionsMenu(menu)
         menuInflater.inflate(R.menu.main_menu, menu)
-        mainMenuButton = menu?.findItem(R.id.mnu_main)
-        setToolbar()
         return true
     }
 
@@ -161,9 +158,7 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun closeDrawer() {
-        mainMenuButton?.setIcon(R.drawable.menu)
         if (binding.drawer.isDrawerOpen(GravityCompat.START)) {
-            restoreMenuIcon()
             binding.drawer.closeDrawer(GravityCompat.START)
         } else if (binding.drawer.isDrawerOpen(GravityCompat.END)) {
             binding.drawer.closeDrawer(GravityCompat.END)
@@ -172,11 +167,6 @@ class HomeActivity : ThemableActivity() {
 
     private fun openDrawer() {
         if (!drawerOpen()) {
-            val forwardArrow = ContextCompat.getDrawable(this, R.drawable.arrow_forward)
-            forwardArrow?.setTint(Color.WHITE)
-            mainMenuButton?.icon = forwardArrow
-            supportActionBar?.setHomeAsUpIndicator(0) // Show the 'Back/up' arrow
-            supportActionBar?.setHomeActionContentDescription(R.string.close_drawer_menu)
             val direction = if (PreferencesHelper.instance.isMainMenuOnLeft())
                 GravityCompat.START
             else
@@ -186,20 +176,11 @@ class HomeActivity : ThemableActivity() {
         }
     }
 
-    private fun restoreMenuIcon() {
-        supportActionBar?.setHomeAsUpIndicator(R.drawable.menu)
-        supportActionBar?.setHomeActionContentDescription(R.string.open_drawer_menu)
-    }
-
-    private fun setToolbar() {
-        if (PreferencesHelper.instance.isMainMenuOnLeft()) {
-            supportActionBar?.setDisplayHomeAsUpEnabled(true)
-            supportActionBar?.setHomeAsUpIndicator(R.drawable.menu)
-            supportActionBar?.setHomeActionContentDescription(R.string.open_drawer_menu)
-            mainMenuButton?.isVisible = false
+    private fun setAppBar() {
+        binding.elocAppBar.menuButtonPosition = if (PreferencesHelper.instance.isMainMenuOnLeft()) {
+            ElocAppBar.MenuButtonPosition.Left
         } else {
-            supportActionBar?.setDisplayHomeAsUpEnabled(false)
-            mainMenuButton?.isVisible = true
+            ElocAppBar.MenuButtonPosition.Right
         }
     }
 
@@ -239,32 +220,29 @@ class HomeActivity : ThemableActivity() {
         leftHeaderBinding.editButton.setOnClickListener { editProfile() }
         rightHeaderBinding.editButton.setOnClickListener { editProfile() }
 
-        binding.drawer.addDrawerListener(object : DrawerLayout.SimpleDrawerListener() {
-            override fun onDrawerClosed(drawerView: View) {
-                super.onDrawerClosed(drawerView)
-                restoreMenuIcon()
-            }
-        })
         binding.leftDrawer.setNavigationItemSelectedListener { onNavItemSelected(it) }
         binding.rightDrawer.setNavigationItemSelectedListener { onNavItemSelected(it) }
+        binding.elocAppBar.setOnMenuButtonClickedListener { toggleDrawer() }
     }
 
     private fun setViewModel() {
         viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
-        viewModel.watchProfile().observe(this) {
-            leftHeaderBinding.profilePictureImageView.setImageUrl(
-                it.profilePictureUrl,
-                HttpHelper.getInstance().imageLoader
-            )
-            rightHeaderBinding.profilePictureImageView.setImageUrl(
-                it.profilePictureUrl,
-                HttpHelper.getInstance().imageLoader
-            )
-            userId = it.userId
-            leftHeaderBinding.userIdTextView.text = it.userId
-            rightHeaderBinding.userIdTextView.text = it.userId
-            leftHeaderBinding.emailAddressTextView.text = it.emailAddress
-            rightHeaderBinding.emailAddressTextView.text = it.emailAddress
+        viewModel.profile.observe(this) {
+            if (it != null) {
+                leftHeaderBinding.profilePictureImageView.setImageUrl(
+                    it.profilePictureUrl,
+                    HttpHelper.getInstance().imageLoader
+                )
+                rightHeaderBinding.profilePictureImageView.setImageUrl(
+                    it.profilePictureUrl,
+                    HttpHelper.getInstance().imageLoader
+                )
+                userId = it.userId
+                leftHeaderBinding.userIdTextView.text = it.userId
+                rightHeaderBinding.userIdTextView.text = it.userId
+                leftHeaderBinding.emailAddressTextView.text = it.emailAddress
+                rightHeaderBinding.emailAddressTextView.text = it.emailAddress
+            }
         }
     }
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="actionbar">#29780f</color>
-    <color name="actionbar_icon">#284f25</color>
+    <color name="actionbar_icon">#21491D</color>
     <color name="black">@android:color/black</color>
     <color name="connected">#65d95b</color>
     <color name="critical_red">#f95d48</color>
@@ -11,7 +11,7 @@
     <color name="normal_green">#44873e</color>
     <color name="normal_storage">#099dd1</color>
     <color name="recorder_settings_title">#3e6f3a</color>
-    <color name="user_label">#cc9411</color>
+    <color name="user_label">#ffb300</color>
     <color name="white">@android:color/white</color>
     <color name="window">#2e2e2e</color>
     <color name="status_grey">#717171</color>

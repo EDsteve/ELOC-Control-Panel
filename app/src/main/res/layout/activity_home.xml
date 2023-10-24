@@ -6,12 +6,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ng2.activities.HomeActivity"
-    tools:openDrawer="end">
+    tools:openDrawer="start">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/coordinator"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
+        <de.eloc.eloc_control_panel.ng3.widgets.ElocAppBar
+            android:id="@+id/eloc_app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:menu_button_position="right"
+            app:title="@string/scanner" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"

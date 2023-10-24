@@ -4,7 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ng2.activities.UserPrefsActivity">
+    tools:context=".ng3.activities.UserPrefsActivity">
+
+    <de.eloc.eloc_control_panel.ng3.widgets.ElocAppBar
+        android:id="@+id/eloc_app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:show_back_button="true"
+        app:title="@string/preferences" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -30,11 +37,13 @@
                 app:selectionRequired="true"
                 app:singleSelection="true">
 
-                <include layout="@layout/layout_app_chip"
-                    android:id="@+id/left_chip_layout" />
+                <include
+                    android:id="@+id/left_chip_layout"
+                    layout="@layout/layout_app_chip" />
 
-                <include layout="@layout/layout_app_chip"
-                    android:id="@+id/right_chip_layout" />
+                <include
+                    android:id="@+id/right_chip_layout"
+                    layout="@layout/layout_app_chip" />
 
             </com.google.android.material.chip.ChipGroup>
 
@@ -56,14 +65,17 @@
                 app:selectionRequired="true"
                 app:singleSelection="true">
 
-                <include layout="@layout/layout_app_chip"
-                    android:id="@+id/small_font_chip_layout" />
+                <include
+                    android:id="@+id/small_font_chip_layout"
+                    layout="@layout/layout_app_chip" />
 
-                <include layout="@layout/layout_app_chip"
-                    android:id="@+id/medium_font_chip_layout" />
+                <include
+                    android:id="@+id/medium_font_chip_layout"
+                    layout="@layout/layout_app_chip" />
 
-                <include layout="@layout/layout_app_chip"
-                    android:id="@+id/large_font_chip_layout" />
+                <include
+                    android:id="@+id/large_font_chip_layout"
+                    layout="@layout/layout_app_chip" />
 
             </com.google.android.material.chip.ChipGroup>
 

@@ -51,11 +51,10 @@ import de.eloc.eloc_control_panel.ng.models.BluetoothHelperOld;
 import de.eloc.eloc_control_panel.ng3.App;
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
 import de.eloc.eloc_control_panel.ng2.activities.DeviceSettingsActivity;
-import de.eloc.eloc_control_panel.ng2.activities.JavaActivityHelper;
 import de.eloc.eloc_control_panel.ng2.models.LabelColor;
-import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper;
 import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
+import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper;
 
 public class TerminalActivity extends ThemableActivity implements ServiceConnection, SerialListener {
     private final PreferencesHelper preferencesHelper = PreferencesHelper.Companion.getInstance();

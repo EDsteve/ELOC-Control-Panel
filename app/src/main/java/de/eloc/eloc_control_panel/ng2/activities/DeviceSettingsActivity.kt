@@ -8,10 +8,10 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.TerminalActivity
 import de.eloc.eloc_control_panel.databinding.ActivityDeviceSettingsBinding
 import de.eloc.eloc_control_panel.ng2.models.GainType
-import de.eloc.eloc_control_panel.ng2.models.PreferencesHelper
 import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity
 import de.eloc.eloc_control_panel.ng3.activities.hideKeyboard
 import de.eloc.eloc_control_panel.ng3.activities.*
+import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper
 import java.lang.NumberFormatException
 
 class DeviceSettingsActivity : ThemableActivity() {
@@ -87,23 +87,23 @@ class DeviceSettingsActivity : ThemableActivity() {
     }
 
     private fun setChipColors() {
-        ActivityHelper.setChipColors(this, binding.btOnLayout)
-        ActivityHelper.setChipColors(this, binding.btOffLayout)
+        setChipColors(binding.btOnLayout)
+        setChipColors(binding.btOffLayout)
 
-        ActivityHelper.setChipColors(this, binding.lowGainLayout)
-        ActivityHelper.setChipColors(this, binding.highGainLayout)
+        setChipColors(binding.lowGainLayout)
+        setChipColors(binding.highGainLayout)
 
-        ActivityHelper.setChipColors(this, binding.time12hLayout)
-        ActivityHelper.setChipColors(this, binding.time4hLayout)
-        ActivityHelper.setChipColors(this, binding.time1hLayout)
-        ActivityHelper.setChipColors(this, binding.time1mLayout)
-        ActivityHelper.setChipColors(this, binding.time10sLayout)
+        setChipColors(binding.time12hLayout)
+        setChipColors(binding.time4hLayout)
+        setChipColors(binding.time1hLayout)
+        setChipColors(binding.time1mLayout)
+        setChipColors(binding.time10sLayout)
 
-        ActivityHelper.setChipColors(this, binding.rate44kLayout)
-        ActivityHelper.setChipColors(this, binding.rate32kLayout)
-        ActivityHelper.setChipColors(this, binding.rate22kLayout)
-        ActivityHelper.setChipColors(this, binding.rate16kLayout)
-        ActivityHelper.setChipColors(this, binding.rate8kLayout)
+        setChipColors(binding.rate44kLayout)
+        setChipColors(binding.rate32kLayout)
+        setChipColors(binding.rate22kLayout)
+        setChipColors(binding.rate16kLayout)
+        setChipColors(binding.rate8kLayout)
     }
 
     private fun setChips() {

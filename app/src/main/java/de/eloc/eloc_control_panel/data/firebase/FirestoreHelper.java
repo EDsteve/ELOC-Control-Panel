@@ -9,10 +9,10 @@ import com.google.firebase.firestore.Source;
 
 import java.util.HashMap;
 
-import de.eloc.eloc_control_panel.data.UserProfile;
 import de.eloc.eloc_control_panel.ng2.interfaces.BooleanCallback;
 import de.eloc.eloc_control_panel.ng2.interfaces.ProfileCallback;
 import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback;
+import de.eloc.eloc_control_panel.ng3.data.UserProfile;
 
 public class FirestoreHelper {
 

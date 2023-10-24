@@ -9,4 +9,17 @@
         <attr name="lowColorThreshold" format="integer" />
         <attr name="alwaysFilled" format="boolean" />
     </declare-styleable>
+
+    <declare-styleable name="ElocAppBar">
+        <attr name="title" format="string" />
+        <attr name="show_back_button" format="boolean" />
+        <attr name="show_settings_button" format="boolean" />
+        <attr name="show_connection_status" format="boolean" />
+        <attr name="show_user_name" format="boolean" />
+        <attr name="menu_button_position" format="enum">
+            <enum name="none" value="0" />
+            <enum name="left" value="1" />
+            <enum name="right" value="2" />
+        </attr>
+    </declare-styleable>
 </resources>

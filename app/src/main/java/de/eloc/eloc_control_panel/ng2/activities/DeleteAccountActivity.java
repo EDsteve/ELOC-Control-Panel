@@ -14,10 +14,10 @@ import androidx.appcompat.app.ActionBar;
 import androidx.lifecycle.ViewModelProvider;
 
 import de.eloc.eloc_control_panel.R;
-import de.eloc.eloc_control_panel.data.UserAccountViewModel;
 import de.eloc.eloc_control_panel.databinding.ActivityDeleteAccountBinding;
 import de.eloc.eloc_control_panel.ng3.activities.LoginActivity;
 import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
+import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel;
 
 public class DeleteAccountActivity extends ThemableActivity {
 

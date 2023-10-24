@@ -7,28 +7,21 @@ import androidx.core.content.ContextCompat
 import de.eloc.eloc_control_panel.R
 
 import de.eloc.eloc_control_panel.databinding.ActivityHomeNg3Binding
+import de.eloc.eloc_control_panel.databinding.LayoutAppBarBinding
 
 class HomeActivityNg3 : AppCompatActivity() {
-    lateinit var binding: ActivityHomeNg3Binding
+    private lateinit var binding: ActivityHomeNg3Binding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeNg3Binding.inflate(layoutInflater)
         setContentView(binding.root)
-        supportActionBar?.hide()
-        setListeners()
         setUiData()
     }
 
-    private fun setListeners() {
-        binding.settingsButton.setOnClickListener {
-            println("Open settings")
-        }
-    }
-
     private fun setUiData() {
-        binding.elocNameTextView.text = "ChangeMe"
-        binding.userLabel.text = getString(R.string.eloc_user, "Jane Doe")
+        binding.elocAppBar.title = "ChangeMe"
+        binding.elocAppBar.userName = "Jane Doe"
         updateBatteryLevel(24.0)
         updateStorageStatus(78.0)
         updateGpsAccuracy(7.0)

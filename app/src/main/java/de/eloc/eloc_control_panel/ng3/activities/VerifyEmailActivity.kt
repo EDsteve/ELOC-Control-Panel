@@ -6,13 +6,12 @@ import android.view.View
 import androidx.lifecycle.ViewModelProvider
 
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.databinding.ActivityVerifyEmailBinding
 import de.eloc.eloc_control_panel.ng2.activities.HomeActivity
-import de.eloc.eloc_control_panel.ng2.activities.NoActionBarActivity
 import de.eloc.eloc_control_panel.ng2.activities.ProfileSetupActivity
+import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel
 
-class VerifyEmailActivity : NoActionBarActivity() {
+class VerifyEmailActivity : ThemableActivity() {
     private lateinit var binding: ActivityVerifyEmailBinding
     private lateinit var viewModel: UserAccountViewModel
 

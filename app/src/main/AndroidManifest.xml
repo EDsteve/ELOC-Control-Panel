@@ -45,7 +45,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".ng2.activities.UserPrefsActivity"
+            android:name=".ng3.activities.UserPrefsActivity"
             android:exported="false"
             android:label="@string/preferences"
             android:parentActivityName=".ng2.activities.HomeActivity">
