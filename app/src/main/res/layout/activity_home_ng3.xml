@@ -76,6 +76,11 @@
                     app:normalColor="@color/normal_green"
                     app:showDiscreteColors="true" />
 
+                <com.example.gauges.widgets.SimpleGauge
+
+                    app:normalColor="@color/normal_green"
+                    app:showDiscreteColors="true" />
+
                 <de.eloc.eloc_control_panel.ng3.widgets.SimpleGauge
                     android:id="@+id/gps_gauge"
                     android:layout_width="0dp"

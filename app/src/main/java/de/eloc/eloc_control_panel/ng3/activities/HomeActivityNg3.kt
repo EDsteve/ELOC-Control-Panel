@@ -9,6 +9,16 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityHomeNg3Binding
 import de.eloc.eloc_control_panel.databinding.LayoutAppBarBinding
 
+// todo: show free space text under storage gauge
+// todo: show % of free storage in gauge after firmware update
+// todo: show battery % after firmware update
+// todo: STATUS section will have data loaded after firmware update.
+// todo: DETECTOR SETTINGS section -> RecordWhenDetected, Model, Communication -> after AI has been implemented
+// todo: mic gain is bitshift
+// todo: hrs per file is seconds per file
+// todo: recording since boot is totalRecordingTime
+// todo: detecting button to be activate when detection is implemented.
+
 class HomeActivityNg3 : AppCompatActivity() {
     private lateinit var binding: ActivityHomeNg3Binding
 

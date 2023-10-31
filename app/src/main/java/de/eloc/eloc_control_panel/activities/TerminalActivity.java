@@ -68,6 +68,8 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     private ExecutorService timeMonitor = Executors.newSingleThreadExecutor();
     private boolean runTimeMonitor = false;
 
+    private StringBuilder buffer = new StringBuilder();
+
     private enum Connected {False, Pending, True}
 
     // TODO: Replace log.i
@@ -233,6 +235,8 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     protected void onPause() {
         super.onPause();
         runTimeMonitor = false;
+        String json = buffer.toString();
+        int l = json.length();
     }
 
     private void updateRecordingTime() {
@@ -473,6 +477,9 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
             }
             receiveText.append(TextUtil.toCaretString(msg, newline.length() != 0));
             elocReceive(msg);
+             buffer.append(msg);
+             String json = buffer.toString();
+             int l = json.length();
         }
     }
 
@@ -927,6 +934,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         binding.recBtn.setOnClickListener(view -> recordButtonClicked());
         binding.swipeRefreshLayout.setOnRefreshListener(this::refresh);
         binding.instructionsButton.setOnClickListener(view -> ActivityHelper.INSTANCE.showInstructions(TerminalActivity.this));
+        binding.testButton.setOnClickListener(v -> runCommand());
     }
 
     private void refresh() {
@@ -1056,5 +1064,14 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
                 binding.gpsValueTv.setText(prettyAccuracy);
             }
         });
+    }
+
+    private void runCommand() {
+        String command = "";
+        Editable editable = binding.commandBox.getEditableText();
+        if (editable != null) {
+            command = editable.toString().trim();
+        }
+        send(command);
     }
 }
