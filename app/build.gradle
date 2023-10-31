@@ -14,7 +14,7 @@ android {
         minSdk 21
         //noinspection EditedTargetSdkVersion
         targetSdk 34
-        versionCode 32
+        versionCode 33
         versionName '4.712'
         versionNameSuffix 'AppBeta'
         multiDexEnabled true

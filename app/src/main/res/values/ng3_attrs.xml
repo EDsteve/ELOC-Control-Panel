@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+
     <declare-styleable name="SimpleGauge">
         <attr name="showDiscreteColors" format="boolean" />
         <attr name="criticalColor" format="color" />
         <attr name="lowColor" format="color" />
         <attr name="normalColor" format="color" />
+        <!-- range for lowColorThreshold is 0 to 100 -->
         <attr name="lowColorThreshold" format="integer" />
+
+        <!-- range for criticalColorThreshold is 0 to 100 -->
+        <attr name="criticalColorThreshold" format="integer" />
         <attr name="alwaysFilled" format="boolean" />
     </declare-styleable>
 

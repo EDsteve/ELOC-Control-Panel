@@ -11,8 +11,11 @@ import de.eloc.eloc_control_panel.R
 import kotlin.math.ceil
 import kotlin.math.min
 
+const val CRITICAL_COLOR_THRESHOLD_DEFAULT = 15
+
 const val LOW_COLOR_THRESHOLD_MIN = 15
-const val LOW_COLOR_THRESHOLD_MAX = 80
+const val LOW_COLOR_THRESHOLD_MAX = 95
+const val LOW_COLOR_THRESHOLD_DEFAULT = 45
 
 class SimpleGauge : View {
 
@@ -25,6 +28,8 @@ class SimpleGauge : View {
     private var canInvalidate = false
     private var normalColor = Color.GREEN
     private var lowColor = Color.YELLOW
+    private var lowColorThreshold: Int = LOW_COLOR_THRESHOLD_DEFAULT
+    private var criticalColorThreshold: Int = CRITICAL_COLOR_THRESHOLD_DEFAULT
     private var criticalColor = Color.RED
     private var lowRange = 30.0f
     private var alwaysFilled = true
@@ -48,8 +53,9 @@ class SimpleGauge : View {
             normalColor = typedArray.getColor(R.styleable.SimpleGauge_normalColor, Color.GREEN)
             lowColor = typedArray.getColor(R.styleable.SimpleGauge_lowColor, Color.YELLOW)
             criticalColor = typedArray.getColor(R.styleable.SimpleGauge_criticalColor, Color.RED)
-            val lowColorThreshold =
-                typedArray.getInteger(R.styleable.SimpleGauge_lowColorThreshold, 30)
+            lowColorThreshold =
+                typedArray.getInteger(R.styleable.SimpleGauge_lowColorThreshold, LOW_COLOR_THRESHOLD_DEFAULT)
+            criticalColorThreshold = typedArray.getInteger(R.styleable.SimpleGauge_criticalColorThreshold, CRITICAL_COLOR_THRESHOLD_DEFAULT)
             lowRange = if (lowColorThreshold <= LOW_COLOR_THRESHOLD_MIN) {
                 LOW_COLOR_THRESHOLD_MIN.toFloat()
             } else if (lowColorThreshold >= LOW_COLOR_THRESHOLD_MAX) {
@@ -66,9 +72,9 @@ class SimpleGauge : View {
         normalizeGaugeValue()
 
         if (showDiscreteColors) {
-            return if (gaugeValue <= 15)
+            return if (gaugeValue <= criticalColorThreshold)
                 criticalColor
-            else if (gaugeValue <= 45)
+            else if (gaugeValue <= lowColorThreshold)
                 lowColor
             else
                 normalColor

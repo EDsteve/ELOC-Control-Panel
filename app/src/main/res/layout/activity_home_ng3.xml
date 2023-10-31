@@ -72,6 +72,7 @@
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintWidth_percent="0.33"
                     app:lowColor="@color/low_orange"
+                    app:lowColorThreshold="80"
                     app:normalColor="@color/normal_green"
                     app:showDiscreteColors="true" />
 
@@ -97,8 +98,9 @@
                     app:layout_constraintEnd_toStartOf="@id/battery_gauge"
                     app:layout_constraintTop_toTopOf="@id/battery_gauge"
                     app:layout_constraintWidth_percent="0.33"
-                    app:lowColor="@color/low_storage"
-                    app:normalColor="@color/normal_storage"
+                    app:lowColor="@color/low_storage"  app:lowColorThreshold="80"
+                    app:criticalColorThreshold="30"
+                    app:normalColor="@color/normal_green"
                     app:showDiscreteColors="true" />
 
                 <TextView
