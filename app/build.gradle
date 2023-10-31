@@ -5,11 +5,8 @@ plugins {
     id 'com.google.gms.google-services'
 }
 
-def keystorePropertiesFile = rootProject.file('/home/joseph/android/projects/general.keystore.properties')
-def keystoreProperties = new Properties()
-keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-
 android {
+
     compileSdk 33
     compileSdkPreview "UpsideDownCake"
 
@@ -24,18 +21,6 @@ android {
         vectorDrawables.useSupportLibrary = true
     }
 
-    signingConfigs {
-        release_config {
-            keyAlias 'upload'
-            keyPassword ''
-            storeFile file('/home/joseph/android/projects/key.jks')
-            storePassword ''
-        }
-        debug_config {
-
-        }
-    }
-
     buildFeatures {
         viewBinding true
     }
@@ -46,7 +31,6 @@ android {
             shrinkResources true
             renderscriptDebuggable false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release_config
         }
         debug {
             minifyEnabled false
