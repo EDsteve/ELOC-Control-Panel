@@ -11,8 +11,6 @@ import androidx.lifecycle.ViewModelProvider
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityLoginBinding
 import de.eloc.eloc_control_panel.ng2.activities.HomeActivity
-import de.eloc.eloc_control_panel.ng2.activities.ProfileSetupActivity
-import de.eloc.eloc_control_panel.ng2.activities.RegisterActivity
 import de.eloc.eloc_control_panel.ng2.activities.TextInputWatcher
 import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel
 

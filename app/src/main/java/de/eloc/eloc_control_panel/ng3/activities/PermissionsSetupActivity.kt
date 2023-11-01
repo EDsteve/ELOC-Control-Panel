@@ -5,10 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.view.View
 import androidx.core.content.ContextCompat
 import de.eloc.eloc_control_panel.R
@@ -93,18 +91,6 @@ class PermissionsSetupActivity : ThemableActivity() {
         binding.locationButton.setOnClickListener { openSystemAppSettings() }
         binding.locationStateButton.setOnClickListener { openLocationSettings() }
         binding.bluetoothStateButton.setOnClickListener { startActivity(bluetoothHelper.enablingIntent) }
-    }
-
-    private fun openSystemAppSettings() {
-        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-        val uri = Uri.fromParts("package", packageName, null)
-        intent.data = uri
-        startActivity(intent)
-    }
-
-    private fun openLocationSettings() {
-        val settingsIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-        startActivity(settingsIntent)
     }
 
     private fun hideActions() {

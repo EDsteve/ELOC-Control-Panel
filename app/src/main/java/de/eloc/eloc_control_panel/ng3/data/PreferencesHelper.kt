@@ -36,6 +36,8 @@ class PreferencesHelper {
 
     fun getLocationRequested(): Boolean = preferences.getBoolean(PREF_LOCATION_REQUESTED, false)
 
+    fun getCameraRequested(): Boolean = preferences.getBoolean(PREF_CAMERA_REQUESTED, false)
+
     fun getDeviceSettings(): String = preferences.getString(PREF_DEVICE_SETTINGS, "") ?: ""
 
     // Assume default state to be ON (i.e., return true), because that is default behavior when the preference
@@ -49,6 +51,9 @@ class PreferencesHelper {
 
     fun setLocationRequested() =
         preferences.edit().putBoolean(PREF_LOCATION_REQUESTED, true).apply()
+
+    fun setCameraRequested() =
+        preferences.edit().putBoolean(PREF_CAMERA_REQUESTED, true).apply()
 
     fun setDeviceSettings(data: String) =
         preferences.edit().putString(PREF_DEVICE_SETTINGS, data).apply()
@@ -111,6 +116,7 @@ class PreferencesHelper {
     }
 
     companion object {
+        private const val PREF_CAMERA_REQUESTED = "camera_requested"
         private const val PREF_SHOW_ALL_BT_DEVICES = "show_all_bt_devices"
         private const val PREF_MAIN_MENU_POSITION = "main_menu_position"
         private const val PREF_LOCATION_REQUESTED = "location_requested"

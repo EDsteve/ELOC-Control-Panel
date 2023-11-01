@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:map="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.MapActivity">
+    tools:context=".ng3.activities.MapActivity">
+
+    <de.eloc.eloc_control_panel.ng3.widgets.ElocAppBar
+        android:id="@+id/eloc_app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:show_back_button="true"
+        app:title="@string/find_your_elocs" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        map:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
         tools:visibility="invisible">
 
         <androidx.fragment.app.FragmentContainerView
@@ -17,8 +24,8 @@
             android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            map:layout_constraintBottom_toTopOf="@id/unknown_devices_panel"
-            map:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintBottom_toTopOf="@id/unknown_devices_panel"
+            app:layout_constraintTop_toTopOf="parent" />
 
 
         <LinearLayout
@@ -27,7 +34,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp"
-            map:layout_constraintBottom_toBottomOf="parent">
+            app:layout_constraintBottom_toBottomOf="parent">
 
             <LinearLayout
                 android:id="@+id/unknown_devices_button"
@@ -50,12 +57,14 @@
                     android:id="@+id/down_icon"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:importantForAccessibility="no"
                     android:src="@drawable/ic_down" />
 
                 <ImageView
                     android:id="@+id/up_icon"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:importantForAccessibility="no"
                     android:src="@drawable/ic_up" />
             </LinearLayout>
 
@@ -74,10 +83,10 @@
             android:layout_margin="16dp"
             android:gravity="center"
             android:orientation="vertical"
-            map:layout_constraintBottom_toBottomOf="parent"
-            map:layout_constraintEnd_toEndOf="parent"
-            map:layout_constraintStart_toStartOf="parent"
-            map:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
             <TextView
                 android:id="@+id/message_text_view"

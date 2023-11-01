@@ -33,6 +33,7 @@ import de.eloc.eloc_control_panel.ng2.receivers.BluetoothDeviceReceiver
 import de.eloc.eloc_control_panel.ng3.activities.LoginActivity
 import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity
 import de.eloc.eloc_control_panel.ng3.activities.UserPrefsActivity
+import de.eloc.eloc_control_panel.ng3.activities.MapActivity
 import de.eloc.eloc_control_panel.ng3.activities.open
 import de.eloc.eloc_control_panel.ng3.activities.showModalAlert
 import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper
@@ -242,6 +243,7 @@ class HomeActivity : ThemableActivity() {
                 rightHeaderBinding.userIdTextView.text = it.userId
                 leftHeaderBinding.emailAddressTextView.text = it.emailAddress
                 rightHeaderBinding.emailAddressTextView.text = it.emailAddress
+                binding.elocAppBar.userName = it.userId
             }
         }
     }

@@ -136,7 +136,7 @@
             android:textColor="@color/user_label"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/left_menu_button"
+            app:layout_constraintTop_toBottomOf="@id/title_text_view"
             tools:text="USER: Tester" />
 
         <Space

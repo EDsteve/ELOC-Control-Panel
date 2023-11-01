@@ -14,6 +14,7 @@ import de.eloc.eloc_control_panel.databinding.ActivityAccountBinding;
 import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
 import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel;
 import de.eloc.eloc_control_panel.ng3.data.UserProfile;
+import de.eloc.eloc_control_panel.ng3.activities.DeleteAccountActivity;
 
 public class AccountActivity extends ThemableActivity {
     private ActivityAccountBinding binding;

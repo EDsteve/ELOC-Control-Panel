@@ -1,5 +1,6 @@
 package de.eloc.eloc_control_panel.ng2.activities;
 
+import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.getPickImageRequest;
 import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.showModalAlert;
 
 import android.content.Intent;
@@ -24,11 +25,11 @@ import de.eloc.eloc_control_panel.data.DataHelper;
 import de.eloc.eloc_control_panel.databinding.ActivityProfileBinding;
 import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback;
 import de.eloc.eloc_control_panel.ng2.models.HttpHelper;
-import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
 import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel;
 import de.eloc.eloc_control_panel.ng3.data.UserProfile;
+import de.eloc.eloc_control_panel.ng3.activities.MediaActivity;
 
-public class ProfileActivity extends ThemableActivity implements MediaActivity {
+public class ProfileActivity extends MediaActivity {
     private ActivityProfileBinding binding;
     private UserAccountViewModel viewModel;
     private ActivityResultLauncher<PickVisualMediaRequest> imagePicker;
@@ -69,6 +70,7 @@ public class ProfileActivity extends ThemableActivity implements MediaActivity {
 
     @Override
     public void takePhoto() {
+        super.takePhoto();
         photoUri = DataHelper.getTempFileUri();
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -78,7 +80,7 @@ public class ProfileActivity extends ThemableActivity implements MediaActivity {
 
     @Override
     public void pickImage() {
-        imagePicker.launch(JavaActivityHelper.getPickImageRequest());
+        imagePicker.launch(getPickImageRequest(this));
     }
 
     @Override

@@ -1,11 +1,10 @@
-package de.eloc.eloc_control_panel.ng2.activities
+package de.eloc.eloc_control_panel.ng3.activities
 
 import android.annotation.SuppressLint
 import android.location.Location
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.MenuItem
 import android.view.View
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -23,8 +22,6 @@ import de.eloc.eloc_control_panel.databinding.WindowLayoutBinding
 import de.eloc.eloc_control_panel.models.ElocDeviceInfo
 import de.eloc.eloc_control_panel.models.ElocMarker
 import de.eloc.eloc_control_panel.ng2.models.HttpHelper
-import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity
-import de.eloc.eloc_control_panel.ng3.activities.showModalAlert
 import java.util.Locale
 
 class MapActivity : ThemableActivity() {
@@ -78,11 +75,10 @@ class MapActivity : ThemableActivity() {
         binding.mapView.visibility = View.INVISIBLE
 
         setContentView(binding.root)
-        setToolbar()
         setListeners()
-        hideUnknownDevices()
+        updateUnknownDevices()
+        collapseUnknownDevices()
         if (hasRangerName()) {
-
             val mapFragment =
                 supportFragmentManager.findFragmentById(binding.mapView.id) as SupportMapFragment?
             mapFragment?.getMapAsync { googleMap: GoogleMap ->
@@ -96,17 +92,9 @@ class MapActivity : ThemableActivity() {
                 getString(R.string.required),
                 getString(R.string.ranger_name_required)
             ) {
-                onBackPressedDispatcher.onBackPressed()
+                goBack()
             }
         }
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == android.R.id.home) {
-            onBackPressedDispatcher.onBackPressed()
-            return true
-        }
-        return false
     }
 
     private fun hasRangerName(): Boolean {
@@ -120,36 +108,27 @@ class MapActivity : ThemableActivity() {
         showMap()
     }
 
-    private fun hideUnknownDevices() {
-        binding.unknownDevicesPanel.visibility = View.VISIBLE
-    }
-
     private fun setListeners() {
         binding.unknownDevicesButton.setOnClickListener {
             if (binding.upIcon.visibility == View.VISIBLE) {
-                collapseUnknownDevices()
-            } else {
                 expandUnknownDevices()
+            } else {
+                collapseUnknownDevices()
             }
         }
-    }
-
-    private fun collapseUnknownDevices() {
-        binding.upIcon.visibility = View.VISIBLE
-        binding.downIcon.visibility = View.GONE
-        binding.unknownDevicesTextView.visibility = View.VISIBLE
+        binding.elocAppBar.setOnBackButtonClickedListener { goBack() }
     }
 
     private fun expandUnknownDevices() {
         binding.upIcon.visibility = View.GONE
         binding.downIcon.visibility = View.VISIBLE
-        binding.unknownDevicesTextView.visibility = View.GONE
+        binding.unknownDevicesTextView.visibility = View.VISIBLE
     }
 
-    private fun setToolbar() {
-        val actionBar = supportActionBar
-        actionBar?.setTitle(R.string.find_your_elocs)
-        actionBar?.setDisplayHomeAsUpEnabled(true)
+    private fun collapseUnknownDevices() {
+        binding.upIcon.visibility = View.VISIBLE
+        binding.downIcon.visibility = View.GONE
+        binding.unknownDevicesTextView.visibility = View.GONE
     }
 
     private fun zoomTo(zoomLevel: Int, position: LatLng) {
@@ -185,17 +164,22 @@ class MapActivity : ThemableActivity() {
     }
 
     private fun updateUnknownDevices() {
-        val builder = StringBuilder()
         val names = unknownDevices.toArray(arrayOf<String>())
-        names.sort()
-        val maxIndex = names.size - 1
-        for (i in 0..maxIndex) {
-            builder.append(names[i])
-            if (i < maxIndex) {
-                builder.append(", ")
+        binding.unknownDevicesTextView.text = if (names.isEmpty()) {
+            getString(R.string.none)
+        } else {
+            val builder = StringBuilder()
+            names.sort()
+            val maxIndex = names.size - 1
+            for (i in 0..maxIndex) {
+                builder.append(names[i])
+                if (i < maxIndex) {
+                    builder.append(", ")
+                }
             }
+            builder
         }
-        binding.unknownDevicesTextView.text = builder
+
     }
 
     private fun showUnknownDevices() {
@@ -264,10 +248,10 @@ class MapActivity : ThemableActivity() {
 
     @SuppressLint("MissingPermission")
     private fun showMap() {
+        if (map == null || devices == null) {
+            return
+        }
         synchronized(map!!) {
-            if (map == null || devices == null) {
-                return
-            }
             runOnUiThread {
                 if (map == null) {
                     return@runOnUiThread

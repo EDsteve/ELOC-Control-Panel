@@ -3,8 +3,13 @@ package de.eloc.eloc_control_panel.ng3.activities
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import de.eloc.eloc_control_panel.R
@@ -12,6 +17,23 @@ import de.eloc.eloc_control_panel.databinding.LayoutAlertOkBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOptionBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAppChipBinding
 import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback
+
+fun AppCompatActivity.getPickImageRequest(): PickVisualMediaRequest =
+    PickVisualMediaRequest.Builder()
+        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        .build()
+
+fun AppCompatActivity.openSystemAppSettings() {
+    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+    val uri = Uri.fromParts("package", packageName, null)
+    intent.data = uri
+    startActivity(intent)
+}
+
+fun AppCompatActivity.openLocationSettings() {
+    val settingsIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+    startActivity(settingsIntent)
+}
 
 fun AppCompatActivity.setChipColors(chipBinding: LayoutAppChipBinding) {
     val colorTextOnPrimary = ContextCompat.getColor(this, R.color.colorTextOnPrimary)
@@ -48,8 +70,19 @@ fun AppCompatActivity.hideKeyboard() {
     }
 }
 
+fun AppCompatActivity.overrideGoBack(callback: VoidCallback?) {
+    onBackPressedDispatcher.addCallback(
+        this,
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                callback?.handler()
+            }
+        },
+    )
+}
+
 fun ComponentActivity.goBack() {
-    this.onBackPressedDispatcher.onBackPressed()
+    onBackPressedDispatcher.onBackPressed()
 }
 
 fun AppCompatActivity.showModalAlert(title: String, message: String) =

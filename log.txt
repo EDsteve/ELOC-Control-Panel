@@ -1,3 +1,8 @@
+TODO
+maps not showing elocs with unknown location
+
+
+
 MISC
 + SessionID  ELOC2312647821
 - Grid ID	Riv12

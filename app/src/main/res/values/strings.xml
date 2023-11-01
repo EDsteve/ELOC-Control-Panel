@@ -126,6 +126,7 @@
     <string name="manage_account">Manage account</string>
     <string name="manual_bluetooth">You must manually enable the bluetooth permissions to connect with bluetooth devices.</string>
     <string name="manual_location">You must manually enable the location permission to use location for bluetooth devices.</string>
+    <string name="manual_camera">You must manually enable the permission to the camera for photos.</string>
     <string name="map_button_text">FIND MY ELOC</string>
     <string name="medium">Medium</string>
     <string name="menu">Menu</string>
@@ -143,7 +144,6 @@
     <string name="oops">Oops!</string>
     <string name="open_camera">Open camera</string>
     <string name="open_photo_gallery">Open photo gallery</string>
-    <string name="open_settings">Open settings</string>
     <string name="or">or</string>
     <string name="password">Password</string>
     <string name="password_is_required">Password is required!</string>
@@ -151,7 +151,6 @@
     <string name="password_too_short">Password must be at least 8 characters long!</string>
     <string name="password_updated">Your password has been updated</string>
     <string name="passwords_must_match">Passwords must match!</string>
-    <string name="permission_required">Permission required</string>
     <string name="please_wait">Please wait…</string>
     <string name="preferences">Preferences</string>
     <string name="preparing">Preparing…</string>
@@ -236,4 +235,5 @@
     <string name="wait">Wait…</string>
     <string name="yes_permissions">yes, grant permissions</string>
     <string name="yes_update_now">Yes, Update now</string>
+    <string name="your_account_has_been_deleted">Your account has been deleted</string>
 </resources>

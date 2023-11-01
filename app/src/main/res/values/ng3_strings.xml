@@ -30,4 +30,9 @@
     <string name="important_delete_prompt"><u>IMPORTANT</u>\nThis operation is NOT reversible!</string>
     <string name="open_drawer_menu">Open drawer menu</string>
     <string name="go_back">Go back</string>
+    <string name="permission_required">Permission required</string>
+    <string name="camera_permission_rationale">%s needs permission to use the camera to take a photo.\nDo you want to grant the permission?</string>
+    <string name="yes">Yes</string>
+    <string name="open_settings">Open settings</string>
+    <string name="none">(None)</string>
 </resources>
