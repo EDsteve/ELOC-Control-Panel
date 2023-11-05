@@ -35,7 +35,7 @@
         tools:ignore="AllowBackup,GoogleAppIndexingWarning"
         tools:targetApi="m">
         <activity
-            android:name=".ng3.activities.HomeActivityNg3"
+            android:name=".ng3.activities.DeviceActivity"
             android:exported="true"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"

@@ -43,8 +43,7 @@
     <string name="command">Command</string>
     <string name="command_missing">You must enter a command to run!</string>
     <string name="confirm_update">Confirm update</string>
-    <string name="connected">Connected</string>
-    <string name="connecting">Connecting…</string>
+
     <string name="connection_close_message">The ELOC is set to turn off bluetooth while recording.\n\nThe bluetooth connection will be closed.</string>
     <string name="create_new_account">Create new account</string>
     <string name="current_email_address">Current email address:</string>
@@ -56,7 +55,7 @@
     <string name="delete_account_message">If you are certain you want to delete your account,\nenter your password below</string>
     <string name="desired_user_id">Desired user ID</string>
     <string name="detector">Detector</string>
-    <string name="device_address_required">Device address is required!</string>
+
     <string name="device_name">Change Device Name</string>
     <string name="device_name_missing">You must enter a device name!</string>
     <string name="devices">ELOC Devices</string>

@@ -17,8 +17,6 @@ import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
@@ -40,10 +38,8 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import de.eloc.eloc_control_panel.SerialListener;
 import de.eloc.eloc_control_panel.SerialService;
 import de.eloc.eloc_control_panel.SerialService.SerialBinder;
-import de.eloc.eloc_control_panel.SerialSocket;
 import de.eloc.eloc_control_panel.SimpleLocation;
 import de.eloc.eloc_control_panel.TextUtil;
 import de.eloc.eloc_control_panel.R;
@@ -53,14 +49,16 @@ import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
 import de.eloc.eloc_control_panel.ng2.activities.DeviceSettingsActivity;
 import de.eloc.eloc_control_panel.ng2.models.LabelColor;
 import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
+import de.eloc.eloc_control_panel.ng3.DeviceDriver;
 import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
+import de.eloc.eloc_control_panel.ng3.data.ConnectionStatus;
 import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper;
+import de.eloc.eloc_control_panel.ng3.interfaces.SocketListener;
 
-public class TerminalActivity extends ThemableActivity implements ServiceConnection, SerialListener {
+public class TerminalActivity extends ThemableActivity implements ServiceConnection, SocketListener {
     private final PreferencesHelper preferencesHelper = PreferencesHelper.Companion.getInstance();
     private ActivityTerminalBinding binding;
-    public static final String EXTRA_DEVICE = "device";
-    public static final String EXTRA_DEVICE_NAME = "device_name";
+
     public static final String EXTRA_RANGER_NAME = "ranger_name";
     private boolean refreshing = false;
     private final double MINUTE = 1.0 / 60; // 1 minute in hrs.
@@ -68,9 +66,6 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     private ExecutorService timeMonitor = Executors.newSingleThreadExecutor();
     private boolean runTimeMonitor = false;
 
-    private StringBuilder buffer = new StringBuilder();
-
-    private enum Connected {False, Pending, True}
 
     // TODO: Replace log.i
 
@@ -84,7 +79,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     private String deviceAddress = "";
     private String deviceName = "";
     private SerialService service;
-    private Connected connected = Connected.False;
+    private ConnectionStatus connected = ConnectionStatus.Inactive;
     private boolean initialStart = true;
     private final boolean hexEnabled = false;
     private boolean pendingNewline = false;
@@ -100,7 +95,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     private DeviceState deviceState = DeviceState.Ready;
     private double recordingTime = 0;
     private boolean hasSDCardError = false;
-    private MenuItem elocSettingsItem;
+    // todo private MenuItem elocSettingsItem;
 
     public SimpleLocation theLocation;
     public String rangerName;
@@ -116,12 +111,9 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         Intent bindIntent = new Intent(this, SerialService.class);
         bindService(bindIntent, this, Context.BIND_AUTO_CREATE);
 
-        setActionBar();
         setListeners();
         setLaunchers();
         setupScrollHack();
-
-        setDeviceAddress();
         setRangerName();
 
         Log.i("elocApp", "terminal rangerName " + rangerName);
@@ -155,25 +147,6 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
                     this,
                     getString(R.string.required),
                     getString(R.string.ranger_name_required),
-                    this::onBackPressed
-            );
-        }
-    }
-
-    private void setDeviceAddress() {
-        Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            deviceAddress = extras.getString(EXTRA_DEVICE, "");
-        }
-        if (deviceAddress == null) {
-            deviceAddress = "";
-        }
-        deviceAddress = deviceAddress.trim();
-        if (deviceAddress.isEmpty()) {
-            showModalAlert(
-                    this,
-                    getString(R.string.required),
-                    getString(R.string.device_address_required),
                     this::onBackPressed
             );
         }
@@ -235,8 +208,6 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     protected void onPause() {
         super.onPause();
         runTimeMonitor = false;
-        String json = buffer.toString();
-        int l = json.length();
     }
 
     private void updateRecordingTime() {
@@ -267,6 +238,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
             service.detach();
         }
         super.onStop();
+        DeviceDriver.INSTANCE.disconnect();
     }
 
     @Override
@@ -276,12 +248,12 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
             unbindService(this);
         } catch (Exception ignored) {
         }
-        if (connected != Connected.False)
+        if (connected != ConnectionStatus.Inactive)
             disconnect();
         stopService(new Intent(this, SerialService.class));
         super.onDestroy();
     }
-
+/*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_terminal, menu);
@@ -306,7 +278,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         } else {
             return super.onOptionsItemSelected(item);
         }
-    }
+    }*/
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder binder) {
@@ -330,15 +302,15 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
      * SerialListener
      */
     @Override
-    public void onSerialConnect() {
+    public void onConnect() {
         ActivityHelper.INSTANCE.showSnack(binding.coordinator, getString(R.string.connected));
-        connected = Connected.True;
+        connected = ConnectionStatus.Active;
         //send("_setClk_"+getBestTimeEstimate());
         //send("settingsRequest");
     }
 
     @Override
-    public void onSerialConnectError(Exception e) {
+    public void onConnectionError(Exception e) {
         updateDeviceState(DeviceState.Ready, "Connection Lost");
         ActivityHelper.INSTANCE.showSnack(binding.coordinator, "Connection Lost");
         updateRecordButton();
@@ -347,12 +319,12 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     }
 
     @Override
-    public void onSerialRead(byte[] data) {
+    public void onRead(byte[] data) {
         receive(data);
     }
 
     @Override
-    public void onSerialIoError(Exception e) {
+    public void onIOError(Exception e) {
         updateDeviceState(DeviceState.Ready, "Connection Lost");
         ActivityHelper.INSTANCE.showSnack(binding.coordinator, "Connection Lost");
         updateRecordButton();
@@ -362,24 +334,22 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     }
 
     private void openSettings() {
-        if (deviceState == DeviceState.Ready) {
+        /*if (deviceState == DeviceState.Ready) {
             Intent intent = new Intent(TerminalActivity.this, DeviceSettingsActivity.class);
             // todo: device name might be changed in DeviceSettingsActivity
             intent.putExtra(EXTRA_DEVICE_NAME, deviceName);
             settingsLauncher.launch(intent);
-        }
+        }*/
     }
 
     /*
      * Serial + UI
      */
     private void connect(boolean notify) {
-
+/*dele-->
         try {
             BluetoothDevice device = BluetoothHelperOld.INSTANCE.getDevice(deviceAddress);
-            // this line might have introduced a bug. This is bluetooth connection and not recording sttatus.
-            //updateDeviceState(DeviceState.Recording, null);
-            connected = Connected.Pending;
+                       connected = ConnectionStatus.Pending;
             SerialSocket socket = new SerialSocket(getApplicationContext(), device);
             service.connect(socket);
             boolean success = service.isConnected();
@@ -388,17 +358,17 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
             }
             binding.swipeRefreshLayout.setRefreshing(false);
         } catch (Exception e) {
-            onSerialConnectError(e);
+            onConnectionError(e);
         } finally {
             binding.refreshLayout.setVisibility(View.GONE);
             binding.infoLayout.setVisibility(View.VISIBLE);
             refreshing = false;
         }
-
+*/
     }
 
     private void disconnect() {
-        connected = Connected.False;
+        connected = ConnectionStatus.Inactive;
         service.disconnect();
     }
 
@@ -417,21 +387,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         }
     }
 
-    private void setActionBar() {
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-            Bundle extras = getIntent().getExtras();
-            if (extras != null) {
-                deviceName = extras.getString(EXTRA_DEVICE_NAME);
-            }
-            if (deviceName == null) {
-                deviceName = "";
-            }
-            deviceName = deviceName.trim();
-            actionBar.setTitle(deviceName);
-        }
-    }
+
 
     private void setLaunchers() {
         settingsLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
@@ -477,9 +433,6 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
             }
             receiveText.append(TextUtil.toCaretString(msg, newline.length() != 0));
             elocReceive(msg);
-             buffer.append(msg);
-             String json = buffer.toString();
-             int l = json.length();
         }
     }
 
@@ -824,7 +777,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     }
 
     private String send(String str) {
-        if (connected != Connected.True) {
+        if (connected != ConnectionStatus.Active) {
             return "not connected";
         }
         try {
@@ -844,7 +797,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
             service.write(data);
             return null;
         } catch (Exception e) {
-            onSerialIoError(e);
+            onIOError(e);
             return "Command not sent - error occurred!";
         }
     }
@@ -880,13 +833,13 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
 
     private void updateDeviceState(DeviceState state, String errorMessage) {
         deviceState = state;
-        elocSettingsItem.setEnabled(true);
+        // todo elocSettingsItem.setEnabled(true);
         switch (state) {
             case Recording:
                 binding.statusTv.setText(R.string.connected);
                 binding.statusIcon.setImageResource(R.drawable.connectivity);
                 binding.btRecordingValueTv.setText(R.string.on);
-                elocSettingsItem.setEnabled(false);
+                // todo elocSettingsItem.setEnabled(false);
                 break;
             case Ready:
                 binding.statusTv.setText(R.string.ready);
@@ -932,18 +885,12 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         binding.sdCardValueTv.setOnClickListener(view -> showSDCardError());
         binding.sdCardErrorBtn.setOnClickListener(view -> showSDCardError());
         binding.recBtn.setOnClickListener(view -> recordButtonClicked());
-        binding.swipeRefreshLayout.setOnRefreshListener(this::refresh);
+
         binding.instructionsButton.setOnClickListener(view -> ActivityHelper.INSTANCE.showInstructions(TerminalActivity.this));
         binding.testButton.setOnClickListener(v -> runCommand());
     }
 
-    private void refresh() {
-        binding.refreshLayout.setVisibility(View.VISIBLE);
-        binding.infoLayout.setVisibility(View.GONE);
-        refreshing = true;
-        disconnect();
-        connect(true);
-    }
+
 
     private void recordButtonClicked() {
         switch (deviceState) {

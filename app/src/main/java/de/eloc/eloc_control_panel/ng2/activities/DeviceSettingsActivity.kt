@@ -68,7 +68,7 @@ class DeviceSettingsActivity : ThemableActivity() {
 
     private fun setDeviceName() {
         val extras = intent.extras
-        deviceName = extras?.getString(TerminalActivity.EXTRA_DEVICE_NAME, "") ?: ""
+        deviceName = extras?.getString(DeviceActivity.EXTRA_DEVICE_NAME, "") ?: ""
         if (deviceName.isNotEmpty()) {
             binding.deviceNameEditText.setText(deviceName.trim())
         }

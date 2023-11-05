@@ -36,6 +36,7 @@ import de.eloc.eloc_control_panel.ng3.activities.UserPrefsActivity
 import de.eloc.eloc_control_panel.ng3.activities.MapActivity
 import de.eloc.eloc_control_panel.ng3.activities.open
 import de.eloc.eloc_control_panel.ng3.activities.AccountActivity
+import de.eloc.eloc_control_panel.ng3.activities.DeviceActivity
 import de.eloc.eloc_control_panel.ng3.activities.showModalAlert
 import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper
 import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel
@@ -379,11 +380,17 @@ class HomeActivity : ThemableActivity() {
 
     private fun showDevice(name: String, address: String) {
         BluetoothHelper.instance.stopScan(this::scanUpdate)
-        val intent = Intent(this, TerminalActivity::class.java)
-        intent.putExtra(TerminalActivity.EXTRA_RANGER_NAME, userId)
-        intent.putExtra(TerminalActivity.EXTRA_DEVICE, address)
-        intent.putExtra(TerminalActivity.EXTRA_DEVICE_NAME, name)
-        startActivity(intent)
+        val old = false
+        if (old) {
+            val intent = Intent(this, TerminalActivity::class.java)
+            intent.putExtra(TerminalActivity.EXTRA_RANGER_NAME, userId)
+            startActivity(intent)
+        } else {
+            val intent = Intent(this, DeviceActivity::class.java)
+            intent.putExtra(DeviceActivity.EXTRA_DEVICE_ADDRESS, address)
+            intent.putExtra(DeviceActivity.EXTRA_DEVICE_NAME, name)
+            startActivity(intent)
+        }
     }
 
     private fun synchronizeClock() {

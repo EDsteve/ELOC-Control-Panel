@@ -5,7 +5,7 @@ import de.eloc.eloc_control_panel.ng3.App;
 class Constants {
 
     // values have to be globally unique
-    static final String INTENT_ACTION_DISCONNECT = App.Companion.getApplicationId() + ".Disconnect";
+
     static final String NOTIFICATION_CHANNEL = App.Companion.getApplicationId() + ".Channel";
     static final String INTENT_CLASS_MAIN_ACTIVITY = App.Companion.getApplicationId() + ".MainActivity";
 

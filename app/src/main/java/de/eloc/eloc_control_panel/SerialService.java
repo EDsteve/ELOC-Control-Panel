@@ -21,12 +21,13 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import de.eloc.eloc_control_panel.R;
+import de.eloc.eloc_control_panel.ng3.interfaces.SocketListener;
 
 /**
  * create notification and queue serial data while activity is not in the foreground
  * use listener chain: SerialSocket -> SerialService -> UI fragment
  */
-public class SerialService extends Service implements SerialListener {
+public class SerialService extends Service implements SocketListener {
 
     public class SerialBinder extends Binder {
         public SerialService getService() {
@@ -52,8 +53,7 @@ public class SerialService extends Service implements SerialListener {
     private final IBinder binder;
     private final Queue<QueueItem> queue1, queue2;
 
-    private SerialSocket socket;
-    private SerialListener listener;
+    private SocketListener listener;
     private boolean connected;
 
     /**
@@ -66,12 +66,6 @@ public class SerialService extends Service implements SerialListener {
         queue2 = new LinkedList<>();
     }
 
-    @Override
-    public void onDestroy() {
-        cancelNotification();
-        disconnect();
-        super.onDestroy();
-    }
 
     @Nullable
     @Override
@@ -82,20 +76,7 @@ public class SerialService extends Service implements SerialListener {
     /**
      * Api
      */
-    public void connect(SerialSocket socket) throws IOException {
-        socket.connect(this);
-        this.socket = socket;
-        connected = true;
-    }
 
-    public void disconnect() {
-        connected = false; // ignore data,errors while disconnecting
-        cancelNotification();
-        if (socket != null) {
-            socket.disconnect();
-            socket = null;
-        }
-    }
 
     public boolean isConnected() {
         return connected;
@@ -104,13 +85,13 @@ public class SerialService extends Service implements SerialListener {
     public void write(byte[] data) throws IOException {
         if (!connected)
             throw new IOException("not connected");
-        socket.write(data);
+        //dele-->socket.write(data);
     }
 
-    public void attach(SerialListener listener) {
+    public void attach(SocketListener listener) {
         if (Looper.getMainLooper().getThread() != Thread.currentThread())
             throw new IllegalArgumentException("not in main thread");
-        cancelNotification();
+
         // use synchronized() to prevent new items in queue2
         // new items will not be added to queue1 because mainLooper.post and attach() run in main thread
         synchronized (this) {
@@ -119,32 +100,32 @@ public class SerialService extends Service implements SerialListener {
         for (QueueItem item : queue1) {
             switch (item.type) {
                 case Connect:
-                    listener.onSerialConnect();
+                    listener.onConnect();
                     break;
                 case ConnectError:
-                    listener.onSerialConnectError(item.e);
+                    listener.onConnectionError(item.e);
                     break;
                 case Read:
-                    listener.onSerialRead(item.data);
+                    listener.onRead(item.data);
                     break;
                 case IoError:
-                    listener.onSerialIoError(item.e);
+                    listener.onIOError(item.e);
                     break;
             }
         }
         for (QueueItem item : queue2) {
             switch (item.type) {
                 case Connect:
-                    listener.onSerialConnect();
+                    listener.onConnect();
                     break;
                 case ConnectError:
-                    listener.onSerialConnectError(item.e);
+                    listener.onConnectionError(item.e);
                     break;
                 case Read:
-                    listener.onSerialRead(item.data);
+                    listener.onRead(item.data);
                     break;
                 case IoError:
-                    listener.onSerialIoError(item.e);
+                    listener.onIOError(item.e);
                     break;
             }
         }
@@ -169,7 +150,7 @@ public class SerialService extends Service implements SerialListener {
             nm.createNotificationChannel(nc);
         }
         Intent disconnectIntent = new Intent()
-                .setAction(Constants.INTENT_ACTION_DISCONNECT);
+                .setAction("Constants.INTENT_ACTION_DISCONNECT");
         Intent restartIntent = new Intent()
                 .setClassName(this, Constants.INTENT_CLASS_MAIN_ACTIVITY)
                 .setAction(Intent.ACTION_MAIN)
@@ -181,7 +162,7 @@ public class SerialService extends Service implements SerialListener {
                 .setColor(getResources().getColor(R.color.colorPrimary))
                 .setContentTitle(getResources().getString(R.string.app_name))
                 //.setContentTitle("hello")
-                .setContentText(socket != null ? "Connected to " + socket.getName() : "Background Service")
+                //dele.setContentText(socket != null ? "Connected to " + socket.getName() : "Background Service")
                 .setContentIntent(restartPendingIntent)
                 .setOngoing(true)
                 .addAction(new NotificationCompat.Action(R.drawable.ic_clear_white_24dp, "Disconnect", disconnectPendingIntent));
@@ -191,20 +172,16 @@ public class SerialService extends Service implements SerialListener {
         startForeground(Constants.NOTIFY_MANAGER_START_FOREGROUND_SERVICE, notification);
     }
 
-    private void cancelNotification() {
-        stopForeground(true);
-    }
-
     /**
      * SerialListener
      */
-    public void onSerialConnect() {
+    public void onConnect() {
         if (connected) {
             synchronized (this) {
                 if (listener != null) {
                     mainLooper.post(() -> {
                         if (listener != null) {
-                            listener.onSerialConnect();
+                            listener.onConnect();
                         } else {
                             queue1.add(new QueueItem(QueueType.Connect, null, null));
                         }
@@ -216,35 +193,33 @@ public class SerialService extends Service implements SerialListener {
         }
     }
 
-    public void onSerialConnectError(Exception e) {
+    public void onConnectionError(Exception e) {
         if (connected) {
             synchronized (this) {
                 if (listener != null) {
                     mainLooper.post(() -> {
                         if (listener != null) {
-                            listener.onSerialConnectError(e);
+                            listener.onConnectionError(e);
                         } else {
                             queue1.add(new QueueItem(QueueType.ConnectError, null, e));
-                            cancelNotification();
                             disconnect();
                         }
                     });
                 } else {
                     queue2.add(new QueueItem(QueueType.ConnectError, null, e));
-                    cancelNotification();
                     disconnect();
                 }
             }
         }
     }
 
-    public void onSerialRead(byte[] data) {
+    public void onRead(byte[] data) {
         if (connected) {
             synchronized (this) {
                 if (listener != null) {
                     mainLooper.post(() -> {
                         if (listener != null) {
-                            listener.onSerialRead(data);
+                            listener.onRead(data);
                         } else {
                             queue1.add(new QueueItem(QueueType.Read, data, null));
                         }
@@ -256,26 +231,28 @@ public class SerialService extends Service implements SerialListener {
         }
     }
 
-    public void onSerialIoError(Exception e) {
+    public void onIOError(Exception e) {
         if (connected) {
             synchronized (this) {
                 if (listener != null) {
                     mainLooper.post(() -> {
                         if (listener != null) {
-                            listener.onSerialIoError(e);
+                            listener.onIOError(e);
                         } else {
                             queue1.add(new QueueItem(QueueType.IoError, null, e));
-                            cancelNotification();
                             disconnect();
                         }
                     });
                 } else {
                     queue2.add(new QueueItem(QueueType.IoError, null, e));
-                    cancelNotification();
                     disconnect();
                 }
             }
         }
+    }
+
+    public void disconnect() {
+        // dummy
     }
 
 }

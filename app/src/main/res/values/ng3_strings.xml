@@ -35,4 +35,9 @@
     <string name="yes">Yes</string>
     <string name="open_settings">Open settings</string>
     <string name="none">(None)</string>
+    <string name="connected">Connected</string>
+    <string name="connecting">Connecting…</string>
+    <string name="disconnected_swipe_to_reconnect">Disconnected\n\nSwipe down to reconnect</string>
+    <string name="device_address_required">Device address is required!</string>
+    <string name="device_name_required">Device name is required!</string>
 </resources>
