@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import de.eloc.eloc_control_panel.data.DataHelper;
-import de.eloc.eloc_control_panel.ng2.interfaces.BooleanCallback;
-import de.eloc.eloc_control_panel.ng2.interfaces.StringCallback;
+import de.eloc.eloc_control_panel.ng3.interfaces.BooleanCallback;
+import de.eloc.eloc_control_panel.ng3.interfaces.StringCallback;
 
 public class StorageHelper {
     private static final String REF_PROFILE_PICTURES = "profile_pictures";

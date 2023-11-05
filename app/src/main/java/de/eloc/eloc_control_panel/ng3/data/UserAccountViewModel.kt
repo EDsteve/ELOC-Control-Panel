@@ -6,9 +6,9 @@ import android.graphics.Bitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import de.eloc.eloc_control_panel.ng2.interfaces.BooleanCallback
-import de.eloc.eloc_control_panel.ng2.interfaces.StringCallback
-import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.BooleanCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.StringCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.VoidCallback
 
 class UserAccountViewModel(application: Application) : AndroidViewModel(application) {
 

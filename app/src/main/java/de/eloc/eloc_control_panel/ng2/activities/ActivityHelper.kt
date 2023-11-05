@@ -6,7 +6,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import de.eloc.eloc_control_panel.ng3.App
-import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.VoidCallback
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity
 

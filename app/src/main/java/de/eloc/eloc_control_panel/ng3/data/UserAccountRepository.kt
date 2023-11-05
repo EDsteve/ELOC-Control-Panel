@@ -4,10 +4,10 @@ import android.content.Intent
 import android.graphics.Bitmap
 import de.eloc.eloc_control_panel.data.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.data.firebase.StorageHelper
-import de.eloc.eloc_control_panel.ng2.interfaces.BooleanCallback
-import de.eloc.eloc_control_panel.ng2.interfaces.ProfileCallback
-import de.eloc.eloc_control_panel.ng2.interfaces.StringCallback
-import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.BooleanCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.ProfileCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.StringCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.VoidCallback
 import de.eloc.eloc_control_panel.ng3.data.firebase.AuthHelper
 import kotlin.collections.HashMap
 

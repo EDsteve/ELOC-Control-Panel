@@ -5,8 +5,8 @@ import android.view.View
 import androidx.lifecycle.ViewModelProvider
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityRegisterBinding
-import de.eloc.eloc_control_panel.ng2.activities.TextInputWatcher
 import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel
+import de.eloc.eloc_control_panel.ng3.interfaces.TextInputWatcher
 
 class RegisterActivity : ThemableActivity() {
     private lateinit var binding: ActivityRegisterBinding

@@ -5,7 +5,7 @@ import android.util.AttributeSet
 import com.google.android.material.appbar.AppBarLayout
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.LayoutAppBarBinding
-import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.VoidCallback
 
 class ElocAppBar : AppBarLayout {
     private lateinit var binding: LayoutAppBarBinding
@@ -59,7 +59,7 @@ class ElocAppBar : AppBarLayout {
             val state = if (field) {
                 VISIBLE
             } else {
-                INVISIBLE
+                GONE
             }
             binding.connectionStatusIcon.visibility = state
             binding.connectionStatusLabel.visibility = state
@@ -71,7 +71,7 @@ class ElocAppBar : AppBarLayout {
             binding.userLabel.visibility = if (field) {
                 VISIBLE
             } else {
-                INVISIBLE
+                GONE
             }
         }
 
@@ -81,7 +81,7 @@ class ElocAppBar : AppBarLayout {
             binding.settingsButton.visibility = if (field) {
                 VISIBLE
             } else {
-                INVISIBLE
+                GONE
             }
         }
 

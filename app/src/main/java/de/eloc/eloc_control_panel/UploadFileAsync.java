@@ -9,7 +9,7 @@ import java.io.FileInputStream;
 import java.net.URL;
 import java.util.concurrent.Executors;
 
-import de.eloc.eloc_control_panel.ng2.interfaces.StringCallback;
+import de.eloc.eloc_control_panel.ng3.interfaces.StringCallback;
 
 public class UploadFileAsync {
 

@@ -16,7 +16,7 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOkBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOptionBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAppChipBinding
-import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.VoidCallback
 
 fun AppCompatActivity.getPickImageRequest(): PickVisualMediaRequest =
     PickVisualMediaRequest.Builder()

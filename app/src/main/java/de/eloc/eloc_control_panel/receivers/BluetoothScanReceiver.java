@@ -9,7 +9,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import de.eloc.eloc_control_panel.ng.models.BluetoothHelperOld;
-import de.eloc.eloc_control_panel.ng2.interfaces.BooleanCallback;
+import de.eloc.eloc_control_panel.ng3.interfaces.BooleanCallback;
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper;
 
 public class BluetoothScanReceiver extends BroadcastReceiver {

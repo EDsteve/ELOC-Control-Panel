@@ -37,7 +37,7 @@
         <item
             android:id="@+id/mnu_account"
             android:icon="@drawable/person"
-            android:title="@string/account_settings" />
+            android:title="@string/manage_account" />
     </group>
     <group android:id="@+id/group4">
         <item

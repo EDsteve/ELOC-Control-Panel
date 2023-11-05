@@ -23,7 +23,7 @@ import java.io.IOException;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.data.DataHelper;
 import de.eloc.eloc_control_panel.databinding.ActivityProfileBinding;
-import de.eloc.eloc_control_panel.ng2.interfaces.VoidCallback;
+import de.eloc.eloc_control_panel.ng3.interfaces.VoidCallback;
 import de.eloc.eloc_control_panel.ng2.models.HttpHelper;
 import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel;
 import de.eloc.eloc_control_panel.ng3.data.UserProfile;

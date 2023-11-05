@@ -18,8 +18,8 @@ import de.eloc.eloc_control_panel.data.DataHelper
 import de.eloc.eloc_control_panel.data.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.databinding.ActivityProfileSetupBinding
 import de.eloc.eloc_control_panel.ng2.activities.HomeActivity
-import de.eloc.eloc_control_panel.ng2.activities.TextInputWatcher
 import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel
+import de.eloc.eloc_control_panel.ng3.interfaces.TextInputWatcher
 
 class ProfileSetupActivity : MediaActivity() {
     private lateinit var binding: ActivityProfileSetupBinding

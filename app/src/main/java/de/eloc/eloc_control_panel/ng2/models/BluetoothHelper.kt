@@ -19,7 +19,7 @@ import de.eloc.eloc_control_panel.ng.models.DeviceInfo
 import de.eloc.eloc_control_panel.ng3.App
 import de.eloc.eloc_control_panel.ng3.activities.showModalAlert
 import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity
-import de.eloc.eloc_control_panel.ng2.interfaces.IntCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.IntCallback
 import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture

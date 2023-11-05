@@ -5,8 +5,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import de.eloc.eloc_control_panel.databinding.LayoutElocInfoBinding
-import de.eloc.eloc_control_panel.ng2.interfaces.AdapterItemCallback
-import de.eloc.eloc_control_panel.ng2.interfaces.BooleanCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.AdapterItemCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.BooleanCallback
 
 import java.util.ArrayList
 

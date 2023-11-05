@@ -7,7 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
-import de.eloc.eloc_control_panel.ng2.interfaces.ElocCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.ElocCallback
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import de.eloc.eloc_control_panel.ng2.models.ElocInfo
 

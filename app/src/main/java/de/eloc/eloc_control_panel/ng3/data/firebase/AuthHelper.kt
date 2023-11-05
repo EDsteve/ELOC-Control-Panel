@@ -12,8 +12,8 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.ng3.App
-import de.eloc.eloc_control_panel.ng2.interfaces.BooleanCallback
-import de.eloc.eloc_control_panel.ng2.interfaces.StringCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.BooleanCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.StringCallback
 
 class AuthHelper {
     companion object {

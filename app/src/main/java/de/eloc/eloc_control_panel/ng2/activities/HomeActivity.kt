@@ -35,6 +35,7 @@ import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity
 import de.eloc.eloc_control_panel.ng3.activities.UserPrefsActivity
 import de.eloc.eloc_control_panel.ng3.activities.MapActivity
 import de.eloc.eloc_control_panel.ng3.activities.open
+import de.eloc.eloc_control_panel.ng3.activities.AccountActivity
 import de.eloc.eloc_control_panel.ng3.activities.showModalAlert
 import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper
 import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel
