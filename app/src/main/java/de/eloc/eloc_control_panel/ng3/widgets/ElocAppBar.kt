@@ -53,18 +53,6 @@ class ElocAppBar : AppBarLayout {
             binding.userLabel.text = context.getString(R.string.eloc_user, field)
         }
 
-    private var showConnectionStatus = false
-        set(value) {
-            field = value
-            val state = if (field) {
-                VISIBLE
-            } else {
-                GONE
-            }
-            binding.connectionStatusIcon.visibility = state
-            binding.connectionStatusLabel.visibility = state
-        }
-
     private var showUserName = false
         set(value) {
             field = value
@@ -75,7 +63,7 @@ class ElocAppBar : AppBarLayout {
             }
         }
 
-    private var showSettingsButton = false
+    var showSettingsButton = false
         set(value) {
             field = value
             binding.settingsButton.visibility = if (field) {
@@ -112,8 +100,6 @@ class ElocAppBar : AppBarLayout {
         showSettingsButton =
             typedArray.getBoolean(R.styleable.ElocAppBar_show_settings_button, false)
         showUserName = typedArray.getBoolean(R.styleable.ElocAppBar_show_user_name, false)
-        showConnectionStatus =
-            typedArray.getBoolean(R.styleable.ElocAppBar_show_connection_status, false)
         val menuPositionValue = typedArray.getInt(
             R.styleable.ElocAppBar_menu_button_position,
             MenuButtonPosition.None.value

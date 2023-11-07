@@ -128,7 +128,7 @@
                         app:layout_constraintTop_toTopOf="@id/battery_gauge"
                         app:layout_constraintWidth_percent="0.33"
                         app:lowColor="@color/low_orange"
-                        app:lowColorThreshold="15"
+                        app:lowColorThreshold="20"
                         app:normalColor="@color/critical_red"
                         app:showDiscreteColors="false" />
 

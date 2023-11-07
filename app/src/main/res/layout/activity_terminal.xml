@@ -66,7 +66,6 @@
                 android:layout_weight="0.2"
                 android:background="#232323"
                 android:clickable="true"
-                android:textSize="14sp"
                 android:focusable="true"
                 android:gravity="center"
                 android:orientation="horizontal"
@@ -74,25 +73,14 @@
                 android:textAlignment="center"
                 android:textAllCaps="true"
                 android:textColor="@color/white"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toTopOf="@id/instructions_button" />
-
-            <Button app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"
-                android:layout_width="wrap_content" android:id="@+id/test_button"
-                android:layout_height="wrap_content" />
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="0dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toStartOf="@id/test_button" app:layout_constraintTop_toTopOf="parent"
-                android:layout_height="wrap_content">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:id="@+id/command_box" />
-            </com.google.android.material.textfield.TextInputLayout>
 
             <ScrollView
                 android:id="@+id/scroll_view"
                 android:layout_width="match_parent"
-                android:layout_height="0dp" android:layout_marginTop="64dp"
+                android:layout_height="0dp"
                 android:layout_marginBottom="16dp"
                 app:layout_constraintBottom_toTopOf="@id/recBtn"
                 app:layout_constraintTop_toTopOf="parent">
@@ -734,11 +722,6 @@
 
                         </RadioGroup>
 
-
-                        <TextView
-                            android:id="@+id/receive_text"
-                            android:layout_width="0dp"
-                            android:layout_height="0dp" />
 
                         <RadioGroup
                             android:id="@+id/radioGroupSamplesPerSec"

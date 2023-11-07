@@ -1,22 +1,15 @@
 package de.eloc.eloc_control_panel.activities;
 
-import static de.eloc.eloc_control_panel.ng3.activities.ActivityExtensionsKt.showModalAlert;
-
-import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.SystemClock;
-import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
-import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -27,9 +20,8 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.ActionBar;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.openlocationcode.OpenLocationCode;
+import de.eloc.eloc_control_panel.ng3.data.LabelColor;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.NumberFormat;
@@ -40,14 +32,11 @@ import java.util.concurrent.Executors;
 
 import de.eloc.eloc_control_panel.SerialService;
 import de.eloc.eloc_control_panel.SerialService.SerialBinder;
-import de.eloc.eloc_control_panel.SimpleLocation;
 import de.eloc.eloc_control_panel.TextUtil;
 import de.eloc.eloc_control_panel.R;
-import de.eloc.eloc_control_panel.ng.models.BluetoothHelperOld;
 import de.eloc.eloc_control_panel.ng3.App;
 import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
 import de.eloc.eloc_control_panel.ng2.activities.DeviceSettingsActivity;
-import de.eloc.eloc_control_panel.ng2.models.LabelColor;
 import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 import de.eloc.eloc_control_panel.ng3.DeviceDriver;
 import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
@@ -55,15 +44,14 @@ import de.eloc.eloc_control_panel.ng3.data.ConnectionStatus;
 import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper;
 import de.eloc.eloc_control_panel.ng3.interfaces.SocketListener;
 
-public class TerminalActivity extends ThemableActivity implements ServiceConnection, SocketListener {
+public class TerminalActivity extends ThemableActivity /*implements ServiceConnection, SocketListener*/ {
     private final PreferencesHelper preferencesHelper = PreferencesHelper.Companion.getInstance();
     private ActivityTerminalBinding binding;
 
     public static final String EXTRA_RANGER_NAME = "ranger_name";
-    private boolean refreshing = false;
     private final double MINUTE = 1.0 / 60; // 1 minute in hrs.
     private final int UPDATE_INTERVAL_MILLIS = 60 * 1000; // Update after each minute.
-    private ExecutorService timeMonitor = Executors.newSingleThreadExecutor();
+    private final ExecutorService timeMonitor = Executors.newSingleThreadExecutor();
     private boolean runTimeMonitor = false;
 
 
@@ -77,80 +65,40 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
 
     public ActivityResultLauncher<Intent> settingsLauncher;
     private String deviceAddress = "";
-    private String deviceName = "";
+
     private SerialService service;
     private ConnectionStatus connected = ConnectionStatus.Inactive;
     private boolean initialStart = true;
     private final boolean hexEnabled = false;
-    private boolean pendingNewline = false;
     private final String newline = TextUtil.newline_crlf;
-    private TextView receiveText; // todo: where is this used?
-    private TextView sendText;
-    private TextUtil.HexWatcher hexWatcher;
-    private final boolean gInitialSettings = false;
-    public Long gLastGoogleSync = 0L; //need to get the elapsedRealtime ()
-    public Long gLastTimeDifferenceMillisecond = 0L;
-    private String locationCode;
-    public float locationAccuracy;
+
+
     private DeviceState deviceState = DeviceState.Ready;
     private double recordingTime = 0;
     private boolean hasSDCardError = false;
     // todo private MenuItem elocSettingsItem;
 
-    public SimpleLocation theLocation;
+
     public String rangerName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i("elocApp", "terminal onCreate");
         binding = ActivityTerminalBinding.inflate(getLayoutInflater());
 
         setContentView(binding.getRoot());
 
         Intent bindIntent = new Intent(this, SerialService.class);
-        bindService(bindIntent, this, Context.BIND_AUTO_CREATE);
+    /*dele    bindService(bindIntent, this, Context.BIND_AUTO_CREATE);
 
         setListeners();
         setLaunchers();
-        setupScrollHack();
-        setRangerName();
-
-        Log.i("elocApp", "terminal rangerName " + rangerName);
-        Log.i("elocApp", "device address " + deviceAddress);
-        getBestTimeEstimate();
-        //startLocation();
-
-        receiveText = binding.receiveText;                          // TextView performance decreases with number of spans
-        receiveText.setTextColor(getResources().getColor(R.color.colorReceiveText)); // set as default color to reduce number of spans
-        receiveText.setMovementMethod(ScrollingMovementMethod.getInstance());
+        getBestTimeEstimate();*/
 
         String appVersion = App.Companion.getVersionName();
-        appendReceiveText("\nEloc App version: " + appVersion + "\n");
         binding.appversionValueTv.setText(appVersion);
-
-        startLocation();
-
     }
 
-    private void setRangerName() {
-        Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            rangerName = extras.getString(EXTRA_RANGER_NAME, "");
-        }
-        if (rangerName == null) {
-            rangerName = "";
-        }
-        rangerName = rangerName.trim();
-        if (rangerName.isEmpty()) {
-            showModalAlert(
-                    this,
-                    getString(R.string.required),
-                    getString(R.string.ranger_name_required),
-                    this::onBackPressed
-            );
-        }
-    }
 
     @Override
     protected void onResume() {
@@ -158,26 +106,9 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
 
         binding.refreshLayout.setVisibility(View.GONE);
         binding.infoLayout.setVisibility(View.VISIBLE);
-
-        Log.i("elocApp", "terminal onResume()");
+/*dele
         locationCode = "UNKNOWN";
         locationAccuracy = 99.0f;
-        //sendLocation();
-
-        if (theLocation.hasLocationEnabled()) {
-            Log.i("elocApp", "gps enabled");
-
-            //appendReceiveText("\nGetting GPS coords\n");
-
-        } else {
-            Log.i("elocApp", "gps off");
-            //appendReceiveText("\nPlease enable GPS\n");
-            //theLocation.openSettings(context);
-
-        }
-
-
-        //setRecButton();
 
         // if the recbtn is start recording then wait gps
         theLocation.beginUpdates();
@@ -188,7 +119,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         if (initialStart && service != null) {
             initialStart = false;
         }
-        binding.gpsValueTv.setText(R.string.wait);
+
         runTimeMonitor = true;
         timeMonitor.execute(() -> {
             while (runTimeMonitor) {
@@ -216,21 +147,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        Log.i("elocApp", "terminal onstart()");
-        super.onStart();
-        if (service != null) {
-            service.attach(this);
-        } else {
-            // prevents service destroy on unbind from recreated activity caused by orientation change
-            startService(new Intent(this, SerialService.class));
-        }
-    }
-
-    @Override
     protected void onStop() {
-        Log.i("elocApp", "terminal onstart()");
         handleStop();
         //theLocation.endUpdates();
 
@@ -243,7 +160,6 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
 
     @Override
     protected void onDestroy() {
-        Log.i("elocApp", "terminal ondestroy()");
         try {
             unbindService(this);
         } catch (Exception ignored) {
@@ -279,7 +195,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
             return super.onOptionsItemSelected(item);
         }
     }*/
-
+/*dele
     @Override
     public void onServiceConnected(ComponentName name, IBinder binder) {
         SerialBinder serialBinder = (SerialBinder) binder;
@@ -301,7 +217,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     /*
      * SerialListener
      */
-    @Override
+ /*dele   @Override
     public void onConnect() {
         ActivityHelper.INSTANCE.showSnack(binding.coordinator, getString(R.string.connected));
         connected = ConnectionStatus.Active;
@@ -328,7 +244,6 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         updateDeviceState(DeviceState.Ready, "Connection Lost");
         ActivityHelper.INSTANCE.showSnack(binding.coordinator, "Connection Lost");
         updateRecordButton();
-        receiveText.setText("");
         //status("connection lost: " + e.getMessage()); //TODO: This message should be in some kind of log
         disconnect();
     }
@@ -366,28 +281,11 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         }
 */
     }
-
+/*
     private void disconnect() {
         connected = ConnectionStatus.Inactive;
         service.disconnect();
     }
-
-    private void setupScrollHack() {
-        // Keep swipe gesture for SwipeToRefreshLayout disabled
-        // Only enable it when the scrollview is at the top.
-        // Do this this avoid the SwipeToRefreshLayout stealing focus
-        // and making scrolling broken
-
-        binding.swipeRefreshLayout.setEnabled(false);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            binding.scrollView.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-                Log.d("TAG", "onScrollChange: " + scrollY);
-                binding.swipeRefreshLayout.setEnabled(scrollY <= 0);
-            });
-        }
-    }
-
-
 
     private void setLaunchers() {
         settingsLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
@@ -416,22 +314,13 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
     private void receive(byte[] data) {
 
         if (hexEnabled) {
-            receiveText.append(TextUtil.toHexString(data) + '\n');
         } else {
             String msg = new String(data);
 
             if (newline.equals(TextUtil.newline_crlf) && msg.length() > 0) {
                 // don't show CR as ^M if directly before LF
                 msg = msg.replace(TextUtil.newline_crlf, TextUtil.newline_lf);
-                // special handling if CR and LF come in separate fragments
-                if (pendingNewline && msg.charAt(0) == '\n') {
-                    Editable edt = receiveText.getEditableText();
-                    if (edt != null && edt.length() > 1)
-                        edt.replace(edt.length() - 2, edt.length(), "");
-                }
-                pendingNewline = msg.charAt(msg.length() - 1) == '\r';
             }
-            receiveText.append(TextUtil.toCaretString(msg, newline.length() != 0));
             elocReceive(msg);
         }
     }
@@ -481,32 +370,14 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         data = data.trim() + "\nApp last time sync:  " + Long.toString(((System.currentTimeMillis() - lastGoogleTimestamp) / 1000l / 60l)) + " min\n";
         data = data + "App Version:  " + App.Companion.getVersionName();
 
-
-        //msg=top+msg;
-
-        //receiveText.setText("");
-        //status(msg);
-        receiveText.setText(spanWhite(data.trim()));
-
-        //always first one fails
-        receiveText.post(() -> receiveText.scrollTo(0, 0));
-
-        //String lines[] = msg.split("\\r?\\n");
         String temp = deviceAddress.replace(":", "-");
         String filename = temp + ".txt";
-
-        File test = getFilesDir();
-        //getAbsolutePath()
-        Log.i("elocApp", "file written   " + test.getAbsolutePath() + filename);
-        //Log.i("elocApp", msg);
-
-
         try {
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(openFileOutput(filename, Context.MODE_PRIVATE));
             outputStreamWriter.write(data);
             outputStreamWriter.close();
         } catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
+
         }
     }
 
@@ -566,11 +437,11 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
                     }
                     binding.batteryValueTv.setText(batteryLevel);
                     String tmp = batteryLevel.toLowerCase();
-                    LabelColor batteryValueColor = LabelColor.middle;
+                    LabelColor batteryValueColor = LabelColor.Middle;
                     if (tmp.contains("low")) {
-                        batteryValueColor = LabelColor.off;
+                        batteryValueColor = LabelColor.Off;
                     } else if (tmp.contains("full")) {
-                        batteryValueColor = LabelColor.on;
+                        batteryValueColor = LabelColor.On;
                     }
                     setLabelColor(binding.batteryValueTv, batteryValueColor, true);
 
@@ -674,7 +545,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
                         } else {
                             labelColor = LabelColor.off;
                         }
-                        setLabelColor(binding.gpsValueTv, labelColor, true);
+
                     }
                     binding.lastAccuracyValueTv.setText(prettyAccuracy);
                 } else if (l.startsWith("!16!")) {
@@ -769,12 +640,7 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         setLabelColor(binding.recordingValueTv, color, true);
     }
 
-    private String formatNumber(double number, String units) {
-        NumberFormat format = NumberFormat.getInstance(Locale.ENGLISH);
-        format.setMaximumFractionDigits(2);
-        format.setMinimumFractionDigits(0);
-        return format.format(number) + units;
-    }
+
 
     private String send(String str) {
         if (connected != ConnectionStatus.Active) {
@@ -793,19 +659,12 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
                 msg = str;
                 data = (str + newline).getBytes();
             }
-            appendReceiveText(msg + "\n");
             service.write(data);
             return null;
         } catch (Exception e) {
             onIOError(e);
             return "Command not sent - error occurred!";
         }
-    }
-
-    public void appendReceiveText(String stuff) {
-        SpannableStringBuilder temp = new SpannableStringBuilder(stuff);
-        temp.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorStatusText)), 0, temp.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        receiveText.append(temp);
     }
 
     private String getBestTimeEstimate() {
@@ -885,11 +744,8 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
         binding.sdCardValueTv.setOnClickListener(view -> showSDCardError());
         binding.sdCardErrorBtn.setOnClickListener(view -> showSDCardError());
         binding.recBtn.setOnClickListener(view -> recordButtonClicked());
-
         binding.instructionsButton.setOnClickListener(view -> ActivityHelper.INSTANCE.showInstructions(TerminalActivity.this));
-        binding.testButton.setOnClickListener(v -> runCommand());
     }
-
 
 
     private void recordButtonClicked() {
@@ -949,76 +805,16 @@ public class TerminalActivity extends ThemableActivity implements ServiceConnect
                 .setTitle("")
                 .setMessage("Please wait for better GPS accuracy < 8 m")
                 .setPositiveButton("Record Anyway", (dialog, which) -> {
-                    // do something here on OK
-                    Log.i("elocApp", "clicked record");
                     dialog.cancel();
                     startRecording();
                 })
                 .setNegativeButton("Wait    ", (dialog, which) -> {
                     dialog.cancel();
-                    Log.i("elocApp", "clicked wait");
                 })
                 .show();
     }
 
-    void setLabelColor(TextView label, LabelColor color, boolean foreground) {
-        if (label != null) {
-            if (foreground) {
-                label.setTextColor(color.getColor());
-            } else {
-                label.setBackgroundColor(color.getColor());
-            }
-        }
-    }
 
-    private void startLocation() {
-        //It really depends on the way you call that constructor. Make sure not to enable passive mode while using a network/coarse location.
-        //Passive mode is only available for GPS/fine location.
-        boolean requireFineGranularity = true;
-        boolean passiveMode = false;
-        long updateIntervalInMilliseconds = 3 * 1000; //10 secs?
-        boolean requireNewLocation = true;
-        theLocation = new SimpleLocation(this, requireFineGranularity, passiveMode, updateIntervalInMilliseconds, requireNewLocation);
-        //Button gpsBtn = findViewById(R.id.gpsBtn);
 
-        theLocation.setBlurRadius(0);
-        theLocation.setListener(new SimpleLocation.Listener() {
-            //OpenLocationCode(double latitude, double longitude, int codeLength);
-            OpenLocationCode theCode;
-
-            public void onPositionChanged() {
-                //Log.i("elocApp", "position changed");
-                locationAccuracy = theLocation.getAccuracy();
-                theCode = new OpenLocationCode(theLocation.getLatitude(), theLocation.getLongitude());
-                locationCode = theCode.getCode();
-                Log.i(
-                        "elocApp",
-                        "code: " + locationCode +
-                                "\nlat: " + theLocation.getLatitude() +
-                                "\nlon: " + theLocation.getLongitude() +
-                                "\nalt: " + theLocation.getAltitude() +
-                                "\nacc: " + locationAccuracy);
-                String prettyAccuracy = formatNumber(locationAccuracy, "m");
-                final LabelColor labelColor;
-                if (locationAccuracy < 8) {
-                    labelColor = LabelColor.on;
-                } else if (locationAccuracy < 12) {
-                    labelColor = LabelColor.middle;
-                } else {
-                    labelColor = LabelColor.off;
-                }
-                setLabelColor(binding.gpsValueTv, labelColor, true);
-                binding.gpsValueTv.setText(prettyAccuracy);
-            }
-        });
-    }
-
-    private void runCommand() {
-        String command = "";
-        Editable editable = binding.commandBox.getEditableText();
-        if (editable != null) {
-            command = editable.toString().trim();
-        }
-        send(command);
-    }
-}
+*/
+} //1070

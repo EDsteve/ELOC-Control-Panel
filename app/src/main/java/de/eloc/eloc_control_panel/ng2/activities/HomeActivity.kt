@@ -58,7 +58,7 @@ class HomeActivity : ThemableActivity() {
     private lateinit var leftHeaderBinding: LayoutNavHeaderBinding
     private lateinit var rightHeaderBinding: LayoutNavHeaderBinding
     private lateinit var viewModel: UserAccountViewModel
-    private lateinit var userId: String
+    private lateinit var rangerName: String
     private val bluetoothHelper = BluetoothHelper.instance
     private val elocAdapter = ElocInfoAdapter(this::onListUpdated, this::showDevice)
     private val elocReceiver = BluetoothDeviceReceiver(elocAdapter::add)
@@ -240,7 +240,7 @@ class HomeActivity : ThemableActivity() {
                     it.profilePictureUrl,
                     HttpHelper.getInstance().imageLoader
                 )
-                userId = it.userId
+                rangerName = it.userId
                 leftHeaderBinding.userIdTextView.text = it.userId
                 rightHeaderBinding.userIdTextView.text = it.userId
                 leftHeaderBinding.emailAddressTextView.text = it.emailAddress
@@ -383,12 +383,15 @@ class HomeActivity : ThemableActivity() {
         val old = false
         if (old) {
             val intent = Intent(this, TerminalActivity::class.java)
-            intent.putExtra(TerminalActivity.EXTRA_RANGER_NAME, userId)
+            intent.putExtra(TerminalActivity.EXTRA_RANGER_NAME, rangerName)
             startActivity(intent)
         } else {
             val intent = Intent(this, DeviceActivity::class.java)
-            intent.putExtra(DeviceActivity.EXTRA_DEVICE_ADDRESS, address)
-            intent.putExtra(DeviceActivity.EXTRA_DEVICE_NAME, name)
+                .apply {
+                    putExtra(DeviceActivity.EXTRA_RANGER_NAME, rangerName)
+                    putExtra(DeviceActivity.EXTRA_DEVICE_ADDRESS, address)
+                    putExtra(DeviceActivity.EXTRA_DEVICE_NAME, name)
+                }
             startActivity(intent)
         }
     }
@@ -434,7 +437,7 @@ class HomeActivity : ThemableActivity() {
 
     private fun showMap() {
         val intent = Intent(this, MapActivity::class.java)
-        intent.putExtra(MapActivity.EXTRA_RANGER_NAME, userId)
+        intent.putExtra(MapActivity.EXTRA_RANGER_NAME, rangerName)
         startActivity(intent)
     }
 

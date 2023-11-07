@@ -16,6 +16,7 @@ package de.eloc.eloc_control_panel;
  * limitations under the License.
  */
 
+import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -230,6 +231,7 @@ public class SimpleLocation {
 	}
 
 	/** Starts updating the location and requesting new updates after the defined interval */
+	@SuppressLint("MissingPermission")
 	public void beginUpdates() {
 		if (mLocationListener != null) {
 			endUpdates();
