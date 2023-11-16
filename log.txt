@@ -1,3 +1,9 @@
+- fix state of swipe to refresh after json is received
+- disable swipe refresh on first load
+- poll battery level every 60s
+- handle situation where json is received in incomplete chunks
+- remove MaterialAlertDialogBuilder and use showModalAlert for a consistent UI experience
+- I just remembered thta I had tried to optimize scanning by disabled repeated scans when there are already results in the list. I will revert to always scanning to get fresh results
 
 MISC
 - Storage gauge
@@ -8,92 +14,73 @@ MISC
 + App version	ver0.1
 (from https://github.com/EDsteve/ELOC-Control-Panel/issues/14)
 
-greeting from device:
-{"device" : ELOC 3.0, "cmdVersion" : 1}
+>setRecordMode#mode=off/on
 
-command: getConfig
-{"ecode" : 0, "cmd" : getConfig, "payload" : {
+{"ecode" : 0, "error" : "ESP_OK", "cmd" : "setRecordMode", "payload" : {"recordingState" : 0}}
+
+{"ecode" : 0, "error" : "ESP_OK", "cmd" : "setRecordMode", "payload" : {"recordingState" : 1}}
+
+{"device" : "ELOC 3.0", "cmdVersion" : 1} // the greeting line has no cmd field. that is where the error is from
+
+
+{
+"ecode" : 0,
+"error" : "ESP_OK",
+"cmd" : "getStatus", "payload" : {
+  "battery": {
+    "type": "LiPo Battery",
+    "state": "Full", if we could get the percent here, that could solve our situation...
+    "SoC[%]": 3.2, is the current level? yes
+    "voltage[V]": 3.49
+  },
+  "session": {
+    "identifier": "",
+    "recordingState": {
+      "val": 0,
+      "state": "IDLE"
+    },
+    "recordingTime[h]": 0
+  },
   "device": {
-    "location": "",
-    "locationCode": "unknown",
-    "locationAccuracy": "99",
-    "nodeName": "ELOC_NONAME"
+    "firmware": "ELOC_V0.1",
+    "Uptime[h]": 1.973056793,
+    "totalRecordingTime[h]": 0,
+    "SdCardSize[GB]": -0.62, Not ure why it shows like this. Let me check thee log in VScode
+    "SdCardFreeSpace[GB]": 103.07, so inside the gauge show "103GB"?? yes. That way the user gets more precise info. Ok
+    "SdCardFreeSpace[%]": -16490.48 ??
+  }
+}}
+
+
+{"ecode" : 0, "error" : "ESP_OK", "cmd" : "getConfig", "payload" : {
+  "device": {
+    "fileHeader": "not_set",so we replace Grid ID with File Header in U
+    "locationCode": "6MJWMRHV+8V",
+    "locationAccuracy": 99,
+    "nodeName": "ELOC_SD_CONFIG"
   },
   "config": {
     "secondsPerFile": 60,
-    "listenOnly": false,
     "cpuMaxFrequencyMHZ": 80,
     "cpuMinFrequencyMHZ": 10,
     "cpuEnableLightSleep": true,
-    "bluetoothEnableAtStart": false,
+    "bluetoothEnableAtStart": true,
     "bluetoothEnableOnTapping": true,
     "bluetoothEnableDuringRecord": true,
-    "bluetoothOffTimeoutSeconds": 60
+    "bluetoothOffTimeoutSeconds": 6000,
+    "logConfig": {
+      "logToSdCard": true,
+      "filename": "/sdcard/log/eloc.log",
+      "maxFiles": 10,
+      "maxFileSize": 5120
+    }
   },
   "mic": {
     "MicType": "ns",
     "MicBitShift": 11,
-    "MicSampleRate": 26000,
+    "MicSampleRate": 16000,
     "MicUseAPLL": true,
-    "MicUseTimingFix": true,
-    "MicGPSCoords": "ns",
-    "MicPointingDirectionDegrees": "ns",
-    "MicHeight": "ns",
-    "MicMountType": "ns"
+    "MicUseTimingFix": false
   }
 }}
-
-command: getStatus
-{"ecode" : 0, "cmd" : "getStatus", "payload" : {
-  "battery": {
-    "type": "LiPo Battery",
-    "state": "Full",
-    "SoC[%]": 4.309902668,
-    "voltage[V]": 3.563073397
-  },
-  "session": {
-    "identifier": "ELOC2312647821",
-    "recordingState": "0",
-    "recordingTime[h]": "0.00"
-  },
-  "device": {
-    "firmware": "ELOC_V0.1",
-    "timeStamp": "0.54",
-    "totalRecordingTime[h]": "0.00",
-    "SdCardFreeSpace[GB]": "115.58"
-  }
-}}
-
-command: getHelp
-{"ecode" : 0, "cmd" : "getHelp", "payload" : {
-  "commands": [
-    {
-      "cmd": "getHelp",
-      "help": "Print all available command and their help as JSON"
-    },
-    {
-      "cmd": "setConfig",
-      "help": "Write config key as json, e.g. setConfig#cfg={\"device\":{\"location\":\"not_set\"}}"
-    },
-    {
-      "cmd": "getConfig",
-      "help": "Read config as json, e.g. getConfig --> return{\"device\":{\"location\":\"not_set\"}}"
-    },
-    {
-      "cmd": "delConfig",
-      "help": "Delete the current config file. Current config is not reset to default until next reboot"
-    },
-    {
-      "cmd": "getStatus",
-      "help": "Returns the current status in JSON format"
-    },
-    {
-      "cmd": "setTime",
-      "help": "Set the current Time. Time format is given as JSON, e.g. setTime#time={\"seconds\":1351824120,\"ms\":42,\"timezone\":6,\"type\":\"G\"}"
-    },
-    {
-      "cmd": "setRecordMode",
-      "help": "Start/Stop recording. If used without arguments, current mode is toggled(start/stop). Otherwise set recording to specified mode, e.g. setRecordMode#mode=start"
-    }
-  ]
-}}
+

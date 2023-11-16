@@ -7,4 +7,5 @@
     <dimen name="auth_input_width">280dp</dimen>
     <dimen name="drawer_width">280dp</dimen>
     <dimen name="tab_corner_radius">8dp</dimen>
+    <dimen name="gauge_font_size">14sp</dimen>
 </resources>

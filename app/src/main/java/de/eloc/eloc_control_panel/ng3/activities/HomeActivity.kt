@@ -277,8 +277,6 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun startScan() {
-        showDevice("testdev", "aa:bb:cc:dd:ee:ff")
-        return
 
         closeDrawer()
         val isOn = BluetoothHelper.instance.isAdapterOn()

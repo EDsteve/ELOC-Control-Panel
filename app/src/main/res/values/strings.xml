@@ -15,7 +15,7 @@
     <string name="eloc_user">USER: %s</string>
     <string name="gain">Gain</string>
     <string name="gauge_battery_level">%d%%</string>
-    <string name="gauge_free_space">%d%%\nfree</string>
+    <string name="gauge_free_space">%dGB\nfree</string>
     <string name="gauge_gps_distance">%dm</string>
     <string name="gauge_gps_long_distance">&gt;100m</string>
     <string name="go_back">Go back</string>
@@ -59,4 +59,8 @@
     <string name="wait55">Wait</string>
     <string name="please_wait_for_gps_accuracy">Please wait for GPS accuracy to be less than 8m</string>
     <string name="record_anyway">Record Anyway</string>
+    <string name="last_location">Last Location</string>
+    <string name="file_header">File Header</string>
+    <string name="battery_type">Battery Type</string>
+    <string name="battery_volt">Battery Volt</string>
 </resources>

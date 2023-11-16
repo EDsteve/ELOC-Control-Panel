@@ -76,7 +76,7 @@
     <string name="failed_to_clear_profile">Failed to clear profile!</string>
     <string name="failed_to_remove_account">Failed to remove account!</string>
     <string name="failed_to_remove_remote_files">Failed to remove remote files!</string>
-    <string name="file_header">Grid ID</string>
+
     <string name="file_header_missing">File header name is required!</string>
     <string name="file_header_name">Grid ID</string>
     <string name="filename">Filename</string>
@@ -108,8 +108,7 @@
     <string name="invalid_password">Invalid password!</string>
     <string name="landing_page">Landing page</string>
     <string name="large">Large</string>
-    <string name="last_gps_accuracy">Last GPS Accuracy</string>
-    <string name="last_gps_location">Last GPS Location</string>
+
     <string name="last_time_sync">Last Time Sync</string>
     <string name="link_sent">Link sent</string>
     <string name="loading_map">Loading map…</string>

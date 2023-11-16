@@ -33,7 +33,7 @@
                 android:orientation="vertical"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:visibility="visible">
+                tools:visibility="invisible">
 
                 <TextView
                     android:id="@+id/connection_status_text_view"
@@ -72,7 +72,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintWidth_percent="0.5"
-                tools:visibility="visible" />
+                tools:visibility="invisible" />
 
             <TextView
                 android:id="@+id/start_detecting_button"
@@ -90,7 +90,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@id/start_recording_button"
                 app:layout_constraintWidth_percent="0.5"
-                tools:visibility="visible" />
+                tools:visibility="invisible" />
 
             <ScrollView
                 android:id="@+id/content_scroll_view"
@@ -171,7 +171,7 @@
                         app:layout_constraintEnd_toEndOf="@id/battery_gauge"
                         app:layout_constraintStart_toStartOf="@id/battery_gauge"
                         app:layout_constraintTop_toTopOf="@id/battery_gauge"
-                        tools:text="88%" />
+                        tools:text="888%" />
 
                     <TextView
                         android:id="@+id/storage_status"
@@ -179,15 +179,15 @@
                         android:layout_height="wrap_content"
                         android:gravity="center"
                         android:textAlignment="center"
-                        android:textSize="16sp"
+                        android:textSize="@dimen/gauge_font_size"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toBottomOf="@id/storage_gauge"
                         app:layout_constraintEnd_toEndOf="@id/storage_gauge"
                         app:layout_constraintStart_toStartOf="@id/storage_gauge"
                         app:layout_constraintTop_toTopOf="@id/storage_gauge"
-                        tools:text="95%\nFree" />
+                        tools:text="295GB\nFree" />
 
-                    <TextView
+                    <TextView android:id="@+id/storage_text_view"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/storage"
@@ -360,27 +360,35 @@
                         tools:itemValue="ELOC23432423497" />
 
                     <de.eloc.eloc_control_panel.ng3.widgets.ListItem
-                        android:id="@+id/grid_id_item"
+                        android:id="@+id/battery_type_item"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:itemLabel="@string/grid_id"
+                        app:itemLabel="@string/battery_type"
                         app:layout_constraintTop_toBottomOf="@id/session_id_item"
+                        tools:itemValue="LiFePo4" />
+
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/battery_volt_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/battery_volt"
+                        app:layout_constraintTop_toBottomOf="@id/battery_type_item"
+                        tools:itemValue="3.23" />
+
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/file_header_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/file_header"
+                        app:layout_constraintTop_toBottomOf="@id/battery_volt_item"
                         tools:itemValue="Riv 78" />
 
                     <de.eloc.eloc_control_panel.ng3.widgets.ListItem
-                        android:id="@+id/last_gps_accuracy_item"
+                        android:id="@+id/last_location_item"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:itemLabel="@string/last_gps_accuracy"
-                        app:layout_constraintTop_toBottomOf="@id/grid_id_item"
-                        tools:itemValue="13453+GT" />
-
-                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
-                        android:id="@+id/last_gps_location_item"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:itemLabel="@string/last_gps_location"
-                        app:layout_constraintTop_toBottomOf="@id/last_gps_accuracy_item"
+                        app:itemLabel="@string/last_location"
+                        app:layout_constraintTop_toBottomOf="@id/file_header_item"
                         tools:itemValue="13453+GT" />
 
                     <de.eloc.eloc_control_panel.ng3.widgets.ListItem
@@ -388,7 +396,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:itemLabel="@string/uptime"
-                        app:layout_constraintTop_toBottomOf="@id/last_gps_location_item"
+                        app:layout_constraintTop_toBottomOf="@id/last_location_item"
                         tools:itemValue="1d 5h 10m" />
 
                     <de.eloc.eloc_control_panel.ng3.widgets.ListItem
