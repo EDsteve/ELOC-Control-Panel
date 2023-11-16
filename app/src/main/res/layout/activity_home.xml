@@ -1,98 +1,125 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/drawer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ng2.activities.HomeActivity"
-    tools:openDrawer="start">
+    tools:context=".ng3.activities.HomeActivity">
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:id="@+id/coordinator"
+    <LinearLayout
+        android:id="@+id/progress_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical">
 
-        <de.eloc.eloc_control_panel.ng3.widgets.ElocAppBar
-            android:id="@+id/eloc_app_bar"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginVertical="32dp"
+            android:text="@string/getting_ranger_profile" />
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:menu_button_position="right"
-            app:show_user_name="true"
-            app:title="@string/scanner" />
+            android:layout_marginHorizontal="32dp"
+            android:indeterminate="true" />
+    </LinearLayout>
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.drawerlayout.widget.DrawerLayout
+        android:id="@+id/drawer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:openDrawer="start"
+        tools:visibility="gone">
+
+        <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:id="@+id/coordinator"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+            android:layout_height="match_parent">
 
-            <TextView
-                android:id="@+id/instructions_button"
-                android:layout_width="wrap_content"
+            <de.eloc.eloc_control_panel.ng3.widgets.ElocAppBar
+                android:id="@+id/eloc_app_bar"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:background="?selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true"
-                android:text="@string/instructions"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
+                app:menu_button_position="right"
+                app:show_user_name="true"
+                app:title="@string/scanner" />
 
-            <Button
-                android:id="@+id/refresh_list_button"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/button_height"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginBottom="16dp"
-                android:text="@string/refresh_list"
-                app:layout_constraintBottom_toTopOf="@id/instructions_button" />
+                android:layout_height="match_parent"
+                app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
-            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-                android:id="@+id/swipe_refresh_layout"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginVertical="16dp"
-                app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
-                app:layout_constraintBottom_toTopOf="@id/refresh_list_button"
-                app:layout_constraintTop_toBottomOf="@id/status_text_view">
+                <TextView
+                    android:id="@+id/instructions_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:background="?selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:text="@string/instructions"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/devices_recycler_view"
+                <Button
+                    android:id="@+id/refresh_list_button"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:visibility="visible" />
-            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:text="@string/refresh_list"
+                    app:layout_constraintBottom_toTopOf="@id/instructions_button" />
 
-            <TextView
-                android:id="@+id/status_text_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="@string/initializing"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+                    android:id="@+id/swipe_refresh_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_marginVertical="16dp"
+                    app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
+                    app:layout_constraintBottom_toTopOf="@id/refresh_list_button"
+                    app:layout_constraintTop_toBottomOf="@id/status_text_view">
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/devices_recycler_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:visibility="visible" />
+                </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+                <TextView
+                    android:id="@+id/status_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/initializing"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/left_drawer"
-        android:layout_width="@dimen/drawer_width"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        app:drawerLayoutCornerSize="0dp"
-        app:headerLayout="@layout/layout_nav_header"
-        app:menu="@menu/nav_menu" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/right_drawer"
-        android:layout_width="@dimen/drawer_width"
-        android:layout_height="match_parent"
-        android:layout_gravity="end"
-        app:drawerLayoutCornerSize="0dp"
-        app:headerLayout="@layout/layout_nav_header"
-        app:menu="@menu/nav_menu" />
-</androidx.drawerlayout.widget.DrawerLayout>
+        </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+        <com.google.android.material.navigation.NavigationView
+            android:id="@+id/left_drawer"
+            android:layout_width="@dimen/drawer_width"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            app:drawerLayoutCornerSize="0dp"
+            app:headerLayout="@layout/layout_nav_header"
+            app:menu="@menu/nav_menu" />
+
+        <com.google.android.material.navigation.NavigationView
+            android:id="@+id/right_drawer"
+            android:layout_width="@dimen/drawer_width"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            app:drawerLayoutCornerSize="0dp"
+            app:headerLayout="@layout/layout_nav_header"
+            app:menu="@menu/nav_menu" />
+    </androidx.drawerlayout.widget.DrawerLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#29780f</color>
+    <color name="colorPrimaryTranslucent">#efd177</color>
+    <color name="colorTextOnPrimary">#fff</color>
+    <color name="colorTextOnPrimaryTranslucent">#000</color>
+    <color name="colorPrimaryDark">#4c5d0b</color>
+    <color name="colorAccent">#f26c10</color>
+
+    <color name="colorReceiveText">#00FF00</color>
+    <color name="colorSendText">#82CAFF</color>
+    <color name="colorStatusText">#FFDB58</color>
+
+    <color name="off_color">#D32F2F</color>
+    <color name="on_color">#8EA213</color>
+    <color name="middle_color">#FFDB58</color>
+
+    <color name="divider">#DF2C2C2C</color>
+    <color name="cardview">#323232</color>
+
+
+    <color name="color_active_tab">#ff9d09</color>
+    <color name="color_on_active_tab">#4c3a1f</color>
+
+    <color name="color_inactive_tab">#435042</color>
+    <color name="color_on_inactive_tab">#8b938a</color>
+
+    <color name="color_pager">#2e2e2e</color>
+</resources>

@@ -26,4 +26,10 @@
             <enum name="right" value="2" />
         </attr>
     </declare-styleable>
+
+    <declare-styleable name="ListItem">
+        <attr name="itemLabel" format="string" />
+        <attr name="itemValue" format="string" />
+        <attr name="thickDivider" format="boolean" />
+    </declare-styleable>
 </resources>

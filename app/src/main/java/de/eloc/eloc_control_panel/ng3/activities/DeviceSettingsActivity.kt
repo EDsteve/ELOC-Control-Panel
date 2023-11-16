@@ -1,16 +1,11 @@
-package de.eloc.eloc_control_panel.ng2.activities
+package de.eloc.eloc_control_panel.ng3.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.MenuItem
 import android.view.View
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.activities.TerminalActivity
 import de.eloc.eloc_control_panel.databinding.ActivityDeviceSettingsBinding
-import de.eloc.eloc_control_panel.ng2.models.GainType
-import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity
-import de.eloc.eloc_control_panel.ng3.activities.hideKeyboard
-import de.eloc.eloc_control_panel.ng3.activities.*
+import de.eloc.eloc_control_panel.ng3.data.GainType
 import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper
 import java.lang.NumberFormatException
 
@@ -21,7 +16,7 @@ class DeviceSettingsActivity : ThemableActivity() {
     private var deviceName = ""
     private var location = ""
 
-    private companion object {
+    companion object {
         const val COMMAND = "command"
         private const val SEPARATOR = "#"
         private const val COMMAND_PREFIX = SEPARATOR + "settings" + SEPARATOR
@@ -36,18 +31,9 @@ class DeviceSettingsActivity : ThemableActivity() {
         setData()
         setMicData()
         setBtState()
-        setToolbar()
         setListeners()
         hideAdvancedOperations()
         setChipColors()
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == android.R.id.home) {
-            onBackPressedDispatcher.onBackPressed()
-            return true
-        }
-        return false
     }
 
     override fun onPause() {
@@ -211,11 +197,6 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
     }
 
-    private fun setToolbar() {
-        supportActionBar?.title = getString(R.string.eloc_device_settings)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-    }
-
     private fun setListeners() {
         binding.sampleRateChipGroup.setOnCheckedStateChangeListener { _, _ -> setChipColors() }
         binding.fileTimeChipGroup.setOnCheckedStateChangeListener { _, _ -> setChipColors() }
@@ -228,9 +209,10 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding.fileHeaderButton.setOnClickListener { runFileHeaderCommand() }
         binding.hideAdvancedOptionsButton.setOnClickListener { hideAdvancedOperations() }
         binding.showAdvancedOptionsButton.setOnClickListener { showAdvancedOperations() }
-        binding.instructionsButton.setOnClickListener { ActivityHelper.showInstructions(this) }
+        binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.updateFirmwareButton.setOnClickListener { confirmFirmwareUpdate() }
         binding.bluetoothRecordingStateButton.setOnClickListener { saveBtRecordingState() }
+        binding.elocAppBar.setOnBackButtonClickedListener { goBack() }
     }
 
     private fun hideAdvancedOperations() {

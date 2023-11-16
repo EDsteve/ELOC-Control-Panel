@@ -435,7 +435,7 @@
                     <TextView
                         android:id="@+id/recording_boot_title_tv"
                         style="@style/IndentedTileTitle"
-                        android:text="@string/rec_time_since_boot"
+                        android:text="@string/rec_since_boot"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider13" />
 
@@ -550,7 +550,7 @@
                     <TextView
                         android:id="@+id/firmware_title_tv"
                         style="@style/IndentedTileTitle"
-                        android:text="@string/firmware"
+                        android:text="@string/firmware_version"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider18" />
 
@@ -576,7 +576,7 @@
                     <TextView
                         android:id="@+id/appversion_title_tv"
                         style="@style/IndentedTileTitle"
-                        android:text="@string/appversion"
+                        android:text="@string/app_version"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider19" />
 

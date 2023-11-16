@@ -48,7 +48,7 @@
             android:name=".ng3.activities.UserPrefsActivity"
             android:exported="false"
             android:label="@string/preferences"
-            android:parentActivityName=".ng2.activities.HomeActivity">
+            android:parentActivityName=".ng3.activities.HomeActivity">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
@@ -62,7 +62,7 @@
             android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name=".ng2.activities.HomeActivity"
+            android:name=".ng3.activities.HomeActivity"
             android:exported="false"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"
@@ -94,7 +94,7 @@
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.DeviceSettingsActivity"
+            android:name=".ng3.activities.DeviceSettingsActivity"
             android:exported="false"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"

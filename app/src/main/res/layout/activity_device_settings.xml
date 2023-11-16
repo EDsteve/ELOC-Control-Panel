@@ -5,7 +5,14 @@
     android:id="@+id/coordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ng2.activities.DeviceSettingsActivity">
+    tools:context=".ng3.activities.DeviceSettingsActivity">
+
+    <de.eloc.eloc_control_panel.ng3.widgets.ElocAppBar
+        android:id="@+id/eloc_app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:show_back_button="true"
+        app:title="@string/eloc_device_settings" />
 
     <TextView
         android:id="@+id/instructions_button"

@@ -20,7 +20,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.ActionBar;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import de.eloc.eloc_control_panel.ng3.data.LabelColor;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -35,8 +34,7 @@ import de.eloc.eloc_control_panel.SerialService.SerialBinder;
 import de.eloc.eloc_control_panel.TextUtil;
 import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.ng3.App;
-import de.eloc.eloc_control_panel.ng2.activities.ActivityHelper;
-import de.eloc.eloc_control_panel.ng2.activities.DeviceSettingsActivity;
+import de.eloc.eloc_control_panel.ng3.activities.DeviceSettingsActivity;
 import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 import de.eloc.eloc_control_panel.ng3.DeviceDriver;
 import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
@@ -55,15 +53,6 @@ public class TerminalActivity extends ThemableActivity /*implements ServiceConne
     private boolean runTimeMonitor = false;
 
 
-    // TODO: Replace log.i
-
-    private enum DeviceState {
-        Recording,
-        Stopping,
-        Ready,
-    }
-
-    public ActivityResultLauncher<Intent> settingsLauncher;
     private String deviceAddress = "";
 
     private SerialService service;
@@ -73,10 +62,8 @@ public class TerminalActivity extends ThemableActivity /*implements ServiceConne
     private final String newline = TextUtil.newline_crlf;
 
 
-    private DeviceState deviceState = DeviceState.Ready;
-    private double recordingTime = 0;
-    private boolean hasSDCardError = false;
-    // todo private MenuItem elocSettingsItem;
+
+
 
 
     public String rangerName;
@@ -85,18 +72,8 @@ public class TerminalActivity extends ThemableActivity /*implements ServiceConne
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = ActivityTerminalBinding.inflate(getLayoutInflater());
-
         setContentView(binding.getRoot());
-
-        Intent bindIntent = new Intent(this, SerialService.class);
-    /*dele    bindService(bindIntent, this, Context.BIND_AUTO_CREATE);
-
-        setListeners();
-        setLaunchers();
-        getBestTimeEstimate();*/
-
-        String appVersion = App.Companion.getVersionName();
-        binding.appversionValueTv.setText(appVersion);
+      /*dele  getBestTimeEstimate(); */
     }
 
 
@@ -104,17 +81,8 @@ public class TerminalActivity extends ThemableActivity /*implements ServiceConne
     protected void onResume() {
         super.onResume();
 
-        binding.refreshLayout.setVisibility(View.GONE);
-        binding.infoLayout.setVisibility(View.VISIBLE);
 /*dele
-        locationCode = "UNKNOWN";
-        locationAccuracy = 99.0f;
 
-        // if the recbtn is start recording then wait gps
-        theLocation.beginUpdates();
-        if (deviceState == DeviceState.Ready) {
-            updateRecordButton();
-        }
 
         if (initialStart && service != null) {
             initialStart = false;
@@ -148,9 +116,6 @@ public class TerminalActivity extends ThemableActivity /*implements ServiceConne
 
     @Override
     protected void onStop() {
-        handleStop();
-        //theLocation.endUpdates();
-
         if (service != null && !isChangingConfigurations()) {
             service.detach();
         }
@@ -169,32 +134,7 @@ public class TerminalActivity extends ThemableActivity /*implements ServiceConne
         stopService(new Intent(this, SerialService.class));
         super.onDestroy();
     }
-/*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_terminal, menu);
-        elocSettingsItem = menu.findItem(R.id.eloc_settings);
-        return true;
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == android.R.id.home) {
-            finish();
-            return true;
-        }
-
-        if (refreshing) {
-            ActivityHelper.INSTANCE.showSnack(binding.coordinator, "Currently unavailable");
-            return true;
-        } else if (id == R.id.eloc_settings) {
-            openSettings();
-            return true;
-        } else {
-            return super.onOptionsItemSelected(item);
-        }
-    }*/
 /*dele
     @Override
     public void onServiceConnected(ComponentName name, IBinder binder) {
@@ -209,10 +149,6 @@ public class TerminalActivity extends ThemableActivity /*implements ServiceConne
         }
     }
 
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-        service = null;
-    }
 
     /*
      * SerialListener
@@ -221,15 +157,13 @@ public class TerminalActivity extends ThemableActivity /*implements ServiceConne
     public void onConnect() {
         ActivityHelper.INSTANCE.showSnack(binding.coordinator, getString(R.string.connected));
         connected = ConnectionStatus.Active;
-        //send("_setClk_"+getBestTimeEstimate());
-        //send("settingsRequest");
+
     }
 
     @Override
     public void onConnectionError(Exception e) {
         updateDeviceState(DeviceState.Ready, "Connection Lost");
         ActivityHelper.INSTANCE.showSnack(binding.coordinator, "Connection Lost");
-        updateRecordButton();
         // status("connection failed: " + e.getMessage()); // TODO: this message must be in a log
         disconnect();
     }
@@ -243,73 +177,13 @@ public class TerminalActivity extends ThemableActivity /*implements ServiceConne
     public void onIOError(Exception e) {
         updateDeviceState(DeviceState.Ready, "Connection Lost");
         ActivityHelper.INSTANCE.showSnack(binding.coordinator, "Connection Lost");
-        updateRecordButton();
+
         //status("connection lost: " + e.getMessage()); //TODO: This message should be in some kind of log
         disconnect();
     }
 
-    private void openSettings() {
-        /*if (deviceState == DeviceState.Ready) {
-            Intent intent = new Intent(TerminalActivity.this, DeviceSettingsActivity.class);
-            // todo: device name might be changed in DeviceSettingsActivity
-            intent.putExtra(EXTRA_DEVICE_NAME, deviceName);
-            settingsLauncher.launch(intent);
-        }*/
-    }
 
-    /*
-     * Serial + UI
-     */
-    private void connect(boolean notify) {
-/*dele-->
-        try {
-            BluetoothDevice device = BluetoothHelperOld.INSTANCE.getDevice(deviceAddress);
-                       connected = ConnectionStatus.Pending;
-            SerialSocket socket = new SerialSocket(getApplicationContext(), device);
-            service.connect(socket);
-            boolean success = service.isConnected();
-            if (notify && success) {
-                ActivityHelper.INSTANCE.showSnack(binding.coordinator, getString(R.string.connected));
-            }
-            binding.swipeRefreshLayout.setRefreshing(false);
-        } catch (Exception e) {
-            onConnectionError(e);
-        } finally {
-            binding.refreshLayout.setVisibility(View.GONE);
-            binding.infoLayout.setVisibility(View.VISIBLE);
-            refreshing = false;
-        }
-*/
-    }
-/*
-    private void disconnect() {
-        connected = ConnectionStatus.Inactive;
-        service.disconnect();
-    }
 
-    private void setLaunchers() {
-        settingsLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
-            @Override
-            public void onActivityResult(ActivityResult result) {
-                if (result.getResultCode() == RESULT_OK) {
-                    Intent intent = result.getData();
-                    if (intent != null) {
-                        Bundle extras = intent.getExtras();
-                        if (extras != null) {
-                            String command = extras.getString(DeviceSettingsActivity.COMMAND, null);
-                            if (command != null) {
-                                String resultMessage = send(command);
-                                if (resultMessage == null) {
-                                    resultMessage = "Command sent successfully";
-                                }
-                                ActivityHelper.INSTANCE.showSnack(binding.coordinator, resultMessage);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
 
     private void receive(byte[] data) {
 
@@ -469,7 +343,6 @@ public class TerminalActivity extends ThemableActivity /*implements ServiceConne
                         updateDeviceState(DeviceState.Ready, null);
                         recON = 0;
                     }
-                    updateRecordButton();
                     setRecordingTime();
                 } else if (l.startsWith("!8!")) {
                     // !8! tell the state of bluetooth when recording, so I do not understand while
@@ -484,14 +357,7 @@ public class TerminalActivity extends ThemableActivity /*implements ServiceConne
                             setRecordingTime();
                         }
                     }
-                } else if (l.startsWith("!9!")) {
-                    sampleRate = l.replace("!9!", "").trim();
-                    Double rate = parseDouble(sampleRate);
-                    String prettyRate = "Unknown";
-                    if (rate != null) {
-                        prettyRate = formatNumber(rate / 1000, "KHz");
-                    }
-                    binding.sampleRateValueTv.setText(prettyRate);
+
                 } else if (l.startsWith("!10!")) {
                     secondsString = l.replace("!10!", "").trim();
                     String hoursString = "Unknown";
@@ -640,33 +506,6 @@ public class TerminalActivity extends ThemableActivity /*implements ServiceConne
         setLabelColor(binding.recordingValueTv, color, true);
     }
 
-
-
-    private String send(String str) {
-        if (connected != ConnectionStatus.Active) {
-            return "not connected";
-        }
-        try {
-            String msg;
-            byte[] data;
-            if (hexEnabled) {
-                StringBuilder sb = new StringBuilder();
-                TextUtil.toHexString(sb, TextUtil.fromHexString(str));
-                TextUtil.toHexString(sb, newline.getBytes());
-                msg = sb.toString();
-                data = TextUtil.fromHexString(msg);
-            } else {
-                msg = str;
-                data = (str + newline).getBytes();
-            }
-            service.write(data);
-            return null;
-        } catch (Exception e) {
-            onIOError(e);
-            return "Command not sent - error occurred!";
-        }
-    }
-
     private String getBestTimeEstimate() {
         //returns a string with the following:
         //X_Y_ZZZZZZZZZZZZZZZ
@@ -690,131 +529,7 @@ public class TerminalActivity extends ThemableActivity /*implements ServiceConne
         return (timestamp);
     }
 
-    private void updateDeviceState(DeviceState state, String errorMessage) {
-        deviceState = state;
-        // todo elocSettingsItem.setEnabled(true);
-        switch (state) {
-            case Recording:
-                binding.statusTv.setText(R.string.connected);
-                binding.statusIcon.setImageResource(R.drawable.connectivity);
-                binding.btRecordingValueTv.setText(R.string.on);
-                // todo elocSettingsItem.setEnabled(false);
-                break;
-            case Ready:
-                binding.statusTv.setText(R.string.ready);
-                binding.statusIcon.setImageResource(R.drawable.connected);
-                binding.btRecordingValueTv.setText(R.string.off);
-                break;
-            case Stopping:
-                binding.statusTv.setText(R.string.please_wait);
-                binding.statusIcon.setImageResource(R.drawable.connecting);
-                binding.btRecordingValueTv.setText(R.string.stopping);
-                recordingTime = 0;
-                break;
-        }
-        if (errorMessage != null) {
-            binding.statusIcon.setImageResource(R.drawable.error);
-            binding.statusTv.setText(errorMessage);
-        }
-        updateRecordButton();
+
+  */
     }
-
-    private void updateRecordButton() {
-        int text = R.string.rec_state_ready;
-        LabelColor color = LabelColor.on;
-        switch (deviceState) {
-            case Recording:
-                text = R.string.rec_state_recording;
-                color = LabelColor.off; // Red when recording
-                break;
-            case Stopping:
-                text = R.string.rec_state_wait;
-                color = LabelColor.middle;
-                break;
-            case Ready:
-            default:
-                break;
-        }
-        binding.recBtn.setText(text);
-        setLabelColor(binding.recBtn, color, false);
-    }
-
-    private void setListeners() {
-        binding.settingsSection.setOnClickListener(view -> openSettings());
-        binding.sdCardValueTv.setOnClickListener(view -> showSDCardError());
-        binding.sdCardErrorBtn.setOnClickListener(view -> showSDCardError());
-        binding.recBtn.setOnClickListener(view -> recordButtonClicked());
-        binding.instructionsButton.setOnClickListener(view -> ActivityHelper.INSTANCE.showInstructions(TerminalActivity.this));
-    }
-
-
-    private void recordButtonClicked() {
-        switch (deviceState) {
-            case Recording:
-                updateDeviceState(DeviceState.Stopping, null);
-                updateRecordButton();
-                binding.recBtn.setBackgroundColor(0x000000);
-                send("stoprecord"); //When this line is executed and command is sent, we are supposed to receive a message from the device toindicate when device is disconnected, right?
-                // TODO: Notes for future: remove line below and wait for update from !7! value.
-                updateDeviceState(DeviceState.Ready, null);
-                break;
-            case Ready:
-                if (hasSDCardError) {
-                    showSDCardError();
-                    return;
-                }
-                if (locationAccuracy <= 8.1) {
-                    startRecording();
-                } else {
-                    popUpRecord();
-                }
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void startRecording() {
-        binding.recBtn.setText(R.string.please_wait);
-
-        // Respect the bt recording state setting
-        boolean btOnWhenRecording = preferencesHelper.getBluetoothRecordingState();
-        send("setGPS^" + locationCode + "#" + locationAccuracy);
-        handleStop();
-
-        // If bt on ELOC must be off, it means app will lose connection; go back to main screen
-        if (!btOnWhenRecording) {
-            String message = getString(R.string.connection_close_message);
-            ActivityHelper.INSTANCE.showAlert(this, message, false, this::onBackPressed);
-        }
-    }
-
-    private void handleStop() {
-        locationCode = "UNKNOWN";
-        theLocation.endUpdates();
-    }
-
-    private void showSDCardError() {
-        if (hasSDCardError) {
-            ActivityHelper.INSTANCE.showAlert(this, "Check SD card!");
-        }
-    }
-
-    private void popUpRecord() {
-        new MaterialAlertDialogBuilder(this)
-                .setTitle("")
-                .setMessage("Please wait for better GPS accuracy < 8 m")
-                .setPositiveButton("Record Anyway", (dialog, which) -> {
-                    dialog.cancel();
-                    startRecording();
-                })
-                .setNegativeButton("Wait    ", (dialog, which) -> {
-                    dialog.cancel();
-                })
-                .show();
-    }
-
-
-
-*/
 } //1070

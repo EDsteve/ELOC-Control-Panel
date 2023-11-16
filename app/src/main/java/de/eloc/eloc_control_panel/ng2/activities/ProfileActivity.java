@@ -80,7 +80,7 @@ public class ProfileActivity extends MediaActivity {
 
     @Override
     public void pickImage() {
-        imagePicker.launch(getPickImageRequest(this));
+        imagePicker.launch(getPickImageRequest());
     }
 
     @Override

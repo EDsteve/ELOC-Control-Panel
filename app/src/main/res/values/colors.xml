@@ -1,29 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#29780f</color>
-    <color name="colorPrimaryTranslucent">#efd177</color>
-    <color name="colorTextOnPrimary">#fff</color>
-    <color name="colorTextOnPrimaryTranslucent">#000</color>
-    <color name="colorPrimaryDark">#4c5d0b</color>
-    <color name="colorAccent">#f26c10</color>
-
-    <color name="colorReceiveText">#00FF00</color>
-    <color name="colorSendText">#82CAFF</color>
-    <color name="colorStatusText">#FFDB58</color>
-
-    <color name="off_color">#D32F2F</color>
-    <color name="on_color">#8EA213</color>
-    <color name="middle_color">#FFDB58</color>
-
-    <color name="divider">#DF2C2C2C</color>
-    <color name="cardview">#323232</color>
-
-
-    <color name="color_active_tab">#ff9d09</color>
-    <color name="color_on_active_tab">#4c3a1f</color>
-
-    <color name="color_inactive_tab">#435042</color>
-    <color name="color_on_inactive_tab">#8b938a</color>
-
-    <color name="color_pager">#2e2e2e</color>
+    <color name="actionbar">#29780f</color>
+    <color name="actionbar_icon">#21491D</color>
+    <color name="black">@android:color/black</color>
+    <color name="connected">#65d95b</color>
+    <color name="critical_red">#f95d48</color>
+    <color name="detector_settings_title">#b87410</color>
+    <color name="low_orange">#fe9901</color>
+    <color name="low_storage">#ffc846</color>
+    <color name="normal_green">#44873e</color>
+    <color name="recorder_settings_title">#3e6f3a</color>
+    <color name="user_label">#ffb300</color>
+    <color name="white">@android:color/white</color>
+    <color name="window">#2e2e2e</color>
+    <color name="status_grey">#717171</color>
+    <color name="disabled_button">#414141</color>
+    <color name="disabled_button_text">#787878</color>
+    <color name="detecting_off_button">#ca7d08</color>
+    <color name="recording_on_button">#D32F2F</color>
+    <color name="recording_off_button">@color/colorPrimary</color>
+    <color name="status_field_green">#5ce051</color>
+    <color name="status_field_red">#c60c0c</color>
 </resources>

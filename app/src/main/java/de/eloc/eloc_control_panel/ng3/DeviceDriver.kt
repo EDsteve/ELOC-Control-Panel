@@ -56,8 +56,18 @@ object DeviceDriver : Runnable {
     fun connect(
         deviceAddress: String,
         callback: ConnectionStatusListener? = null,
-        dataListener: SocketListener? = null
+        dataListener: SocketListener? = null, test: Boolean
     ) {
+        if (test) {
+            connectionStatus = ConnectionStatus.Active
+            if ((callback != null) && (!clients.contains(callback))) {
+                clients.add(callback)
+            }
+            if ((dataListener != null) && (!dataListenerList.contains(dataListener))) {
+                dataListenerList.add(dataListener)
+            }
+            return
+        }
         var hadError = false
         try {
             disconnect()
@@ -111,18 +121,26 @@ object DeviceDriver : Runnable {
         } catch (_: Exception) {
         }
         connectionStatus = ConnectionStatus.Inactive
+        clients.clear()
+        dataListenerList.clear()
     }
 
-    private fun write(data: ByteArray) {
+    fun write(command: String) {
         try {
             if (bluetoothSocket?.isConnected == true) {
+                val data = command.encodeToByteArray()
                 bluetoothSocket?.outputStream?.write(data)
             } else {
                 throw IOException("ELOC device not connected!")
             }
         } catch (e: IOException) {
+            disconnect()
             onIOError(e)
         }
+    }
+
+    fun stopRecording() {
+        write("setRecordMode#mode=stop")
     }
 
     private fun onConnect() {
@@ -194,5 +212,72 @@ object DeviceDriver : Runnable {
             disconnect()
             return
         }
+    }
+
+    // todo: delete
+    fun dummyGetConfig() {
+        val config = "{\n" +
+                "  \"ecode\": 0,\n" +
+                "  \"cmd\": \"getConfig\",\n" +
+                "  \"payload\": {\n" +
+                "    \"device\": {\n" +
+                "      \"location\": \"London\",\n" +
+                "      \"locationCode\": \"4534985893+QR\",\n" +
+                "      \"locationAccuracy\": \"93\",\n" +
+                "      \"nodeName\": \"ELOC_NONAME\"\n" +
+                "    },\n" +
+                "    \"config\": {\n" +
+                "      \"secondsPerFile\": 60,\n" +
+                "      \"listenOnly\": false,\n" +
+                "      \"cpuMaxFrequencyMHZ\": 80,\n" +
+                "      \"cpuMinFrequencyMHZ\": 10,\n" +
+                "      \"cpuEnableLightSleep\": true,\n" +
+                "      \"bluetoothEnableAtStart\": false,\n" +
+                "      \"bluetoothEnableOnTapping\": true,\n" +
+                "      \"bluetoothEnableDuringRecord\": true,\n" +
+                "      \"bluetoothOffTimeoutSeconds\": 60\n" +
+                "    },\n" +
+                "    \"mic\": {\n" +
+                "      \"MicType\": \"ICS-434349\",\n" +
+                "      \"MicBitShift\": 11,\n" +
+                "      \"MicSampleRate\": 26000,\n" +
+                "      \"MicUseAPLL\": true,\n" +
+                "      \"MicUseTimingFix\": true,\n" +
+                "      \"MicGPSCoords\": \"ns\",\n" +
+                "      \"MicPointingDirectionDegrees\": \"ns\",\n" +
+                "      \"MicHeight\": \"ns\",\n" +
+                "      \"MicMountType\": \"ns\"\n" +
+                "    }\n" +
+                "  }\n" +
+                "}"
+        onRead(config.encodeToByteArray())
+    }
+
+    // todo: delete
+    fun dummyGetStatus() {
+        val status = "{\n" +
+                "  \"ecode\": 0,\n" +
+                "  \"cmd\": \"getStatus\",\n" +
+                "  \"payload\": {\n" +
+                "    \"battery\": {\n" +
+                "      \"type\": \"LiPo Battery\",\n" +
+                "      \"state\": \"Full\",\n" +
+                "      \"SoC[%]\": 4.309902668,\n" +
+                "      \"voltage[V]\": 3.563073397\n" +
+                "    },\n" +
+                "    \"session\": {\n" +
+                "      \"identifier\": \"ELOC2312647821\",\n" +
+                "      \"recordingState\": \"0\",\n" +
+                "      \"recordingTime[h]\": 1.23\n" +
+                "    },\n" +
+                "    \"device\": {\n" +
+                "      \"firmware\": \"ELOC_V0.1\",\n" +
+                "      \"timeStamp\": \"0.54\",\n" +
+                "      \"totalRecordingTime[h]\": \"34.56\",\n" +
+                "      \"SdCardFreeSpace[GB]\": \"115.58\"\n" +
+                "    }\n" +
+                "  }\n" +
+                "}"
+        onRead(status.encodeToByteArray())
     }
 }

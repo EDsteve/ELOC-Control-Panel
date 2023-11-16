@@ -1,12 +1,10 @@
 
 MISC
-+ SessionID  ELOC2312647821
+- Storage gauge
+- Battery gauge
 - Grid ID	Riv12
 - Uptime	1d 5h 10m
-+ Detect/Record Since Boot	1d 5h 10m
-+ Bluetooth during Detecting	ON, OFF
-+ Microphone Type	ICS-43434
-+ Firmware	ver0.1
+
 + App version	ver0.1
 (from https://github.com/EDsteve/ELOC-Control-Panel/issues/14)
 
@@ -54,7 +52,7 @@ command: getStatus
     "voltage[V]": 3.563073397
   },
   "session": {
-    "identifier": "",
+    "identifier": "ELOC2312647821",
     "recordingState": "0",
     "recordingTime[h]": "0.00"
   },

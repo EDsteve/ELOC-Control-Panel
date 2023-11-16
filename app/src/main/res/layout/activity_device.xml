@@ -2,6 +2,7 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/coordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ng3.activities.DeviceActivity">
@@ -31,7 +32,8 @@
                 android:gravity="center"
                 android:orientation="vertical"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toTopOf="parent"
+                tools:visibility="visible">
 
                 <TextView
                     android:id="@+id/connection_status_text_view"
@@ -57,8 +59,8 @@
             <TextView
                 android:id="@+id/start_recording_button"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:background="@color/recorder_button"
+                android:layout_height="72dp"
+                android:background="@color/recording_off_button"
                 android:clickable="true"
                 android:elevation="16dp"
                 android:focusable="true"
@@ -70,13 +72,13 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintWidth_percent="0.5"
-                tools:visibility="invisible" />
+                tools:visibility="visible" />
 
             <TextView
                 android:id="@+id/start_detecting_button"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:background="@color/detector_button"
+                android:background="@color/detecting_off_button"
                 android:clickable="true"
                 android:elevation="16dp"
                 android:focusable="true"
@@ -88,7 +90,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@id/start_recording_button"
                 app:layout_constraintWidth_percent="0.5"
-                tools:visibility="invisible" />
+                tools:visibility="visible" />
 
             <ScrollView
                 android:id="@+id/content_scroll_view"
@@ -96,7 +98,7 @@
                 android:layout_height="0dp"
                 app:layout_constraintBottom_toTopOf="@id/start_recording_button"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:visibility="invisible">
+                tools:visibility="visible">
 
 
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -215,11 +217,10 @@
                         app:layout_constraintTop_toBottomOf="@id/gps_gauge" />
 
                     <com.google.android.material.divider.MaterialDivider
-                        android:id="@+id/divider1"
+                        android:id="@+id/divider"
                         android:layout_width="match_parent"
-                        android:layout_height="2dp"
+                        android:layout_height="3dp"
                         android:layout_marginVertical="16dp"
-                        app:dividerColor="@color/black"
                         app:layout_constraintTop_toBottomOf="@id/battery_gauge_label"
                         tools:viewBindingIgnore="true" />
 
@@ -227,254 +228,213 @@
                         android:id="@+id/status_section_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_margin="16dp"
+                        android:layout_marginHorizontal="16dp"
+                        android:layout_marginTop="24dp"
                         android:text="@string/status"
                         android:textAllCaps="true"
                         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                         android:textColor="@color/status_grey"
                         android:textStyle="bold"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/divider1"
+                        app:layout_constraintTop_toBottomOf="@id/divider"
                         tools:viewBindingIgnore="true" />
 
-                    <TextView
-                        android:id="@+id/detecting_since_text_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginVertical="8dp"
-                        android:textColor="@color/status_field_green"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/status_section_title"
-                        tools:text="1D 10H 22M" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/detecting_since"
-                        app:layout_constraintBottom_toBottomOf="@id/detecting_since_text_view"
-                        app:layout_constraintStart_toStartOf="@id/status_section_title"
-                        app:layout_constraintTop_toTopOf="@id/detecting_since_text_view" />
-
-                    <TextView
-                        android:id="@+id/recording_text_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginVertical="8dp"
-                        android:textColor="@color/status_field_red"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/detecting_since_text_view"
-                        tools:text="OFF" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/recording"
-                        app:layout_constraintBottom_toBottomOf="@id/recording_text_view"
-                        app:layout_constraintStart_toStartOf="@id/status_section_title"
-                        app:layout_constraintTop_toTopOf="@id/recording_text_view" />
-
-                    <com.google.android.material.divider.MaterialDivider
-                        android:id="@+id/divider2"
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/detecting_since_item"
                         android:layout_width="match_parent"
-                        android:layout_height="2dp"
-                        android:layout_marginVertical="16dp"
-                        app:dividerColor="@color/black"
-                        app:layout_constraintTop_toBottomOf="@id/recording_text_view"
-                        tools:viewBindingIgnore="true" />
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/detecting_since"
+                        app:layout_constraintTop_toBottomOf="@id/status_section_title"
+                        tools:itemValue="1d 10h 22m" />
+
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/recording_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/recording"
+                        app:layout_constraintTop_toBottomOf="@id/detecting_since_item"
+                        app:thickDivider="true"
+                        tools:itemValue="OFF" />
 
                     <TextView
                         android:id="@+id/detector_section_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_margin="16dp"
+                        android:layout_marginHorizontal="16dp"
+                        android:layout_marginTop="24dp"
                         android:text="@string/detector_settings"
                         android:textAllCaps="true"
                         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                         android:textColor="@color/detector_settings_title"
                         android:textStyle="bold"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/divider2"
+                        app:layout_constraintTop_toBottomOf="@id/recording_item"
                         tools:viewBindingIgnore="true" />
 
-                    <TextView
-                        android:id="@+id/record_when_detected_text_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginVertical="8dp"
-                        android:textColor="@color/status_field_green"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/detector_section_title"
-                        tools:text="ON" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/record_when_detected"
-                        app:layout_constraintBottom_toBottomOf="@id/record_when_detected_text_view"
-                        app:layout_constraintStart_toStartOf="@id/detector_section_title"
-                        app:layout_constraintTop_toTopOf="@id/record_when_detected_text_view" />
-
-                    <TextView
-                        android:id="@+id/model_text_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginVertical="8dp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/record_when_detected_text_view"
-                        tools:text="Trumpet_V12" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/model"
-                        app:layout_constraintBottom_toBottomOf="@id/model_text_view"
-                        app:layout_constraintStart_toStartOf="@id/detector_section_title"
-                        app:layout_constraintTop_toTopOf="@id/model_text_view" />
-
-                    <TextView
-                        android:id="@+id/communication_text_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginVertical="8dp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/model_text_view"
-                        tools:text="LoRa" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/communication"
-                        app:layout_constraintBottom_toBottomOf="@id/communication_text_view"
-                        app:layout_constraintStart_toStartOf="@id/detector_section_title"
-                        app:layout_constraintTop_toTopOf="@id/communication_text_view" />
-
-                    <com.google.android.material.divider.MaterialDivider
-                        android:id="@+id/divider3"
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/record_when_detected_item"
                         android:layout_width="match_parent"
-                        android:layout_height="2dp"
-                        android:layout_marginVertical="16dp"
-                        app:dividerColor="@color/black"
-                        app:layout_constraintTop_toBottomOf="@id/communication_text_view"
-                        tools:viewBindingIgnore="true" />
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/record_when_detected"
+                        app:layout_constraintTop_toBottomOf="@id/detector_section_title"
+                        tools:itemValue="ON" />
+
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/model_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/model"
+                        app:layout_constraintTop_toBottomOf="@id/record_when_detected_item"
+                        tools:itemValue="Trumpet_V12" />
+
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/communication_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/communication"
+                        app:layout_constraintTop_toBottomOf="@id/model_item"
+                        app:thickDivider="true"
+                        tools:itemValue="LoRa" />
 
                     <TextView
                         android:id="@+id/recorder_section_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_margin="16dp"
+                        android:layout_marginHorizontal="16dp"
+                        android:layout_marginTop="24dp"
                         android:text="@string/recorder_settings"
                         android:textAllCaps="true"
                         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                         android:textColor="@color/recorder_settings_title"
                         android:textStyle="bold"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/divider3"
+                        app:layout_constraintTop_toBottomOf="@id/communication_item"
                         tools:viewBindingIgnore="true" />
 
-                    <TextView
-                        android:id="@+id/sample_rate_text_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginVertical="8dp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/recorder_section_title"
-                        tools:text="1600" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/sample_rate"
-                        app:layout_constraintBottom_toBottomOf="@id/sample_rate_text_view"
-                        app:layout_constraintStart_toStartOf="@id/recorder_section_title"
-                        app:layout_constraintTop_toTopOf="@id/sample_rate_text_view" />
-
-                    <TextView
-                        android:id="@+id/gain_text_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginVertical="8dp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/sample_rate_text_view"
-                        tools:text="HIGH" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/gain"
-                        app:layout_constraintBottom_toBottomOf="@id/gain_text_view"
-                        app:layout_constraintStart_toStartOf="@id/recorder_section_title"
-                        app:layout_constraintTop_toTopOf="@id/gain_text_view" />
-
-                    <TextView
-                        android:id="@+id/hours_per_file_text_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginVertical="8dp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/gain_text_view"
-                        tools:text="1" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/hours_per_file"
-                        app:layout_constraintBottom_toBottomOf="@id/hours_per_file_text_view"
-                        app:layout_constraintStart_toStartOf="@id/recorder_section_title"
-                        app:layout_constraintTop_toTopOf="@id/hours_per_file_text_view" />
-
-                    <com.google.android.material.divider.MaterialDivider
-                        android:id="@+id/divider4"
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/sample_rate_item"
                         android:layout_width="match_parent"
-                        android:layout_height="2dp"
-                        android:layout_marginVertical="16dp"
-                        app:dividerColor="@color/black"
-                        app:layout_constraintTop_toBottomOf="@id/hours_per_file_text_view"
-                        tools:viewBindingIgnore="true" />
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/sample_rate"
+                        app:layout_constraintTop_toBottomOf="@id/recorder_section_title"
+                        tools:itemValue="16kHz" />
+
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/gain_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/gain"
+                        app:layout_constraintTop_toBottomOf="@id/sample_rate_item"
+                        tools:itemValue="HIGH" />
+
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/hours_per_file_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/hours_per_file"
+                        app:layout_constraintTop_toBottomOf="@id/gain_item"
+                        app:thickDivider="true"
+                        tools:itemValue="5h" />
 
                     <TextView
                         android:id="@+id/misc_section_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_margin="16dp"
+                        android:layout_marginHorizontal="16dp"
+                        android:layout_marginTop="24dp"
                         android:text="@string/misc"
                         android:textAllCaps="true"
                         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                         android:textColor="@color/status_grey"
                         android:textStyle="bold"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/divider4"
+                        app:layout_constraintTop_toBottomOf="@id/hours_per_file_item"
                         tools:viewBindingIgnore="true" />
 
-                    <TextView
-                        android:id="@+id/session_id_text_view"
-                        android:layout_width="wrap_content"
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/session_id_item"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="16dp"
-                        android:layout_marginVertical="8dp"
-                        app:layout_constraintEnd_toEndOf="parent"
+                        app:itemLabel="@string/session_id"
                         app:layout_constraintTop_toBottomOf="@id/misc_section_title"
-                        tools:text="ELOC23432423497" />
+                        tools:itemValue="ELOC23432423497" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/grid_id_item"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/session_id"
-                        app:layout_constraintBottom_toBottomOf="@id/session_id_text_view"
-                        app:layout_constraintStart_toStartOf="@id/misc_section_title"
-                        app:layout_constraintTop_toTopOf="@id/session_id_text_view" />
+                        app:itemLabel="@string/grid_id"
+                        app:layout_constraintTop_toBottomOf="@id/session_id_item"
+                        tools:itemValue="Riv 78" />
+
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/last_gps_accuracy_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/last_gps_accuracy"
+                        app:layout_constraintTop_toBottomOf="@id/grid_id_item"
+                        tools:itemValue="13453+GT" />
+
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/last_gps_location_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/last_gps_location"
+                        app:layout_constraintTop_toBottomOf="@id/last_gps_accuracy_item"
+                        tools:itemValue="13453+GT" />
+
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/uptime_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/uptime"
+                        app:layout_constraintTop_toBottomOf="@id/last_gps_location_item"
+                        tools:itemValue="1d 5h 10m" />
+
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/rec_since_boot_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/rec_since_boot"
+                        app:layout_constraintTop_toBottomOf="@id/uptime_item"
+                        tools:itemValue="1d 5h 10m" />
+
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/bluetooth_during_recording_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/bluetooth_during_recording"
+                        app:layout_constraintTop_toBottomOf="@id/rec_since_boot_item"
+                        tools:itemValue="ON" />
+
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/microphone_type_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/microphone_type"
+                        app:layout_constraintTop_toBottomOf="@id/bluetooth_during_recording_item"
+                        tools:itemValue="ICS-43434" />
+
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/firmware_version_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/firmware_version"
+                        app:layout_constraintTop_toBottomOf="@id/microphone_type_item"
+                        tools:itemValue="v1.23" />
+
+                    <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        android:id="@+id/app_version_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:itemLabel="@string/app_version"
+                        app:layout_constraintTop_toBottomOf="@id/firmware_version_item"
+                        tools:itemValue="v4.56" />
 
                     <Space
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        app:layout_constraintTop_toBottomOf="@id/session_id_text_view" />
+                        app:layout_constraintTop_toBottomOf="@id/app_version_item" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </ScrollView>

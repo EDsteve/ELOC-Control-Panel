@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.ng2.activities
+package de.eloc.eloc_control_panel.ng3.activities
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
@@ -25,19 +25,12 @@ import de.eloc.eloc_control_panel.UploadFileAsync
 import de.eloc.eloc_control_panel.activities.TerminalActivity
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.LayoutNavHeaderBinding
+import de.eloc.eloc_control_panel.ng2.activities.ProfileActivity
 import de.eloc.eloc_control_panel.ng3.App
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import de.eloc.eloc_control_panel.ng2.models.ElocInfoAdapter
 import de.eloc.eloc_control_panel.ng2.models.HttpHelper
 import de.eloc.eloc_control_panel.ng2.receivers.BluetoothDeviceReceiver
-import de.eloc.eloc_control_panel.ng3.activities.LoginActivity
-import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity
-import de.eloc.eloc_control_panel.ng3.activities.UserPrefsActivity
-import de.eloc.eloc_control_panel.ng3.activities.MapActivity
-import de.eloc.eloc_control_panel.ng3.activities.open
-import de.eloc.eloc_control_panel.ng3.activities.AccountActivity
-import de.eloc.eloc_control_panel.ng3.activities.DeviceActivity
-import de.eloc.eloc_control_panel.ng3.activities.showModalAlert
 import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper
 import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.ng3.widgets.ElocAppBar
@@ -54,6 +47,7 @@ import java.util.Locale
 // todo: use cached profile picture
 
 class HomeActivity : ThemableActivity() {
+    private var firstScanDone = false
     private lateinit var binding: ActivityHomeBinding
     private lateinit var leftHeaderBinding: LayoutNavHeaderBinding
     private lateinit var rightHeaderBinding: LayoutNavHeaderBinding
@@ -75,12 +69,21 @@ class HomeActivity : ThemableActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        val leftHeader = binding.leftDrawer.getHeaderView(0)
+        val rightHeader = binding.rightDrawer.getHeaderView(0)
+        leftHeaderBinding = LayoutNavHeaderBinding.bind(leftHeader)
+        rightHeaderBinding = LayoutNavHeaderBinding.bind(rightHeader)
+
+        setLaunchers()
+        setListeners()
         setViewModel()
-        initialize()
-        closeDrawer()
 
         binding.swipeRefreshLayout.setColorSchemeColors(Color.WHITE)
         binding.swipeRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.colorPrimary)
+
+        binding.drawer.visibility = View.GONE
+        binding.progressLayout.visibility = View.VISIBLE
     }
 
     override fun onResume() {
@@ -88,11 +91,7 @@ class HomeActivity : ThemableActivity() {
 
         viewModel.getProfileAsync()
         setAppBar()
-
-        val hasNoDevices = binding.devicesRecyclerView.adapter?.itemCount == 0
-        if (hasNoDevices) {
-            startScan()
-        }
+        runFirstScan()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -113,6 +112,18 @@ class HomeActivity : ThemableActivity() {
             }
         }
         return true
+    }
+
+    private fun runFirstScan() {
+        if (firstScanDone) {
+            return
+        }
+        val deviceCount = binding.devicesRecyclerView.adapter?.itemCount ?: 0
+        val hasNoDevices = (deviceCount == 0)
+        val hasRangerName = ::rangerName.isInitialized
+        if (hasNoDevices && hasRangerName) {
+            startScan()
+        }
     }
 
     private fun backPressed() {
@@ -140,11 +151,12 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun initialize() {
+        binding.drawer.visibility = View.VISIBLE
+        binding.progressLayout.visibility = View.GONE
+        closeDrawer()
         registerReceiver(elocReceiver, IntentFilter(BluetoothDevice.ACTION_FOUND))
-        setLaunchers()
-        setListeners()
         setupListView()
-        onBackPressedDispatcher.addCallback(backPressedHandler)
+        runFirstScan()
     }
 
     private fun drawerOpen(): Boolean {
@@ -212,14 +224,11 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun setListeners() {
-        binding.instructionsButton.setOnClickListener { ActivityHelper.showInstructions(this@HomeActivity) }
+        onBackPressedDispatcher.addCallback(backPressedHandler)
+        binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.refreshListButton.setOnClickListener { startScan() }
         binding.swipeRefreshLayout.setOnRefreshListener { startScan() }
 
-        val leftHeader = binding.leftDrawer.getHeaderView(0)
-        val rightHeader = binding.rightDrawer.getHeaderView(0)
-        leftHeaderBinding = LayoutNavHeaderBinding.bind(leftHeader)
-        rightHeaderBinding = LayoutNavHeaderBinding.bind(rightHeader)
         leftHeaderBinding.editButton.setOnClickListener { editProfile() }
         rightHeaderBinding.editButton.setOnClickListener { editProfile() }
 
@@ -232,6 +241,9 @@ class HomeActivity : ThemableActivity() {
         viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
         viewModel.profile.observe(this) {
             if (it != null) {
+                val isFirstRun = (!::rangerName.isInitialized)
+                rangerName = it.userId
+
                 leftHeaderBinding.profilePictureImageView.setImageUrl(
                     it.profilePictureUrl,
                     HttpHelper.getInstance().imageLoader
@@ -240,12 +252,15 @@ class HomeActivity : ThemableActivity() {
                     it.profilePictureUrl,
                     HttpHelper.getInstance().imageLoader
                 )
-                rangerName = it.userId
                 leftHeaderBinding.userIdTextView.text = it.userId
                 rightHeaderBinding.userIdTextView.text = it.userId
                 leftHeaderBinding.emailAddressTextView.text = it.emailAddress
                 rightHeaderBinding.emailAddressTextView.text = it.emailAddress
                 binding.elocAppBar.userName = it.userId
+
+                if (isFirstRun) {
+                    initialize()
+                }
             }
         }
     }
@@ -262,8 +277,10 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun startScan() {
+        showDevice("testdev", "aa:bb:cc:dd:ee:ff")
+        return
+
         closeDrawer()
-        binding.swipeRefreshLayout.isRefreshing = true
         val isOn = BluetoothHelper.instance.isAdapterOn()
         binding.statusTextView.text =
             if (isOn)
@@ -274,6 +291,8 @@ class HomeActivity : ThemableActivity() {
             return
         }
 
+        firstScanDone = true
+        binding.swipeRefreshLayout.isRefreshing = true
         if (!bluetoothHelper.isScanning) {
             elocAdapter.clear()
         }
@@ -281,7 +300,7 @@ class HomeActivity : ThemableActivity() {
         onListUpdated(false)
         val error = bluetoothHelper.startScan(this::scanUpdate)
         if (!TextUtils.isEmpty(error)) {
-            ActivityHelper.showSnack(binding.coordinator, error!!)
+            showSnack(binding.coordinator, error!!)
         }
     }
 
@@ -369,16 +388,16 @@ class HomeActivity : ThemableActivity() {
             UploadFileAsync.run(filename, filesDir) { message ->
                 runOnUiThread {
                     if (message.trim().isNotEmpty()) {
-                        ActivityHelper.showSnack(binding.coordinator, message)
+                        showSnack(binding.coordinator, message)
                     }
                 }
             }
         } else {
-            ActivityHelper.showSnack(binding.coordinator, "Nothing to Upload!")
+            showSnack(binding.coordinator, getString(R.string.nothing_to_upload))
         }
     }
 
-    private fun showDevice(name: String, address: String) {
+    private fun showDevice(deviceName: String, address: String) {
         BluetoothHelper.instance.stopScan(this::scanUpdate)
         val old = false
         if (old) {
@@ -390,7 +409,7 @@ class HomeActivity : ThemableActivity() {
                 .apply {
                     putExtra(DeviceActivity.EXTRA_RANGER_NAME, rangerName)
                     putExtra(DeviceActivity.EXTRA_DEVICE_ADDRESS, address)
-                    putExtra(DeviceActivity.EXTRA_DEVICE_NAME, name)
+                    putExtra(DeviceActivity.EXTRA_DEVICE_NAME, deviceName)
                 }
             startActivity(intent)
         }
@@ -412,9 +431,9 @@ class HomeActivity : ThemableActivity() {
                     gUploadEnabled = false
                     invalidateOptionsMenu()
                     if (showMessage) {
-                        ActivityHelper.showSnack(
+                        showSnack(
                             binding.coordinator,
-                            "sync FAILED\nCheck internet connection"
+                            getString(R.string.sync_failed_check_internet_connection)
                         )
                     }
                 } else {
@@ -428,7 +447,7 @@ class HomeActivity : ThemableActivity() {
                     if (showMessage) {
                         val message =
                             getString(R.string.sync_template, gLastTimeDifferenceMillisecond)
-                        ActivityHelper.showSnack(binding.coordinator, message)
+                        showSnack(binding.coordinator, message)
                     }
                 }
             }
@@ -490,7 +509,7 @@ class HomeActivity : ThemableActivity() {
             }
 
             R.id.mnu_browse_eloc_status -> {
-                ActivityHelper.showStatusUpdates(this@HomeActivity)
+                showStatusUpdates()
                 return true
             }
         }
@@ -515,5 +534,9 @@ class HomeActivity : ThemableActivity() {
         val title = getString(R.string.app_name)
         val message = getString(R.string.version_template, App.versionName)
         showModalAlert(title, message)
+    }
+
+    private fun showStatusUpdates() {
+        openUrl(App.instance.getString(R.string.status_updates_url))
     }
 }

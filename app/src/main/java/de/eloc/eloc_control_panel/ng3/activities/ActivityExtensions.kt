@@ -11,14 +11,36 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
+import com.google.android.material.snackbar.Snackbar
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOkBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOptionBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAppChipBinding
 import de.eloc.eloc_control_panel.ng3.interfaces.VoidCallback
 
-fun AppCompatActivity.getPickImageRequest(): PickVisualMediaRequest =
+fun AppCompatActivity.showInstructions() {
+    openUrl(getString(R.string.instructions_url))
+}
+
+fun AppCompatActivity.openUrl(address: String) {
+    // Note: startActivity() is called outside an Activity
+    // be sure you are using the contect from an Activity.
+    try {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(address)
+        startActivity(intent)
+    } catch (_: Exception) {
+    }
+}
+
+fun showSnack(coordinator: CoordinatorLayout, message: String) =
+    Snackbar
+        .make(coordinator, message, Snackbar.LENGTH_LONG)
+        .show()
+
+fun getPickImageRequest(): PickVisualMediaRequest =
     PickVisualMediaRequest.Builder()
         .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
         .build()
@@ -133,7 +155,7 @@ fun AppCompatActivity.showModalOptionAlert(
     positiveButtonLabel: String = "",
     negativeButtonLabel: String = "",
     positiveCallback: VoidCallback?,
-    negativeCallback: VoidCallback?,
+    negativeCallback: VoidCallback? = null,
 ) {
     val dialogMessage = message.trim()
     if (dialogMessage.isEmpty()) {
