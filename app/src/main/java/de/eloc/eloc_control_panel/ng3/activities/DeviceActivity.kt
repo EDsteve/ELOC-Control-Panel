@@ -1,6 +1,5 @@
 package de.eloc.eloc_control_panel.ng3.activities
 
-import android.bluetooth.BluetoothClass.Device
 import android.content.Intent
 import android.location.Location
 import android.location.LocationListener
@@ -28,7 +27,6 @@ import org.json.JSONObject
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.absoluteValue
-import kotlin.math.max
 
 // todo: show free space text under storage gauge
 // todo: show % of free storage in gauge after firmware update
@@ -286,6 +284,7 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun setListeners() {
+        binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.startRecordingButton.setOnClickListener { recordButtonClicked() }
         binding.elocAppBar.setOnBackButtonClickedListener { goBack() }
         binding.elocAppBar.setOnSettingsButtonClickedListener { openSettings() }
