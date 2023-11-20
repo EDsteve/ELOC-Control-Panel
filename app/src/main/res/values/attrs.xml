@@ -16,6 +16,9 @@
     </declare-styleable>
 
     <declare-styleable name="ElocAppBar">
+        <attr name="topPadding" format="dimension" />
+        <attr name="bottomPadding" format="dimension" />
+        <attr name="paddingBotton" format="dimension" />
         <attr name="titleOpacity" format="float" />
         <attr name="nameOpacity" format="float" />
         <attr name="backButtonOpacity" format="float" />

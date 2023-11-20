@@ -2,16 +2,20 @@ package de.eloc.eloc_control_panel.ng3.widgets
 
 import android.content.Context
 import android.util.AttributeSet
+import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.android.material.appbar.AppBarLayout
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.LayoutAppBarBinding
 import de.eloc.eloc_control_panel.ng3.interfaces.VoidCallback
+
+private const val MIN_PADDING = 0.1f
 
 class ElocAppBar : AppBarLayout {
     private lateinit var binding: LayoutAppBarBinding
     private var onMenuButtonClickListener: VoidCallback? = null
     private var onSettingsButtonClickListener: VoidCallback? = null
     private var onBackButtonClickListener: VoidCallback? = null
+
 
     private var titleOpacity = 1.0f
         set(value) {
@@ -29,6 +33,22 @@ class ElocAppBar : AppBarLayout {
         set(value) {
             field = getSanitizedOpacity(value)
             binding.backButton.alpha = field
+        }
+
+    private var topPadding = MIN_PADDING
+        set(value) {
+            field = if (value < MIN_PADDING) MIN_PADDING else value
+            val params = binding.topSpace.layoutParams as? ConstraintLayout.LayoutParams
+            params?.height = field.toInt()
+            binding.topSpace.layoutParams = params
+        }
+
+    private var bottomPadding = MIN_PADDING
+        set(value) {
+            field = if (value < MIN_PADDING) MIN_PADDING else value
+            val params = binding.bottomSpace.layoutParams as? ConstraintLayout.LayoutParams
+            params?.height = field.toInt()
+            binding.bottomSpace.layoutParams = params
         }
 
     private var showBackButton = false
@@ -110,9 +130,12 @@ class ElocAppBar : AppBarLayout {
     private fun initView(attrs: AttributeSet? = null) {
         val view = inflate(context, R.layout.layout_app_bar, this)
         binding = LayoutAppBarBinding.bind(view)
-        elevation = resources.displayMetrics.density * 16.0f // 16dp
+        val density = resources.displayMetrics.density
+        elevation = density * 16.0f // 16dp
 
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ElocAppBar)
+        topPadding = typedArray.getDimension(R.styleable.ElocAppBar_topPadding, 12f * density)
+        bottomPadding = typedArray.getDimension(R.styleable.ElocAppBar_bottomPadding, 4f * density)
         title = typedArray.getString(R.styleable.ElocAppBar_title) ?: ""
         titleOpacity = typedArray.getFloat(R.styleable.ElocAppBar_titleOpacity, 1.0f)
         nameOpacity = typedArray.getFloat(R.styleable.ElocAppBar_nameOpacity, 1.0f)
