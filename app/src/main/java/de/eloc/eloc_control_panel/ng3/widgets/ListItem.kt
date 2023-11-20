@@ -16,16 +16,10 @@ class ListItem : ConstraintLayout {
             binding.labelTextView.text = field
         }
 
-    private var thickDivider = false
+    private var showDivider = false
         set(value) {
             field = value
-            if (field) {
-                binding.thickDivider.visibility = View.VISIBLE
-                binding.thinDivider.visibility = View.GONE
-            } else {
-                binding.thickDivider.visibility = View.GONE
-                binding.thinDivider.visibility = View.VISIBLE
-            }
+            binding.divider.visibility = if (field) View.VISIBLE else View.GONE
         }
 
     var itemValue = ""
@@ -57,7 +51,7 @@ class ListItem : ConstraintLayout {
             val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ListItem)
             itemLabel = typedArray.getString(R.styleable.ListItem_itemLabel) ?: "-"
             itemValue = typedArray.getString(R.styleable.ListItem_itemValue) ?: "-"
-            thickDivider = typedArray.getBoolean(R.styleable.ListItem_thickDivider, false)
+            showDivider = typedArray.getBoolean(R.styleable.ListItem_showDivider, false)
             typedArray.recycle()
         }
     }

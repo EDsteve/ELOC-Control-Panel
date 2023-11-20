@@ -30,6 +30,6 @@
     <declare-styleable name="ListItem">
         <attr name="itemLabel" format="string" />
         <attr name="itemValue" format="string" />
-        <attr name="thickDivider" format="boolean" />
+        <attr name="showDivider" format="boolean" />
     </declare-styleable>
 </resources>
