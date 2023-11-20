@@ -13,6 +13,24 @@ class ElocAppBar : AppBarLayout {
     private var onSettingsButtonClickListener: VoidCallback? = null
     private var onBackButtonClickListener: VoidCallback? = null
 
+    private var titleOpacity = 1.0f
+        set(value) {
+            field = getSanitizedOpacity(value)
+            binding.titleTextView.alpha = field
+        }
+
+    private var nameOpacity = 1.0f
+        set(value) {
+            field = getSanitizedOpacity(value)
+            binding.userLabel.alpha = field
+        }
+
+    private var backButtonOpacity = 1.0f
+        set(value) {
+            field = getSanitizedOpacity(value)
+            binding.backButton.alpha = field
+        }
+
     private var showBackButton = false
         set(value) {
             field = value
@@ -96,6 +114,9 @@ class ElocAppBar : AppBarLayout {
 
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ElocAppBar)
         title = typedArray.getString(R.styleable.ElocAppBar_title) ?: ""
+        titleOpacity = typedArray.getFloat(R.styleable.ElocAppBar_titleOpacity, 1.0f)
+        nameOpacity = typedArray.getFloat(R.styleable.ElocAppBar_nameOpacity, 1.0f)
+        backButtonOpacity = typedArray.getFloat(R.styleable.ElocAppBar_backButtonOpacity, 1.0f)
         showBackButton = typedArray.getBoolean(R.styleable.ElocAppBar_show_back_button, false)
         showSettingsButton =
             typedArray.getBoolean(R.styleable.ElocAppBar_show_settings_button, false)
@@ -127,6 +148,14 @@ class ElocAppBar : AppBarLayout {
 
     fun setOnSettingsButtonClickedListener(callback: VoidCallback?) {
         onSettingsButtonClickListener = callback
+    }
+
+    private fun getSanitizedOpacity(opacity: Float) = if (opacity >= 1.0) {
+        1.0f
+    } else if (opacity <= 0.0) {
+        0.0f
+    } else {
+        opacity
     }
 
     enum class MenuButtonPosition(val value: Int) {

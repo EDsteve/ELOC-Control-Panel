@@ -11,9 +11,13 @@
         android:id="@+id/eloc_app_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:backButtonOpacity="0.5"
+        app:nameOpacity="0.55"
         app:show_back_button="true"
         app:show_settings_button="true"
-        app:show_user_name="true" />
+        app:show_user_name="true"
+        app:titleOpacity="0.65"
+        tools:title="eloc 56" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipe_refresh_layout"
@@ -241,7 +245,7 @@
                     <com.google.android.material.divider.MaterialDivider
                         android:id="@+id/gauge_divider"
                         android:layout_width="match_parent"
-                        android:layout_height="3dp"
+                        android:layout_height="2dp"
                         app:dividerColor="@color/black"
                         tools:viewBindingIgnore="true" />
 
@@ -251,11 +255,13 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="16dp"
                         android:layout_marginTop="24dp"
+                        android:drawablePadding="8dp"
                         android:text="@string/status"
                         android:textAllCaps="true"
                         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                         android:textColor="@color/status_grey"
                         android:textStyle="bold"
+                        app:drawableEndCompat="@drawable/connected"
                         tools:viewBindingIgnore="true" />
 
                     <de.eloc.eloc_control_panel.ng3.widgets.ListItem
@@ -277,7 +283,7 @@
                     <com.google.android.material.divider.MaterialDivider
                         android:id="@+id/status_divider"
                         android:layout_width="match_parent"
-                        android:layout_height="3dp"
+                        android:layout_height="2dp"
                         android:layout_marginVertical="24dp"
                         app:dividerColor="@color/black"
                         tools:viewBindingIgnore="true" />
@@ -320,7 +326,7 @@
 
                     <com.google.android.material.divider.MaterialDivider
                         android:layout_width="match_parent"
-                        android:layout_height="3dp"
+                        android:layout_height="2dp"
                         android:layout_marginVertical="24dp"
                         app:dividerColor="@color/black"
                         tools:viewBindingIgnore="true" />
@@ -365,7 +371,7 @@
 
                     <com.google.android.material.divider.MaterialDivider
                         android:layout_width="match_parent"
-                        android:layout_height="3dp"
+                        android:layout_height="2dp"
                         android:layout_marginVertical="24dp"
                         app:dividerColor="@color/black"
                         tools:viewBindingIgnore="true" />

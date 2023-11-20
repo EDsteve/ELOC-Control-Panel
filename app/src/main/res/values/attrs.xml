@@ -16,6 +16,9 @@
     </declare-styleable>
 
     <declare-styleable name="ElocAppBar">
+        <attr name="titleOpacity" format="float" />
+        <attr name="nameOpacity" format="float" />
+        <attr name="backButtonOpacity" format="float" />
         <attr name="title" format="string" />
         <attr name="show_back_button" format="boolean" />
         <attr name="show_settings_button" format="boolean" />
