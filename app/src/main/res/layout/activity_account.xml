@@ -7,12 +7,18 @@
     android:layout_height="match_parent"
     tools:context=".ng3.activities.AccountActivity">
 
-    <de.eloc.eloc_control_panel.ng3.widgets.ElocAppBar
-        android:id="@+id/eloc_app_bar"
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:show_back_button="true"
-        app:title="@string/manage_account" />
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            style="@style/ElocToolbarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="?actionBarSize"
+            app:navigationIcon="@drawable/arrow_back"
+            app:title="@string/manage_account" />
+    </com.google.android.material.appbar.AppBarLayout>
 
     <ScrollView
         android:id="@+id/fields_layout"

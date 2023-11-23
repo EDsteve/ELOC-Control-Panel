@@ -10,12 +10,17 @@
     android:orientation="vertical"
     tools:context=".ng3.activities.ChangeEmailAddressActivity">
 
-    <de.eloc.eloc_control_panel.ng3.widgets.ElocAppBar
-        android:id="@+id/eloc_app_bar"
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:show_back_button="true"
-        app:title="@string/change_email_address" />
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?actionBarSize"
+            app:navigationIcon="@drawable/arrow_back"
+            app:title="@string/change_email_address" />
+    </com.google.android.material.appbar.AppBarLayout>
 
     <TextView
         android:layout_width="@dimen/auth_input_width"

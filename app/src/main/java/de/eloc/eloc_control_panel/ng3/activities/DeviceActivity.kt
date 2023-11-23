@@ -203,8 +203,8 @@ class DeviceActivity : AppCompatActivity() {
                         ::goBack
                     )
                 } else {
-                    binding.elocAppBar.title = deviceName
-                    binding.elocAppBar.userName = rangerName
+                    binding.toolbar.title = deviceName
+                    binding.toolbar.subtitle = getString(R.string.eloc_user, rangerName)
                     binding.appVersionItem.itemValue = App.versionName
                     updateGpsViews()
                     connect()
@@ -273,7 +273,7 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun connect() {
-        binding.elocAppBar.visibility = View.GONE
+        binding.toolbar.visibility = View.GONE
         binding.startDetectingButton.visibility = View.GONE
         binding.startRecordingButton.visibility = View.GONE
         binding.contentScrollView.visibility = View.GONE
@@ -286,8 +286,13 @@ class DeviceActivity : AppCompatActivity() {
     private fun setListeners() {
         binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.startRecordingButton.setOnClickListener { recordButtonClicked() }
-        binding.elocAppBar.setOnBackButtonClickedListener { goBack() }
-        binding.elocAppBar.setOnSettingsButtonClickedListener { openSettings() }
+        binding.toolbar.setNavigationOnClickListener { goBack() }
+        binding.toolbar.setOnMenuItemClickListener {
+            if (it.itemId == R.id.mnu_settings) {
+                openSettings()
+            }
+            return@setOnMenuItemClickListener true
+        }
         binding.swipeRefreshLayout.setOnRefreshListener {
             if (!refreshing) {
                 refreshing = true
@@ -326,21 +331,21 @@ class DeviceActivity : AppCompatActivity() {
         runOnUiThread {
             refreshing = false
             binding.swipeRefreshLayout.isRefreshing = false
+            binding.toolbar.menu.clear()
             when (status) {
                 ConnectionStatus.Active -> {
-                    binding.elocAppBar.visibility = View.VISIBLE
-                    binding.elocAppBar.showSettingsButton = true
+                    binding.toolbar.visibility = View.VISIBLE
                     binding.startDetectingButton.visibility = View.VISIBLE
                     binding.startRecordingButton.visibility = View.VISIBLE
                     binding.contentScrollView.visibility = View.VISIBLE
                     binding.loadingLinearLayout.visibility = View.GONE
                     binding.swipeRefreshLayout.isEnabled = true
+                    menuInflater.inflate(R.menu.app_bar_settings, binding.toolbar.menu)
                     getDeviceInfo()
                 }
 
                 ConnectionStatus.Inactive -> {
-                    binding.elocAppBar.visibility = View.VISIBLE
-                    binding.elocAppBar.showSettingsButton = false
+                    binding.toolbar.visibility = View.VISIBLE
                     binding.startDetectingButton.visibility = View.GONE
                     binding.startRecordingButton.visibility = View.GONE
                     binding.contentScrollView.visibility = View.GONE
@@ -351,7 +356,7 @@ class DeviceActivity : AppCompatActivity() {
                 }
 
                 ConnectionStatus.Pending -> {
-                    binding.elocAppBar.visibility = View.GONE
+                    binding.toolbar.visibility = View.GONE
                     binding.startDetectingButton.visibility = View.GONE
                     binding.startRecordingButton.visibility = View.GONE
                     binding.contentScrollView.visibility = View.GONE

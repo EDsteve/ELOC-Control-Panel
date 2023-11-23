@@ -124,7 +124,7 @@
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng2.activities.ProfileActivity"
+            android:name=".ng3.activities.ProfileActivity"
             android:exported="false"
             android:label="@string/edit_profile"
             android:screenOrientation="portrait"

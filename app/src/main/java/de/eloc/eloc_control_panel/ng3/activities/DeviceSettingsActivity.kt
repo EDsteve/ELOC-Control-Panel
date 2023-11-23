@@ -212,7 +212,7 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.updateFirmwareButton.setOnClickListener { confirmFirmwareUpdate() }
         binding.bluetoothRecordingStateButton.setOnClickListener { saveBtRecordingState() }
-        binding.elocAppBar.setOnBackButtonClickedListener { goBack() }
+        binding.toolbar.setNavigationOnClickListener { goBack() }
     }
 
     private fun hideAdvancedOperations() {

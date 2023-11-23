@@ -72,7 +72,7 @@ class UserPrefsActivity : ThemableActivity() {
     }
 
     private fun setListeners() {
-        binding.elocAppBar.setOnBackButtonClickedListener { onBackButtonPressed() }
+        binding.toolbar.setNavigationOnClickListener { onBackButtonPressed() }
 
         binding.btDevicesSwitch.setOnCheckedChangeListener { _, checked ->
             helper.setShowAllBluetoothDevices(checked)

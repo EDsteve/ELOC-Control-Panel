@@ -25,7 +25,6 @@ import de.eloc.eloc_control_panel.UploadFileAsync
 import de.eloc.eloc_control_panel.activities.TerminalActivity
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.LayoutNavHeaderBinding
-import de.eloc.eloc_control_panel.ng2.activities.ProfileActivity
 import de.eloc.eloc_control_panel.ng3.App
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import de.eloc.eloc_control_panel.ng2.models.ElocInfoAdapter
@@ -33,7 +32,6 @@ import de.eloc.eloc_control_panel.ng2.models.HttpHelper
 import de.eloc.eloc_control_panel.ng2.receivers.BluetoothDeviceReceiver
 import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper
 import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel
-import de.eloc.eloc_control_panel.ng3.widgets.ElocAppBar
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
@@ -103,13 +101,7 @@ class HomeActivity : ThemableActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             android.R.id.home -> toggleDrawer()
-            R.id.mnu_main -> {
-                if (drawerOpen()) {
-                    closeDrawer()
-                } else {
-                    openDrawer()
-                }
-            }
+            R.id.mnu_overflow -> toggleDrawer()
         }
         return true
     }
@@ -192,10 +184,13 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun setAppBar() {
-        binding.elocAppBar.menuButtonPosition = if (PreferencesHelper.instance.isMainMenuOnLeft()) {
-            ElocAppBar.MenuButtonPosition.Left
+        binding.toolbar.menu.clear()
+        if (PreferencesHelper.instance.isMainMenuOnLeft()) {
+            binding.toolbar.setNavigationIcon(R.drawable.menu)
+            binding.toolbar.setNavigationIconTint(Color.WHITE)
         } else {
-            ElocAppBar.MenuButtonPosition.Right
+            binding.toolbar.navigationIcon = null
+            menuInflater.inflate(R.menu.app_bar_more, binding.toolbar.menu)
         }
     }
 
@@ -234,7 +229,14 @@ class HomeActivity : ThemableActivity() {
 
         binding.leftDrawer.setNavigationItemSelectedListener { onNavItemSelected(it) }
         binding.rightDrawer.setNavigationItemSelectedListener { onNavItemSelected(it) }
-        binding.elocAppBar.setOnMenuButtonClickedListener { toggleDrawer() }
+
+        binding.toolbar.setNavigationOnClickListener { toggleDrawer() }
+        binding.toolbar.setOnMenuItemClickListener {
+            if (it.itemId == R.id.mnu_overflow) {
+                toggleDrawer()
+            }
+            return@setOnMenuItemClickListener true
+        }
     }
 
     private fun setViewModel() {
@@ -256,7 +258,7 @@ class HomeActivity : ThemableActivity() {
                 rightHeaderBinding.userIdTextView.text = it.userId
                 leftHeaderBinding.emailAddressTextView.text = it.emailAddress
                 rightHeaderBinding.emailAddressTextView.text = it.emailAddress
-                binding.elocAppBar.userName = it.userId
+                binding.toolbar.subtitle = getString(R.string.eloc_user, it.userId)
 
                 if (isFirstRun) {
                     initialize()
@@ -487,7 +489,7 @@ class HomeActivity : ThemableActivity() {
             }
 
             R.id.mnu_account -> {
-                editAccount()
+                manageAccount()
                 return true
             }
 
@@ -524,7 +526,7 @@ class HomeActivity : ThemableActivity() {
         open(LoginActivity::class.java, true)
     }
 
-    private fun editAccount() {
+    private fun manageAccount() {
         open(AccountActivity::class.java, false)
     }
 

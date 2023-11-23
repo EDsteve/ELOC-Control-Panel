@@ -45,7 +45,7 @@ class ChangeEmailAddressActivity : ThemableActivity() {
         binding.submitButton.setOnClickListener { submit() }
         binding.editText.addTextChangedListener(TextInputWatcher(binding.textEditLayout))
         binding.passwordTextInput.addTextChangedListener(TextInputWatcher(binding.passwordLayout))
-        binding.elocAppBar.setOnBackButtonClickedListener { goBack() }
+        binding.toolbar.setNavigationOnClickListener { goBack() }
     }
 
     private fun submit() {

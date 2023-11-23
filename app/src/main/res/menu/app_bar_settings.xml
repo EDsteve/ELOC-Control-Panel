@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/mnu_settings"
+        android:icon="@drawable/settings_outline"
+        app:iconTint="#74000000"
+        android:title="@string/more"
+        app:showAsAction="always|withText" />
+</menu>

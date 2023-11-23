@@ -116,7 +116,7 @@ class MapActivity : ThemableActivity() {
                 collapseUnknownDevices()
             }
         }
-        binding.elocAppBar.setOnBackButtonClickedListener { goBack() }
+        binding.toolbar.setNavigationOnClickListener { goBack() }
     }
 
     private fun expandUnknownDevices() {

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-
     <declare-styleable name="SimpleGauge">
         <attr name="showDiscreteColors" format="boolean" />
         <attr name="criticalColor" format="color" />
@@ -13,24 +12,6 @@
         <!-- range for criticalColorThreshold is 0 to 100 -->
         <attr name="criticalColorThreshold" format="integer" />
         <attr name="alwaysFilled" format="boolean" />
-    </declare-styleable>
-
-    <declare-styleable name="ElocAppBar">
-        <attr name="topPadding" format="dimension" />
-        <attr name="bottomPadding" format="dimension" />
-        <attr name="paddingBotton" format="dimension" />
-        <attr name="titleOpacity" format="float" />
-        <attr name="nameOpacity" format="float" />
-        <attr name="backButtonOpacity" format="float" />
-        <attr name="title" format="string" />
-        <attr name="show_back_button" format="boolean" />
-        <attr name="show_settings_button" format="boolean" />
-        <attr name="show_user_name" format="boolean" />
-        <attr name="menu_button_position" format="enum">
-            <enum name="none" value="0" />
-            <enum name="left" value="1" />
-            <enum name="right" value="2" />
-        </attr>
     </declare-styleable>
 
     <declare-styleable name="ListItem">

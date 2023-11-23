@@ -42,7 +42,7 @@ class ChangePasswordActivity : ThemableActivity() {
     private fun setListeners() {
         binding.root.setOnClickListener { hideKeyboard() }
         binding.submitButton.setOnClickListener { submit() }
-        binding.elocAppBar.setOnBackButtonClickedListener { goBack() }
+        binding.toolbar.setNavigationOnClickListener { goBack() }
         binding.currentPasswordTextInput.addTextChangedListener(TextInputWatcher(binding.currentPasswordLayout))
         binding.newPasswordTextInput.addTextChangedListener(TextInputWatcher(binding.newPasswordLayout))
         binding.verifyPasswordTextInput.addTextChangedListener(TextInputWatcher(binding.verifyPasswordLayout))

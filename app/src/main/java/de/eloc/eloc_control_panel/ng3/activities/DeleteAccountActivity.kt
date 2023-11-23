@@ -40,7 +40,7 @@ class DeleteAccountActivity : ThemableActivity() {
         binding.root.setOnClickListener { hideKeyboard() }
         binding.submitButton.setOnClickListener { submit() }
         binding.passwordTextInput.addTextChangedListener(TextInputWatcher(binding.passwordLayout))
-        binding.elocAppBar.setOnBackButtonClickedListener { goBack() }
+        binding.toolbar.setNavigationOnClickListener { goBack() }
     }
 
     private fun submit() {

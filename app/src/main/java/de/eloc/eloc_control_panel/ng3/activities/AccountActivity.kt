@@ -43,7 +43,7 @@ class AccountActivity : ThemableActivity() {
     }
 
     private fun setListeners() {
-        binding.elocAppBar.setOnBackButtonClickedListener { goBack() }
+        binding.toolbar.setNavigationOnClickListener { goBack() }
         binding.changeEmailAddressItem.button.setOnClickListener { openEmailAddressEditor() }
         binding.changePasswordItem.button.setOnClickListener { openPasswordEditor() }
         binding.deleteAccountItem.button.setOnClickListener { openAccountDeleter() }
