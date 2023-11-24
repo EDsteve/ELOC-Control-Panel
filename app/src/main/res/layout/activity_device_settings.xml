@@ -19,497 +19,511 @@
             app:title="@string/eloc_device_settings" />
     </com.google.android.material.appbar.AppBarLayout>
 
-    <TextView
-        android:id="@+id/instructions_button"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/bottom_bar_size"
-        android:layout_gravity="bottom|center"
-        android:background="?selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:text="@string/instructions"
-        android:textAlignment="center" />
-
-    <ScrollView
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="@dimen/bottom_bar_size"
-        android:padding="16dp"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
-        <LinearLayout
-            android:id="@+id/card_container"
+        <TextView
+            android:id="@+id/instructions_button"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/bottom_bar_size"
+            android:layout_gravity="bottom|center"
+            android:background="?selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/instructions"
+            android:textAlignment="center" />
+
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="match_parent"
+            android:layout_marginBottom="@dimen/bottom_bar_size"
+            android:padding="16dp">
 
-            <androidx.cardview.widget.CardView
-                android:id="@+id/recording_card"
+            <LinearLayout
+                android:id="@+id/card_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/cardview"
-                app:cardCornerRadius="8dp"
-                app:contentPadding="8dp">
+                android:orientation="vertical">
 
-                <LinearLayout
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/recording_card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    app:cardBackgroundColor="@color/cardview"
+                    app:cardCornerRadius="8dp"
+                    app:contentPadding="8dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="4dp"
-                        android:orientation="horizontal">
+                        android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/recording"
-                            android:textAllCaps="true"
-                            android:textStyle="bold" />
-
-                        <Button
-                            android:id="@+id/recording_button"
-                            style="@style/AppTextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/run"
-                            app:drawableEndCompat="@drawable/run"
-                            app:drawableTint="@color/colorPrimary" />
-
-                    </LinearLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/file_header_name">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/eloc_bt_name_edit_text"
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:imeOptions="actionDone"
-                            android:importantForAutofill="no"
-                            android:inputType="text"
-                            tools:ignore="TouchTargetSizeCheck,DuplicateSpeakableTextCheck"
-                            tools:text="ELOC18" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                            android:layout_marginBottom="4dp"
+                            android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/sample_rate_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="@string/sample_rate" />
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/recording"
+                                android:textAllCaps="true"
+                                android:textStyle="bold" />
 
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/sample_rate_chip_group"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        app:selectionRequired="true"
-                        app:singleSelection="true">
+                            <Button
+                                android:id="@+id/recording_button"
+                                style="@style/AppTextButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/run"
+                                app:drawableEndCompat="@drawable/run"
+                                app:drawableTint="@color/colorPrimary" />
 
-                        <include
-                            android:id="@+id/rate_44k_layout"
-                            layout="@layout/layout_app_chip" />
+                        </LinearLayout>
 
-                        <include
-                            android:id="@+id/rate_32k_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/rate_22k_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/rate_16k_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/rate_8k_layout"
-                            layout="@layout/layout_app_chip" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                    <TextView
-                        android:id="@+id/recording_time_per_file_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="@string/recording_time_per_file" />
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/file_time_chip_group"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        app:selectionRequired="true"
-                        app:singleSelection="true">
-
-                        <include
-                            android:id="@+id/time_12h_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/time_4h_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/time_1h_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/time_1m_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/time_10s_layout"
-                            layout="@layout/layout_app_chip" />
-
-                    </com.google.android.material.chip.ChipGroup>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <Button
-                android:id="@+id/show_advanced_options_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginVertical="16dp"
-                android:drawableEnd="@drawable/keyboard_arrow_down"
-                android:text="@string/advanced_options"
-                android:textColor="@color/white"
-                tools:ignore="DuplicateSpeakableTextCheck" />
-
-            <Button
-                android:id="@+id/hide_advanced_options_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginVertical="16dp"
-                android:drawableEnd="@drawable/keyboard_arrow_up"
-                android:text="@string/advanced_options"
-                android:textColor="@color/white" />
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/command_line_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardBackgroundColor="@color/cardview"
-                app:cardCornerRadius="8dp"
-                app:contentPadding="8dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="4dp"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/custom_command"
-                            android:textAllCaps="true"
-                            android:textStyle="bold" />
-
-                        <Button
-                            android:id="@+id/command_line_button"
-                            style="@style/AppTextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/run"
-                            app:drawableEndCompat="@drawable/run"
-                            app:drawableTint="@color/colorPrimary" />
-
-                    </LinearLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/command">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/custom_command_edit_text"
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:imeOptions="actionDone"
-                            android:importantForAutofill="no"
-                            android:inputType="text"
-                            tools:ignore="TouchTargetSizeCheck"
-                            tools:text="ELOC18" />
-                    </com.google.android.material.textfield.TextInputLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                            android:hint="@string/file_header_name">
 
-            <androidx.cardview.widget.CardView
-                android:id="@+id/fileheader_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardBackgroundColor="@color/cardview"
-                app:cardCornerRadius="8dp"
-                app:contentPadding="8dp">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/eloc_bt_name_edit_text"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:imeOptions="actionDone"
+                                android:importantForAutofill="no"
+                                android:inputType="text"
+                                tools:ignore="TouchTargetSizeCheck,DuplicateSpeakableTextCheck"
+                                tools:text="ELOC18" />
+                        </com.google.android.material.textfield.TextInputLayout>
 
+                        <TextView
+                            android:id="@+id/sample_rate_tv"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/sample_rate" />
 
-                <LinearLayout
+                        <com.google.android.material.chip.ChipGroup
+                            android:id="@+id/sample_rate_chip_group"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            app:selectionRequired="true"
+                            app:singleSelection="true">
+
+                            <include
+                                android:id="@+id/rate_44k_layout"
+                                layout="@layout/layout_app_chip" />
+
+                            <include
+                                android:id="@+id/rate_32k_layout"
+                                layout="@layout/layout_app_chip" />
+
+                            <include
+                                android:id="@+id/rate_22k_layout"
+                                layout="@layout/layout_app_chip" />
+
+                            <include
+                                android:id="@+id/rate_16k_layout"
+                                layout="@layout/layout_app_chip" />
+
+                            <include
+                                android:id="@+id/rate_8k_layout"
+                                layout="@layout/layout_app_chip" />
+
+                        </com.google.android.material.chip.ChipGroup>
+
+                        <TextView
+                            android:id="@+id/recording_time_per_file_tv"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/recording_time_per_file" />
+
+                        <com.google.android.material.chip.ChipGroup
+                            android:id="@+id/file_time_chip_group"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            app:selectionRequired="true"
+                            app:singleSelection="true">
+
+                            <include
+                                android:id="@+id/time_12h_layout"
+                                layout="@layout/layout_app_chip" />
+
+                            <include
+                                android:id="@+id/time_4h_layout"
+                                layout="@layout/layout_app_chip" />
+
+                            <include
+                                android:id="@+id/time_1h_layout"
+                                layout="@layout/layout_app_chip" />
+
+                            <include
+                                android:id="@+id/time_1m_layout"
+                                layout="@layout/layout_app_chip" />
+
+                            <include
+                                android:id="@+id/time_10s_layout"
+                                layout="@layout/layout_app_chip" />
+
+                        </com.google.android.material.chip.ChipGroup>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <Button
+                    android:id="@+id/show_advanced_options_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginVertical="16dp"
+                    android:drawableEnd="@drawable/keyboard_arrow_down"
+                    android:text="@string/advanced_options"
+                    android:textColor="@color/white"
+                    tools:ignore="DuplicateSpeakableTextCheck" />
+
+                <Button
+                    android:id="@+id/hide_advanced_options_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginVertical="16dp"
+                    android:drawableEnd="@drawable/keyboard_arrow_up"
+                    android:text="@string/advanced_options"
+                    android:textColor="@color/white" />
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/command_line_card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/cardview"
+                    app:cardCornerRadius="8dp"
+                    app:contentPadding="8dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="4dp"
-                        android:orientation="horizontal">
+                        android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/device_name"
-                            android:textAllCaps="true"
-                            android:textStyle="bold" />
-
-                        <Button
-                            android:id="@+id/file_header_button"
-                            style="@style/AppTextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/run"
-                            app:drawableEndCompat="@drawable/run"
-                            app:drawableTint="@color/colorPrimary" />
-
-                    </LinearLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/device_name"
-                        app:counterEnabled="true"
-                        app:counterMaxLength="30">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/device_name_edit_text"
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:imeOptions="actionDone"
-                            android:importantForAutofill="no"
-                            android:inputType="text"
-                            tools:ignore="TouchTargetSizeCheck"
-                            tools:text="ELOC18" />
-                    </com.google.android.material.textfield.TextInputLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                            android:layout_marginBottom="4dp"
+                            android:orientation="horizontal">
 
-            <androidx.cardview.widget.CardView
-                android:id="@+id/microphone_type_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardBackgroundColor="@color/cardview"
-                app:cardCornerRadius="8dp"
-                app:contentPadding="8dp">
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/custom_command"
+                                android:textAllCaps="true"
+                                android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                            <Button
+                                android:id="@+id/command_line_button"
+                                style="@style/AppTextButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/run"
+                                app:drawableEndCompat="@drawable/run"
+                                app:drawableTint="@color/colorPrimary" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="4dp"
-                        android:orientation="horizontal">
+                        </LinearLayout>
 
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/microphone_type"
-                            android:textAllCaps="true"
-                            android:textStyle="bold" />
-
-                        <Button
-                            android:id="@+id/microphone_type_button"
-                            style="@style/AppTextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/run"
-                            app:drawableEndCompat="@drawable/run"
-                            app:drawableTint="@color/colorPrimary" />
-
-                    </LinearLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/microphone_type">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/mic_type_edit_text"
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:imeOptions="actionDone"
-                            android:importantForAutofill="no"
-                            android:inputType="text"
-                            tools:text="ns" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                            android:hint="@string/command">
 
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/custom_command_edit_text"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:imeOptions="actionDone"
+                                android:importantForAutofill="no"
+                                android:inputType="text"
+                                tools:ignore="TouchTargetSizeCheck"
+                                tools:text="ELOC18" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
 
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/microphone_gain_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardBackgroundColor="@color/cardview"
-                app:cardCornerRadius="8dp"
-                app:contentPadding="8dp">
-
-                <LinearLayout
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/fileheader_card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/cardview"
+                    app:cardCornerRadius="8dp"
+                    app:contentPadding="8dp">
+
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="4dp"
-                        android:orientation="horizontal">
+                        android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="0dp"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/microphone_gain"
-                            android:textAllCaps="true"
-                            android:textStyle="bold" />
+                            android:layout_marginBottom="4dp"
+                            android:orientation="horizontal">
 
-                        <Button
-                            android:id="@+id/microphone_gain_button"
-                            style="@style/AppTextButton"
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/device_name"
+                                android:textAllCaps="true"
+                                android:textStyle="bold" />
+
+                            <Button
+                                android:id="@+id/file_header_button"
+                                style="@style/AppTextButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/run"
+                                app:drawableEndCompat="@drawable/run"
+                                app:drawableTint="@color/colorPrimary" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/run"
-                            app:drawableEndCompat="@drawable/run"
-                            app:drawableTint="@color/colorPrimary" />
+                            android:hint="@string/device_name"
+                            app:counterEnabled="true"
+                            app:counterMaxLength="30">
 
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/device_name_edit_text"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:imeOptions="actionDone"
+                                android:importantForAutofill="no"
+                                android:inputType="text"
+                                tools:ignore="TouchTargetSizeCheck"
+                                tools:text="ELOC18" />
+                        </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
+                </androidx.cardview.widget.CardView>
 
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/mic_gain_chip_group"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        app:selectionRequired="true"
-                        app:singleSelection="true">
-
-                        <include
-                            android:id="@+id/low_gain_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/high_gain_layout"
-                            layout="@layout/layout_app_chip" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/recording_bluetooth_state_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardBackgroundColor="@color/cardview"
-                app:cardCornerRadius="8dp"
-                app:contentPadding="8dp">
-
-                <LinearLayout
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/microphone_type_card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/cardview"
+                    app:cardCornerRadius="8dp"
+                    app:contentPadding="8dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="4dp"
-                        android:orientation="horizontal">
+                        android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="0dp"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/bluetooth_state_when_recording"
-                            android:textAllCaps="true"
-                            android:textStyle="bold" />
+                            android:layout_marginBottom="4dp"
+                            android:orientation="horizontal">
 
-                        <Button
-                            android:id="@+id/bluetooth_recording_state_button"
-                            style="@style/AppTextButton"
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/microphone_type"
+                                android:textAllCaps="true"
+                                android:textStyle="bold" />
+
+                            <Button
+                                android:id="@+id/microphone_type_button"
+                                style="@style/AppTextButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/run"
+                                app:drawableEndCompat="@drawable/run"
+                                app:drawableTint="@color/colorPrimary" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/run"
-                            app:drawableEndCompat="@drawable/run"
-                            app:drawableTint="@color/colorPrimary" />
+                            android:hint="@string/microphone_type">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/mic_type_edit_text"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:imeOptions="actionDone"
+                                android:importantForAutofill="no"
+                                android:inputType="text"
+                                tools:text="ns" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
 
                     </LinearLayout>
+                </androidx.cardview.widget.CardView>
 
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/bt_state_chip_group"
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/microphone_gain_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/cardview"
+                    app:cardCornerRadius="8dp"
+                    app:contentPadding="8dp">
+
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        app:selectionRequired="true"
-                        app:singleSelection="true">
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
 
-                        <include
-                            android:id="@+id/bt_on_layout"
-                            layout="@layout/layout_app_chip" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="4dp"
+                            android:orientation="horizontal">
 
-                        <include
-                            android:id="@+id/bt_off_layout"
-                            layout="@layout/layout_app_chip" />
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/microphone_gain"
+                                android:textAllCaps="true"
+                                android:textStyle="bold" />
 
-                    </com.google.android.material.chip.ChipGroup>
+                            <Button
+                                android:id="@+id/microphone_gain_button"
+                                style="@style/AppTextButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/run"
+                                app:drawableEndCompat="@drawable/run"
+                                app:drawableTint="@color/colorPrimary" />
 
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                        </LinearLayout>
 
-            <View
-                android:id="@+id/divider7"
-                android:layout_width="match_parent"
-                android:layout_height="4dp"
-                android:layout_marginVertical="8dp"
-                android:background="#535353" />
+                        <com.google.android.material.chip.ChipGroup
+                            android:id="@+id/mic_gain_chip_group"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            app:selectionRequired="true"
+                            app:singleSelection="true">
 
-            <Button
-                android:id="@+id/update_firmware_button"
-                style="@style/AppTextButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="16dp"
-                android:text="@string/update_firmware"
-                app:drawableEndCompat="@drawable/system_update"
-                app:drawableTint="@color/colorPrimary" />
-        </LinearLayout>
-    </ScrollView>
+                            <include
+                                android:id="@+id/low_gain_layout"
+                                layout="@layout/layout_app_chip" />
+
+                            <include
+                                android:id="@+id/high_gain_layout"
+                                layout="@layout/layout_app_chip" />
+
+                        </com.google.android.material.chip.ChipGroup>
+
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/recording_bluetooth_state_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/cardview"
+                    app:cardCornerRadius="8dp"
+                    app:contentPadding="8dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="4dp"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/bluetooth_state_when_recording"
+                                android:textAllCaps="true"
+                                android:textStyle="bold" />
+
+                            <Button
+                                android:id="@+id/bluetooth_recording_state_button"
+                                style="@style/AppTextButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/run"
+                                app:drawableEndCompat="@drawable/run"
+                                app:drawableTint="@color/colorPrimary" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.chip.ChipGroup
+                            android:id="@+id/bt_state_chip_group"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            app:selectionRequired="true"
+                            app:singleSelection="true">
+
+                            <include
+                                android:id="@+id/bt_on_layout"
+                                layout="@layout/layout_app_chip" />
+
+                            <include
+                                android:id="@+id/bt_off_layout"
+                                layout="@layout/layout_app_chip" />
+
+                        </com.google.android.material.chip.ChipGroup>
+
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <View
+                    android:id="@+id/divider7"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:layout_marginVertical="8dp"
+                    android:background="#535353" />
+
+                <Button
+                    android:id="@+id/update_firmware_button"
+                    style="@style/AppTextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="16dp"
+                    android:text="@string/update_firmware"
+                    app:drawableEndCompat="@drawable/system_update"
+                    app:drawableTint="@color/colorPrimary" />
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="32dp" />
+            </LinearLayout>
+        </ScrollView>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:background="@drawable/toolbar_shadow" />
+    </FrameLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

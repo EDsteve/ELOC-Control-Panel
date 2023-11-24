@@ -20,32 +20,41 @@
             app:title="@string/manage_account" />
     </com.google.android.material.appbar.AppBarLayout>
 
-    <ScrollView
-        android:id="@+id/fields_layout"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingVertical="16dp"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
         tools:visibility="visible">
 
-        <LinearLayout
+        <ScrollView
+            android:id="@+id/fields_layout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="match_parent"
+            android:paddingVertical="16dp">
 
-            <include
-                android:id="@+id/change_email_address_item"
-                layout="@layout/layout_profile_item" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-            <include
-                android:id="@+id/change_password_item"
-                layout="@layout/layout_profile_item" />
+                <include
+                    android:id="@+id/change_email_address_item"
+                    layout="@layout/layout_profile_item" />
 
-            <include
-                android:id="@+id/delete_account_item"
-                layout="@layout/layout_profile_item" />
-        </LinearLayout>
+                <include
+                    android:id="@+id/change_password_item"
+                    layout="@layout/layout_profile_item" />
 
-    </ScrollView>
+                <include
+                    android:id="@+id/delete_account_item"
+                    layout="@layout/layout_profile_item" />
+            </LinearLayout>
 
+        </ScrollView>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:background="@drawable/toolbar_shadow" />
+    </FrameLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
