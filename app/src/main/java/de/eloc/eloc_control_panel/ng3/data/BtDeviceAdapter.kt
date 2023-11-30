@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.ng2.models
+package de.eloc.eloc_control_panel.ng3.data
 
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
@@ -14,18 +14,18 @@ class ElocInfoAdapter(
     val callback: BooleanCallback,
     private val itemCallback: AdapterItemCallback
 ) :
-    RecyclerView.Adapter<ElocInfoViewHolder>() {
-    private val deviceInfos = ArrayList<ElocInfo>()
+    RecyclerView.Adapter<BtDeviceViewHolder>() {
+    private val deviceInfos = ArrayList<BtDevice>()
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ElocInfoViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BtDeviceViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         val binding = LayoutElocInfoBinding.inflate(inflater, parent, false)
-        return ElocInfoViewHolder(binding.root)
+        return BtDeviceViewHolder(binding.root)
     }
 
     override fun getItemCount(): Int = deviceInfos.size
 
-    override fun onBindViewHolder(holder: ElocInfoViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: BtDeviceViewHolder, position: Int) {
         val info = deviceInfos[position]
         holder.setInfo(info, itemCallback)
     }
@@ -36,10 +36,10 @@ class ElocInfoAdapter(
         notifyDataSetChanged()
     }
 
-    fun add(info: ElocInfo) {
-        if (BluetoothHelper.instance.isElocDevice(info.device)) {
-            if (!deviceInfos.contains(info)) {
-                deviceInfos.add(info)
+    fun add(device: BtDevice) {
+        if (BtDevice.isEloc(device)) {
+            if (!deviceInfos.contains(device)) {
+                deviceInfos.add(device)
                 notifyItemInserted(deviceInfos.size - 1)
                 callback.handler(false)
             }

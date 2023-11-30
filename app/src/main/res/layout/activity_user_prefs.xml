@@ -25,24 +25,84 @@
 
         <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="16dp">
+            android:layout_height="match_parent">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:paddingVertical="32dp">
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/bt_devices_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:text="@string/show_all_bt_scanning"
+                    app:thumbTint="@color/white" />
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="16dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:text="@string/status_upload_intervals" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/upload_interval_chip_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    app:selectionRequired="true"
+                    app:singleSelection="true">
+
+                    <include
+                        android:id="@+id/upload_interval_15mins_chip_layout"
+                        layout="@layout/layout_app_chip" />
+
+                    <include
+                        android:id="@+id/upload_interval_30mins_chip_layout"
+                        layout="@layout/layout_app_chip" />
+
+                    <include
+                        android:id="@+id/upload_interval_60mins_chip_layout"
+                        layout="@layout/layout_app_chip" />
+
+                    <include
+                        android:id="@+id/upload_interval_120mins_chip_layout"
+                        layout="@layout/layout_app_chip" />
+
+                </com.google.android.material.chip.ChipGroup>
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="match_parent"
+                    android:layout_height="3dp"
+                    android:layout_marginVertical="16dp"
+                    app:dividerColor="@color/black" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="16dp"
+                    android:text="@string/user_interface"
+                    android:textAllCaps="true"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
                     android:text="@string/main_menu_position" />
 
                 <com.google.android.material.chip.ChipGroup
                     android:id="@+id/menu_position_chip_group"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginVertical="8dp"
+                    android:layout_marginHorizontal="16dp"
                     app:selectionRequired="true"
                     app:singleSelection="true">
 
@@ -56,21 +116,20 @@
 
                 </com.google.android.material.chip.ChipGroup>
 
-                <com.google.android.material.divider.MaterialDivider
+                <Space
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginVertical="16dp" />
+                    android:layout_height="16dp"  />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
                     android:text="@string/font_size" />
 
                 <com.google.android.material.chip.ChipGroup
                     android:id="@+id/font_size_chip_group"
-                    android:layout_width="match_parent"
+                    android:layout_width="match_parent" android:layout_marginHorizontal="16dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginVertical="8dp"
                     app:selectionRequired="true"
                     app:singleSelection="true">
 
@@ -87,23 +146,6 @@
                         layout="@layout/layout_app_chip" />
 
                 </com.google.android.material.chip.ChipGroup>
-
-                <com.google.android.material.divider.MaterialDivider
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginVertical="16dp" />
-
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/bt_devices_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/show_all_bt_scanning"
-                    app:thumbTint="@color/white" />
-
-                <com.google.android.material.divider.MaterialDivider
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginVertical="16dp" />
             </LinearLayout>
         </ScrollView>
 

@@ -19,9 +19,9 @@ import com.google.openlocationcode.OpenLocationCode
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityMapBinding
 import de.eloc.eloc_control_panel.databinding.WindowLayoutBinding
-import de.eloc.eloc_control_panel.models.ElocDeviceInfo
-import de.eloc.eloc_control_panel.models.ElocMarker
-import de.eloc.eloc_control_panel.ng2.models.HttpHelper
+import de.eloc.eloc_control_panel.ng3.data.ElocDeviceInfo
+import de.eloc.eloc_control_panel.ng3.data.ElocMarker
+import de.eloc.eloc_control_panel.ng3.data.helpers.HttpHelper
 import java.util.Locale
 
 class MapActivity : ThemableActivity() {
@@ -85,8 +85,11 @@ class MapActivity : ThemableActivity() {
                 map = googleMap
                 showMap()
             }
-            HttpHelper.getInstance()
-                .getElocDevicesAsync(rangerName) { info -> elocDeviceInfoReceived(info) }
+
+            HttpHelper.instance.getElocDevicesAsync(rangerName) { info ->
+                devices = info
+                showMap()
+            }
         } else {
             showModalAlert(
                 getString(R.string.required),
@@ -101,11 +104,6 @@ class MapActivity : ThemableActivity() {
         rangerName = intent.extras?.getString(EXTRA_RANGER_NAME, "") ?: ""
         rangerName = rangerName.trim()
         return rangerName.isNotEmpty()
-    }
-
-    private fun elocDeviceInfoReceived(info: ArrayList<ElocDeviceInfo>?) {
-        devices = info
-        showMap()
     }
 
     private fun setListeners() {

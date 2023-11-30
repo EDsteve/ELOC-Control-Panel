@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import de.eloc.eloc_control_panel.ng3.interfaces.BooleanCallback
+import de.eloc.eloc_control_panel.ng3.interfaces.ProfileCheckCallback
 import de.eloc.eloc_control_panel.ng3.interfaces.StringCallback
 import de.eloc.eloc_control_panel.ng3.interfaces.VoidCallback
 
@@ -65,7 +66,7 @@ class UserAccountViewModel(application: Application) : AndroidViewModel(applicat
     fun updateProfile(data: HashMap<String, Any>, callback: BooleanCallback) =
         repository.updateProfile(data, callback)
 
-    fun hasProfile(callback: BooleanCallback) =
+    fun hasProfile(callback: ProfileCheckCallback) =
         repository.hasProfile(callback)
 
     fun userIdExists(userId: String, callback: BooleanCallback) =

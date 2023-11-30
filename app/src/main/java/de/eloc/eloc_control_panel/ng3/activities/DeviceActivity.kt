@@ -21,7 +21,8 @@ import de.eloc.eloc_control_panel.ng3.DeviceDriver
 import de.eloc.eloc_control_panel.ng3.data.ConnectionStatus
 import de.eloc.eloc_control_panel.ng3.data.DeviceState
 import de.eloc.eloc_control_panel.ng3.data.GainType
-import de.eloc.eloc_control_panel.ng3.data.LocationHelper
+import de.eloc.eloc_control_panel.ng3.data.helpers.TimeHelper
+import de.eloc.eloc_control_panel.ng3.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.ng3.interfaces.BluetoothDeviceListener
 import org.json.JSONObject
 import java.text.NumberFormat
@@ -39,9 +40,6 @@ import kotlin.math.absoluteValue
 
 class DeviceActivity : AppCompatActivity() {
     companion object {
-        private const val ONE_MINUTE_SECONDS = 60.0
-        private const val ONE_HOUR_SECONDS = ONE_MINUTE_SECONDS * 60
-        private const val ONE_DAY_SECONDS = ONE_HOUR_SECONDS * 24
 
         const val EXTRA_DEVICE_ADDRESS = "device_address"
         const val EXTRA_DEVICE_NAME = "device_name"
@@ -226,8 +224,7 @@ class DeviceActivity : AppCompatActivity() {
                         val command = extras.getString(DeviceSettingsActivity.COMMAND, "")
                         if (command.isNotEmpty()) {
                             DeviceDriver.write(command)
-                            showSnack(
-                                binding.coordinator,
+                            binding.coordinator.showSnack(
                                 getString(R.string.command_sent_successfully)
                             )
                         }
@@ -405,7 +402,7 @@ class DeviceActivity : AppCompatActivity() {
     private fun setHoursPerFile(jsonObject: JSONObject) {
         val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_SECONDS_PER_FILE"
         val secondsPerFile = getJSONNumberAttribute(path, jsonObject)
-        val hoursPerFile = secondsPerFile / ONE_HOUR_SECONDS
+        val hoursPerFile = TimeHelper.toHours(secondsPerFile)
         binding.hoursPerFileItem.itemValue = formatNumber(hoursPerFile, "h")
     }
 
@@ -438,13 +435,13 @@ class DeviceActivity : AppCompatActivity() {
     private fun setRecordingTime(jsonObject: JSONObject) {
         val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_RECORDING_TIME"
         val hours = getJSONNumberAttribute(path, jsonObject)
-        recordingSeconds = hours * ONE_HOUR_SECONDS
+        recordingSeconds = TimeHelper.toSeconds(hours)
     }
 
     private fun setRecSinceBoot(jsonObject: JSONObject) {
         val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_TOTAL_RECORDING_TIME"
         val hours = getJSONNumberAttribute(path, jsonObject)
-        binding.recSinceBootItem.itemValue = formatHours(hours)
+        binding.recSinceBootItem.itemValue = TimeHelper.formatHours(this, hours)
     }
 
     private fun setFirmwareVersion(jsonObject: JSONObject) {
@@ -456,7 +453,7 @@ class DeviceActivity : AppCompatActivity() {
     private fun setUptime(jsonObject: JSONObject) {
         val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_UPTIME"
         val hours = getJSONNumberAttribute(path, jsonObject)
-        val time = formatHours(hours)
+        val time = TimeHelper.formatHours(this, hours)
         binding.uptimeItem.itemValue = time
     }
 
@@ -482,7 +479,12 @@ class DeviceActivity : AppCompatActivity() {
     private fun setSDCardSize(jsonObject: JSONObject) {
         val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_SDCARD_SIZE"
         val gb = getJSONNumberAttribute(path, jsonObject)
-        binding.storageTextView.text = formatNumber(gb, "GB")
+        if (gb <= 0.0) {
+            binding.storageTextView.text = getString(R.string.no_sd_card)
+            binding.storageGauge.updateValue(0.0)
+        } else {
+            binding.storageTextView.text = formatNumber(gb, "GB")
+        }
     }
 
     private fun setSDCardFreePerc(jsonObject: JSONObject) {
@@ -531,26 +533,6 @@ class DeviceActivity : AppCompatActivity() {
         }
     }
 
-    private fun formatHours(hours: Double) = formatTime(hours * ONE_HOUR_SECONDS)
-
-    private fun formatTime(durationSeconds: Double): String {
-
-        val days = (durationSeconds / ONE_DAY_SECONDS).toInt()
-        var remaining = durationSeconds - (days * ONE_DAY_SECONDS)
-        val prettyDays = if (days > 0) "${days}d" else ""
-
-        val hours = (remaining / ONE_HOUR_SECONDS).toInt()
-        remaining -= (ONE_HOUR_SECONDS * hours)
-        val prettyHours = if (hours > 0) "${hours}h" else ""
-
-        val minutes = (remaining / ONE_MINUTE_SECONDS).toInt()
-        val prettyMinutes = if (minutes > 0) "${minutes}m" else ""
-
-        val result = "$prettyDays $prettyHours $prettyMinutes".trim()
-        return result.ifEmpty { getString(R.string.less_than_one_minute) }
-
-    }
-
     private fun formatNumber(number: Double, units: String, maxFractionDigits: Int = 2): String {
         val format = NumberFormat.getInstance(Locale.ENGLISH)
         format.maximumFractionDigits = maxFractionDigits
@@ -561,34 +543,6 @@ class DeviceActivity : AppCompatActivity() {
     private fun getDeviceInfo() {
         DeviceDriver.getStatus()
         DeviceDriver.getConfig()
-    }
-
-    private fun setUiData() {
-        /*
-                updateBatteryLevel(24.0)
-                updateStorageStatus(78.0)
-
-                binding.detectingSinceItem.itemValue  = "1D 10H 22M"
-                val recording = false
-                val recordingColor = if (recording) {
-                    binding.recordingTextView.setText(R.string.on)
-                    ContextCompat.getColor(this, R.color.status_field_green)
-                } else {
-                    binding.recordingTextView.setText(R.string.off)
-                    ContextCompat.getColor(this, R.color.status_field_red)
-                }
-                binding.recordingTextView.setTextColor(recordingColor)
-
-                val recordWhenDetected = true
-                val colorRes =
-                    if (recordWhenDetected) R.color.status_field_green else R.color.status_field_red
-
-                val textRes = if (recordWhenDetected) R.string.on else R.string.off
-                val color = ContextCompat.getColor(this, colorRes)
-                binding.recordWhenDetectedTextView.setTextColor(color)
-                binding.modelItem.itemValue = "Trumpet_V12"
-                binding.communicationItem.itemValue  = "LoRa"
-        */
     }
 
     private fun getJSONBooleanAttribute(

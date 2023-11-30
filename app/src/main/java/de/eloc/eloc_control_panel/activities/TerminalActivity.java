@@ -39,7 +39,7 @@ import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
 import de.eloc.eloc_control_panel.ng3.DeviceDriver;
 import de.eloc.eloc_control_panel.ng3.activities.ThemableActivity;
 import de.eloc.eloc_control_panel.ng3.data.ConnectionStatus;
-import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper;
+import de.eloc.eloc_control_panel.ng3.data.helpers.PreferencesHelper;
 import de.eloc.eloc_control_panel.ng3.interfaces.SocketListener;
 
 public class TerminalActivity extends ThemableActivity /*implements ServiceConnection, SocketListener*/ {

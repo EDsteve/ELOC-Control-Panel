@@ -2,7 +2,7 @@ package de.eloc.eloc_control_panel.ng3.activities
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper
+import de.eloc.eloc_control_panel.ng3.data.helpers.PreferencesHelper
 
 abstract class ThemableActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

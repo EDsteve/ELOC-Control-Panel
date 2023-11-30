@@ -9,6 +9,10 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityVerifyEmailBinding
 import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel
 
+private enum class UiState {
+    Offline, InProgress, Idle
+}
+
 class VerifyEmailActivity : ThemableActivity() {
     private lateinit var binding: ActivityVerifyEmailBinding
     private lateinit var viewModel: UserAccountViewModel
@@ -27,6 +31,7 @@ class VerifyEmailActivity : ThemableActivity() {
     }
 
     private fun setListeners() {
+        binding.retryButton.setOnClickListener { checkAuthState() }
         binding.verifiedButton.setOnClickListener { signIn() }
         binding.resendButton.setOnClickListener { viewModel.sendEmailVerificationLink(this::onResendCompleted) }
         binding.signOutButton.setOnClickListener {
@@ -35,19 +40,23 @@ class VerifyEmailActivity : ThemableActivity() {
         }
     }
 
-    private fun updateUI(showProgress: Boolean) {
-        if (showProgress) {
-            binding.progressHorizontal.visibility = View.VISIBLE
-            binding.messageLayout.visibility = View.GONE
-        } else {
-            binding.progressHorizontal.visibility = View.GONE
-            binding.messageLayout.visibility = View.VISIBLE
-        }
-    }
+    private fun updateUI(state: UiState) {
+        binding.progressHorizontal.visibility = View.GONE
+        binding.messageLayout.visibility = View.GONE
+        binding.offlineLayout.visibility = View.GONE
+        when (state) {
+            UiState.InProgress -> {
+                binding.progressHorizontal.visibility = View.VISIBLE
+            }
 
-    private fun onHasProfileCompleted(hasProfile: Boolean) {
-        val target = if (hasProfile) HomeActivity::class.java else ProfileSetupActivity::class.java
-        open(target, true)
+            UiState.Idle -> {
+                binding.messageLayout.visibility = View.VISIBLE
+            }
+
+            UiState.Offline -> {
+                binding.offlineLayout.visibility = View.VISIBLE
+            }
+        }
     }
 
     private fun onResendCompleted(sent: Boolean) {
@@ -70,14 +79,22 @@ class VerifyEmailActivity : ThemableActivity() {
     }
 
     private fun checkAuthState() {
-        updateUI(true)
+        updateUI(UiState.InProgress)
         if (viewModel.isSignedIn) {
             if (viewModel.isEmailVerified) {
-                viewModel.hasProfile(this::onHasProfileCompleted)
+                viewModel.hasProfile { hasProfile, firebaseUnavailable ->
+                    if (firebaseUnavailable) {
+                        updateUI(UiState.Offline)
+                    } else {
+                        val target =
+                            if (hasProfile) HomeActivity::class.java else ProfileSetupActivity::class.java
+                        open(target, true)
+                    }
+                }
             } else {
                 val message = getString(R.string.verification_message, viewModel.emailAddress)
                 binding.messageTextView.text = message
-                updateUI(false)
+                updateUI(UiState.Idle)
             }
         } else {
             open(LoginActivity::class.java, true)

@@ -12,7 +12,7 @@ import android.os.Bundle
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper
+import de.eloc.eloc_control_panel.ng3.data.helpers.PreferencesHelper
 
 private const val CAMERA_PERMISSION = Manifest.permission.CAMERA
 

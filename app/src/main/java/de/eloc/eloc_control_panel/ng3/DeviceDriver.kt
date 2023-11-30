@@ -7,9 +7,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import de.eloc.eloc_control_panel.ng.models.BluetoothHelperOld
-import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import de.eloc.eloc_control_panel.ng3.data.ConnectionStatus
+import de.eloc.eloc_control_panel.ng3.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.ng3.interfaces.ConnectionStatusListener
 import de.eloc.eloc_control_panel.ng3.interfaces.SocketListener
 import java.io.IOException
@@ -131,7 +130,7 @@ object DeviceDriver : Runnable {
         try {
             disconnect()
             connectionStatus = ConnectionStatus.Pending
-            device = BluetoothHelperOld.getDevice(deviceAddress)
+            device = BluetoothHelper.getDevice(deviceAddress)
 
             // Connection success and most connection errors are returned asynchronously to listener
             try {
@@ -139,7 +138,7 @@ object DeviceDriver : Runnable {
                     disconnectBroadcastReceiver, IntentFilter(INTENT_ACTION_DISCONNECT)
                 )
                 bluetoothSocket = device?.createRfcommSocketToServiceRecord(BLUETOOTH_SPP)
-                BluetoothHelper.instance.stopScan {
+                BluetoothHelper.stopScan {
                     doConnect()
                 }
             } catch (e: Exception) {
@@ -192,32 +191,32 @@ object DeviceDriver : Runnable {
 
     override fun run() {
         try {
-                val buffer = ByteArray(1024)
-                while (bluetoothSocket?.isConnected == true) {
-                    try {
-                        val byteCount = bluetoothSocket?.inputStream?.read(buffer) ?: 0
-                        val data = buffer.copyOf(byteCount)
-                        bytesCache += data.toList()
-                        while (true) {
-                            val offset = bytesCache.indexOf(EOT)
-                            if (offset < 0) {
-                                break
-                            }
-                            val jsonBytes = bytesCache.slice(0..offset - 1)
-                            val startIndex = offset + 1
-                            val endIndex = bytesCache.size - 1
-                            bytesCache = bytesCache.slice(startIndex..endIndex)
-                            onRead(jsonBytes.toByteArray())
+            val buffer = ByteArray(1024)
+            while (bluetoothSocket?.isConnected == true) {
+                try {
+                    val byteCount = bluetoothSocket?.inputStream?.read(buffer) ?: 0
+                    val data = buffer.copyOf(byteCount)
+                    bytesCache += data.toList()
+                    while (true) {
+                        val offset = bytesCache.indexOf(EOT)
+                        if (offset < 0) {
+                            break
                         }
-                    } catch (e: Exception) {
-                        onIOError(e)
-                        disconnect()
+                        val jsonBytes = bytesCache.slice(0 until offset)
+                        val startIndex = offset + 1
+                        val endIndex = bytesCache.size - 1
+                        bytesCache = bytesCache.slice(startIndex..endIndex)
+                        onRead(jsonBytes.toByteArray())
                     }
-                    try {
-                        Thread.sleep(500)
-                    } catch (_: Exception) {
-                    }
+                } catch (e: Exception) {
+                    onIOError(e)
+                    disconnect()
                 }
+                try {
+                    Thread.sleep(500)
+                } catch (_: Exception) {
+                }
+            }
 
         } catch (e: SecurityException) {
             onConnectionError(e)

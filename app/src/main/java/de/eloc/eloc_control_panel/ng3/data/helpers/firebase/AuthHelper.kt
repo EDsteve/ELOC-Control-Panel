@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.ng3.data.firebase
+package de.eloc.eloc_control_panel.ng3.data.helpers.firebase
 
 import android.content.Intent
 import com.google.android.gms.auth.api.signin.GoogleSignIn

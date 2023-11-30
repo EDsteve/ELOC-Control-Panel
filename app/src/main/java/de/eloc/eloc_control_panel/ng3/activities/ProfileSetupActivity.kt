@@ -15,9 +15,9 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.lifecycle.ViewModelProvider
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.data.DataHelper
-import de.eloc.eloc_control_panel.data.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.databinding.ActivityProfileSetupBinding
 import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel
+import de.eloc.eloc_control_panel.ng3.data.helpers.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.ng3.interfaces.TextInputWatcher
 
 class ProfileSetupActivity : MediaActivity() {

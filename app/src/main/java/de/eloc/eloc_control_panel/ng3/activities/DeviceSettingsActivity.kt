@@ -6,7 +6,7 @@ import android.view.View
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityDeviceSettingsBinding
 import de.eloc.eloc_control_panel.ng3.data.GainType
-import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper
+import de.eloc.eloc_control_panel.ng3.data.helpers.PreferencesHelper
 import java.lang.NumberFormatException
 
 class DeviceSettingsActivity : ThemableActivity() {

@@ -28,6 +28,7 @@
     <string name="bluetooth_off_message">You must turn on bluetooth\nto proceed</string>
     <string name="bluetooth_permission_required_message">You must enable bluetooth permission\nto proceed\n\nOn newer devices, enable the permission for\n\"Nearby devices\"\nin the permissions section</string>
     <string name="bluetooth_rationale">%s needs to connect with bluetooth devices</string>
+    <string name="notifications_rationale">%s needs to post notifications to keep you updated about background operations</string>
     <string name="bluetooth_recording">Bluetooth Recording</string>
     <string name="bluetooth_settings">Bluetooth settings</string>
     <string name="bluetooth_state">Bluetooth state</string>
@@ -123,6 +124,7 @@
     <string name="manage_account">Manage account</string>
     <string name="manual_bluetooth">You must manually enable the bluetooth permissions to connect with bluetooth devices.</string>
     <string name="manual_location">You must manually enable the location permission to use location for bluetooth devices.</string>
+    <string name="manual_notifications">You must manually enable the permission for notifications to get updates about background operations.</string>
     <string name="manual_camera">You must manually enable the permission to the camera for photos.</string>
     <string name="map_button_text">FIND MY ELOC</string>
     <string name="medium">Medium</string>
@@ -183,7 +185,7 @@
     <string name="send">Send</string>
     <string name="send_reset_link_error">Failed to send link to the provided email address!</string>
 
-    <string name="set_bluetooth_permissions">Set Bluetooth Permissions</string>
+    <string name="set_bluetooth_permission">Set Bluetooth Permission</string>
     <string name="set_location_permission">Set Location Permission</string>
     <string name="set_mic_gain_template">%dsetgain</string>
     <string name="set_mic_type_template">%ssettype</string>

@@ -3,6 +3,7 @@ package de.eloc.eloc_control_panel.ng3.activities
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
@@ -35,9 +36,11 @@ fun AppCompatActivity.openUrl(address: String) {
     }
 }
 
-fun showSnack(coordinator: CoordinatorLayout, message: String) =
+fun CoordinatorLayout.showSnack(message: String) =
     Snackbar
-        .make(coordinator, message, Snackbar.LENGTH_LONG)
+        .make(this, message, Snackbar.LENGTH_LONG)
+        .setBackgroundTint(ContextCompat.getColor(context, R.color.colorPrimaryDark))
+        .setTextColor(Color.WHITE)
         .show()
 
 fun getPickImageRequest(): PickVisualMediaRequest =
@@ -59,13 +62,13 @@ fun AppCompatActivity.openLocationSettings() {
 
 fun AppCompatActivity.setChipColors(chipBinding: LayoutAppChipBinding) {
     val colorTextOnPrimary = ContextCompat.getColor(this, R.color.colorTextOnPrimary)
-    val colorTextOnPrimaryTransclucent =
+    val colorTextOnPrimaryTranslucent =
         ContextCompat.getColor(this, R.color.colorTextOnPrimaryTranslucent)
     if (chipBinding.chip.isChecked) {
         chipBinding.chip.setTextColor(colorTextOnPrimary)
         chipBinding.chip.setChipBackgroundColorResource(R.color.colorPrimary)
     } else {
-        chipBinding.chip.setTextColor(colorTextOnPrimaryTransclucent)
+        chipBinding.chip.setTextColor(colorTextOnPrimaryTranslucent)
         chipBinding.chip.setChipBackgroundColorResource(R.color.colorPrimaryTranslucent)
     }
 }
@@ -142,10 +145,12 @@ fun AppCompatActivity.showModalOptionAlert(
     message: String,
     positiveCallback: VoidCallback?
 ) {
-    showModalOptionAlert(
-        title = title,
-        message = message,
-        positiveCallback = positiveCallback
+    this.showModalOptionAlert(
+        title,
+        message,
+        getString(android.R.string.ok),
+        getString(android.R.string.cancel),
+        positiveCallback,
     )
 }
 
@@ -154,7 +159,7 @@ fun AppCompatActivity.showModalOptionAlert(
     message: String = "",
     positiveButtonLabel: String = "",
     negativeButtonLabel: String = "",
-    positiveCallback: VoidCallback?,
+    positiveCallback: VoidCallback? = null,
     negativeCallback: VoidCallback? = null,
 ) {
     val dialogMessage = message.trim()

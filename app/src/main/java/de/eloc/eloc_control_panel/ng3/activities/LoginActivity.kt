@@ -78,11 +78,15 @@ class LoginActivity : ThemableActivity() {
 
         if (viewModel.isSignedIn) {
             if (viewModel.isEmailVerified) {
-                viewModel.hasProfile { profileFound ->
-                    open(
-                        if (profileFound) HomeActivity::class.java else ProfileSetupActivity::class.java,
-                        true
-                    )
+                viewModel.hasProfile { profileFound, firebaseUnavailable ->
+                    if (firebaseUnavailable) {
+                        updateUI(false)
+                    } else {
+                        open(
+                            if (profileFound) HomeActivity::class.java else ProfileSetupActivity::class.java,
+                            true
+                        )
+                    }
                 }
             } else {
                 open(VerifyEmailActivity::class.java, true)

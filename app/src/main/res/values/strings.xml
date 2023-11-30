@@ -49,6 +49,7 @@
     <string name="app_version">App Version</string>
     <string name="nothing_to_upload">Nothing to upload!</string>
     <string name="sync_failed_check_internet_connection">Sync failed\nCheck internet connection</string>
+    <string name="check_internet_connection">Check internet connection!</string>
     <string name="getting_ranger_profile">Getting ranger profile…</string>
     <string name="not_available">Not available</string>
     <string name="device_settings_not_available">Device settings are not available while it is recording or detecting.</string>
@@ -64,4 +65,26 @@
     <string name="battery_type">Battery Type</string>
     <string name="battery_volt">Battery Volt</string>
     <string name="more">More</string>
+    <string name="no_sd_card">No SD\ncard</string>
+    <string name="upload_was_not_successful">Upload was not successful</string>
+    <string name="upload_was_completed_successfully">Upload was completed successfully</string>
+    <string name="status_upload">Status Upload</string>
+    <string name="user_interface">User Interface</string>
+    <string name="status_upload_intervals">Retry automatically uploading status at intervals of</string>
+    <string name="mins_15">15 mins</string>
+    <string name="mins_30">30 mins</string>
+    <string name="mins_60">1 hr</string>
+    <string name="mins_120">2 hrs</string>
+    <string name="checking_eloc_status_to_upload">Checking ELOC status to upload…</string>
+    <string name="eloc_status_uploaded">ELOC status was successfully uploaded</string>
+    <string name="upload_in_progress">An upload is already in progress</string>
+    <string name="retrying_in_time">Retrying in %s</string>
+    <string name="uploading_status">Uploading ELOC status…</string>
+    <string name="cancel">Cancel</string>
+    <string name="stopping_upload_service">Stopping upload service…</string>
+    <string name="offline">Offline</string>
+    <string name="device_offline">Failed to connect to server.\n\nPlease check your internet connection and make sure it is active.</string>
+    <string name="try_again">Try Again</string>
+    <string name="confirm_sign_out">Are you sure you want to sign out?</string>
+    <string name="set_notifications_permission">Set Notifications permission</string>
 </resources>

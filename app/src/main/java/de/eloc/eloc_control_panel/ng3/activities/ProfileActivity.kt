@@ -15,7 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.data.DataHelper
 import de.eloc.eloc_control_panel.databinding.ActivityProfileBinding
-import de.eloc.eloc_control_panel.ng2.models.HttpHelper
+import de.eloc.eloc_control_panel.ng3.data.helpers.HttpHelper
 import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.ng3.data.UserProfile
 import java.io.IOException
@@ -85,7 +85,7 @@ class ProfileActivity : MediaActivity() {
             ) {
                 binding.avatarImageView.setImageUrl(
                     originalProfilePicture,
-                    HttpHelper.getInstance().imageLoader
+                    HttpHelper.instance.imageLoader
                 )
             }
         } else {
@@ -110,7 +110,7 @@ class ProfileActivity : MediaActivity() {
         originalProfilePicture = profile?.profilePictureUrl ?: ""
         binding.avatarImageView.setImageUrl(
             profile?.profilePictureUrl,
-            HttpHelper.getInstance().imageLoader
+            HttpHelper.instance.imageLoader
         )
         binding.userIdItem.valueTextView.text = profile?.userId
     }

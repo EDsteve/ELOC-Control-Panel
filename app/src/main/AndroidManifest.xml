@@ -22,6 +22,8 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".ng3.App"
@@ -172,21 +174,34 @@
         <service android:name=".SerialService" />
 
         <receiver
-            android:name=".receivers.BluetoothStateReceiver"
-            android:exported="false"
-            tools:ignore="Instantiatable" />
-        <receiver
-            android:name=".receivers.BluetoothScanReceiver"
-            android:exported="false"
-            tools:ignore="Instantiatable" />
-        <receiver
-            android:name=".ng2.receivers.BluetoothDeviceReceiver"
+            android:name=".ng3.receivers.BluetoothDeviceReceiver"
             android:exported="false"
             tools:ignore="Instantiatable">
             <intent-filter>
                 <action android:name="android.bluetooth.device.action.ACTION_FOUND" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".ng3.receivers.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".ng3.receivers.BluetoothWatcher"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.bluetooth.adapter.action.STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".ng3.services.StatusUploadService"
+            android:enabled="true"
+            android:foregroundServiceType="dataSync" />
 
         <meta-data
             android:name="preloaded_fonts"

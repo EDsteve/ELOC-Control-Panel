@@ -1,5 +1,5 @@
 package de.eloc.eloc_control_panel.ng.models
-
+/*
 import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -21,6 +21,7 @@ import de.eloc.eloc_control_panel.ng3.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
 import java.util.*
 import java.util.concurrent.Executors
+
 
 object BluetoothHelperOld {
 
@@ -64,20 +65,13 @@ object BluetoothHelperOld {
     }
 
     var readyToScan = false
-    private val adapter: BluetoothAdapter?
-        get() {
-            val bluetoothManager =
-                App.instance.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?
-            return bluetoothManager?.adapter
-        }
+
 
     fun getDeviceCount(): Int = devices.size
 
     fun getDevice(index: Int): BluetoothDevice = devices[index]
 
-    fun getDevice(address: String): BluetoothDevice? {
-        return adapter?.getRemoteDevice(address.uppercase(Locale.ENGLISH))
-    }
+
 
     val isAdapterInitialized: Boolean
         get() = (adapter != null)
@@ -154,4 +148,5 @@ object BluetoothHelperOld {
     }
 
     fun clearDevices() = devices.clear()
-}
+    }
+ */

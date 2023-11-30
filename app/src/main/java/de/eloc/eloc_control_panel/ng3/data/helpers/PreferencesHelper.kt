@@ -1,9 +1,13 @@
-package de.eloc.eloc_control_panel.ng3.data
+package de.eloc.eloc_control_panel.ng3.data.helpers
 
 import de.eloc.eloc_control_panel.ng3.App
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.ng3.data.PreferredFontSize
+import de.eloc.eloc_control_panel.ng3.data.StatusUploadInterval
+
+// todo: remove dead code
 
 class PreferencesHelper {
     private val preferences: SharedPreferences =
@@ -34,6 +38,8 @@ class PreferencesHelper {
 
     fun getBluetoothRequested(): Boolean = preferences.getBoolean(PREF_BLUETOOTH_REQUESTED, false)
 
+    fun getNotificationsRequested(): Boolean = preferences.getBoolean(PREF_NOTIFICATIONS_REQUESTED, false)
+
     fun getLocationRequested(): Boolean = preferences.getBoolean(PREF_LOCATION_REQUESTED, false)
 
     fun getCameraRequested(): Boolean = preferences.getBoolean(PREF_CAMERA_REQUESTED, false)
@@ -46,8 +52,19 @@ class PreferencesHelper {
         PREF_BLUETOOTH_RECORDING_STATE, true
     )
 
+    fun getStatusUploadInterval(): StatusUploadInterval {
+        val code = preferences.getInt(PREF_STATUS_UPLOAD_INTERVAL, -1)
+        return StatusUploadInterval.parse(code)
+    }
+
     fun setBluetoothRequested() =
         preferences.edit().putBoolean(PREF_BLUETOOTH_REQUESTED, true).apply()
+
+    fun setNotificationsRequested() =
+        preferences.edit().putBoolean(PREF_NOTIFICATIONS_REQUESTED, true).apply()
+
+    fun setStatusUploadInterval(interval: StatusUploadInterval) =
+        preferences.edit().putInt(PREF_STATUS_UPLOAD_INTERVAL, interval.seconds).apply()
 
     fun setLocationRequested() =
         preferences.edit().putBoolean(PREF_LOCATION_REQUESTED, true).apply()
@@ -58,7 +75,7 @@ class PreferencesHelper {
     fun setDeviceSettings(data: String) =
         preferences.edit().putString(PREF_DEVICE_SETTINGS, data).apply()
 
-    fun setCurrentElapsedTime(elapsed: Long) =
+    private fun setCurrentElapsedTime(elapsed: Long) =
         preferences.edit().putLong(PREF_ELAPSED_TIME_AT_GOOGLE_TIMESTAMP, elapsed).apply()
 
     private fun setLastGoogleTimestamp(ts: Long) =
@@ -85,18 +102,14 @@ class PreferencesHelper {
         setLastGoogleTimestamp(lastGoogleSyncTimestampMS)
     }
 
-    fun getPreferredFontSizeValue(): Int =
-        preferences.getInt(PREF_USER_FONT_SIZE, -1)
-
-    fun setPreferredFontSize(size: Int) {
-        /*
-        Notes:
-        - negative value = small
-        - zero = medium
-        - positive value = large
-         */
-        preferences.edit().putInt(PREF_USER_FONT_SIZE, size).apply()
+    fun getPreferredFontSize(): PreferredFontSize {
+        val code = preferences.getInt(PREF_USER_FONT_SIZE, -1)
+        return PreferredFontSize.parse(code)
     }
+
+    fun setPreferredFontSize(fontSize: PreferredFontSize) =
+        preferences.edit().putInt(PREF_USER_FONT_SIZE, fontSize.code).apply()
+
 
     fun setMainMenuPosition(left: Boolean) {
         preferences.edit().putBoolean(PREF_MAIN_MENU_POSITION, left).apply()
@@ -106,21 +119,20 @@ class PreferencesHelper {
         return preferences.getBoolean(PREF_MAIN_MENU_POSITION, false)
     }
 
-    fun getPreferredFontThemeID(): Int {
-        val fontSize = getPreferredFontSizeValue()
-        return when (PreferredFontSize.parse(fontSize)) {
-            PreferredFontSize.Small -> R.style.AppTheme
-            PreferredFontSize.Large -> R.style.AppThemeLarge
-            else -> R.style.AppThemeMedium
-        }
+    fun getPreferredFontThemeID(): Int = when (getPreferredFontSize()) {
+        PreferredFontSize.Small -> R.style.AppTheme
+        PreferredFontSize.Large -> R.style.AppThemeLarge
+        else -> R.style.AppThemeMedium
     }
 
     companion object {
+        private const val PREF_STATUS_UPLOAD_INTERVAL = "status_upload_interval"
         private const val PREF_CAMERA_REQUESTED = "camera_requested"
         private const val PREF_SHOW_ALL_BT_DEVICES = "show_all_bt_devices"
         private const val PREF_MAIN_MENU_POSITION = "main_menu_position"
         private const val PREF_LOCATION_REQUESTED = "location_requested"
         private const val PREF_BLUETOOTH_REQUESTED = "bluetooth_requested"
+        private const val PREF_NOTIFICATIONS_REQUESTED = "notifications_requested"
         private const val PREF_PROMPTED_BLUETOOTH = "has_prompted_bluetooth"
         private const val PREF_PROMPTED_LOCATION = "has_prompted_location"
         private const val PREF_MICROPHONE_SETTINGS = "microphone_settings"

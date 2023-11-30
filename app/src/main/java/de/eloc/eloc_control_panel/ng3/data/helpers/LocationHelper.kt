@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.ng3.data
+package de.eloc.eloc_control_panel.ng3.data.helpers
 
 import android.annotation.SuppressLint
 import android.content.Context

@@ -1,13 +1,11 @@
 package de.eloc.eloc_control_panel.ng3.activities
 
 import android.bluetooth.BluetoothDevice
-import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Bundle
 import android.os.SystemClock
-import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -21,26 +19,20 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.SNTPClient
-import de.eloc.eloc_control_panel.UploadFileAsync
 import de.eloc.eloc_control_panel.activities.TerminalActivity
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.LayoutNavHeaderBinding
 import de.eloc.eloc_control_panel.ng3.App
-import de.eloc.eloc_control_panel.ng2.models.BluetoothHelper
-import de.eloc.eloc_control_panel.ng2.models.ElocInfoAdapter
-import de.eloc.eloc_control_panel.ng2.models.HttpHelper
-import de.eloc.eloc_control_panel.ng2.receivers.BluetoothDeviceReceiver
-import de.eloc.eloc_control_panel.ng3.data.PreferencesHelper
+import de.eloc.eloc_control_panel.ng3.data.helpers.HttpHelper
+import de.eloc.eloc_control_panel.ng3.data.ElocInfoAdapter
+import de.eloc.eloc_control_panel.ng3.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.ng3.data.UserAccountViewModel
-import java.io.BufferedReader
-import java.io.File
-import java.io.FileReader
-import java.io.IOException
-import java.io.OutputStreamWriter
-import java.text.SimpleDateFormat
+import de.eloc.eloc_control_panel.ng3.data.helpers.BluetoothHelper
+import de.eloc.eloc_control_panel.ng3.data.helpers.FileSystemHelper
+import de.eloc.eloc_control_panel.ng3.interfaces.VoidCallback
+import de.eloc.eloc_control_panel.ng3.receivers.BluetoothDeviceReceiver
+import de.eloc.eloc_control_panel.ng3.services.StatusUploadService
 import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 // todo: use cached profile picture
 
@@ -51,7 +43,6 @@ class HomeActivity : ThemableActivity() {
     private lateinit var rightHeaderBinding: LayoutNavHeaderBinding
     private lateinit var viewModel: UserAccountViewModel
     private lateinit var rangerName: String
-    private val bluetoothHelper = BluetoothHelper.instance
     private val elocAdapter = ElocInfoAdapter(this::onListUpdated, this::showDevice)
     private val elocReceiver = BluetoothDeviceReceiver(elocAdapter::add)
     private var gUploadEnabled = false
@@ -82,6 +73,7 @@ class HomeActivity : ThemableActivity() {
 
         binding.drawer.visibility = View.GONE
         binding.progressLayout.visibility = View.VISIBLE
+        prepareStatusUpload(true)
     }
 
     override fun onResume() {
@@ -129,7 +121,7 @@ class HomeActivity : ThemableActivity() {
 
     override fun onStop() {
         super.onStop()
-        bluetoothHelper.stopScan(this::scanUpdate)
+        BluetoothHelper.stopScan(this::scanUpdate)
     }
 
     override fun onDestroy() {
@@ -248,11 +240,11 @@ class HomeActivity : ThemableActivity() {
 
                 leftHeaderBinding.profilePictureImageView.setImageUrl(
                     it.profilePictureUrl,
-                    HttpHelper.getInstance().imageLoader
+                    HttpHelper.instance.imageLoader
                 )
                 rightHeaderBinding.profilePictureImageView.setImageUrl(
                     it.profilePictureUrl,
-                    HttpHelper.getInstance().imageLoader
+                    HttpHelper.instance.imageLoader
                 )
                 leftHeaderBinding.userIdTextView.text = it.userId
                 rightHeaderBinding.userIdTextView.text = it.userId
@@ -281,7 +273,7 @@ class HomeActivity : ThemableActivity() {
     private fun startScan() {
 
         closeDrawer()
-        val isOn = BluetoothHelper.instance.isAdapterOn()
+        val isOn = BluetoothHelper.isAdapterOn
         binding.statusTextView.text =
             if (isOn)
                 getString(R.string.scanning_eloc_devices)
@@ -293,14 +285,14 @@ class HomeActivity : ThemableActivity() {
 
         firstScanDone = true
         binding.swipeRefreshLayout.isRefreshing = true
-        if (!bluetoothHelper.isScanning) {
+        if (!BluetoothHelper.isScanning) {
             elocAdapter.clear()
         }
 
         onListUpdated(false)
-        val error = bluetoothHelper.startScan(this::scanUpdate)
-        if (!TextUtils.isEmpty(error)) {
-            showSnack(binding.coordinator, error!!)
+        val error = BluetoothHelper.startScan(this::scanUpdate)
+        if (error?.isNotEmpty() == true) {
+            binding.coordinator.showSnack(error)
         }
     }
 
@@ -337,68 +329,8 @@ class HomeActivity : ThemableActivity() {
         }
     }
 
-    private fun fileToString(file: File): String {
-        val text = StringBuilder()
-        var br: BufferedReader? = null
-        try {
-            br = BufferedReader(FileReader(file))
-            while (true) {
-                try {
-                    val line = br.readLine() ?: break
-                    text.append(line)
-                    text.append('\n')
-                } catch (_: IOException) {
-                    break
-                }
-            }
-        } catch (_: IOException) {
-        } finally {
-            br?.close()
-        }
-        return text.toString()
-    }
-
-    private fun uploadElocStatus() {
-        var filecounter = 0
-        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
-        val filestring = "update " + sdf.format(Date()) + ".upd"
-
-        var fileout: OutputStreamWriter? = null
-        try {
-            val files = filesDir.listFiles()
-            fileout = OutputStreamWriter(openFileOutput(filestring, Context.MODE_PRIVATE))
-            if (files != null) {
-                for (file in files) {
-                    if (!file.isDirectory) {
-                        if (file.name.endsWith(".txt")) {
-                            filecounter++
-                            fileout.write(fileToString(file) + "\n\n\n")
-                        }
-                    }
-                }
-                fileout.write("\n\n\n end of updates")
-            }
-        } catch (_: Exception) {
-        } finally {
-            fileout?.close()
-        }
-
-        if (filecounter > 0) {
-            val filename = filesDir.absolutePath + "/" + filestring
-            UploadFileAsync.run(filename, filesDir) { message ->
-                runOnUiThread {
-                    if (message.trim().isNotEmpty()) {
-                        showSnack(binding.coordinator, message)
-                    }
-                }
-            }
-        } else {
-            showSnack(binding.coordinator, getString(R.string.nothing_to_upload))
-        }
-    }
-
     private fun showDevice(deviceName: String, address: String) {
-        BluetoothHelper.instance.stopScan(this::scanUpdate)
+        BluetoothHelper.stopScan(this::scanUpdate)
         val old = false
         if (old) {
             val intent = Intent(this, TerminalActivity::class.java)
@@ -431,8 +363,7 @@ class HomeActivity : ThemableActivity() {
                     gUploadEnabled = false
                     invalidateOptionsMenu()
                     if (showMessage) {
-                        showSnack(
-                            binding.coordinator,
+                        binding.coordinator.showSnack(
                             getString(R.string.sync_failed_check_internet_connection)
                         )
                     }
@@ -447,7 +378,7 @@ class HomeActivity : ThemableActivity() {
                     if (showMessage) {
                         val message =
                             getString(R.string.sync_template, gLastTimeDifferenceMillisecond)
-                        showSnack(binding.coordinator, message)
+                        binding.coordinator.showSnack(message)
                     }
                 }
             }
@@ -484,7 +415,7 @@ class HomeActivity : ThemableActivity() {
             }
 
             R.id.mnu_bluetooth_settings -> {
-                bluetoothHelper.openSettings(this)
+                BluetoothHelper.openSettings(this)
                 return true
             }
 
@@ -499,7 +430,7 @@ class HomeActivity : ThemableActivity() {
             }
 
             R.id.mnu_upload_eloc_status -> {
-                uploadElocStatus()
+                prepareStatusUpload()
                 return true
             }
 
@@ -517,13 +448,39 @@ class HomeActivity : ThemableActivity() {
         return false
     }
 
-    private fun signOut() {
-        viewModel.signOut()
-        onSignOut()
+    private fun prepareStatusUpload(inBackground: Boolean = false) {
+        if (StatusUploadService.isRunning) {
+            binding.coordinator.showSnack(getString(R.string.upload_in_progress))
+            return
+        } else if (inBackground) {
+            StatusUploadService.start(this)
+        } else {
+            val fileName = FileSystemHelper.getUploadStatusFileName()
+            if (fileName?.isNotEmpty() == true) {
+                StatusUploadService.errorCallback = VoidCallback {
+                    runOnUiThread {
+                        binding.coordinator.showSnack(getString(R.string.nothing_to_upload))
+                    }
+                }
+                StatusUploadService.start(this)
+            } else {
+                binding.coordinator.showSnack(getString(R.string.nothing_to_upload))
+            }
+        }
     }
 
-    private fun onSignOut() {
-        open(LoginActivity::class.java, true)
+    private fun signOut() {
+        val title = getString(R.string.confirm)
+        val message = getString(R.string.confirm_sign_out)
+        showModalOptionAlert(
+            title = title,
+            message = message,
+            positiveButtonLabel = getString(R.string.yes),
+            positiveCallback = {
+                viewModel.signOut()
+                open(LoginActivity::class.java, true)
+            },
+        )
     }
 
     private fun manageAccount() {
