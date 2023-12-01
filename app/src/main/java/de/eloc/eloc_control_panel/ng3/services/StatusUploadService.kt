@@ -37,6 +37,8 @@ class StatusUploadService : Service() {
         var isRunning = false
             private set
 
+        private var skipWait = false
+
         private var lastUsedNotificationId = 0
         private var statusUpdateIntervalMillis =
             PreferencesHelper.instance.getStatusUploadInterval().millis
@@ -45,7 +47,8 @@ class StatusUploadService : Service() {
             statusUpdateIntervalMillis = PreferencesHelper.instance.getStatusUploadInterval().millis
         }
 
-        fun start(context: Context) {
+        fun start(context: Context, skipWait: Boolean = false) {
+            StatusUploadService.skipWait = skipWait
             val serviceIntent = Intent(context, StatusUploadService::class.java)
             ContextCompat.startForegroundService(context, serviceIntent)
         }
@@ -169,7 +172,8 @@ class StatusUploadService : Service() {
             foregroundNotificationId = id
         }
         startForeground(foregroundNotificationId, notification)
-        if (!isRunning) {
+        val doTask = skipWait || (!isRunning)
+        if (doTask) {
             Executors.newSingleThreadExecutor().execute(task)
         }
         return START_REDELIVER_INTENT

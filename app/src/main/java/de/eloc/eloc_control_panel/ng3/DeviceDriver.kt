@@ -16,6 +16,8 @@ import java.util.UUID
 import java.util.concurrent.Executors
 
 object DeviceDriver : Runnable {
+    private var connecting = false
+    private var disconnecting = false
     private const val NEWLINE = "\n"
     private const val EOT: Byte = 4
     private var bluetoothSocket: BluetoothSocket? = null
@@ -63,6 +65,7 @@ object DeviceDriver : Runnable {
     }
 
     fun disconnect() {
+        disconnecting = true
         try {
             bluetoothSocket?.close()
         } catch (_: Exception) {
@@ -73,8 +76,8 @@ object DeviceDriver : Runnable {
         } catch (_: Exception) {
         }
         connectionStatus = ConnectionStatus.Inactive
-        clients.clear()
         dataListenerList.clear()
+        disconnecting = false
     }
 
     fun write(command: String) {
@@ -93,7 +96,11 @@ object DeviceDriver : Runnable {
     }
 
     fun stopRecording() {
-        write("setRecordMode#mode=stop")
+        write("setRecordMode#mode=off")
+    }
+
+    fun startRecording() {
+        write("setRecordMode#mode=on")
     }
 
     private fun onConnect() {
@@ -120,12 +127,19 @@ object DeviceDriver : Runnable {
         }
     }
 
+
+    fun registerConnectionChangedListener(callback: ConnectionStatusListener? = null) {
+        if ((callback != null) && (!clients.contains(callback))) {
+            clients.add(callback)
+        }
+    }
+
     @SuppressLint("MissingPermission")
     fun connect(
         deviceAddress: String,
-        callback: ConnectionStatusListener? = null,
         dataListener: SocketListener? = null
     ) {
+        connecting = true
         var hadError = false
         try {
             disconnect()
@@ -145,10 +159,6 @@ object DeviceDriver : Runnable {
                 // todo : remove
                 println(e.localizedMessage)
             }
-
-            if ((callback != null) && (!clients.contains(callback))) {
-                clients.add(callback)
-            }
             if ((dataListener != null) && (!dataListenerList.contains(dataListener))) {
                 dataListenerList.add(dataListener)
             }
@@ -163,6 +173,7 @@ object DeviceDriver : Runnable {
                 } else {
                     ConnectionStatus.Pending
                 }
+            connecting = false
         }
     }
 
@@ -209,6 +220,11 @@ object DeviceDriver : Runnable {
                         onRead(jsonBytes.toByteArray())
                     }
                 } catch (e: Exception) {
+                    if (connecting || disconnecting) {
+                        // Ignore and don't report the crash that happens while connecting
+                        return
+                    }
+
                     onIOError(e)
                     disconnect()
                 }

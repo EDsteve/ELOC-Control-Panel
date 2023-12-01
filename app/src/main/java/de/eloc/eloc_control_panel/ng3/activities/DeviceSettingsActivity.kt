@@ -277,13 +277,8 @@ class DeviceSettingsActivity : ThemableActivity() {
 
     private fun runCommand(command: String) {
         hideKeyboard()
-        val properCommand = if (command.startsWith(COMMAND_PREFIX)) {
-            command
-        } else {
-            COMMAND_PREFIX + command
-        }
         val intent = Intent()
-        intent.putExtra(COMMAND, properCommand)
+        intent.putExtra(COMMAND, command)
         setResult(RESULT_OK, intent)
         finish()
     }

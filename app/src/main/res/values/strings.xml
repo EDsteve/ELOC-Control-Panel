@@ -42,6 +42,7 @@
     <string name="start_detecting">Start\nDetecting</string>
     <string name="start_recording">Start\nRecording</string>
     <string name="stop_recording">Stop\nRecording</string>
+    <string name="stop_detecting">Stop\nDetecting</string>
     <string name="status">Status</string>
     <string name="storage">Storage</string>
     <string name="yes">Yes</string>

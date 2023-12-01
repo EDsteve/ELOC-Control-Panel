@@ -453,7 +453,7 @@ class HomeActivity : ThemableActivity() {
             binding.coordinator.showSnack(getString(R.string.upload_in_progress))
             return
         } else if (inBackground) {
-            StatusUploadService.start(this)
+            StatusUploadService.start(this, true)
         } else {
             val fileName = FileSystemHelper.getUploadStatusFileName()
             if (fileName?.isNotEmpty() == true) {
@@ -462,7 +462,7 @@ class HomeActivity : ThemableActivity() {
                         binding.coordinator.showSnack(getString(R.string.nothing_to_upload))
                     }
                 }
-                StatusUploadService.start(this)
+                StatusUploadService.start(this, true)
             } else {
                 binding.coordinator.showSnack(getString(R.string.nothing_to_upload))
             }
