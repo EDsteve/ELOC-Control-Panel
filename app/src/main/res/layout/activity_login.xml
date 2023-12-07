@@ -10,7 +10,7 @@
     android:focusable="true"
     android:gravity="center"
     android:orientation="vertical"
-    tools:context=".ng3.activities.LoginActivity">
+    tools:context=".activities.LoginActivity">
 
     <ImageView
         android:layout_width="64dp"

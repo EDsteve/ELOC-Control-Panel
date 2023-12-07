@@ -26,7 +26,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
-        android:name=".ng3.App"
+        android:name=".App"
         android:allowBackup="true"
         android:icon="@mipmap/app_logo"
         android:label="@string/app_name"
@@ -37,7 +37,7 @@
         tools:ignore="AllowBackup,GoogleAppIndexingWarning"
         tools:targetApi="m">
         <activity
-            android:name=".ng3.activities.DeviceActivity"
+            android:name=".activities.DeviceActivity"
             android:exported="true"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"
@@ -47,10 +47,10 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".ng3.activities.UserPrefsActivity"
+            android:name=".activities.UserPrefsActivity"
             android:exported="false"
             android:label="@string/preferences"
-            android:parentActivityName=".ng3.activities.HomeActivity">
+            android:parentActivityName=".activities.HomeActivity">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
@@ -64,7 +64,7 @@
             android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name=".ng3.activities.HomeActivity"
+            android:name=".activities.HomeActivity"
             android:exported="false"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"
@@ -74,7 +74,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".ng3.activities.PermissionsSetupActivity"
+            android:name=".activities.PermissionsSetupActivity"
             android:exported="true"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"
@@ -96,75 +96,75 @@
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng3.activities.DeviceSettingsActivity"
+            android:name=".activities.DeviceSettingsActivity"
             android:exported="false"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng3.activities.MapActivity"
+            android:name=".activities.MapActivity"
             android:exported="false"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng3.activities.DeleteAccountActivity"
+            android:name=".activities.DeleteAccountActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng3.activities.ChangeEmailAddressActivity"
+            android:name=".activities.ChangeEmailAddressActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng3.activities.ChangePasswordActivity"
+            android:name=".activities.ChangePasswordActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng3.activities.ProfileActivity"
+            android:name=".activities.ProfileActivity"
             android:exported="false"
             android:label="@string/edit_profile"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng3.activities.AccountActivity"
+            android:name=".activities.AccountActivity"
             android:exported="false"
             android:label="@string/edit_profile"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng3.activities.PasswordResetActivity"
+            android:name=".activities.PasswordResetActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng3.activities.ProfileSetupActivity"
+            android:name=".activities.ProfileSetupActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng3.activities.VerifyEmailActivity"
+            android:name=".activities.VerifyEmailActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng3.activities.RegisterActivity"
+            android:name=".activities.RegisterActivity"
             android:exported="false"
             android:noHistory="true"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".ng3.activities.LoginActivity"
+            android:name=".activities.LoginActivity"
             android:exported="true"
             android:noHistory="false"
             android:screenOrientation="portrait"
@@ -174,7 +174,7 @@
         <service android:name=".SerialService" />
 
         <receiver
-            android:name=".ng3.receivers.BluetoothDeviceReceiver"
+            android:name=".receivers.BluetoothDeviceReceiver"
             android:exported="false"
             tools:ignore="Instantiatable">
             <intent-filter>
@@ -183,7 +183,7 @@
         </receiver>
 
         <receiver
-            android:name=".ng3.receivers.BootReceiver"
+            android:name=".receivers.BootReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -191,7 +191,7 @@
         </receiver>
 
         <receiver
-            android:name=".ng3.receivers.BluetoothWatcher"
+            android:name=".receivers.BluetoothWatcher"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.bluetooth.adapter.action.STATE_CHANGED" />
@@ -199,7 +199,7 @@
         </receiver>
 
         <service
-            android:name=".ng3.services.StatusUploadService"
+            android:name=".services.StatusUploadService"
             android:enabled="true"
             android:foregroundServiceType="dataSync" />
 

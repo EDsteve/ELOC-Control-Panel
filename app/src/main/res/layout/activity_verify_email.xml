@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:gravity="center"
     android:padding="16dp"
-    tools:context=".ng3.activities.VerifyEmailActivity">
+    tools:context=".activities.VerifyEmailActivity">
 
     <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/progress_horizontal"

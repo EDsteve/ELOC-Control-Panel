@@ -5,7 +5,7 @@
     android:id="@+id/coordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ng3.activities.DeviceActivity">
+    tools:context=".activities.DeviceActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -85,7 +85,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginVertical="24dp">
 
-                            <de.eloc.eloc_control_panel.ng3.widgets.SimpleGauge
+                            <de.eloc.eloc_control_panel.widgets.SimpleGauge
                                 android:id="@+id/battery_gauge"
                                 android:layout_width="0dp"
                                 android:layout_height="84dp"
@@ -100,7 +100,7 @@
                                 app:normalColor="@color/normal_green"
                                 app:showDiscreteColors="true" />
 
-                            <de.eloc.eloc_control_panel.ng3.widgets.SimpleGauge
+                            <de.eloc.eloc_control_panel.widgets.SimpleGauge
                                 android:id="@+id/gps_gauge"
                                 android:layout_width="0dp"
                                 android:layout_height="84dp"
@@ -113,7 +113,7 @@
                                 app:normalColor="@color/critical_red"
                                 app:showDiscreteColors="false" />
 
-                            <de.eloc.eloc_control_panel.ng3.widgets.SimpleGauge
+                            <de.eloc.eloc_control_panel.widgets.SimpleGauge
                                 android:id="@+id/storage_gauge"
                                 android:layout_width="0dp"
                                 android:layout_height="84dp"
@@ -220,7 +220,7 @@
                             app:drawableEndCompat="@drawable/connected"
                             tools:viewBindingIgnore="true" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/detecting_since_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -228,7 +228,7 @@
                             app:itemLabel="@string/detecting_since"
                             tools:itemValue="1d 10h 22m" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/recording_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -256,7 +256,7 @@
                             android:textStyle="bold"
                             tools:viewBindingIgnore="true" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/record_when_detected_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -264,7 +264,7 @@
                             app:itemLabel="@string/record_when_detected"
                             tools:itemValue="ON" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/model_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -272,7 +272,7 @@
                             app:itemLabel="@string/model"
                             tools:itemValue="Trumpet_V12" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/communication_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -301,7 +301,7 @@
                             app:layout_constraintTop_toBottomOf="@id/communication_item"
                             tools:viewBindingIgnore="true" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/sample_rate_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -309,7 +309,7 @@
                             app:itemLabel="@string/sample_rate"
                             tools:itemValue="16kHz" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/gain_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -317,7 +317,7 @@
                             app:itemLabel="@string/gain"
                             tools:itemValue="HIGH" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/hours_per_file_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -344,7 +344,7 @@
                             android:textStyle="bold"
                             tools:viewBindingIgnore="true" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/session_id_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -352,7 +352,7 @@
                             app:itemLabel="@string/session_id"
                             tools:itemValue="ELOC23432423497" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/battery_type_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -360,7 +360,7 @@
                             app:itemLabel="@string/battery_type"
                             tools:itemValue="LiFePo4" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/battery_volt_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -368,7 +368,7 @@
                             app:itemLabel="@string/battery_volt"
                             tools:itemValue="3.23" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/file_header_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -376,7 +376,7 @@
                             app:itemLabel="@string/file_header"
                             tools:itemValue="Riv 78" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/last_location_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -384,7 +384,7 @@
                             app:itemLabel="@string/last_location"
                             tools:itemValue="13453+GT" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/uptime_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -392,7 +392,7 @@
                             app:itemLabel="@string/uptime"
                             tools:itemValue="1d 5h 10m" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/rec_since_boot_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -400,7 +400,7 @@
                             app:itemLabel="@string/rec_since_boot"
                             tools:itemValue="1d 5h 10m" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/bluetooth_during_recording_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -408,7 +408,7 @@
                             app:itemLabel="@string/bluetooth_during_recording"
                             tools:itemValue="ON" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/microphone_type_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -416,7 +416,7 @@
                             app:itemLabel="@string/microphone_type"
                             tools:itemValue="ICS-43434" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/firmware_version_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -424,7 +424,7 @@
                             app:itemLabel="@string/firmware_version"
                             tools:itemValue="v1.23" />
 
-                        <de.eloc.eloc_control_panel.ng3.widgets.ListItem
+                        <de.eloc.eloc_control_panel.widgets.ListItem
                             android:id="@+id/app_version_item"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"

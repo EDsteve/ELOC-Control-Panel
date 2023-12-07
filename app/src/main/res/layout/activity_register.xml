@@ -10,7 +10,7 @@
     android:focusable="true"
     android:gravity="center"
     android:orientation="vertical"
-    tools:context=".ng3.activities.RegisterActivity">
+    tools:context=".activities.RegisterActivity">
 
     <ImageButton
         android:id="@+id/back_button"
