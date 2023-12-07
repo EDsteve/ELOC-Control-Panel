@@ -101,7 +101,7 @@ class DeviceActivity : AppCompatActivity() {
         }
     }
 
-    private var deviceState = DeviceState.Ready
+    private var deviceState = DeviceState.Disabled
         set(value) {
             field = value
             // todo: update recording/detecting since labels correctly
@@ -111,24 +111,28 @@ class DeviceActivity : AppCompatActivity() {
             binding.stopButton.isClickable = false
             binding.stopButton.isFocusable = false
             when (field) {
-                DeviceState.Recording -> {
+                DeviceState.Disabled, DeviceState.RecordOffDetectOff, DeviceState.RecordOff -> {
+                    binding.startRecordingButton.visibility = View.VISIBLE
+                    binding.startDetectingButton.visibility = View.VISIBLE
+                }
+
+                DeviceState.Continuous, DeviceState.RecordOn -> {
                     binding.stopButton.text = getString(R.string.stop_recording)
                     binding.stopButton.visibility = View.VISIBLE
                     binding.stopButton.isClickable = true
                     binding.stopButton.isFocusable = true
                 }
 
-                DeviceState.Ready -> {
-                    binding.startRecordingButton.visibility = View.VISIBLE
-                    binding.startDetectingButton.visibility = View.VISIBLE
-                }
 
+                // todo fix enum values
+                /*
                 DeviceState.Detecting -> {
                     binding.stopButton.text = getString(R.string.stop_detecting)
                     binding.stopButton.visibility = View.VISIBLE
                     binding.stopButton.isClickable = true
                     binding.stopButton.isFocusable = true
-                }
+                }*/
+                else -> {}
             }
         }
 
@@ -136,9 +140,9 @@ class DeviceActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDeviceBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setDeviceState(DeviceState.Disabled)
         setLaunchers()
         initialize()
-        setDeviceState(DeviceState.Ready)
     }
 
     override fun onResume() {
@@ -235,19 +239,21 @@ class DeviceActivity : AppCompatActivity() {
                 // i.e., JSON might be cut during disconnecting or refreshing.
                 val root = JSONObject(json)
                 processJson(root)
-            } catch (_ : Exception) {
+            } catch (_: Exception) {
 
             }
         }
     }
 
     private fun processJson(root: JSONObject) {
-        when (root.getString(KEY_CMD)) {
-            CMD_SET_RECORD_MODE -> {
+        val command = root.getString(KEY_CMD).lowercase()
+        when (command) {
+            CMD_SET_RECORD_MODE.lowercase() -> {
                 setRecordingMode(root)
+                DeviceDriver.getStatus()
             }
 
-            CMD_GET_CONFIG -> {
+            CMD_GET_CONFIG.lowercase() -> {
                 setMicrophoneType(root)
                 setMicrophoneGain(root)
                 setMicrophoneSampleRate(root)
@@ -257,7 +263,7 @@ class DeviceActivity : AppCompatActivity() {
                 setFileHeader(root)
             }
 
-            CMD_GET_STATUS -> {
+            CMD_GET_STATUS.lowercase() -> {
                 setSessionID(root)
                 setRecordingTime(root)
                 setRecSinceBoot(root)
@@ -288,7 +294,7 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun setListeners() {
-        DeviceDriver.registerConnectionChangedListener { onConnectionChanged(it)}
+        DeviceDriver.registerConnectionChangedListener { onConnectionChanged(it) }
         binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.startRecordingButton.setOnClickListener { recordButtonClicked() }
         binding.stopButton.setOnClickListener { stopRecording() }
@@ -315,7 +321,8 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun openSettings() {
-        if (deviceState == DeviceState.Ready) {
+        // todo: fix after determining proper states
+        if (deviceState.isIdle) {
             val intent = Intent(this, DeviceSettingsActivity::class.java)
             // todo: device name might be changed in DeviceSettingsActivity
             intent.putExtra(EXTRA_DEVICE_NAME, deviceName)
@@ -335,8 +342,6 @@ class DeviceActivity : AppCompatActivity() {
 
     private fun onConnectionChanged(status: ConnectionStatus) {
         runOnUiThread {
-
-            println("in activity ${status.toString()}")
             refreshing = false
             binding.swipeRefreshLayout.isRefreshing = false
             binding.toolbar.menu.clear()
@@ -499,13 +504,11 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun updateUi(jsonObject: JSONObject) {
-        val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_RECORDING_STATE$PATH_SEPARATOR$KEY_STATE"
-        val state = getJSONStringAttribute(path, jsonObject).lowercase()
-        if (state == "continuous") {
-            setDeviceState(DeviceState.Recording)
-        } else {
-            setDeviceState(DeviceState.Ready)
-        }
+        val path =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_RECORDING_STATE$PATH_SEPARATOR$KEY_STATE"
+        val raw = getJSONStringAttribute(path, jsonObject).lowercase()
+        val state = DeviceState.parse(raw)
+        setDeviceState(state)
     }
 
     private fun setSDCardFreePerc(jsonObject: JSONObject) {
@@ -517,15 +520,25 @@ class DeviceActivity : AppCompatActivity() {
     private fun setSDCardFreeGB(jsonObject: JSONObject) {
         val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_SDCARD_FREE_GB"
         val free = getJSONNumberAttribute(path, jsonObject)
-        binding.storageStatus.text = getString(R.string.gauge_free_space, free.toInt())
+        if (free <= 0) {
+            binding.storageStatus.text = ""
+            binding.storageErrorIcon.visibility = View.VISIBLE
+        } else {
+            binding.storageStatus.text = getString(R.string.gauge_free_space, free.toInt())
+            binding.storageErrorIcon.visibility = View.INVISIBLE
+        }
+
     }
 
     private fun setRecordingMode(jsonObject: JSONObject) {
         val resultCode = getJSONNumberAttribute(KEY_ECODE, jsonObject).toInt()
         val commandSucceeded = resultCode == 0
         if (commandSucceeded) {
-            val mode = getJSONNumberAttribute("$KEY_PAYLOAD$PATH_SEPARATOR$KEY_RECORDING_STATE", jsonObject).toInt()
-            val state = DeviceState.fromCode(mode)
+            val raw = getJSONStringAttribute(
+                "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_RECORDING_STATE",
+                jsonObject
+            )
+            val state = DeviceState.parse(raw)
             setDeviceState(state)
         }
     }
@@ -579,13 +592,14 @@ class DeviceActivity : AppCompatActivity() {
         jsonObject: JSONObject,
         defaultValue: String = ""
     ): String {
+        var attribute = defaultValue
         try {
             val (key, node) = getJSONAttributeNode(path, jsonObject)
-            return node?.getString(key) ?: defaultValue
+            attribute = node?.getString(key) ?: defaultValue
         } catch (_: Exception) {
 
         }
-        return defaultValue
+        return attribute
     }
 
     private fun getJSONNumberAttribute(
@@ -647,25 +661,22 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun recordButtonClicked() {
-        when (deviceState) {
-            DeviceState.Recording -> {
-                stopRecording()
+        // todo fix after proper states
+        // this will not workk well until we get a proper enum or table of all states from fw devs
+        // for now, i will work with the 'isIdle' property.
+        if (!deviceState.isIdle) {
+            stopRecording()
+        } else {
+            if (hasSDCardError) {
+                showSDCardError()
+                return
             }
 
-            DeviceState.Ready -> {
-                if (hasSDCardError) {
-                    showSDCardError()
-                    return
-                }
-
-                if (locationAccuracy <= 8.1) {
-                    startRecording()
-                } else {
-                    confirmIgnoreAccuracy()
-                }
+            if (locationAccuracy <= 8.1) {
+                startRecording()
+            } else {
+                confirmIgnoreAccuracy()
             }
-
-            else -> {}
         }
     }
 
@@ -674,7 +685,7 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun startRecording() {
-        DeviceDriver.startRecording()
+        DeviceDriver.startRecording(locationCode, locationAccuracy)
         /*
 
        // todo: check if bt state while recording is maintained as set by user

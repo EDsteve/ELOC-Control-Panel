@@ -109,8 +109,15 @@ class AuthHelper {
                     googleSignInCanceled = true
                     val tokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
                     FirebaseAuth.getInstance().signInWithCustomToken(tokenCredential.idToken)
-                        .addOnSuccessListener {
-                            PreferencesHelper.instance.setAutoGoogleSignIn(true)
+                        .addOnCompleteListener {
+                            PreferencesHelper.instance.setAutoGoogleSignIn(it.isSuccessful)
+                            if (it.isSuccessful) {
+                                val exception = it.exception
+                                if (exception != null) {
+                                    // todo remove logged message
+                                    println(exception.localizedMessage ?: defaultErrorMessage)
+                                }
+                            }
                         }
                 }
             }

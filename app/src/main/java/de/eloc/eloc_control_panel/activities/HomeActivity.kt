@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Bundle
-import android.os.SystemClock
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -18,25 +17,22 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.old.SNTPClient
-import de.eloc.eloc_control_panel.old.TerminalActivity
-import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
-import de.eloc.eloc_control_panel.databinding.LayoutNavHeaderBinding
 import de.eloc.eloc_control_panel.App
-import de.eloc.eloc_control_panel.data.helpers.HttpHelper
+import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.data.ElocInfoAdapter
-import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
+import de.eloc.eloc_control_panel.data.helpers.HttpHelper
+import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
+import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
+import de.eloc.eloc_control_panel.databinding.LayoutNavHeaderBinding
 import de.eloc.eloc_control_panel.interfaces.VoidCallback
+import de.eloc.eloc_control_panel.old.TerminalActivity
 import de.eloc.eloc_control_panel.receivers.BluetoothDeviceReceiver
 import de.eloc.eloc_control_panel.services.StatusUploadService
 import kotlinx.coroutines.launch
-import java.util.Calendar
-import java.util.TimeZone
 
 // todo: use cached profile picture
 
@@ -49,8 +45,6 @@ class HomeActivity : ThemableActivity() {
     private lateinit var rangerName: String
     private val elocAdapter = ElocInfoAdapter(this::onListUpdated, this::showDevice)
     private val elocReceiver = BluetoothDeviceReceiver(elocAdapter::add)
-    private var gUploadEnabled = false
-    private var gLastTimeDifferenceMillisecond = 0L
     private lateinit var preferencesLauncher: ActivityResultLauncher<Intent>
     private val backPressedHandler = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
@@ -351,45 +345,6 @@ class HomeActivity : ThemableActivity() {
         }
     }
 
-    private fun synchronizeClock() {
-        val timeoutMS = 5000
-        val showMessage = true
-        SNTPClient.getDate(
-            timeoutMS,
-            Calendar.getInstance().timeZone
-        ) { _,
-            _,
-            googletimestamp,
-            _
-            ->
-            run {
-                if (googletimestamp == 0L) {
-                    gUploadEnabled = false
-                    invalidateOptionsMenu()
-                    if (showMessage) {
-                        binding.coordinator.showSnack(
-                            getString(R.string.sync_failed_check_internet_connection)
-                        )
-                    }
-                } else {
-                    val tz = TimeHelper.timeZoneOffsetHours()
-                    gLastTimeDifferenceMillisecond = System.currentTimeMillis() - googletimestamp
-                    PreferencesHelper.instance.saveTimestamps(
-                        SystemClock.elapsedRealtime(),
-                        googletimestamp
-                    )
-                    gUploadEnabled = true
-                    invalidateOptionsMenu()
-                    if (showMessage) {
-                        val message =
-                            getString(R.string.sync_template, gLastTimeDifferenceMillisecond)
-                        binding.coordinator.showSnack(message)
-                    }
-                }
-            }
-        }
-    }
-
     private fun showMap() {
         val intent = Intent(this, MapActivity::class.java)
         intent.putExtra(MapActivity.EXTRA_RANGER_NAME, rangerName)
@@ -410,7 +365,7 @@ class HomeActivity : ThemableActivity() {
             }
 
             R.id.mnu_sync_clock -> {
-                synchronizeClock()
+                TimeHelper.synchronizeClock { message -> binding.coordinator.showSnack(message) }
                 return true
             }
 

@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
+import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
 import de.eloc.eloc_control_panel.interfaces.SocketListener
 import java.io.IOException
@@ -99,8 +100,25 @@ object DeviceDriver : Runnable {
         write("setRecordmode#mode=recordOff")
     }
 
-    fun startRecording() {
+    fun startRecording(locationCode: String, locationAccuracy: Double) {
+        setLocation(locationCode, locationAccuracy.toInt())
         write("setRecordmode#mode=recordOn")
+    }
+
+    fun startDetecting(locationCode: String, locationAccuracy: Double) {
+        setLocation(locationCode, locationAccuracy.toInt())
+    }
+
+    fun setTime(timestamp: Long, difference: Long, timezone: Int) {
+        val command =
+            "setTime#time={\"seconds\":$timestamp, \"ms\" : $difference, \"timezone\" : $timezone}"
+        write(command)
+    }
+
+    private fun setLocation(code: String, accuracy: Int) {
+        val command =
+            "setConfig#cfg={\"device\":{\"locationCode\":\"$code\",\"locationAccuracy\":$accuracy}}"
+        write(command)
     }
 
     private fun onConnect() {
@@ -167,6 +185,7 @@ object DeviceDriver : Runnable {
         } finally {
             connectionStatus =
                 if (bluetoothSocket?.isConnected == true) {
+                    TimeHelper.synchronizeClock(true)
                     ConnectionStatus.Active
                 } else if (hadError) {
                     ConnectionStatus.Inactive

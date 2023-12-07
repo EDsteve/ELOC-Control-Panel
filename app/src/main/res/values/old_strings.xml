@@ -206,7 +206,8 @@
     <string name="stop_template">Stop (%d)</string>
     <string name="stopping">Stopping</string>
     <string name="submit">Submit</string>
-    <string name="sync_template">sync SUCCESS\n Your phone differs by %d ms"</string>
+    <string name="sync_template_with_difference">Time synced successfully. Phone differs by %d ms"</string>
+    <string name="sync_template_withno_difference">Time synced successfully."</string>
     <string name="synchronize_clock">Synchronize clock</string>
     <string name="top_left">Top Left</string>
     <string name="top_right">Top Right</string>
