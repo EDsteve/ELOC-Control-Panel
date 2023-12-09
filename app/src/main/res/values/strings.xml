@@ -88,6 +88,5 @@
     <string name="try_again">Try Again</string>
     <string name="confirm_sign_out">Are you sure you want to sign out?</string>
     <string name="set_notifications_permission">Set Notifications permission</string>
-    <string name="gc_client_id">${GCLOUD_CLIENT_ID}</string>
     <string name="no_google_accounts_found">No Google accounts found.</string>
 </resources>

@@ -17,6 +17,7 @@ import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.App
+import de.eloc.eloc_control_panel.BuildConfig
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.interfaces.StringCallback
@@ -138,10 +139,9 @@ class AuthHelper {
     }
 
     private suspend fun getCredential(): GetCredentialResponse {
-        val clientId = App.instance.getString(R.string.gc_client_id)
         val options = GetGoogleIdOption.Builder()
             .setNonce(System.currentTimeMillis().toString())
-            .setServerClientId(clientId)
+            .setServerClientId(BuildConfig.GCLOUD_CLIENT_ID)
             .setFilterByAuthorizedAccounts(false)
             .setAutoSelectEnabled(true)
             .build()

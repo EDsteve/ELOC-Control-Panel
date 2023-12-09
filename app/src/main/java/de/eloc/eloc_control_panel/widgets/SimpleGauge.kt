@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
@@ -34,6 +35,8 @@ class SimpleGauge : View {
     private var lowRange = 30.0f
     private var alwaysFilled = true
     private val arc = RectF(0f, 0f, 0f, 0f)
+    var inErrorMode = true
+    private val exclamationMarkBody = Path()
 
     constructor(context: Context) : super(context) {
         initialize(null)
@@ -54,8 +57,14 @@ class SimpleGauge : View {
             lowColor = typedArray.getColor(R.styleable.SimpleGauge_lowColor, Color.YELLOW)
             criticalColor = typedArray.getColor(R.styleable.SimpleGauge_criticalColor, Color.RED)
             lowColorThreshold =
-                typedArray.getInteger(R.styleable.SimpleGauge_lowColorThreshold, LOW_COLOR_THRESHOLD_DEFAULT)
-            criticalColorThreshold = typedArray.getInteger(R.styleable.SimpleGauge_criticalColorThreshold, CRITICAL_COLOR_THRESHOLD_DEFAULT)
+                typedArray.getInteger(
+                    R.styleable.SimpleGauge_lowColorThreshold,
+                    LOW_COLOR_THRESHOLD_DEFAULT
+                )
+            criticalColorThreshold = typedArray.getInteger(
+                R.styleable.SimpleGauge_criticalColorThreshold,
+                CRITICAL_COLOR_THRESHOLD_DEFAULT
+            )
             lowRange = if (lowColorThreshold <= LOW_COLOR_THRESHOLD_MIN) {
                 LOW_COLOR_THRESHOLD_MIN.toFloat()
             } else if (lowColorThreshold >= LOW_COLOR_THRESHOLD_MAX) {
@@ -148,23 +157,51 @@ class SimpleGauge : View {
         // Clear background
         canvas.drawColor(Color.TRANSPARENT)
 
-        // Ring
         updateData()
-        if (alwaysFilled) {
+        if (inErrorMode) {
+            pen.color = criticalColor
             canvas.drawCircle(centerX, centerY, radius, pen)
+
+            pen.style = Paint.Style.FILL
+            pen.strokeWidth = 1f
+            val dotRadius = 0.1f * radius
+            val dotDiameter = dotRadius * 2
+            val dotY = centerY + (dotRadius * 5)
+            canvas.drawCircle(centerX, dotY, dotRadius, pen)
+
+
+            val botLeftX = centerX - (dotDiameter * 0.2f)
+            val botY = dotY - (dotRadius * 1.5f)
+            exclamationMarkBody.moveTo(botLeftX, botY)
+
+            val topLeftX = centerX - dotRadius
+            val topLeftY = botY - radius
+            exclamationMarkBody.lineTo(topLeftX, topLeftY)
+
+            exclamationMarkBody.rLineTo(dotDiameter, 0f)
+
+            val botRightX = centerX + (dotDiameter * 0.2f)
+            exclamationMarkBody.lineTo(botRightX, botY)
+            exclamationMarkBody.close()
+            canvas.drawPath(exclamationMarkBody, pen)
         } else {
-            val darkColor = pen.color
-            val lightColor = Color.argb(
-                60,
-                Color.red(darkColor),
-                Color.green(darkColor),
-                Color.blue(darkColor)
-            )
-            pen.color = lightColor
-            canvas.drawCircle(centerX, centerY, radius, pen)
-            pen.color = darkColor
-            normalizeGaugeValue()
-            canvas.drawArc(arc, 90f, 360f * gaugeValue.toFloat() / 100f, false, pen)
+            // Ring
+            if (alwaysFilled) {
+                canvas.drawCircle(centerX, centerY, radius, pen)
+            } else {
+                val darkColor = pen.color
+                val lightColor = Color.argb(
+                    60,
+                    Color.red(darkColor),
+                    Color.green(darkColor),
+                    Color.blue(darkColor)
+                )
+                pen.color = lightColor
+                canvas.drawCircle(centerX, centerY, radius, pen)
+                pen.color = darkColor
+                normalizeGaugeValue()
+                canvas.drawArc(arc, 90f, 360f * gaugeValue.toFloat() / 100f, false, pen)
+            }
         }
     }
 
