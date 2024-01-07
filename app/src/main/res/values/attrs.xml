@@ -12,6 +12,7 @@
         <!-- range for criticalColorThreshold is 0 to 100 -->
         <attr name="criticalColorThreshold" format="integer" />
         <attr name="alwaysFilled" format="boolean" />
+        <attr name="errorMode" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="ListItem">

@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.SystemClock
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.data.DeviceDriver
+import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.interfaces.StringCallback
 import de.eloc.eloc_control_panel.old.SNTPClient
 import java.util.Calendar
@@ -25,7 +25,7 @@ object TimeHelper {
     fun formatMillis(context: Context, millis: Number, useSeconds: Boolean = false) =
         formatSeconds(context, millis.toDouble() / 1000, useSeconds)
 
-    private fun formatSeconds(
+    fun formatSeconds(
         context: Context,
         seconds: Double,
         useSeconds: Boolean = false
@@ -52,8 +52,6 @@ object TimeHelper {
             }
         }
     }
-
-    fun toHours(seconds: Number) = seconds.toDouble() / ONE_HOUR_SECONDS
 
     fun toSeconds(hours: Number) = hours.toDouble() * ONE_HOUR_SECONDS
 

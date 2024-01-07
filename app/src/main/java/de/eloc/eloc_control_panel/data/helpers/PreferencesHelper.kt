@@ -31,8 +31,6 @@ class PreferencesHelper {
     fun getPromptedBluetooth(): Boolean =
         preferences.getBoolean(PREF_PROMPTED_BLUETOOTH, false)
 
-    fun getMicData(): String = preferences.getString(PREF_MICROPHONE_SETTINGS, "") ?: ""
-
     fun getPromptedLocation(): Boolean =
         preferences.getBoolean(PREF_PROMPTED_LOCATION, false)
 
@@ -91,9 +89,6 @@ class PreferencesHelper {
     fun setPromptedBluetooth() =
         preferences.edit().putBoolean(PREF_PROMPTED_BLUETOOTH, true).apply()
 
-    fun setMicrophoneSettings(data: String) =
-        preferences.edit().putString(PREF_MICROPHONE_SETTINGS, data).apply()
-
     fun setBluetoothRecordingState(btOn: Boolean) = preferences.edit().putBoolean(
         PREF_BLUETOOTH_RECORDING_STATE, btOn
     ).apply()
@@ -142,7 +137,6 @@ class PreferencesHelper {
         private const val PREF_NOTIFICATIONS_REQUESTED = "notifications_requested"
         private const val PREF_PROMPTED_BLUETOOTH = "has_prompted_bluetooth"
         private const val PREF_PROMPTED_LOCATION = "has_prompted_location"
-        private const val PREF_MICROPHONE_SETTINGS = "microphone_settings"
         private const val PREF_DEVICE_SETTINGS = "device_settings"
         private const val PREF_ELAPSED_TIME_AT_GOOGLE_TIMESTAMP = "elapsedTimeAtGoogleTimestamp"
         private const val PREF_LAST_GOOGLE_TIMESTAMP = "lastGoogleTimestamp"

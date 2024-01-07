@@ -21,7 +21,7 @@
     <string name="go_back">Go back</string>
     <string name="gps_accuracy">GPS Accuracy</string>
     <string name="grid_id">Grid ID</string>
-    <string name="hours_per_file">Hours Per File</string>
+    <string name="time_per_file">Time Per File</string>
     <string name="important_delete_prompt"><u>IMPORTANT</u>\nThis operation is NOT reversible!</string>
     <string name="less_than_one_minute"><![CDATA[< 1m]]></string>
     <string name="microphone_type">Microphone Type</string>
@@ -66,7 +66,7 @@
     <string name="battery_type">Battery Type</string>
     <string name="battery_volt">Battery Volt</string>
     <string name="more">More</string>
-    <string name="no_sd_card">No SD\ncard</string>
+    <string name="no_sd_card">No SD card</string>
     <string name="upload_was_not_successful">Upload was not successful</string>
     <string name="upload_was_completed_successfully">Upload was completed successfully</string>
     <string name="status_upload">Status Upload</string>
@@ -89,4 +89,10 @@
     <string name="confirm_sign_out">Are you sure you want to sign out?</string>
     <string name="set_notifications_permission">Set Notifications permission</string>
     <string name="no_google_accounts_found">No Google accounts found.</string>
+    <string name="log_to_sd_card">Log To SD Card</string>
+    <string name="arm_during_recording">Arm During Recording</string>
+    <string name="new_value_was_applied">New value was applied</string>
+    <string name="applying_changes">Applying changes…</string>
+    <string name="updating_values">Updating values…</string>
+    <string name="unknown">Unknown</string>
 </resources>

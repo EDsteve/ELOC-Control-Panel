@@ -3,37 +3,57 @@ package de.eloc.eloc_control_panel.activities
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import com.google.android.material.chip.Chip
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.databinding.ActivityDeviceSettingsBinding
+import de.eloc.eloc_control_panel.driver.DeviceDriver
+import de.eloc.eloc_control_panel.driver.ElocData
 import de.eloc.eloc_control_panel.data.GainType
+import de.eloc.eloc_control_panel.data.SampleRate
+import de.eloc.eloc_control_panel.data.TimePerFile
+import de.eloc.eloc_control_panel.data.helpers.JsonHelper
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
-import java.lang.NumberFormatException
+import de.eloc.eloc_control_panel.databinding.ActivityDeviceSettingsBinding
+import de.eloc.eloc_control_panel.interfaces.BluetoothDeviceListener
+import org.json.JSONObject
 
 class DeviceSettingsActivity : ThemableActivity() {
     private lateinit var binding: ActivityDeviceSettingsBinding
+
+    // todo: must be obtained directly from firmware
     private val preferencesManager = PreferencesHelper.instance
     private var paused = true
     private var deviceName = ""
     private var location = ""
+    private lateinit var sampleRateChips: List<Chip>
+    private lateinit var timePerFileChips: List<Chip>
+    private lateinit var gainChips: List<Chip>
 
-    companion object {
-        const val COMMAND = "command"
-        private const val SEPARATOR = "#"
-        private const val COMMAND_PREFIX = SEPARATOR + "settings" + SEPARATOR
+    private val commandListener = object : BluetoothDeviceListener() {
+        override fun onRead(data: ByteArray) {
+            try {
+                val json = String(data)
+                runOnUiThread { parseResponse(json) }
+            } catch (_: Exception) {
+
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDeviceSettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         setChips()
         setDeviceName()
-        setData()
+        setoldData()
         setMicData()
         setBtState()
+
+        setData()
+
+        // Set the listeners after setting the data
         setListeners()
-        hideAdvancedOperations()
-        setChipColors()
     }
 
     override fun onPause() {
@@ -52,6 +72,277 @@ class DeviceSettingsActivity : ThemableActivity() {
         paused = false
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        DeviceDriver.removeCommandListener(commandListener)
+    }
+
+    private fun setData() {
+        updateSampleRate()
+        updateTimePerFile()
+        updateMicrophoneGain()
+        binding.logSwitch.isChecked = ElocData.logToSDCardEnabled
+        updateChipColors()
+        showContent()
+    }
+
+    private fun parseResponse(json: String) {
+        try {
+            val root = JSONObject(json)
+            val command = JsonHelper.getJSONStringAttribute(DeviceDriver.KEY_CMD, root).lowercase()
+            if (
+                (command == DeviceDriver.CMD_SET_STATUS.lowercase()) ||
+                (command == DeviceDriver.CMD_SET_CONFIG.lowercase())
+            ) {
+                val message = try {
+                    val errorCode =
+                        JsonHelper.getJSONNumberAttribute(DeviceDriver.KEY_ECODE, root, -1.0)
+                            .toInt()
+                    val messageResId = if (errorCode == 0)
+                        R.string.new_value_was_applied
+                    else
+                        R.string.something_went_wrong
+                    getString(messageResId)
+                } catch (e: Exception) {
+                    e.localizedMessage ?: getString(R.string.something_went_wrong)
+                }
+                binding.coordinator.showSnack(message)
+                binding.progressTextView.text = getString(R.string.updating_values)
+                DeviceDriver.getDeviceInfo()
+            } else if (
+                (command == DeviceDriver.CMD_GET_STATUS.lowercase()) ||
+                (command == DeviceDriver.CMD_GET_CONFIG.lowercase())
+            ) {
+                setData()
+            }
+        } catch (_: Exception) {
+
+        }
+    }
+
+    private fun setListeners() {
+
+        DeviceDriver.addCommandListener(commandListener)
+        binding.sampleRateChipGroup.setOnCheckedStateChangeListener { _, _ -> updateChipColors() }
+        binding.fileTimeChipGroup.setOnCheckedStateChangeListener { _, _ -> updateChipColors() }
+        binding.gainChipGroup.setOnCheckedStateChangeListener { _, _ -> updateChipColors() }
+        binding.btStateChipGroup.setOnCheckedStateChangeListener { _, _ -> updateChipColors() }
+        binding.commandLineButton.setOnClickListener { runCommandLine() }
+        binding.recordingButton.setOnClickListener { runRecordingCommand() }
+        binding.microphoneTypeButton.setOnClickListener { runMicTypeCommand() }
+        binding.fileHeaderButton.setOnClickListener { runFileHeaderCommand() }
+        binding.hideAdvancedOptionsButton.setOnClickListener { }
+        binding.showAdvancedOptionsButton.setOnClickListener { }
+        binding.instructionsButton.setOnClickListener { showInstructions() }
+        binding.updateFirmwareButton.setOnClickListener { confirmFirmwareUpdate() }
+        binding.bluetoothRecordingStateButton.setOnClickListener { saveBtRecordingState() }
+        binding.toolbar.setNavigationOnClickListener { goBack() }
+
+        sampleRateChips.map { element ->
+            element.setOnClickListener {
+                if (it is Chip) {
+                    if (it.isChecked) {
+                        changeSampleRate(it)
+                    }
+                }
+            }
+        }
+
+        timePerFileChips.map { element ->
+            element.setOnClickListener {
+                if (it is Chip) {
+                    if (it.isChecked) {
+                        changeTimePerFile(it)
+                    }
+                }
+            }
+        }
+
+        gainChips.map { element ->
+            element.setOnClickListener {
+                if (it is Chip) {
+                    if (it.isChecked) {
+                        changeMicrophoneGain(it)
+                    }
+                }
+            }
+        }
+
+        binding.logSwitch.setOnClickListener {
+            showProgress()
+            val enableLogs = binding.logSwitch.isChecked
+            DeviceDriver.setSDCardLogs(enableLogs)
+        }
+    }
+
+    private fun changeMicrophoneGain(chip: Chip) {
+        val desiredGain = when (chip) {
+            binding.gainLowLayout.chip -> GainType.Low
+            binding.gainHighLayout.chip -> GainType.High
+            else -> GainType.Unknown
+        }
+        if (desiredGain != GainType.Unknown) {
+            showProgress()
+            DeviceDriver.setMicrophoneGain(desiredGain)
+        }
+    }
+
+    private fun changeSampleRate(chip: Chip) {
+        val desiredRate = when (chip) {
+            binding.rate8kLayout.chip -> SampleRate.Rate8k
+            binding.rate16kLayout.chip -> SampleRate.Rate16k
+            binding.rate22kLayout.chip -> SampleRate.Rate22k
+            binding.rate32kLayout.chip -> SampleRate.Rate32k
+            binding.rate44kLayout.chip -> SampleRate.Rate44k
+            else -> SampleRate.Unknown
+        }
+        if (desiredRate != SampleRate.Unknown) {
+            showProgress()
+            DeviceDriver.setSampleRate(desiredRate)
+        }
+    }
+
+    private fun changeTimePerFile(chip: Chip) {
+        val desiredTime = when (chip) {
+            binding.time10sLayout.chip -> TimePerFile.Time10s
+            binding.time1mLayout.chip -> TimePerFile.Time1m
+            binding.time1hLayout.chip -> TimePerFile.Time1h
+            binding.time4hLayout.chip -> TimePerFile.Time4h
+            binding.time12hLayout.chip -> TimePerFile.Time12h
+            else -> TimePerFile.Unknown
+        }
+        if (desiredTime != TimePerFile.Unknown) {
+            showProgress()
+            DeviceDriver.setTimePerFile(desiredTime)
+        }
+    }
+
+    private fun updateChipColors() {
+        setChipColors(binding.btOnLayout)
+        setChipColors(binding.btOffLayout)
+
+        setChipColors(binding.gainLowLayout)
+        setChipColors(binding.gainHighLayout)
+
+        setChipColors(binding.time12hLayout)
+        setChipColors(binding.time4hLayout)
+        setChipColors(binding.time1hLayout)
+        setChipColors(binding.time1mLayout)
+        setChipColors(binding.time10sLayout)
+
+        setChipColors(binding.rate44kLayout)
+        setChipColors(binding.rate32kLayout)
+        setChipColors(binding.rate22kLayout)
+        setChipColors(binding.rate16kLayout)
+        setChipColors(binding.rate8kLayout)
+    }
+
+    private fun setChips() {
+        sampleRateChips = listOf(
+            binding.rate8kLayout.chip,
+            binding.rate16kLayout.chip,
+            binding.rate22kLayout.chip,
+            binding.rate32kLayout.chip,
+            binding.rate44kLayout.chip
+        )
+
+        timePerFileChips = listOf(
+            binding.time12hLayout.chip,
+            binding.time4hLayout.chip,
+            binding.time1hLayout.chip,
+            binding.time1mLayout.chip,
+            binding.time10sLayout.chip
+        )
+
+        gainChips = listOf(
+            binding.gainLowLayout.chip,
+            binding.gainHighLayout.chip
+        )
+
+        binding.rate44kLayout.chip.setText(R.string._44k)
+        binding.rate32kLayout.chip.setText(R.string._32k)
+        binding.rate22kLayout.chip.setText(R.string._22k)
+        binding.rate16kLayout.chip.setText(R.string._16k)
+        binding.rate8kLayout.chip.setText(R.string._8k)
+
+        binding.time12hLayout.chip.setText(R.string._12h)
+        binding.time4hLayout.chip.setText(R.string._4h)
+        binding.time1hLayout.chip.setText(R.string._1h)
+        binding.time1mLayout.chip.setText(R.string._1m)
+        binding.time10sLayout.chip.setText(R.string._10s)
+
+        binding.gainLowLayout.chip.setText(R.string.low)
+        binding.gainHighLayout.chip.setText(R.string.high)
+
+        binding.btOnLayout.chip.setText(R.string.on)
+        binding.btOffLayout.chip.setText(R.string.off)
+
+    }
+
+    private fun updateMicrophoneGain() {
+        binding.gainLowLayout.chip.isChecked = false
+        binding.gainHighLayout.chip.isChecked = false
+        when (ElocData.microphoneGain) {
+            GainType.Low -> binding.gainLowLayout.chip.isChecked = true
+            GainType.High -> binding.gainHighLayout.chip.isChecked = true
+            else -> {}
+        }
+    }
+
+    private fun updateSampleRate() {
+        binding.rate44kLayout.chip.isChecked = false
+        binding.rate32kLayout.chip.isChecked = false
+        binding.rate22kLayout.chip.isChecked = false
+        binding.rate16kLayout.chip.isChecked = false
+        binding.rate8kLayout.chip.isChecked = false
+        when (SampleRate.parse(ElocData.sampleRate.toInt())) {
+            SampleRate.Rate8k -> binding.rate8kLayout.chip.isChecked = true
+            SampleRate.Rate16k -> binding.rate16kLayout.chip.isChecked = true
+            SampleRate.Rate22k -> binding.rate22kLayout.chip.isChecked = true
+            SampleRate.Rate32k -> binding.rate32kLayout.chip.isChecked = true
+            SampleRate.Rate44k -> binding.rate44kLayout.chip.isChecked = true
+            else -> {}
+        }
+    }
+
+    private fun updateTimePerFile() {
+        binding.time12hLayout.chip.isChecked = false
+        binding.time4hLayout.chip.isChecked = false
+        binding.time1hLayout.chip.isChecked = false
+        binding.time1mLayout.chip.isChecked = false
+        binding.time10sLayout.chip.isChecked = false
+        when (TimePerFile.parse(ElocData.secondsPerFile.toInt())) {
+            TimePerFile.Time10s -> binding.time10sLayout.chip.isChecked = true
+            TimePerFile.Time1m -> binding.time1mLayout.chip.isChecked = true
+            TimePerFile.Time1h -> binding.time1hLayout.chip.isChecked = true
+            TimePerFile.Time4h -> binding.time4hLayout.chip.isChecked = true
+            TimePerFile.Time12h -> binding.time12hLayout.chip.isChecked = true
+            else -> {}
+        }
+    }
+
+    private fun showProgress() {
+        binding.progressTextView.text = getString(R.string.applying_changes)
+        binding.progressLayout.visibility = View.VISIBLE
+        binding.contentLayout.visibility = View.GONE
+    }
+
+    private fun showContent() {
+        binding.progressLayout.visibility = View.GONE
+        binding.contentLayout.visibility = View.VISIBLE
+    }
+
+
+    // OLD ------------------------------------------------
+
+
+    companion object {
+        const val COMMAND = "command"
+        private const val SEPARATOR = "#"
+        private const val COMMAND_PREFIX = SEPARATOR + "settings" + SEPARATOR
+    }
+
+
     private fun setDeviceName() {
         val extras = intent.extras
         deviceName = extras?.getString(DeviceActivity.EXTRA_DEVICE_NAME, "") ?: ""
@@ -69,114 +360,24 @@ class DeviceSettingsActivity : ThemableActivity() {
         } else {
             binding.btOffLayout.chip.isChecked = true
         }
-        setChipColors()
+        updateChipColors()
     }
 
-    private fun setChipColors() {
-        setChipColors(binding.btOnLayout)
-        setChipColors(binding.btOffLayout)
 
-        setChipColors(binding.lowGainLayout)
-        setChipColors(binding.highGainLayout)
-
-        setChipColors(binding.time12hLayout)
-        setChipColors(binding.time4hLayout)
-        setChipColors(binding.time1hLayout)
-        setChipColors(binding.time1mLayout)
-        setChipColors(binding.time10sLayout)
-
-        setChipColors(binding.rate44kLayout)
-        setChipColors(binding.rate32kLayout)
-        setChipColors(binding.rate22kLayout)
-        setChipColors(binding.rate16kLayout)
-        setChipColors(binding.rate8kLayout)
-    }
-
-    private fun setChips() {
-        binding.btOnLayout.chip.setText(R.string.on)
-        binding.btOffLayout.chip.setText(R.string.off)
-        binding.lowGainLayout.chip.setText(R.string.low)
-        binding.highGainLayout.chip.setText(R.string.high)
-
-        binding.time12hLayout.chip.setText(R.string._12h)
-        binding.time4hLayout.chip.setText(R.string._4h)
-        binding.time1hLayout.chip.setText(R.string._1h)
-        binding.time1mLayout.chip.setText(R.string._1m)
-        binding.time10sLayout.chip.setText(R.string._10s)
-
-        binding.rate44kLayout.chip.setText(R.string._44k)
-        binding.rate32kLayout.chip.setText(R.string._32k)
-        binding.rate22kLayout.chip.setText(R.string._22k)
-        binding.rate16kLayout.chip.setText(R.string._16k)
-        binding.rate8kLayout.chip.setText(R.string._8k)
-    }
-
-    private fun setData() {
+    private fun setoldData() {
+        // todo: remove method
         val data = preferencesManager.getDeviceSettings()
-        //gInitialSettings=true;
-        //
-        // #16000 sample rate /0
-        // #10 seconds /1
-        // #loc /2
-        // First item (0) is not used, so firmware dev was counting from 1, not 0.
         val separated = data.split(SEPARATOR)
         if (separated.size < 4) {
             return
         }
-
-        var sampleRateObject: Int? = null
-        try {
-            sampleRateObject = separated[0].toInt()
-        } catch (_: NumberFormatException) {
-        }
-        binding.rate44kLayout.chip.isChecked = false
-        binding.rate32kLayout.chip.isChecked = false
-        binding.rate22kLayout.chip.isChecked = false
-        binding.rate16kLayout.chip.isChecked = false
-        binding.rate8kLayout.chip.isChecked = false
-        val sampleRate = sampleRateObject ?: 16000
-        if (sampleRate <= 8000) {
-            binding.rate8kLayout.chip.isChecked = true
-        } else if (sampleRate <= 16000) {
-            binding.rate16kLayout.chip.isChecked = true
-        } else if (sampleRate <= 22050) {
-            binding.rate22kLayout.chip.isChecked = true
-        } else if (sampleRate <= 32000) {
-            binding.rate32kLayout.chip.isChecked = true
-        } else if (sampleRate <= 44100) {
-            binding.rate44kLayout.chip.isChecked = true
-        }
-
-        var secondsObject: Int? = null
-        try {
-            secondsObject = separated[2].toInt()
-        } catch (_: NumberFormatException) {
-        }
-        val secondsPerFile = secondsObject ?: 3600
-        binding.time12hLayout.chip.isChecked = false
-        binding.time4hLayout.chip.isChecked = false
-        binding.time1hLayout.chip.isChecked = false
-        binding.time1mLayout.chip.isChecked = false
-        binding.time10sLayout.chip.isChecked = false
-        if (secondsPerFile <= 10) {
-            binding.time10sLayout.chip.isChecked = true
-        } else if (secondsPerFile <= 60) {
-            binding.time1mLayout.chip.isChecked = true
-        } else if (secondsPerFile <= 3600) {
-            binding.time1hLayout.chip.isChecked = true
-        } else if (secondsPerFile <= 14400) {
-            binding.time4hLayout.chip.isChecked = true
-        } else if (secondsPerFile <= 43200) {
-            binding.time12hLayout.chip.isChecked = true
-        }
-
         location = separated[3].trim()
         binding.elocBtNameEditText.setText(location)
     }
 
     private fun setMicData() {
-        // todo: must be obtained directly from firmware
-        val data = preferencesManager.getMicData()
+// todo remove
+        val data = "preferencesManager.getMicData()"
         val separated = data.split("#")
         if (separated.size < 2) {
             return
@@ -184,96 +385,11 @@ class DeviceSettingsActivity : ThemableActivity() {
 
         binding.micTypeEditText.setText(separated[1].trim())
 
-        var gainObject: Int? = null
-        try {
-            gainObject = if (separated[2].trim().lowercase().contains("low")) 14 else 0
-        } catch (_: NumberFormatException) {
-        }
-        binding.lowGainLayout.chip.isChecked = false
-        binding.highGainLayout.chip.isChecked = false
-        when (GainType.fromValue(gainObject)) {
-            GainType.Low -> binding.lowGainLayout.chip.isChecked = true
-            GainType.High -> binding.highGainLayout.chip.isChecked = true
-        }
+
+
     }
 
-    private fun setListeners() {
-        binding.sampleRateChipGroup.setOnCheckedStateChangeListener { _, _ -> setChipColors() }
-        binding.fileTimeChipGroup.setOnCheckedStateChangeListener { _, _ -> setChipColors() }
-        binding.micGainChipGroup.setOnCheckedStateChangeListener { _, _ -> setChipColors() }
-        binding.btStateChipGroup.setOnCheckedStateChangeListener { _, _ -> setChipColors() }
-        binding.commandLineButton.setOnClickListener { runCommandLine() }
-        binding.recordingButton.setOnClickListener { runRecordingCommand() }
-        binding.microphoneTypeButton.setOnClickListener { runMicTypeCommand() }
-        binding.microphoneGainButton.setOnClickListener { runMicGainCommand() }
-        binding.fileHeaderButton.setOnClickListener { runFileHeaderCommand() }
-        binding.hideAdvancedOptionsButton.setOnClickListener { hideAdvancedOperations() }
-        binding.showAdvancedOptionsButton.setOnClickListener { showAdvancedOperations() }
-        binding.instructionsButton.setOnClickListener { showInstructions() }
-        binding.updateFirmwareButton.setOnClickListener { confirmFirmwareUpdate() }
-        binding.bluetoothRecordingStateButton.setOnClickListener { saveBtRecordingState() }
-        binding.toolbar.setNavigationOnClickListener { goBack() }
-    }
 
-    private fun hideAdvancedOperations() {
-        toggleAdvancedOperations(false)
-    }
-
-    private fun showAdvancedOperations() {
-        toggleAdvancedOperations(true)
-    }
-
-    private fun toggleAdvancedOperations(show: Boolean) {
-        for (i in 0 until binding.cardContainer.childCount) {
-            val child = binding.cardContainer.getChildAt(i)
-            val id = child.id
-            if ((R.id.recording_card == id) || (R.id.instructions_button == id)) {
-                continue
-            }
-            child.visibility = if (show) {
-                View.VISIBLE
-            } else {
-                View.GONE
-            }
-        }
-        if (show) {
-            binding.hideAdvancedOptionsButton.visibility = View.VISIBLE
-            binding.showAdvancedOptionsButton.visibility = View.GONE
-        } else {
-            binding.hideAdvancedOptionsButton.visibility = View.GONE
-            binding.showAdvancedOptionsButton.visibility = View.VISIBLE
-        }
-    }
-
-    private fun getSampleRate(): Int {
-        return if (binding.rate44kLayout.chip.isChecked) {
-            44100
-        } else if (binding.rate32kLayout.chip.isChecked) {
-            32000
-        } else if (binding.rate22kLayout.chip.isChecked) {
-            22050
-        } else if (binding.rate16kLayout.chip.isChecked) {
-            16000
-        } else {
-            8000
-        }
-    }
-
-    private fun getSecondsPerFile(): Int {
-        return if (binding.time12hLayout.chip.isChecked) {
-            43200
-        } else if (binding.time4hLayout.chip.isChecked) {
-            14400
-        } else if (binding.time1hLayout.chip.isChecked) {
-            3600
-        } else if (binding.time1mLayout.chip.isChecked) {
-            60
-        } else if (binding.time10sLayout.chip.isChecked) {
-            10
-        } else {
-            60
-        }
-    }
 
     private fun runCommand(command: String) {
         hideKeyboard()
@@ -309,8 +425,8 @@ class DeviceSettingsActivity : ThemableActivity() {
                 getString(R.string.invalid_file_header_name)
             )
         } else {
-            val secondsPerFile = getSecondsPerFile()
-            val sampleRate = getSampleRate()
+            val secondsPerFile = "getSecondsPerFile()"
+            val sampleRate = "getSampleRate()"
             val command =
                 COMMAND_PREFIX + sampleRate + SEPARATOR + secondsPerFile + SEPARATOR + location
             runCommand(command)
@@ -328,16 +444,6 @@ class DeviceSettingsActivity : ThemableActivity() {
             val command = getString(R.string.set_mic_type_template, type)
             runCommand(command)
         }
-    }
-
-    private fun runMicGainCommand() {
-        val gain = if (binding.lowGainLayout.chip.isChecked) {
-            GainType.Low
-        } else {
-            GainType.High
-        }
-        val command = getString(R.string.set_mic_gain_template, gain.value)
-        runCommand(command)
     }
 
     private fun runFileHeaderCommand() {

@@ -35,7 +35,7 @@ class SimpleGauge : View {
     private var lowRange = 30.0f
     private var alwaysFilled = true
     private val arc = RectF(0f, 0f, 0f, 0f)
-    var inErrorMode = true
+    var errorMode = false
     private val exclamationMarkBody = Path()
 
     constructor(context: Context) : super(context) {
@@ -52,6 +52,7 @@ class SimpleGauge : View {
             val show =
                 typedArray.getBoolean(R.styleable.SimpleGauge_showDiscreteColors, false)
             setShowDiscreteColors(show)
+            errorMode = typedArray.getBoolean(R.styleable.SimpleGauge_errorMode, false)
             alwaysFilled = typedArray.getBoolean(R.styleable.SimpleGauge_alwaysFilled, true)
             normalColor = typedArray.getColor(R.styleable.SimpleGauge_normalColor, Color.GREEN)
             lowColor = typedArray.getColor(R.styleable.SimpleGauge_lowColor, Color.YELLOW)
@@ -158,7 +159,7 @@ class SimpleGauge : View {
         canvas.drawColor(Color.TRANSPARENT)
 
         updateData()
-        if (inErrorMode) {
+        if (errorMode) {
             pen.color = criticalColor
             canvas.drawCircle(centerX, centerY, radius, pen)
 

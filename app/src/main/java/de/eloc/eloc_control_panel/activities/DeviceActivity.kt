@@ -13,12 +13,12 @@ import com.google.openlocationcode.OpenLocationCode
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityDeviceBinding
 import de.eloc.eloc_control_panel.App
-import de.eloc.eloc_control_panel.data.DeviceDriver
+import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.data.ConnectionStatus
 import de.eloc.eloc_control_panel.data.DeviceState
-import de.eloc.eloc_control_panel.data.GainType
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
+import de.eloc.eloc_control_panel.driver.ElocData
 import de.eloc.eloc_control_panel.interfaces.BluetoothDeviceListener
 import org.json.JSONObject
 import java.text.NumberFormat
@@ -39,38 +39,6 @@ class DeviceActivity : AppCompatActivity() {
         const val EXTRA_DEVICE_ADDRESS = "device_address"
         const val EXTRA_DEVICE_NAME = "device_name"
         const val EXTRA_RANGER_NAME = "ranger_name"
-
-        private const val PATH_SEPARATOR = ":"
-        private const val KEY_CMD = "cmd"
-        private const val KEY_MICROPHONE_GAIN = "MicBitShift"
-        private const val KEY_MICROPHONE_TYPE = "MicType"
-        private const val KEY_MICROPHONE_SAMPLE_RATE = "MicSampleRate"
-        private const val KEY_SECONDS_PER_FILE = "secondsPerFile"
-        private const val KEY_MICROPHONE = "mic"
-        private const val KEY_CONFIG = "config"
-        private const val KEY_SESSION = "session"
-        private const val KEY_DEVICE = "device"
-        private const val KEY_RECORDING_TIME = "recordingTime[h]"
-        private const val KEY_UPTIME = "Uptime[h]"
-        private const val KEY_FILE_HEADER = "fileHeader"
-        private const val KEY_TOTAL_RECORDING_TIME = "totalRecordingTime[h]"
-        private const val KEY_BLUETOOTH_ENABLED_DURING_REC = "bluetoothEnableDuringRecord"
-        private const val KEY_LOCATION_CODE = "locationCode"
-        private const val KEY_SDCARD_SIZE = "SdCardSize[GB]"
-        private const val KEY_SDCARD_FREE_GB = "SdCardFreeSpace[GB]"
-        private const val KEY_SDCARD_FREE_PERC = "SdCardFreeSpace[%]"
-        private const val KEY_BATTERY = "battery"
-        private const val KEY_TYPE = "type"
-        private const val KEY_BATTERY_LEVEL = "SoC[%]"
-        private const val KEY_VOLTAGE = "voltage[V]"
-        private const val KEY_IDENTIFIER = "identifier"
-        private const val KEY_PAYLOAD = "payload"
-        private const val KEY_ECODE = "ecode"
-        private const val KEY_STATE = "state"
-        private const val KEY_RECORDING_STATE = "recordingState"
-        private const val KEY_FIRMWARE = "firmware"
-        private const val CMD_GET_CONFIG = "getConfig"
-        private const val CMD_GET_STATUS = "getStatus"
         private const val CMD_SET_RECORD_MODE = "setRecordMode"
     }
 
@@ -83,14 +51,12 @@ class DeviceActivity : AppCompatActivity() {
     private var deviceName = ""
     private var rangerName = ""
     private var refreshing = false
-    private var recordingSeconds = 0.0
     private val scrollChangeListener =
         View.OnScrollChangeListener { _, _, y, _, _ ->
             binding.swipeRefreshLayout.isEnabled = (y <= 5)
         }
 
     private val bluetoothDeviceListener = object : BluetoothDeviceListener() {
-
         override fun onRead(data: ByteArray) {
             try {
                 val json = String(data)
@@ -111,7 +77,7 @@ class DeviceActivity : AppCompatActivity() {
             binding.stopButton.isClickable = false
             binding.stopButton.isFocusable = false
             when (field) {
-                DeviceState.Disabled, DeviceState.RecordOffDetectOff, DeviceState.RecordOff -> {
+                DeviceState.Disabled, DeviceState.RecordOffDetectOff, DeviceState.RecordOff, DeviceState.Idle -> {
                     binding.startRecordingButton.visibility = View.VISIBLE
                     binding.startDetectingButton.visibility = View.VISIBLE
                 }
@@ -147,10 +113,9 @@ class DeviceActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        setConfigData()
+        setStatusData()
         startLocationUpdates()
-        //connect()
-        // todo: set appropritate state for device on connection
-        // todo: make sure second call to connect() does not cause crash
     }
 
     override fun onPause() {
@@ -226,7 +191,7 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun parseResponse(json: String) {
-        val cmdField = "\"$KEY_CMD\""
+        val cmdField = "\"${DeviceDriver.KEY_CMD}\""
         val isResponse = json.contains(cmdField)
         if (isResponse) {
             runOnUiThread {
@@ -246,47 +211,73 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun processJson(root: JSONObject) {
-        val command = root.getString(KEY_CMD).lowercase()
-        when (command) {
+        when (root.getString(DeviceDriver.KEY_CMD).lowercase()) {
             CMD_SET_RECORD_MODE.lowercase() -> {
                 setRecordingMode(root)
                 DeviceDriver.getStatus()
             }
 
-            CMD_GET_CONFIG.lowercase() -> {
-                setMicrophoneType(root)
-                setMicrophoneGain(root)
-                setMicrophoneSampleRate(root)
-                setHoursPerFile(root)
-                setLastLocation(root)
-                setBluetoothDuringRecording(root)
-                setFileHeader(root)
+            DeviceDriver.CMD_GET_CONFIG.lowercase() -> {
+                ElocData.parseConfig(root)
+                setConfigData()
             }
 
-            CMD_GET_STATUS.lowercase() -> {
-                setSessionID(root)
-                setRecordingTime(root)
-                setRecSinceBoot(root)
-                setFirmwareVersion(root)
-                setUptime(root)
-                setCurrentBatteryLevel(root)
-                setBatteryVoltage(root)
-                setBatteryType(root)
-                setSDCardFreeGB(root)
-                setSDCardFreePerc(root)
-                setSDCardSize(root)
-                updateUi(root)
+            DeviceDriver.CMD_GET_STATUS.lowercase() -> {
+                ElocData.parseStatus(root)
+                setStatusData()
             }
 
             else -> {}
         }
     }
 
+    private fun setStatusData() {
+
+        binding.sessionIdItem.itemValue = ElocData.sessionId
+        binding.recSinceBootItem.itemValue =
+            TimeHelper.formatHours(this, ElocData.recHoursSinceBoot)
+        binding.firmwareVersionItem.itemValue = ElocData.version
+        binding.uptimeItem.itemValue = TimeHelper.formatHours(this, ElocData.uptimeHours)
+        val level = ElocData.batteryLevel
+        binding.batteryStatus.text = getString(R.string.gauge_battery_level, level.toInt())
+        binding.batteryGauge.updateValue(level)
+        binding.batteryVoltItem.itemValue = formatNumber(ElocData.batteryVoltage, "V")
+        binding.batteryTypeItem.itemValue = ElocData.batteryType
+        val free = ElocData.freeSpaceGb
+        binding.storageGauge.errorMode = (free <= 0)
+        binding.storageStatus.text = if (binding.storageGauge.errorMode)
+            ""
+        else
+            getString(R.string.gauge_free_space, free.toInt())
+        binding.storageGauge.updateValue(ElocData.freeSpacePercentage)
+        val gb = ElocData.sdCardSizeGb
+        if (gb <= 0.0) {
+            binding.storageTextView.text = getString(R.string.no_sd_card)
+            binding.storageGauge.updateValue(0.0)
+        } else {
+            binding.storageTextView.text = formatNumber(gb, "GB")
+        }
+        setDeviceState(ElocData.deviceState)
+    }
+
+    private fun setConfigData() {
+        val prettyRate =
+            formatNumber(ElocData.sampleRate / 1000, "kHz", maxFractionDigits = 0)
+        binding.sampleRateItem.itemValue = prettyRate
+        binding.microphoneTypeItem.itemValue = ElocData.microphoneType
+        binding.gainItem.itemValue = ElocData.microphoneGain.toString()
+        binding.timePerFileItem.itemValue =
+            TimeHelper.formatSeconds(this, ElocData.secondsPerFile, useSeconds = true)
+        binding.lastLocationItem.itemValue = ElocData.lastLocation
+        val enabledLabel =
+            getString(if (ElocData.bluetoothEnabledDuringRecording) R.string.on else R.string.off)
+        binding.bluetoothDuringRecordingItem.itemValue = enabledLabel
+        binding.fileHeaderItem.itemValue = ElocData.fileHeader
+    }
+
     private fun connect() {
         binding.toolbar.visibility = View.GONE
-        binding.startDetectingButton.visibility = View.GONE
-        binding.startRecordingButton.visibility = View.GONE
-        binding.contentScrollView.visibility = View.GONE
+        binding.contentLayout.visibility = View.GONE
         binding.loadingLinearLayout.visibility = View.VISIBLE
         binding.connectionProgressIndicator.visibility = View.VISIBLE
         binding.connectionStatusTextView.setText(R.string.connecting)
@@ -299,6 +290,7 @@ class DeviceActivity : AppCompatActivity() {
         binding.startRecordingButton.setOnClickListener { recordButtonClicked() }
         binding.stopButton.setOnClickListener { stopRecording() }
         binding.toolbar.setNavigationOnClickListener { goBack() }
+        binding.backButton.setOnClickListener { goBack() }
         binding.toolbar.setOnMenuItemClickListener {
             if (it.itemId == R.id.mnu_settings) {
                 openSettings()
@@ -316,7 +308,7 @@ class DeviceActivity : AppCompatActivity() {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            binding.contentScrollView.setOnScrollChangeListener(scrollChangeListener)
+            binding.scrollView.setOnScrollChangeListener(scrollChangeListener)
         }
     }
 
@@ -347,38 +339,38 @@ class DeviceActivity : AppCompatActivity() {
             binding.toolbar.menu.clear()
             when (status) {
                 ConnectionStatus.Active -> {
-                    binding.toolbar.visibility = View.VISIBLE
-                    binding.startDetectingButton.visibility = View.VISIBLE
-                    binding.startRecordingButton.visibility = View.VISIBLE
-                    binding.contentScrollView.visibility = View.VISIBLE
-                    binding.loadingLinearLayout.visibility = View.GONE
                     binding.swipeRefreshLayout.isEnabled = true
+                    toggleContent(true)
                     menuInflater.inflate(R.menu.app_bar_settings, binding.toolbar.menu)
-                    getDeviceInfo()
+                    DeviceDriver.getDeviceInfo()
                 }
 
                 ConnectionStatus.Inactive -> {
-                    binding.toolbar.visibility = View.VISIBLE
-                    binding.startDetectingButton.visibility = View.GONE
-                    binding.startRecordingButton.visibility = View.GONE
-                    binding.contentScrollView.visibility = View.GONE
-                    binding.loadingLinearLayout.visibility = View.VISIBLE
+                    binding.swipeRefreshLayout.isEnabled = true
+                    toggleContent(false)
                     binding.connectionProgressIndicator.visibility = View.GONE
                     binding.connectionStatusTextView.setText(R.string.disconnected_swipe_to_reconnect)
-                    binding.swipeRefreshLayout.isEnabled = true
                 }
 
                 ConnectionStatus.Pending -> {
-                    binding.toolbar.visibility = View.GONE
-                    binding.startDetectingButton.visibility = View.GONE
-                    binding.startRecordingButton.visibility = View.GONE
-                    binding.contentScrollView.visibility = View.GONE
-                    binding.loadingLinearLayout.visibility = View.VISIBLE
+                    binding.swipeRefreshLayout.isEnabled = false
+                    toggleContent(false)
                     binding.connectionProgressIndicator.visibility = View.VISIBLE
                     binding.connectionStatusTextView.setText(R.string.connecting)
-                    binding.swipeRefreshLayout.isEnabled = false
                 }
             }
+        }
+    }
+
+    private fun toggleContent(visible: Boolean) {
+        if (visible) {
+            binding.toolbar.visibility = View.VISIBLE
+            binding.contentLayout.visibility = View.VISIBLE
+            binding.loadingLinearLayout.visibility = View.GONE
+        } else {
+            binding.toolbar.visibility = View.GONE
+            binding.contentLayout.visibility = View.GONE
+            binding.loadingLinearLayout.visibility = View.VISIBLE
         }
     }
 
@@ -406,159 +398,9 @@ class DeviceActivity : AppCompatActivity() {
         binding.gpsStatus.text = formatNumber(locationAccuracy, "m", 0)
     }
 
-    private fun setMicrophoneSampleRate(jsonObject: JSONObject) {
-        // Sample rate
-        val sampleRatePath =
-            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_MICROPHONE$PATH_SEPARATOR$KEY_MICROPHONE_SAMPLE_RATE"
-        val sampleRate = getJSONNumberAttribute(sampleRatePath, jsonObject)
-        val prettyRate = formatNumber(sampleRate / 1000, "kHz", maxFractionDigits = 0)
-        binding.sampleRateItem.itemValue = prettyRate
-    }
-
-    private fun setHoursPerFile(jsonObject: JSONObject) {
-        val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_SECONDS_PER_FILE"
-        val secondsPerFile = getJSONNumberAttribute(path, jsonObject)
-        val hoursPerFile = TimeHelper.toHours(secondsPerFile)
-        binding.hoursPerFileItem.itemValue = formatNumber(hoursPerFile, "h")
-    }
-
-    private fun setLastLocation(jsonObject: JSONObject) {
-        val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_LOCATION_CODE"
-        val location = getJSONStringAttribute(path, jsonObject)
-        binding.lastLocationItem.itemValue = location
-    }
-
-    private fun setFileHeader(jsonObject: JSONObject) {
-        val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_FILE_HEADER"
-        val fileHeader = getJSONStringAttribute(path, jsonObject)
-        binding.fileHeaderItem.itemValue = fileHeader
-    }
-
-    private fun setBluetoothDuringRecording(jsonObject: JSONObject) {
-        val path =
-            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_BLUETOOTH_ENABLED_DURING_REC"
-        val enabled = getJSONBooleanAttribute(path, jsonObject)
-        val enabledLabel = getString(if (enabled) R.string.on else R.string.off)
-        binding.bluetoothDuringRecordingItem.itemValue = enabledLabel
-    }
-
-    private fun setSessionID(jsonObject: JSONObject) {
-        val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_IDENTIFIER"
-        val sessionId = getJSONStringAttribute(path, jsonObject)
-        binding.sessionIdItem.itemValue = sessionId
-    }
-
-    private fun setRecordingTime(jsonObject: JSONObject) {
-        val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_RECORDING_TIME"
-        val hours = getJSONNumberAttribute(path, jsonObject)
-        recordingSeconds = TimeHelper.toSeconds(hours)
-    }
-
-    private fun setRecSinceBoot(jsonObject: JSONObject) {
-        val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_TOTAL_RECORDING_TIME"
-        val hours = getJSONNumberAttribute(path, jsonObject)
-        binding.recSinceBootItem.itemValue = TimeHelper.formatHours(this, hours)
-    }
-
-    private fun setFirmwareVersion(jsonObject: JSONObject) {
-        val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_FIRMWARE"
-        val version = getJSONStringAttribute(path, jsonObject)
-        binding.firmwareVersionItem.itemValue = version
-    }
-
-    private fun setUptime(jsonObject: JSONObject) {
-        val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_UPTIME"
-        val hours = getJSONNumberAttribute(path, jsonObject)
-        val time = TimeHelper.formatHours(this, hours)
-        binding.uptimeItem.itemValue = time
-    }
-
-    private fun setBatteryVoltage(jsonObject: JSONObject) {
-        val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_BATTERY$PATH_SEPARATOR$KEY_VOLTAGE"
-        val volts = getJSONNumberAttribute(path, jsonObject)
-        binding.batteryVoltItem.itemValue = formatNumber(volts, "V")
-    }
-
-    private fun setCurrentBatteryLevel(jsonObject: JSONObject) {
-        val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_BATTERY$PATH_SEPARATOR$KEY_BATTERY_LEVEL"
-        val level = getJSONNumberAttribute(path, jsonObject)
-        binding.batteryStatus.text = getString(R.string.gauge_battery_level, level.toInt())
-        binding.batteryGauge.updateValue(level)
-    }
-
-    private fun setBatteryType(jsonObject: JSONObject) {
-        val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_BATTERY$PATH_SEPARATOR$KEY_TYPE"
-        val batteryType = getJSONStringAttribute(path, jsonObject)
-        binding.batteryTypeItem.itemValue = batteryType
-    }
-
-    private fun setSDCardSize(jsonObject: JSONObject) {
-        val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_SDCARD_SIZE"
-        val gb = getJSONNumberAttribute(path, jsonObject)
-        if (gb <= 0.0) {
-            binding.storageTextView.text = getString(R.string.no_sd_card)
-            binding.storageGauge.updateValue(0.0)
-        } else {
-            binding.storageTextView.text = formatNumber(gb, "GB")
-        }
-    }
-
-    private fun updateUi(jsonObject: JSONObject) {
-        val path =
-            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_RECORDING_STATE$PATH_SEPARATOR$KEY_STATE"
-        val raw = getJSONStringAttribute(path, jsonObject).lowercase()
-        val state = DeviceState.parse(raw)
-        setDeviceState(state)
-    }
-
-    private fun setSDCardFreePerc(jsonObject: JSONObject) {
-        val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_SDCARD_FREE_PERC"
-        val free = getJSONNumberAttribute(path, jsonObject)
-        binding.storageGauge.updateValue(free)
-    }
-
-    private fun setSDCardFreeGB(jsonObject: JSONObject) {
-        val path = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_SDCARD_FREE_GB"
-        val free = getJSONNumberAttribute(path, jsonObject)
-        if (free <= 0) {
-            binding.storageStatus.text = ""
-            binding.storageErrorIcon.visibility = View.VISIBLE
-        } else {
-            binding.storageStatus.text = getString(R.string.gauge_free_space, free.toInt())
-            binding.storageErrorIcon.visibility = View.INVISIBLE
-        }
-
-    }
-
     private fun setRecordingMode(jsonObject: JSONObject) {
-        val resultCode = getJSONNumberAttribute(KEY_ECODE, jsonObject).toInt()
-        val commandSucceeded = resultCode == 0
-        if (commandSucceeded) {
-            val raw = getJSONStringAttribute(
-                "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_RECORDING_STATE",
-                jsonObject
-            )
-            val state = DeviceState.parse(raw)
-            setDeviceState(state)
-        }
-    }
-
-    private fun setMicrophoneType(jsonObject: JSONObject) {
-        val typePath =
-            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_MICROPHONE$PATH_SEPARATOR$KEY_MICROPHONE_TYPE"
-        val micType = getJSONStringAttribute(typePath, jsonObject)
-        binding.microphoneTypeItem.itemValue = micType
-    }
-
-    private fun setMicrophoneGain(jsonObject: JSONObject) {
-        val gainPath =
-            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_MICROPHONE$PATH_SEPARATOR$KEY_MICROPHONE_GAIN"
-        val micBitShift = getJSONStringAttribute(gainPath, jsonObject)
-        val gainText = when (GainType.fromValue(micBitShift)) {
-            GainType.Low -> getString(R.string.low)
-            GainType.High -> getString(R.string.high)
-        }
-        binding.gainItem.itemValue = gainText
+        ElocData.parseDeviceState(jsonObject)
+        setDeviceState(ElocData.deviceState)
     }
 
     private fun formatNumber(number: Double, units: String, maxFractionDigits: Int = 2): String {
@@ -566,79 +408,6 @@ class DeviceActivity : AppCompatActivity() {
         format.maximumFractionDigits = maxFractionDigits
         format.minimumFractionDigits = 0
         return format.format(number) + units
-    }
-
-    private fun getDeviceInfo() {
-        DeviceDriver.getStatus()
-        DeviceDriver.getConfig()
-    }
-
-    private fun getJSONBooleanAttribute(
-        path: String,
-        jsonObject: JSONObject,
-        defaultValue: Boolean = false,
-    ): Boolean {
-        try {
-            val (key, node) = getJSONAttributeNode(path, jsonObject)
-            return node?.getBoolean(key) ?: defaultValue
-        } catch (_: Exception) {
-
-        }
-        return defaultValue
-    }
-
-    private fun getJSONStringAttribute(
-        path: String,
-        jsonObject: JSONObject,
-        defaultValue: String = ""
-    ): String {
-        var attribute = defaultValue
-        try {
-            val (key, node) = getJSONAttributeNode(path, jsonObject)
-            attribute = node?.getString(key) ?: defaultValue
-        } catch (_: Exception) {
-
-        }
-        return attribute
-    }
-
-    private fun getJSONNumberAttribute(
-        path: String,
-        jsonObject: JSONObject,
-        defaultValue: Double = 0.0
-    ): Double {
-        try {
-            val (key, node) = getJSONAttributeNode(path, jsonObject)
-            return node?.getDouble(key) ?: defaultValue
-        } catch (_: Exception) {
-
-        }
-        return defaultValue
-    }
-
-    private fun getJSONAttributeNode(
-        path: String,
-        jsonObject: JSONObject
-    ): Pair<String, JSONObject?> {
-        var result: JSONObject? = null
-        var key = ""
-        try {
-            val parts = path.split(PATH_SEPARATOR)
-            val iterator = parts.iterator()
-            var node = jsonObject
-            while (iterator.hasNext()) {
-                val name = iterator.next()
-                if (!iterator.hasNext()) {
-                    result = node
-                    key = name
-                } else {
-                    node = node.getJSONObject(name)
-                }
-            }
-        } catch (_: Exception) {
-
-        }
-        return (key to result)
     }
 
     private fun showSDCardError() {

@@ -130,7 +130,7 @@
     <string name="medium">Medium</string>
     <string name="menu">Menu</string>
     <string name="mic_type_missing">You must enter a mic type to set!</string>
-    <string name="microphone_gain">Microphone gain</string>
+    <string name="microphone_gain">Microphone Gain</string>
 
     <string name="my_eloc">My ELOC</string>
     <string name="new_email_address">New email address</string>
@@ -164,7 +164,7 @@
     <string name="rec_state_wait">Please wait…</string>
     <string name="rec_since_boot">Rec Since Boot</string>
     <string name="recorder">Recorder</string>
-    <string name="recording_time_per_file">Recording time per file</string>
+    <string name="recording_time_per_file">Recording Time Per File</string>
     <string name="redirect_to_sign_in">You will be redirected to the sign in screen.</string>
     <string name="refresh">Refresh</string>
     <string name="refresh_list">Refresh List</string>

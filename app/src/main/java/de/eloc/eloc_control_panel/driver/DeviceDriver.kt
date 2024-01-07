@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.data
+package de.eloc.eloc_control_panel.driver
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
@@ -8,6 +8,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import de.eloc.eloc_control_panel.App
+import de.eloc.eloc_control_panel.data.ConnectionStatus
+import de.eloc.eloc_control_panel.data.GainType
+import de.eloc.eloc_control_panel.data.SampleRate
+import de.eloc.eloc_control_panel.data.TimePerFile
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
@@ -17,6 +21,12 @@ import java.util.UUID
 import java.util.concurrent.Executors
 
 object DeviceDriver : Runnable {
+    const val KEY_CMD = "cmd"
+    const val KEY_ECODE = "ecode"
+    const val CMD_GET_CONFIG = "getConfig"
+    const val CMD_GET_STATUS = "getStatus"
+    const val CMD_SET_CONFIG = "setConfig"
+    const val CMD_SET_STATUS = "setStatus"
     private var connecting = false
     private var disconnecting = false
     private const val NEWLINE = "\n"
@@ -81,6 +91,16 @@ object DeviceDriver : Runnable {
         disconnecting = false
     }
 
+    fun addCommandListener(listener: SocketListener?) {
+        if ((listener != null) && (!dataListenerList.contains(listener))) {
+            dataListenerList.add(listener)
+        }
+    }
+
+    fun removeCommandListener(listener: SocketListener) {
+        dataListenerList.remove(listener)
+    }
+
     fun write(command: String) {
         try {
             if (bluetoothSocket?.isConnected == true) {
@@ -118,6 +138,32 @@ object DeviceDriver : Runnable {
     private fun setLocation(code: String, accuracy: Int) {
         val command =
             "setConfig#cfg={\"device\":{\"locationCode\":\"$code\",\"locationAccuracy\":$accuracy}}"
+        write(command)
+    }
+
+    fun setSampleRate(rate: SampleRate) {
+        if (rate != SampleRate.Unknown) {
+            val command = "setConfig#cfg={\"mic\":{\"MicSampleRate\":${rate.code}}}"
+            write(command)
+        }
+    }
+
+    fun setTimePerFile(time: TimePerFile) {
+        if (time != TimePerFile.Unknown) {
+            val command = "setConfig#cfg={\"config\":{\"secondsPerFile\":${time.seconds}}}"
+            write(command)
+        }
+    }
+
+    fun setMicrophoneGain(gain: GainType) {
+        if (gain != GainType.Unknown) {
+            val command = "setConfig#cfg={\"mic\":{\"MicBitShift\":${gain.value}}}"
+            write(command)
+        }
+    }
+
+    fun setSDCardLogs(enabled: Boolean) {
+        val command = "setConfig#cfg={\"config\":{\"logConfig\":{\"logToSdCard\":$enabled}}}"
         write(command)
     }
 
@@ -177,9 +223,7 @@ object DeviceDriver : Runnable {
                 // todo : remove
                 println(e.localizedMessage)
             }
-            if ((dataListener != null) && (!dataListenerList.contains(dataListener))) {
-                dataListenerList.add(dataListener)
-            }
+            addCommandListener(dataListener)
         } catch (e: Exception) {
             hadError = true
         } finally {
@@ -266,5 +310,10 @@ object DeviceDriver : Runnable {
 
     fun getConfig() {
         write("getConfig")
+    }
+
+    fun getDeviceInfo() {
+        getStatus()
+        getConfig()
     }
 }

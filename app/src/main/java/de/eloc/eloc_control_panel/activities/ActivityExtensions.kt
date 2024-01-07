@@ -39,7 +39,7 @@ fun AppCompatActivity.openUrl(address: String) {
 fun CoordinatorLayout.showSnack(message: String) =
     Snackbar
         .make(this, message, Snackbar.LENGTH_LONG)
-        .setBackgroundTint(ContextCompat.getColor(context, R.color.colorPrimaryDark))
+        .setBackgroundTint(ContextCompat.getColor(context, R.color.colorPrimary))
         .setTextColor(Color.WHITE)
         .show()
 
