@@ -6,23 +6,19 @@ import android.location.LocationListener
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.openlocationcode.OpenLocationCode
-import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.databinding.ActivityDeviceBinding
 import de.eloc.eloc_control_panel.App
-import de.eloc.eloc_control_panel.driver.DeviceDriver
+import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
-import de.eloc.eloc_control_panel.data.DeviceState
+import de.eloc.eloc_control_panel.data.RecordState
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
-import de.eloc.eloc_control_panel.driver.ElocData
-import de.eloc.eloc_control_panel.interfaces.BluetoothDeviceListener
-import org.json.JSONObject
-import java.text.NumberFormat
-import java.util.Locale
+import de.eloc.eloc_control_panel.databinding.ActivityDeviceBinding
+import de.eloc.eloc_control_panel.driver.DeviceDriver
+import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
+import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 
 // todo: show free space text under storage gauge
 // todo: show % of free storage in gauge after firmware update
@@ -35,39 +31,52 @@ import java.util.Locale
 
 class DeviceActivity : AppCompatActivity() {
     companion object {
-
         const val EXTRA_DEVICE_ADDRESS = "device_address"
-        const val EXTRA_DEVICE_NAME = "device_name"
         const val EXTRA_RANGER_NAME = "ranger_name"
         private const val CMD_SET_RECORD_MODE = "setRecordMode"
     }
 
     private var hasSDCardError = false
-    private lateinit var settingsLauncher: ActivityResultLauncher<Intent>
     private var locationAccuracy = 100.0 // Start with very inaccurate value of 100 meters.
     private var locationCode = "UNKNOWN"
     private lateinit var binding: ActivityDeviceBinding
     private var deviceAddress = ""
-    private var deviceName = ""
     private var rangerName = ""
+    private var firstResume = true
     private var refreshing = false
     private val scrollChangeListener =
         View.OnScrollChangeListener { _, _, y, _, _ ->
             binding.swipeRefreshLayout.isEnabled = (y <= 5)
         }
 
-    private val bluetoothDeviceListener = object : BluetoothDeviceListener() {
-        override fun onRead(data: ByteArray) {
-            try {
-                val json = String(data)
-                runOnUiThread { parseResponse(json) }
-            } catch (_: Exception) {
+    private val getCommandCompletedListener = GetCommandCompletedCallback {
+        runOnUiThread {
+            // Hide the progress indicator when data is received i.e., there is a connection
+            binding.swipeRefreshLayout.isRefreshing = false
 
+            when (it) {
+                CommandType.GetStatus -> setStatusData()
+                CommandType.GetConfig -> setConfigData()
+                else -> {}
             }
         }
     }
 
-    private var deviceState = DeviceState.Disabled
+    private val setCommandCompletedCallback = SetCommandCompletedCallback {success, type ->
+        runOnUiThread {
+            when(type) {
+                CommandType.SetRecordMode -> {
+                    setDeviceState(DeviceDriver.general.recordingState)
+                    if (success) {
+                        DeviceDriver.getStatus()
+                    }
+                }
+                else -> {}
+            }
+        }
+    }
+
+    private var recordingState = RecordState.Invalid
         set(value) {
             field = value
             // todo: update recording/detecting since labels correctly
@@ -77,12 +86,12 @@ class DeviceActivity : AppCompatActivity() {
             binding.stopButton.isClickable = false
             binding.stopButton.isFocusable = false
             when (field) {
-                DeviceState.Disabled, DeviceState.RecordOffDetectOff, DeviceState.RecordOff, DeviceState.Idle -> {
+                RecordState.Invalid, RecordState.RecordOffDetectOff -> {
                     binding.startRecordingButton.visibility = View.VISIBLE
                     binding.startDetectingButton.visibility = View.VISIBLE
                 }
 
-                DeviceState.Continuous, DeviceState.RecordOn -> {
+                else -> {
                     binding.stopButton.text = getString(R.string.stop_recording)
                     binding.stopButton.visibility = View.VISIBLE
                     binding.stopButton.isClickable = true
@@ -98,23 +107,27 @@ class DeviceActivity : AppCompatActivity() {
                     binding.stopButton.isClickable = true
                     binding.stopButton.isFocusable = true
                 }*/
-                else -> {}
             }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDeviceBinding.inflate(layoutInflater)
+        DeviceDriver.addOnSetCommandCompletedListener(setCommandCompletedCallback)
+        DeviceDriver.addOnGetCommandCompletedListener(getCommandCompletedListener)
         setContentView(binding.root)
-        setDeviceState(DeviceState.Disabled)
-        setLaunchers()
+        setDeviceState(RecordState.Invalid)
         initialize()
     }
 
     override fun onResume() {
         super.onResume()
-        setConfigData()
-        setStatusData()
+        if (firstResume) {
+            firstResume = false
+        } else {
+            setConfigData()
+            setStatusData()
+        }
         startLocationUpdates()
     }
 
@@ -127,6 +140,8 @@ class DeviceActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        DeviceDriver.removeOnSetCommandCompletedListener(setCommandCompletedCallback)
+        DeviceDriver.removeOnGetCommandCompletedListener(getCommandCompletedListener)
         DeviceDriver.disconnect()
     }
 
@@ -141,138 +156,64 @@ class DeviceActivity : AppCompatActivity() {
                 ::goBack
             )
         } else {
-            deviceName = extras?.getString(EXTRA_DEVICE_NAME, "")?.trim() ?: ""
-            if (deviceName.isEmpty()) {
+            rangerName = extras?.getString(EXTRA_RANGER_NAME, "")?.trim() ?: ""
+            if (rangerName.isEmpty()) {
                 showModalAlert(
                     getString(R.string.required),
-                    getString(R.string.device_name_required),
+                    getString(R.string.ranger_name_required),
                     ::goBack
                 )
             } else {
-                rangerName = extras?.getString(EXTRA_RANGER_NAME, "")?.trim() ?: ""
-                if (rangerName.isEmpty()) {
-                    showModalAlert(
-                        getString(R.string.required),
-                        getString(R.string.ranger_name_required),
-                        ::goBack
-                    )
-                } else {
-                    binding.toolbar.title = deviceName
-                    binding.toolbar.subtitle = getString(R.string.eloc_user, rangerName)
-                    binding.appVersionItem.itemValue = App.versionName
-                    updateGpsViews()
-                    setListeners()
-                    connect()
-                }
+                binding.toolbar.title = getString(R.string.getting_node_name)
+                binding.toolbar.subtitle = getString(R.string.eloc_user, rangerName)
+                binding.appVersionItem.valueText = App.versionName
+                updateGpsViews()
+                setListeners()
+                connect()
             }
-        }
-    }
-
-    private fun setLaunchers() {
-        settingsLauncher = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { result ->
-            if (result.resultCode == RESULT_OK) {
-                val intent = result.data
-                if (intent != null) {
-                    val extras = intent.extras
-                    if (extras != null) {
-                        val command = extras.getString(DeviceSettingsActivity.COMMAND, "")
-                        if (command.isNotEmpty()) {
-                            DeviceDriver.write(command)
-                            binding.coordinator.showSnack(
-                                getString(R.string.command_sent_successfully)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun parseResponse(json: String) {
-        val cmdField = "\"${DeviceDriver.KEY_CMD}\""
-        val isResponse = json.contains(cmdField)
-        if (isResponse) {
-            runOnUiThread {
-                // Hide the progress indicator when data is received i.e., there is a connection
-                binding.swipeRefreshLayout.isRefreshing = false
-            }
-            try {
-                // Parse JSON in a try block...
-                // parsing might fail if incomplete JSON is received
-                // i.e., JSON might be cut during disconnecting or refreshing.
-                val root = JSONObject(json)
-                processJson(root)
-            } catch (_: Exception) {
-
-            }
-        }
-    }
-
-    private fun processJson(root: JSONObject) {
-        when (root.getString(DeviceDriver.KEY_CMD).lowercase()) {
-            CMD_SET_RECORD_MODE.lowercase() -> {
-                setRecordingMode(root)
-                DeviceDriver.getStatus()
-            }
-
-            DeviceDriver.CMD_GET_CONFIG.lowercase() -> {
-                ElocData.parseConfig(root)
-                setConfigData()
-            }
-
-            DeviceDriver.CMD_GET_STATUS.lowercase() -> {
-                ElocData.parseStatus(root)
-                setStatusData()
-            }
-
-            else -> {}
         }
     }
 
     private fun setStatusData() {
-
-        binding.sessionIdItem.itemValue = ElocData.sessionId
-        binding.recSinceBootItem.itemValue =
-            TimeHelper.formatHours(this, ElocData.recHoursSinceBoot)
-        binding.firmwareVersionItem.itemValue = ElocData.version
-        binding.uptimeItem.itemValue = TimeHelper.formatHours(this, ElocData.uptimeHours)
-        val level = ElocData.batteryLevel
+        binding.sessionIdItem.valueText = DeviceDriver.general.sessionId
+        binding.recSinceBootItem.valueText =
+            TimeHelper.formatHours(this, DeviceDriver.general.recHoursSinceBoot)
+        binding.firmwareVersionItem.valueText = DeviceDriver.general.version
+        binding.uptimeItem.valueText =
+            TimeHelper.formatHours(this, DeviceDriver.general.uptimeHours)
+        val level = DeviceDriver.battery.level
         binding.batteryStatus.text = getString(R.string.gauge_battery_level, level.toInt())
         binding.batteryGauge.updateValue(level)
-        binding.batteryVoltItem.itemValue = formatNumber(ElocData.batteryVoltage, "V")
-        binding.batteryTypeItem.itemValue = ElocData.batteryType
-        val free = ElocData.freeSpaceGb
+        binding.batteryVoltItem.valueText = formatNumber(DeviceDriver.battery.voltage, "V")
+        binding.batteryTypeItem.valueText = DeviceDriver.battery.type
+        val free = DeviceDriver.sdCard.freeGb
         binding.storageGauge.errorMode = (free <= 0)
         binding.storageStatus.text = if (binding.storageGauge.errorMode)
             ""
         else
             getString(R.string.gauge_free_space, free.toInt())
-        binding.storageGauge.updateValue(ElocData.freeSpacePercentage)
-        val gb = ElocData.sdCardSizeGb
+        binding.storageGauge.updateValue(DeviceDriver.sdCard.freePercentage)
+        val gb = DeviceDriver.sdCard.sizeGb
         if (gb <= 0.0) {
             binding.storageTextView.text = getString(R.string.no_sd_card)
             binding.storageGauge.updateValue(0.0)
         } else {
             binding.storageTextView.text = formatNumber(gb, "GB")
         }
-        setDeviceState(ElocData.deviceState)
+        setDeviceState(DeviceDriver.general.recordingState)
     }
 
     private fun setConfigData() {
-        val prettyRate =
-            formatNumber(ElocData.sampleRate / 1000, "kHz", maxFractionDigits = 0)
-        binding.sampleRateItem.itemValue = prettyRate
-        binding.microphoneTypeItem.itemValue = ElocData.microphoneType
-        binding.gainItem.itemValue = ElocData.microphoneGain.toString()
-        binding.timePerFileItem.itemValue =
-            TimeHelper.formatSeconds(this, ElocData.secondsPerFile, useSeconds = true)
-        binding.lastLocationItem.itemValue = ElocData.lastLocation
+        binding.toolbar.title = DeviceDriver.general.nodeName
+        binding.sampleRateItem.valueText = DeviceDriver.microphone.sampleRate.toString()
+        binding.microphoneTypeItem.valueText = DeviceDriver.microphone.type
+        binding.gainItem.valueText = DeviceDriver.microphone.gain.toString()
+        binding.timePerFileItem.valueText = DeviceDriver.general.timePerFile.toString()
+        binding.lastLocationItem.valueText = DeviceDriver.general.lastLocation
         val enabledLabel =
-            getString(if (ElocData.bluetoothEnabledDuringRecording) R.string.on else R.string.off)
-        binding.bluetoothDuringRecordingItem.itemValue = enabledLabel
-        binding.fileHeaderItem.itemValue = ElocData.fileHeader
+            getString(if (DeviceDriver.bluetooth.enableDuringRecord) R.string.on else R.string.off)
+        binding.bluetoothDuringRecordingItem.valueText = enabledLabel
+        binding.fileHeaderItem.valueText = DeviceDriver.general.fileHeader
     }
 
     private fun connect() {
@@ -291,6 +232,9 @@ class DeviceActivity : AppCompatActivity() {
         binding.stopButton.setOnClickListener { stopRecording() }
         binding.toolbar.setNavigationOnClickListener { goBack() }
         binding.backButton.setOnClickListener { goBack() }
+        binding.recorderContainer.setOnClickListener {
+            openSettings(true)
+        }
         binding.toolbar.setOnMenuItemClickListener {
             if (it.itemId == R.id.mnu_settings) {
                 openSettings()
@@ -312,13 +256,11 @@ class DeviceActivity : AppCompatActivity() {
         }
     }
 
-    private fun openSettings() {
-        // todo: fix after determining proper states
-        if (deviceState.isIdle) {
+    private fun openSettings(showMicrophoneSection: Boolean = false) {
+        if (recordingState.isIdle) {
             val intent = Intent(this, DeviceSettingsActivity::class.java)
-            // todo: device name might be changed in DeviceSettingsActivity
-            intent.putExtra(EXTRA_DEVICE_NAME, deviceName)
-            settingsLauncher.launch(intent)
+            intent.putExtra(DeviceSettingsActivity.EXTRA_SHOW_RECORDER, showMicrophoneSection)
+            startActivity(intent)
         } else {
             showModalAlert(
                 getString(R.string.not_available),
@@ -328,7 +270,7 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun connectToDevice() {
-        DeviceDriver.connect(deviceAddress, bluetoothDeviceListener)
+        DeviceDriver.connect(deviceAddress)
         binding.swipeRefreshLayout.isRefreshing = true
     }
 
@@ -398,18 +340,6 @@ class DeviceActivity : AppCompatActivity() {
         binding.gpsStatus.text = formatNumber(locationAccuracy, "m", 0)
     }
 
-    private fun setRecordingMode(jsonObject: JSONObject) {
-        ElocData.parseDeviceState(jsonObject)
-        setDeviceState(ElocData.deviceState)
-    }
-
-    private fun formatNumber(number: Double, units: String, maxFractionDigits: Int = 2): String {
-        val format = NumberFormat.getInstance(Locale.ENGLISH)
-        format.maximumFractionDigits = maxFractionDigits
-        format.minimumFractionDigits = 0
-        return format.format(number) + units
-    }
-
     private fun showSDCardError() {
         if (hasSDCardError) {
             showModalAlert(
@@ -433,7 +363,7 @@ class DeviceActivity : AppCompatActivity() {
         // todo fix after proper states
         // this will not workk well until we get a proper enum or table of all states from fw devs
         // for now, i will work with the 'isIdle' property.
-        if (!deviceState.isIdle) {
+        if (!recordingState.isIdle) {
             stopRecording()
         } else {
             if (hasSDCardError) {
@@ -471,8 +401,8 @@ class DeviceActivity : AppCompatActivity() {
                 }*/
     }
 
-    private fun setDeviceState(state: DeviceState, errorMessage: String = "") {
-        deviceState = state
+    private fun setDeviceState(state: RecordState, errorMessage: String = "") {
+        recordingState = state
         val err = errorMessage.trim()
         if (err.isNotEmpty()) {
             showModalAlert(getString(R.string.oops), err)

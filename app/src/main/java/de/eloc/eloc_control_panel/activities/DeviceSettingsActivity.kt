@@ -3,30 +3,73 @@ package de.eloc.eloc_control_panel.activities
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import com.google.android.material.chip.Chip
+import androidx.core.content.ContextCompat
+import androidx.core.view.children
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.activities.editors.BaseEditorActivity
+import de.eloc.eloc_control_panel.activities.editors.OptionEditorActivity
+import de.eloc.eloc_control_panel.activities.editors.TextEditorActivity
+import de.eloc.eloc_control_panel.data.Channel
+import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.driver.DeviceDriver
-import de.eloc.eloc_control_panel.driver.ElocData
 import de.eloc.eloc_control_panel.data.GainType
 import de.eloc.eloc_control_panel.data.SampleRate
 import de.eloc.eloc_control_panel.data.TimePerFile
 import de.eloc.eloc_control_panel.data.helpers.JsonHelper
-import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.databinding.ActivityDeviceSettingsBinding
+import de.eloc.eloc_control_panel.driver.BtConfig
+import de.eloc.eloc_control_panel.driver.Cpu
+import de.eloc.eloc_control_panel.driver.General
+import de.eloc.eloc_control_panel.driver.Intruder
+import de.eloc.eloc_control_panel.driver.Logs
+import de.eloc.eloc_control_panel.driver.Microphone
 import de.eloc.eloc_control_panel.interfaces.BluetoothDeviceListener
+import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
+import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 import org.json.JSONObject
 
 class DeviceSettingsActivity : ThemableActivity() {
+    companion object {
+        const val EXTRA_SHOW_RECORDER = "show_recorder"
+        private const val COMMAND = "command"
+    }
+
     private lateinit var binding: ActivityDeviceSettingsBinding
 
-    // todo: must be obtained directly from firmware
-    private val preferencesManager = PreferencesHelper.instance
     private var paused = true
-    private var deviceName = ""
-    private var location = ""
-    private lateinit var sampleRateChips: List<Chip>
-    private lateinit var timePerFileChips: List<Chip>
-    private lateinit var gainChips: List<Chip>
+    private var statusUpdated = false
+    private var configUpdated = false
+
+    private val onGetCommandCompletedCallback = GetCommandCompletedCallback {
+        if (!statusUpdated && (it == CommandType.GetStatus)) {
+            statusUpdated = true
+        }
+        if (!configUpdated && (it == CommandType.GetConfig)) {
+            configUpdated = true
+        }
+        if (statusUpdated && configUpdated) {
+            runOnUiThread {
+                setData()
+            }
+        }
+    }
+
+    private val onSetCommandCompletedCallback = SetCommandCompletedCallback { success, type ->
+        runOnUiThread {
+            if (success) {
+                if (type.isSetCommand) {
+                    binding.progressTextView.text = getString(R.string.updating_values)
+                    DeviceDriver.getDeviceInfo()
+                }
+            } else {
+                showContent()
+                showModalAlert(
+                    getString(R.string.error),
+                    getString(R.string.failed_to_save)
+                )
+            }
+        }
+    }
 
     private val commandListener = object : BluetoothDeviceListener() {
         override fun onRead(data: ByteArray) {
@@ -44,12 +87,15 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding = ActivityDeviceSettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setChips()
-        setDeviceName()
-        setoldData()
-        setMicData()
-        setBtState()
+        val extras = intent.extras
+        val showMicrophoneSection = extras?.getBoolean(EXTRA_SHOW_RECORDER, false) ?: false
 
+        setMicrophoneSectionState(showMicrophoneSection)
+        setIntruderSectionState(false)
+        setBluetoothSectionState(false)
+        setLogsSectionState(false)
+        setCpuSectionState(false)
+        setGeneralSectionState(false)
         setData()
 
         // Set the listeners after setting the data
@@ -63,40 +109,72 @@ class DeviceSettingsActivity : ThemableActivity() {
 
     override fun onResume() {
         super.onResume()
-        val btOnWhenRecording = preferencesManager.getBluetoothRecordingState()
-        if (btOnWhenRecording) {
-            binding.btOnLayout.chip.isChecked = true
-        } else {
-            binding.btOffLayout.chip.isChecked = true
-        }
+        setData()
         paused = false
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        DeviceDriver.removeOnSetCommandCompletedListener(onSetCommandCompletedCallback)
+        DeviceDriver.removeOnGetCommandCompletedListener(onGetCommandCompletedCallback)
         DeviceDriver.removeCommandListener(commandListener)
     }
 
     private fun setData() {
-        updateSampleRate()
-        updateTimePerFile()
-        updateMicrophoneGain()
-        binding.logSwitch.isChecked = ElocData.logToSDCardEnabled
-        updateChipColors()
+        binding.generalNodeNameItem.valueText = DeviceDriver.general.nodeName
+        binding.generalFileHeaderItem.valueText = DeviceDriver.general.fileHeader
+        binding.generalTimePerFileItem.valueText = DeviceDriver.general.timePerFile.toString()
+
+        binding.microphoneTypeItem.valueText = DeviceDriver.microphone.type
+        binding.microphoneGainItem.valueText = DeviceDriver.microphone.gain.toString()
+        binding.microphoneChannelItem.valueText = DeviceDriver.microphone.channel.value
+        binding.microphoneSampleRateItem.valueText = DeviceDriver.microphone.sampleRate.toString()
+        binding.microphoneUseApllItem.setSwitch(DeviceDriver.microphone.useAPLL)
+        binding.microphoneUseTimingFixItem.setSwitch(DeviceDriver.microphone.useTimingFix)
+
+        binding.intruderEnableItem.setSwitch(DeviceDriver.intruder.enabled)
+        binding.intruderThresholdItem.valueText = DeviceDriver.intruder.threshold.toString()
+        binding.intruderWindowsMsItem.valueText = DeviceDriver.intruder.windowsMs.toString()
+
+        binding.btEnableAtStartItem.setSwitch(DeviceDriver.bluetooth.enableAtStart)
+        binding.btEnableOnTappingItem.setSwitch(DeviceDriver.bluetooth.enableOnTapping)
+        binding.btEnableDuringRecordingItem.setSwitch(DeviceDriver.bluetooth.enableDuringRecord)
+        binding.btOffTimeoutSecondsItem.valueText =
+            formatNumber(DeviceDriver.bluetooth.offTimeoutSeconds, " secs", 0)
+
+        val mHz = " MHz"
+        binding.cpuEnableLightSleepItem.setSwitch(DeviceDriver.cpu.enableLightSleep)
+        binding.cpuMinFrequencyItem.valueText = formatNumber(DeviceDriver.cpu.minFrequencyMHz, mHz)
+        binding.cpuMaxFrequencyItem.valueText = formatNumber(DeviceDriver.cpu.maxFrequencyMHz, mHz)
+
+        binding.logsLogToSdCardItem.setSwitch(DeviceDriver.logs.logToSdCard)
+        binding.logsFilenameItem.valueText = DeviceDriver.logs.filename
+        binding.logsMaxFilesItem.valueText = DeviceDriver.logs.maxFiles.toString()
+        binding.logsMaxFileSizeItem.valueText = DeviceDriver.logs.maxFileSize.toString()
+
         showContent()
     }
 
     private fun parseResponse(json: String) {
         try {
+
+            val KEY_CMD = "cmd"
+            val KEY_ECODE = "ecode"
+            val CMD_GET_CONFIG = "getConfig"
+            val CMD_GET_STATUS = "getStatus"
+            val CMD_SET_CONFIG = "setConfig"
+            val CMD_SET_STATUS = "setStatus"
+
+
             val root = JSONObject(json)
-            val command = JsonHelper.getJSONStringAttribute(DeviceDriver.KEY_CMD, root).lowercase()
+            val command = JsonHelper.getJSONStringAttribute(KEY_CMD, root).lowercase()
             if (
-                (command == DeviceDriver.CMD_SET_STATUS.lowercase()) ||
-                (command == DeviceDriver.CMD_SET_CONFIG.lowercase())
+                (command == CMD_SET_STATUS.lowercase()) ||
+                (command == CMD_SET_CONFIG.lowercase())
             ) {
                 val message = try {
                     val errorCode =
-                        JsonHelper.getJSONNumberAttribute(DeviceDriver.KEY_ECODE, root, -1.0)
+                        JsonHelper.getJSONNumberAttribute(KEY_ECODE, root, -1.0)
                             .toInt()
                     val messageResId = if (errorCode == 0)
                         R.string.new_value_was_applied
@@ -110,8 +188,8 @@ class DeviceSettingsActivity : ThemableActivity() {
                 binding.progressTextView.text = getString(R.string.updating_values)
                 DeviceDriver.getDeviceInfo()
             } else if (
-                (command == DeviceDriver.CMD_GET_STATUS.lowercase()) ||
-                (command == DeviceDriver.CMD_GET_CONFIG.lowercase())
+                (command == CMD_GET_STATUS.lowercase()) ||
+                (command == CMD_GET_CONFIG.lowercase())
             ) {
                 setData()
             }
@@ -121,204 +199,441 @@ class DeviceSettingsActivity : ThemableActivity() {
     }
 
     private fun setListeners() {
-
+        DeviceDriver.addOnSetCommandCompletedListener(onSetCommandCompletedCallback)
+        DeviceDriver.addOnGetCommandCompletedListener(onGetCommandCompletedCallback)
         DeviceDriver.addCommandListener(commandListener)
-        binding.sampleRateChipGroup.setOnCheckedStateChangeListener { _, _ -> updateChipColors() }
-        binding.fileTimeChipGroup.setOnCheckedStateChangeListener { _, _ -> updateChipColors() }
-        binding.gainChipGroup.setOnCheckedStateChangeListener { _, _ -> updateChipColors() }
-        binding.btStateChipGroup.setOnCheckedStateChangeListener { _, _ -> updateChipColors() }
         binding.commandLineButton.setOnClickListener { runCommandLine() }
-        binding.recordingButton.setOnClickListener { runRecordingCommand() }
-        binding.microphoneTypeButton.setOnClickListener { runMicTypeCommand() }
-        binding.fileHeaderButton.setOnClickListener { runFileHeaderCommand() }
-        binding.hideAdvancedOptionsButton.setOnClickListener { }
-        binding.showAdvancedOptionsButton.setOnClickListener { }
         binding.instructionsButton.setOnClickListener { showInstructions() }
-        binding.updateFirmwareButton.setOnClickListener { confirmFirmwareUpdate() }
-        binding.bluetoothRecordingStateButton.setOnClickListener { saveBtRecordingState() }
         binding.toolbar.setNavigationOnClickListener { goBack() }
 
-        sampleRateChips.map { element ->
-            element.setOnClickListener {
-                if (it is Chip) {
-                    if (it.isChecked) {
-                        changeSampleRate(it)
-                    }
-                }
+        setGeneralListeners()
+        setCpuListeners()
+        setLogsListeners()
+        setIntruderListeners()
+        setBtListeners()
+        setMicrophoneListeners()
+    }
+
+    private fun setGeneralListeners() {
+        binding.generalSectionTextView.setOnClickListener {
+            setGeneralSectionState(binding.generalNodeNameItem.visibility != View.VISIBLE)
+        }
+        binding.generalNodeNameItem.setOnClickListener {
+            openTextEditor(
+                General.NODE_NAME,
+                getString(R.string.node_device_name),
+                DeviceDriver.general.nodeName,
+            )
+        }
+        binding.generalFileHeaderItem.setOnClickListener {
+            openTextEditor(
+                General.FILE_HEADER,
+                getString(R.string.file_header),
+                DeviceDriver.general.fileHeader,
+            )
+        }
+        binding.generalTimePerFileItem.setOnClickListener {
+            val options = listOf(
+                TimePerFile.Time10s,
+                TimePerFile.Time1m,
+                TimePerFile.Time1h,
+                TimePerFile.Time4h,
+                TimePerFile.Time12h,
+            ).map {
+                "${it.seconds}|$it"
+            }
+            openOptionEditor(
+                General.SECONDS_PER_FILE,
+                getString(R.string.time_per_file),
+                DeviceDriver.general.timePerFile.toString(),
+                options
+            )
+        }
+    }
+
+    private fun setLogsListeners() {
+        binding.logsSectionTextView.setOnClickListener {
+            setLogsSectionState(binding.logsLogToSdCardItem.visibility != View.VISIBLE)
+        }
+        binding.logsLogToSdCardItem.setSwitchClickedListener {
+            val checked = binding.logsLogToSdCardItem.isChecked
+            if (DeviceDriver.setProperty(Logs.LOG_TO_SD_CARD, checked.toString())) {
+                showProgress()
+            } else {
+                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+            }
+        }
+        binding.logsFilenameItem.setOnClickListener {
+            var filename = DeviceDriver.logs.filename
+            val splitter = "/"
+            var prefix = ""
+            if (filename.contains(splitter)) {
+                val parts = filename.split(splitter).toMutableList()
+                filename = parts.removeLast()
+                prefix = parts.joinToString(splitter) + splitter
+            }
+            openTextEditor(
+                Logs.FILENAME,
+                getString(R.string.logs_filename),
+                filename,
+                prefix = prefix
+            )
+        }
+        binding.logsMaxFilesItem.setOnClickListener {
+            openTextEditor(
+                Logs.MAX_FILES,
+                getString(R.string.logs_max_files),
+                DeviceDriver.logs.maxFiles.toString(),
+                true,
+            )
+        }
+        binding.logsMaxFileSizeItem.setOnClickListener {
+            openTextEditor(
+                Logs.MAX_FILE_SIZE,
+                getString(R.string.logs_max_file_size),
+                DeviceDriver.logs.maxFileSize.toString(),
+                true,
+            )
+        }
+    }
+
+    private fun setCpuListeners() {
+        binding.cpuSectionTextView.setOnClickListener {
+            setCpuSectionState(binding.cpuEnableLightSleepItem.visibility != View.VISIBLE)
+        }
+        binding.cpuEnableLightSleepItem.setSwitchClickedListener {
+            val checked = binding.cpuEnableLightSleepItem.isChecked
+            if (DeviceDriver.setProperty(Cpu.ENABLE_LIGHT_SLEEP, checked.toString())) {
+                showProgress()
+            } else {
+                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+            }
+        }
+        binding.cpuMinFrequencyItem.setOnClickListener {
+            openTextEditor(
+                Cpu.MIN_FREQUENCY,
+                getString(R.string.minimum_cpu_frequency),
+                DeviceDriver.cpu.minFrequencyMHz.toString(),
+                isNumeric = true,
+                minimum = 1.0,
+            )
+        }
+        binding.cpuMaxFrequencyItem.setOnClickListener {
+            openTextEditor(
+                Cpu.MAX_FREQUENCY,
+                getString(R.string.maximum_cpu_frequency),
+                DeviceDriver.cpu.maxFrequencyMHz.toString(),
+                isNumeric = true,
+                minimum = 80.0,
+            )
+        }
+    }
+
+    private fun setIntruderListeners() {
+        binding.intruderSectionTextView.setOnClickListener {
+            setIntruderSectionState(binding.intruderEnableItem.visibility != View.VISIBLE)
+        }
+        binding.intruderEnableItem.setSwitchClickedListener {
+            val checked = binding.intruderEnableItem.isChecked
+            if (DeviceDriver.setProperty(Intruder.ENABLED, checked.toString())) {
+                showProgress()
+            } else {
+                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+            }
+        }
+        binding.intruderThresholdItem.setOnClickListener {
+            openTextEditor(
+                Intruder.THRESHOLD,
+                getString(R.string.intruder_threshold),
+                DeviceDriver.intruder.threshold.toString(),
+                true,
+            )
+        }
+        binding.intruderWindowsMsItem.setOnClickListener {
+            openTextEditor(
+                Intruder.WINDOWS_MS,
+                getString(R.string.intruder_windows_ms),
+                DeviceDriver.intruder.windowsMs.toString(),
+                true,
+            )
+        }
+    }
+
+    private fun setBtListeners() {
+        binding.btSectionTextView.setOnClickListener {
+            setBluetoothSectionState(binding.btEnableAtStartItem.visibility != View.VISIBLE)
+        }
+        binding.btEnableAtStartItem.setSwitchClickedListener {
+            val checked = binding.btEnableAtStartItem.isChecked
+            if (DeviceDriver.setProperty(BtConfig.ENABLE_AT_START, checked.toString())) {
+                showProgress()
+            } else {
+                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+            }
+        }
+        binding.btEnableOnTappingItem.setSwitchClickedListener {
+            val checked = binding.btEnableOnTappingItem.isChecked
+            if (DeviceDriver.setProperty(BtConfig.ENABLE_ON_TAPPING, checked.toString())) {
+                showProgress()
+            } else {
+                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+            }
+        }
+        binding.btEnableDuringRecordingItem.setSwitchClickedListener {
+            val checked = binding.btEnableDuringRecordingItem.isChecked
+            if (DeviceDriver.setProperty(BtConfig.ENABLE_DURING_RECORD, checked.toString())) {
+                showProgress()
+            } else {
+                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+            }
+        }
+        binding.btOffTimeoutSecondsItem.setOnClickListener {
+            openTextEditor(
+                BtConfig.OFF_TIME_OUT_SECONDS,
+                getString(R.string.bluetooth_timeout_off_seconds),
+                DeviceDriver.bluetooth.offTimeoutSeconds.toString(),
+                true,
+                minimum = 10.0,
+            )
+        }
+    }
+
+    private fun setMicrophoneListeners() {
+        binding.microphoneSectionTextView.setOnClickListener {
+            setMicrophoneSectionState(binding.microphoneTypeItem.visibility != View.VISIBLE)
+        }
+        binding.microphoneTypeItem.setOnClickListener {
+            openTextEditor(
+                Microphone.TYPE,
+                getString(R.string.microphone_type),
+                DeviceDriver.microphone.type,
+            )
+        }
+        binding.microphoneGainItem.setOnClickListener {
+            val options = listOf(GainType.Low, GainType.High).map {
+                "${it.value}|$it"
+            }
+            openOptionEditor(
+                Microphone.GAIN,
+                getString(R.string.microphone_gain),
+                DeviceDriver.microphone.gain.toString(),
+                options
+            )
+        }
+
+        binding.microphoneChannelItem.setOnClickListener {
+            val options = listOf(Channel.Left, Channel.Right, Channel.Stereo).map {
+                "${it.value}|$it"
+            }
+            openOptionEditor(
+                Microphone.CHANNEL,
+                getString(R.string.recorder_channel),
+                DeviceDriver.microphone.channel.value,
+                options
+            )
+        }
+
+        binding.microphoneSampleRateItem.setOnClickListener {
+            val options = listOf(
+                SampleRate.Rate8k,
+                SampleRate.Rate16k,
+                SampleRate.Rate22k,
+                SampleRate.Rate32k,
+                SampleRate.Rate44k,
+            ).map {
+                "${it.code}|$it"
+            }
+            openOptionEditor(
+                Microphone.SAMPLE_RATE,
+                getString(R.string.recorder_sample_rate),
+                DeviceDriver.microphone.sampleRate.code.toString(),
+                options
+            )
+        }
+
+        binding.microphoneUseApllItem.setSwitchClickedListener {
+            val checked = binding.microphoneUseApllItem.isChecked
+            if (DeviceDriver.setProperty(Microphone.USE_APLL, checked.toString())) {
+                showProgress()
+            } else {
+                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
             }
         }
 
-        timePerFileChips.map { element ->
-            element.setOnClickListener {
-                if (it is Chip) {
-                    if (it.isChecked) {
-                        changeTimePerFile(it)
-                    }
-                }
+        binding.microphoneUseTimingFixItem.setSwitchClickedListener {
+            val checked = binding.microphoneUseApllItem.isChecked
+            if (DeviceDriver.setProperty(Microphone.USE_TIMING_FIX, checked.toString())) {
+                showProgress()
+            } else {
+                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
             }
         }
+    }
 
-        gainChips.map { element ->
-            element.setOnClickListener {
-                if (it is Chip) {
-                    if (it.isChecked) {
-                        changeMicrophoneGain(it)
-                    }
-                }
+    private fun openTextEditor(
+        property: String,
+        settingName: String,
+        currentValue: String,
+        isNumeric: Boolean = false,
+        minimum: Double? = null,
+        prefix: String = ""
+    ) {
+        val intent = Intent(this, TextEditorActivity::class.java)
+        intent.putExtra(BaseEditorActivity.EXTRA_SETTING_NAME, settingName)
+        intent.putExtra(BaseEditorActivity.EXTRA_CURRENT_VALUE, currentValue)
+        intent.putExtra(BaseEditorActivity.EXTRA_PROPERTY, property)
+        intent.putExtra(BaseEditorActivity.EXTRA_IS_NUMERIC, isNumeric)
+        intent.putExtra(BaseEditorActivity.EXTRA_PREFIX, prefix)
+        if (minimum != null) {
+            intent.putExtra(BaseEditorActivity.EXTRA_MINIMUM, minimum)
+        }
+        startActivity(intent)
+    }
+
+    private fun openOptionEditor(
+        property: String,
+        settingName: String,
+        currentValue: String,
+        options: List<String>
+    ) {
+        val intent = Intent(this, OptionEditorActivity::class.java)
+        intent.putExtra(BaseEditorActivity.EXTRA_SETTING_NAME, settingName)
+        intent.putExtra(BaseEditorActivity.EXTRA_CURRENT_VALUE, currentValue)
+        intent.putExtra(BaseEditorActivity.EXTRA_PROPERTY, property)
+        intent.putExtra(BaseEditorActivity.EXTRA_OPTIONS, options.toTypedArray())
+        startActivity(intent)
+    }
+
+    private fun setIntruderSectionState(expanded: Boolean) {
+        val state = if (expanded) View.VISIBLE else View.GONE
+        binding.intruderSection.children.forEach { child ->
+            if (child == binding.intruderSectionTextView) {
+                return@forEach
             }
+            child.visibility = state
         }
 
-        binding.logSwitch.setOnClickListener {
-            showProgress()
-            val enableLogs = binding.logSwitch.isChecked
-            DeviceDriver.setSDCardLogs(enableLogs)
+        val icon = if (expanded) {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
+        } else {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
         }
-    }
-
-    private fun changeMicrophoneGain(chip: Chip) {
-        val desiredGain = when (chip) {
-            binding.gainLowLayout.chip -> GainType.Low
-            binding.gainHighLayout.chip -> GainType.High
-            else -> GainType.Unknown
-        }
-        if (desiredGain != GainType.Unknown) {
-            showProgress()
-            DeviceDriver.setMicrophoneGain(desiredGain)
-        }
-    }
-
-    private fun changeSampleRate(chip: Chip) {
-        val desiredRate = when (chip) {
-            binding.rate8kLayout.chip -> SampleRate.Rate8k
-            binding.rate16kLayout.chip -> SampleRate.Rate16k
-            binding.rate22kLayout.chip -> SampleRate.Rate22k
-            binding.rate32kLayout.chip -> SampleRate.Rate32k
-            binding.rate44kLayout.chip -> SampleRate.Rate44k
-            else -> SampleRate.Unknown
-        }
-        if (desiredRate != SampleRate.Unknown) {
-            showProgress()
-            DeviceDriver.setSampleRate(desiredRate)
-        }
-    }
-
-    private fun changeTimePerFile(chip: Chip) {
-        val desiredTime = when (chip) {
-            binding.time10sLayout.chip -> TimePerFile.Time10s
-            binding.time1mLayout.chip -> TimePerFile.Time1m
-            binding.time1hLayout.chip -> TimePerFile.Time1h
-            binding.time4hLayout.chip -> TimePerFile.Time4h
-            binding.time12hLayout.chip -> TimePerFile.Time12h
-            else -> TimePerFile.Unknown
-        }
-        if (desiredTime != TimePerFile.Unknown) {
-            showProgress()
-            DeviceDriver.setTimePerFile(desiredTime)
-        }
-    }
-
-    private fun updateChipColors() {
-        setChipColors(binding.btOnLayout)
-        setChipColors(binding.btOffLayout)
-
-        setChipColors(binding.gainLowLayout)
-        setChipColors(binding.gainHighLayout)
-
-        setChipColors(binding.time12hLayout)
-        setChipColors(binding.time4hLayout)
-        setChipColors(binding.time1hLayout)
-        setChipColors(binding.time1mLayout)
-        setChipColors(binding.time10sLayout)
-
-        setChipColors(binding.rate44kLayout)
-        setChipColors(binding.rate32kLayout)
-        setChipColors(binding.rate22kLayout)
-        setChipColors(binding.rate16kLayout)
-        setChipColors(binding.rate8kLayout)
-    }
-
-    private fun setChips() {
-        sampleRateChips = listOf(
-            binding.rate8kLayout.chip,
-            binding.rate16kLayout.chip,
-            binding.rate22kLayout.chip,
-            binding.rate32kLayout.chip,
-            binding.rate44kLayout.chip
+        binding.intruderSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
+            null,
+            null,
+            icon,
+            null
         )
+    }
 
-        timePerFileChips = listOf(
-            binding.time12hLayout.chip,
-            binding.time4hLayout.chip,
-            binding.time1hLayout.chip,
-            binding.time1mLayout.chip,
-            binding.time10sLayout.chip
+    private fun setBluetoothSectionState(expanded: Boolean) {
+        val state = if (expanded) View.VISIBLE else View.GONE
+        binding.btSection.children.forEach { child ->
+            if (child == binding.btSectionTextView) {
+                return@forEach
+            }
+            child.visibility = state
+        }
+
+        val icon = if (expanded) {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
+        } else {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
+        }
+        binding.btSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
+            null,
+            null,
+            icon,
+            null
         )
+    }
 
-        gainChips = listOf(
-            binding.gainLowLayout.chip,
-            binding.gainHighLayout.chip
+    private fun setLogsSectionState(expanded: Boolean) {
+        val state = if (expanded) View.VISIBLE else View.GONE
+        binding.logSection.children.forEach { child ->
+            if (child == binding.logsSectionTextView) {
+                return@forEach
+            }
+            child.visibility = state
+        }
+
+        val icon = if (expanded) {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
+        } else {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
+        }
+        binding.logsSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
+            null,
+            null,
+            icon,
+            null
         )
-
-        binding.rate44kLayout.chip.setText(R.string._44k)
-        binding.rate32kLayout.chip.setText(R.string._32k)
-        binding.rate22kLayout.chip.setText(R.string._22k)
-        binding.rate16kLayout.chip.setText(R.string._16k)
-        binding.rate8kLayout.chip.setText(R.string._8k)
-
-        binding.time12hLayout.chip.setText(R.string._12h)
-        binding.time4hLayout.chip.setText(R.string._4h)
-        binding.time1hLayout.chip.setText(R.string._1h)
-        binding.time1mLayout.chip.setText(R.string._1m)
-        binding.time10sLayout.chip.setText(R.string._10s)
-
-        binding.gainLowLayout.chip.setText(R.string.low)
-        binding.gainHighLayout.chip.setText(R.string.high)
-
-        binding.btOnLayout.chip.setText(R.string.on)
-        binding.btOffLayout.chip.setText(R.string.off)
-
     }
 
-    private fun updateMicrophoneGain() {
-        binding.gainLowLayout.chip.isChecked = false
-        binding.gainHighLayout.chip.isChecked = false
-        when (ElocData.microphoneGain) {
-            GainType.Low -> binding.gainLowLayout.chip.isChecked = true
-            GainType.High -> binding.gainHighLayout.chip.isChecked = true
-            else -> {}
+    private fun setGeneralSectionState(expanded: Boolean) {
+        val state = if (expanded) View.VISIBLE else View.GONE
+        binding.generalSection.children.forEach { child ->
+            if (child == binding.generalSectionTextView) {
+                return@forEach
+            }
+            child.visibility = state
         }
+
+        val icon = if (expanded) {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
+        } else {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
+        }
+        binding.generalSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
+            null,
+            null,
+            icon,
+            null
+        )
     }
 
-    private fun updateSampleRate() {
-        binding.rate44kLayout.chip.isChecked = false
-        binding.rate32kLayout.chip.isChecked = false
-        binding.rate22kLayout.chip.isChecked = false
-        binding.rate16kLayout.chip.isChecked = false
-        binding.rate8kLayout.chip.isChecked = false
-        when (SampleRate.parse(ElocData.sampleRate.toInt())) {
-            SampleRate.Rate8k -> binding.rate8kLayout.chip.isChecked = true
-            SampleRate.Rate16k -> binding.rate16kLayout.chip.isChecked = true
-            SampleRate.Rate22k -> binding.rate22kLayout.chip.isChecked = true
-            SampleRate.Rate32k -> binding.rate32kLayout.chip.isChecked = true
-            SampleRate.Rate44k -> binding.rate44kLayout.chip.isChecked = true
-            else -> {}
+    private fun setCpuSectionState(expanded: Boolean) {
+        val state = if (expanded) View.VISIBLE else View.GONE
+        binding.cpuSection.children.forEach { child ->
+            if (child == binding.cpuSectionTextView) {
+                return@forEach
+            }
+            child.visibility = state
         }
+
+        val icon = if (expanded) {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
+        } else {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
+        }
+        binding.cpuSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
+            null,
+            null,
+            icon,
+            null
+        )
     }
 
-    private fun updateTimePerFile() {
-        binding.time12hLayout.chip.isChecked = false
-        binding.time4hLayout.chip.isChecked = false
-        binding.time1hLayout.chip.isChecked = false
-        binding.time1mLayout.chip.isChecked = false
-        binding.time10sLayout.chip.isChecked = false
-        when (TimePerFile.parse(ElocData.secondsPerFile.toInt())) {
-            TimePerFile.Time10s -> binding.time10sLayout.chip.isChecked = true
-            TimePerFile.Time1m -> binding.time1mLayout.chip.isChecked = true
-            TimePerFile.Time1h -> binding.time1hLayout.chip.isChecked = true
-            TimePerFile.Time4h -> binding.time4hLayout.chip.isChecked = true
-            TimePerFile.Time12h -> binding.time12hLayout.chip.isChecked = true
-            else -> {}
+    private fun setMicrophoneSectionState(expanded: Boolean) {
+        val state = if (expanded) View.VISIBLE else View.GONE
+        binding.microphoneSection.children.forEach { child ->
+            if (child == binding.microphoneSectionTextView) {
+                return@forEach
+            }
+            child.visibility = state
         }
+
+        val icon = if (expanded) {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
+        } else {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
+        }
+        binding.microphoneSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
+            null,
+            null,
+            icon,
+            null
+        )
     }
 
     private fun showProgress() {
@@ -334,61 +649,6 @@ class DeviceSettingsActivity : ThemableActivity() {
 
 
     // OLD ------------------------------------------------
-
-
-    companion object {
-        const val COMMAND = "command"
-        private const val SEPARATOR = "#"
-        private const val COMMAND_PREFIX = SEPARATOR + "settings" + SEPARATOR
-    }
-
-
-    private fun setDeviceName() {
-        val extras = intent.extras
-        deviceName = extras?.getString(DeviceActivity.EXTRA_DEVICE_NAME, "") ?: ""
-        if (deviceName.isNotEmpty()) {
-            binding.deviceNameEditText.setText(deviceName.trim())
-        }
-    }
-
-    private fun setBtState() {
-        binding.btOnLayout.chip.isChecked = false
-        binding.btOffLayout.chip.isChecked = false
-        // todo: must be obtained directly from firmware
-        if (preferencesManager.getBluetoothRecordingState()) {
-            binding.btOnLayout.chip.isChecked = true
-        } else {
-            binding.btOffLayout.chip.isChecked = true
-        }
-        updateChipColors()
-    }
-
-
-    private fun setoldData() {
-        // todo: remove method
-        val data = preferencesManager.getDeviceSettings()
-        val separated = data.split(SEPARATOR)
-        if (separated.size < 4) {
-            return
-        }
-        location = separated[3].trim()
-        binding.elocBtNameEditText.setText(location)
-    }
-
-    private fun setMicData() {
-// todo remove
-        val data = "preferencesManager.getMicData()"
-        val separated = data.split("#")
-        if (separated.size < 2) {
-            return
-        }
-
-        binding.micTypeEditText.setText(separated[1].trim())
-
-
-
-    }
-
 
 
     private fun runCommand(command: String) {
@@ -411,81 +671,5 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
     }
 
-    private fun runRecordingCommand() {
-        val regex = "^[a-zA-Z\\d]+$".toRegex()
-        location = binding.elocBtNameEditText.text.toString().trim()
-        if (location.isEmpty()) {
-            showModalAlert(
-                getString(R.string.required),
-                getString(R.string.file_header_missing)
-            )
-        } else if (!location.matches(regex)) {
-            showModalAlert(
-                getString(R.string.invalid),
-                getString(R.string.invalid_file_header_name)
-            )
-        } else {
-            val secondsPerFile = "getSecondsPerFile()"
-            val sampleRate = "getSampleRate()"
-            val command =
-                COMMAND_PREFIX + sampleRate + SEPARATOR + secondsPerFile + SEPARATOR + location
-            runCommand(command)
-        }
-    }
 
-    private fun runMicTypeCommand() {
-        val type = binding.micTypeEditText.text.toString().trim()
-        if (type.isEmpty()) {
-            showModalAlert(
-                getString(R.string.required),
-                getString(R.string.mic_type_missing)
-            )
-        } else {
-            val command = getString(R.string.set_mic_type_template, type)
-            runCommand(command)
-        }
-    }
-
-    private fun runFileHeaderCommand() {
-        val name = binding.deviceNameEditText.text.toString().trim()
-        if (name.isEmpty()) {
-            showModalAlert(
-                getString(R.string.required),
-                getString(R.string.device_name_missing)
-            )
-        } else {
-            val suffix = "setname"
-            val command = if (name.endsWith(suffix)) {
-                name
-            } else {
-                name + suffix
-            }
-            runCommand(command)
-        }
-    }
-
-    private fun confirmFirmwareUpdate() {
-        showModalOptionAlert(
-            getString(R.string.confirm_update),
-            getString(R.string.update_rationale, deviceName)
-        ) {
-            runCommand("update")
-        }
-    }
-
-    private fun saveBtRecordingState() {
-        if (!paused) {
-            val intent = Intent()
-            val btOnWhenRecording = binding.btOnLayout.chip.isChecked
-            preferencesManager.setBluetoothRecordingState(btOnWhenRecording)
-            val command = if (btOnWhenRecording) {
-                COMMAND_PREFIX + "bton"
-            } else {
-                COMMAND_PREFIX + "btoff"
-            }
-            intent.putExtra(COMMAND, command)
-            setResult(RESULT_OK, intent)
-            finish()
-        }
-    }
 }

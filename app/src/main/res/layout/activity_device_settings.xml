@@ -75,252 +75,422 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:id="@+id/sample_rate_text_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/sample_rate"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        tools:viewBindingIgnore="true" />
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/sample_rate_chip_group"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        app:layout_constraintTop_toBottomOf="@id/sample_rate_text_view"
-                        app:selectionRequired="true"
-                        app:singleSelection="true">
-
-                        <include
-                            android:id="@+id/rate_44k_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/rate_32k_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/rate_22k_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/rate_16k_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/rate_8k_layout"
-                            layout="@layout/layout_app_chip" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                    <com.google.android.material.divider.MaterialDivider
-                        android:id="@+id/div1"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginVertical="16dp"
-                        app:layout_constraintTop_toBottomOf="@id/sample_rate_chip_group"
-                        tools:viewBindingIgnore="true" />
-
-                    <TextView
-                        android:id="@+id/gain_text_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginVertical="16dp"
-                        android:text="@string/microphone_gain"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/div1"
-                        tools:viewBindingIgnore="true" />
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/gain_chip_group"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        app:layout_constraintTop_toBottomOf="@id/gain_text_view"
-                        app:selectionRequired="true"
-                        app:singleSelection="true">
-
-                        <include
-                            android:id="@+id/gain_low_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/gain_high_layout"
-                            layout="@layout/layout_app_chip" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                    <com.google.android.material.divider.MaterialDivider
-                        android:id="@+id/div2"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginVertical="16dp"
-                        app:layout_constraintTop_toBottomOf="@id/gain_chip_group"
-                        tools:viewBindingIgnore="true" />
-
-                    <TextView
-                        android:id="@+id/recording_time_per_file_tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginVertical="16dp"
-                        android:text="@string/recording_time_per_file"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/div2" />
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/file_time_chip_group"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        app:layout_constraintTop_toBottomOf="@id/recording_time_per_file_tv"
-                        app:selectionRequired="true"
-                        app:singleSelection="true">
-
-                        <include
-                            android:id="@+id/time_12h_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/time_4h_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/time_1h_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/time_1m_layout"
-                            layout="@layout/layout_app_chip" />
-
-                        <include
-                            android:id="@+id/time_10s_layout"
-                            layout="@layout/layout_app_chip" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                    <com.google.android.material.divider.MaterialDivider
-                        android:id="@+id/div3"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginVertical="16dp"
-                        app:layout_constraintTop_toBottomOf="@id/file_time_chip_group"
-                        tools:viewBindingIgnore="true" />
-
-                    <com.google.android.material.materialswitch.MaterialSwitch
-                        android:id="@+id/log_switch"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginVertical="16dp"
-                        android:text="@string/log_to_sd_card"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/div3"
-                        app:thumbTint="@color/white" />
-
-                    <com.google.android.material.divider.MaterialDivider
-                        android:id="@+id/div4"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginVertical="16dp"
-                        app:layout_constraintTop_toBottomOf="@id/log_switch"
-                        tools:viewBindingIgnore="true" />
-
-                    <com.google.android.material.materialswitch.MaterialSwitch
-                        android:id="@+id/arm_switch"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginVertical="16dp"
-                        android:checked="true"
-                        android:text="@string/arm_during_recording"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/div4"
-                        app:thumbTint="@color/white" />
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/recording_card"
+                <LinearLayout
+                    android:id="@+id/general_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardBackgroundColor="@color/cardview"
-                    app:cardCornerRadius="8dp"
-                    app:contentPadding="8dp"
-                    tools:visibility="visible">
+                    android:orientation="vertical">
 
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/general_section_text_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:background="?selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:text="@string/general"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        app:drawableEndCompat="@drawable/keyboard_arrow_down" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/general_node_name_item"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/node_name"
+                        tools:valueText="ELOC1" />
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="4dp"
-                            android:orientation="horizontal">
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
 
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="@string/recording"
-                                android:textAllCaps="true"
-                                android:textStyle="bold" />
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/general_file_header_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/file_header"
+                        tools:valueText="eloc3_" />
 
-                            <Button
-                                android:id="@+id/recording_button"
-                                style="@style/AppTextButton"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/run"
-                                app:drawableEndCompat="@drawable/run"
-                                app:drawableTint="@color/colorPrimary" />
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
 
-                        </LinearLayout>
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/general_time_per_file_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/time_per_file"
+                        tools:valueText="435 secs" />
+                </LinearLayout>
 
-                        <com.google.android.material.textfield.TextInputLayout
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="@string/file_header_name">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/eloc_bt_name_edit_text"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:imeOptions="actionDone"
-                                android:importantForAutofill="no"
-                                android:inputType="text"
-                                tools:ignore="TouchTargetSizeCheck,DuplicateSpeakableTextCheck"
-                                tools:text="ELOC18" />
-                        </com.google.android.material.textfield.TextInputLayout>
-
-
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <Button
-                    android:id="@+id/show_advanced_options_button"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:id="@+id/microphone_section"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:layout_marginVertical="16dp"
-                    android:drawableEnd="@drawable/keyboard_arrow_down"
-                    android:text="@string/advanced_options"
-                    android:textColor="@color/white"
-                    tools:ignore="DuplicateSpeakableTextCheck" />
+                    android:layout_marginVertical="24dp"
+                    android:orientation="vertical">
 
-                <Button
-                    android:id="@+id/hide_advanced_options_button"
-                    android:layout_width="wrap_content"
+                    <TextView
+                        android:id="@+id/microphone_section_text_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:background="?selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:text="@string/recorder"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        app:drawableEndCompat="@drawable/keyboard_arrow_down" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/microphone_type_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/type"
+                        tools:valueText="ns" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/microphone_gain_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/gain"
+                        tools:valueText="High" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/microphone_channel_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/channel"
+                        tools:valueText="Left" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/microphone_sample_rate_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/sample_rate"
+                        tools:valueText="8k" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/microphone_use_apll_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="toggle"
+                        app:keyText="@string/use_apll" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/microphone_use_timing_fix_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="toggle"
+                        app:keyText="@string/use_timing_fix" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/intruder_section"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:layout_marginVertical="16dp"
-                    android:drawableEnd="@drawable/keyboard_arrow_up"
-                    android:text="@string/advanced_options"
-                    android:textColor="@color/white" />
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/intruder_section_text_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:background="?selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:text="@string/intruder"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        app:drawableEndCompat="@drawable/keyboard_arrow_down" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/intruder_enable_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="toggle"
+                        app:keyText="@string/enabled" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/intruder_threshold_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/threshold"
+                        tools:valueText="4" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/intruder_windows_ms_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/windows_ms"
+                        tools:valueText="4354" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/bt_section"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="24dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/bt_section_text_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:background="?selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:text="@string/bluetooth"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        app:drawableEndCompat="@drawable/keyboard_arrow_down" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/bt_enable_at_start_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="toggle"
+                        app:keyText="@string/enable_at_start" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/bt_enable_on_tapping_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="toggle"
+                        app:keyText="@string/enable_on_tapping" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/bt_enable_during_recording_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="toggle"
+                        app:keyText="@string/enable_during_recording" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/bt_off_timeout_seconds_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="Off Timeout"
+                        tools:valueText="4354" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/cpu_section"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/cpu_section_text_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:background="?selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:text="@string/cpu"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        app:drawableEndCompat="@drawable/keyboard_arrow_down" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/cpu_enable_light_sleep_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="toggle"
+                        app:keyText="Enable Light Sleep" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/cpu_min_frequency_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/min_frequency"
+                        tools:valueText="4 MHz" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/cpu_max_frequency_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/max_frequency"
+                        tools:valueText="4354 MHz" />
+                </LinearLayout>
+
+                <LinearLayout  android:layout_marginVertical="24dp"
+                    android:id="@+id/log_section"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/logs_section_text_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:background="?selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:text="@string/logs"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        app:drawableEndCompat="@drawable/keyboard_arrow_down" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/logs_log_to_sd_card_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="toggle"
+                        app:keyText="@string/log_to_sd_card" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/logs_filename_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/filename"
+                        tools:valueText="4" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/logs_max_files_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/max_files"
+                        tools:valueText="4354" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/logs_max_file_size_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/max_file_size"
+                        tools:valueText="4354" />
+                </LinearLayout>
 
                 <androidx.cardview.widget.CardView
                     android:id="@+id/command_line_card"
@@ -380,204 +550,6 @@
                         </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
-
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/fileheader_card"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    app:cardBackgroundColor="@color/cardview"
-                    app:cardCornerRadius="8dp"
-                    app:contentPadding="8dp">
-
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="4dp"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="@string/device_name"
-                                android:textAllCaps="true"
-                                android:textStyle="bold" />
-
-                            <Button
-                                android:id="@+id/file_header_button"
-                                style="@style/AppTextButton"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/run"
-                                app:drawableEndCompat="@drawable/run"
-                                app:drawableTint="@color/colorPrimary" />
-
-                        </LinearLayout>
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="@string/device_name"
-                            app:counterEnabled="true"
-                            app:counterMaxLength="30">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/device_name_edit_text"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:imeOptions="actionDone"
-                                android:importantForAutofill="no"
-                                android:inputType="text"
-                                tools:ignore="TouchTargetSizeCheck"
-                                tools:text="ELOC18" />
-                        </com.google.android.material.textfield.TextInputLayout>
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/microphone_type_card"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    app:cardBackgroundColor="@color/cardview"
-                    app:cardCornerRadius="8dp"
-                    app:contentPadding="8dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="4dp"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="@string/microphone_type"
-                                android:textAllCaps="true"
-                                android:textStyle="bold" />
-
-                            <Button
-                                android:id="@+id/microphone_type_button"
-                                style="@style/AppTextButton"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/run"
-                                app:drawableEndCompat="@drawable/run"
-                                app:drawableTint="@color/colorPrimary" />
-
-                        </LinearLayout>
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="@string/microphone_type">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/mic_type_edit_text"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:imeOptions="actionDone"
-                                android:importantForAutofill="no"
-                                android:inputType="text"
-                                tools:text="ns" />
-                        </com.google.android.material.textfield.TextInputLayout>
-
-
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/recording_bluetooth_state_card"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    app:cardBackgroundColor="@color/cardview"
-                    app:cardCornerRadius="8dp"
-                    app:contentPadding="8dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="4dp"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="@string/bluetooth_state_when_recording"
-                                android:textAllCaps="true"
-                                android:textStyle="bold" />
-
-                            <Button
-                                android:id="@+id/bluetooth_recording_state_button"
-                                style="@style/AppTextButton"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/run"
-                                app:drawableEndCompat="@drawable/run"
-                                app:drawableTint="@color/colorPrimary" />
-
-                        </LinearLayout>
-
-                        <com.google.android.material.chip.ChipGroup
-                            android:id="@+id/bt_state_chip_group"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            app:selectionRequired="true"
-                            app:singleSelection="true">
-
-                            <include
-                                android:id="@+id/bt_on_layout"
-                                layout="@layout/layout_app_chip" />
-
-                            <include
-                                android:id="@+id/bt_off_layout"
-                                layout="@layout/layout_app_chip" />
-
-                        </com.google.android.material.chip.ChipGroup>
-
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <View
-                    android:id="@+id/divider7"
-                    android:layout_width="match_parent"
-                    android:layout_height="4dp"
-                    android:layout_marginVertical="8dp"
-                    android:background="#535353" />
-
-                <Button
-                    android:id="@+id/update_firmware_button"
-                    style="@style/AppTextButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginVertical="16dp"
-                    android:text="@string/update_firmware"
-                    app:drawableEndCompat="@drawable/system_update"
-                    app:drawableTint="@color/colorPrimary" />
 
                 <Space
                     android:layout_width="match_parent"

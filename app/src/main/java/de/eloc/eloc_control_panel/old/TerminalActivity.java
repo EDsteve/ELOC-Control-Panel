@@ -36,7 +36,6 @@ import de.eloc.eloc_control_panel.R;
 import de.eloc.eloc_control_panel.App;
 import de.eloc.eloc_control_panel.activities.DeviceSettingsActivity;
 import de.eloc.eloc_control_panel.databinding.ActivityTerminalBinding;
-import de.eloc.eloc_control_panel.data.DeviceDriver;
 import de.eloc.eloc_control_panel.activities.ThemableActivity;
 import de.eloc.eloc_control_panel.data.ConnectionStatus;
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper;

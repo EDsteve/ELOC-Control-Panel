@@ -20,6 +20,25 @@ import de.eloc.eloc_control_panel.databinding.LayoutAlertOkBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOptionBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAppChipBinding
 import de.eloc.eloc_control_panel.interfaces.VoidCallback
+import java.text.NumberFormat
+import java.util.Locale
+
+fun formatNumber(
+    number: Int,
+    units: String,
+    maxFractionDigits: Int = 2
+) = formatNumber(number.toDouble(), units, maxFractionDigits)
+
+fun formatNumber(
+    number: Double,
+    units: String,
+    maxFractionDigits: Int = 2
+): String {
+    val format = NumberFormat.getInstance(Locale.ENGLISH)
+    format.maximumFractionDigits = maxFractionDigits
+    format.minimumFractionDigits = 0
+    return format.format(number) + units
+}
 
 fun AppCompatActivity.showInstructions() {
     openUrl(getString(R.string.instructions_url))

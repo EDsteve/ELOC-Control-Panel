@@ -24,6 +24,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:name=".App"
@@ -36,6 +37,12 @@
         android:usesCleartextTraffic="true"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning"
         tools:targetApi="m">
+        <activity
+            android:name=".activities.editors.OptionEditorActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.editors.TextEditorActivity"
+            android:exported="false" />
         <activity
             android:name=".activities.DeviceActivity"
             android:exported="true"
@@ -90,7 +97,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".activities.TerminalActivity"
+            android:name=".old.TerminalActivity"
             android:exported="false"
             android:screenOrientation="sensorPortrait"
             android:windowSoftInputMode="adjustPan"
@@ -171,7 +178,7 @@
             android:windowSoftInputMode="adjustPan"
             tools:ignore="LockedOrientationActivity" />
 
-        <service android:name=".SerialService" />
+        <service android:name=".old.SerialService" />
 
         <receiver
             android:name=".receivers.BluetoothDeviceReceiver"
@@ -181,7 +188,6 @@
                 <action android:name="android.bluetooth.device.action.ACTION_FOUND" />
             </intent-filter>
         </receiver>
-
         <receiver
             android:name=".receivers.BootReceiver"
             android:exported="true">
@@ -189,7 +195,6 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-
         <receiver
             android:name=".receivers.BluetoothWatcher"
             android:exported="false">

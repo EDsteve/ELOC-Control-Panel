@@ -5,14 +5,14 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import de.eloc.eloc_control_panel.databinding.LayoutElocInfoBinding
-import de.eloc.eloc_control_panel.interfaces.AdapterItemCallback
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
+import de.eloc.eloc_control_panel.interfaces.StringCallback
 
 import java.util.ArrayList
 
 class ElocInfoAdapter(
     val callback: BooleanCallback,
-    private val itemCallback: AdapterItemCallback
+    private val itemCallback: StringCallback
 ) :
     RecyclerView.Adapter<BtDeviceViewHolder>() {
     private val deviceInfos = ArrayList<BtDevice>()

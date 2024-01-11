@@ -327,7 +327,7 @@ class HomeActivity : ThemableActivity() {
         }
     }
 
-    private fun showDevice(deviceName: String, address: String) {
+    private fun showDevice(address: String) {
         BluetoothHelper.stopScan(this::scanUpdate)
         val old = false
         if (old) {
@@ -339,7 +339,6 @@ class HomeActivity : ThemableActivity() {
                 .apply {
                     putExtra(DeviceActivity.EXTRA_RANGER_NAME, rangerName)
                     putExtra(DeviceActivity.EXTRA_DEVICE_ADDRESS, address)
-                    putExtra(DeviceActivity.EXTRA_DEVICE_NAME, deviceName)
                 }
             startActivity(intent)
         }
@@ -365,7 +364,7 @@ class HomeActivity : ThemableActivity() {
             }
 
             R.id.mnu_sync_clock -> {
-                TimeHelper.synchronizeClock { message -> binding.coordinator.showSnack(message) }
+                TimeHelper.syncBoardClock { message -> binding.coordinator.showSnack(message) }
                 return true
             }
 

@@ -19,21 +19,6 @@ class PreferencesHelper {
     fun showingAllBluetoothDevices(): Boolean =
         preferences.getBoolean(PREF_SHOW_ALL_BT_DEVICES, false)
 
-    fun isLocationPromptDisabled(): Boolean =
-        preferences.getBoolean(PREF_DISABLE_LOCATION_PROMPT, false)
-
-    fun getLastGoogleTimestamp(): Long =
-        preferences.getLong(PREF_LAST_GOOGLE_TIMESTAMP, 0)
-
-    fun getCurrentElapsedTime(): Long =
-        preferences.getLong(PREF_ELAPSED_TIME_AT_GOOGLE_TIMESTAMP, 0)
-
-    fun getPromptedBluetooth(): Boolean =
-        preferences.getBoolean(PREF_PROMPTED_BLUETOOTH, false)
-
-    fun getPromptedLocation(): Boolean =
-        preferences.getBoolean(PREF_PROMPTED_LOCATION, false)
-
     fun getBluetoothRequested(): Boolean = preferences.getBoolean(PREF_BLUETOOTH_REQUESTED, false)
 
     fun getNotificationsRequested(): Boolean =
@@ -42,14 +27,6 @@ class PreferencesHelper {
     fun getLocationRequested(): Boolean = preferences.getBoolean(PREF_LOCATION_REQUESTED, false)
 
     fun getCameraRequested(): Boolean = preferences.getBoolean(PREF_CAMERA_REQUESTED, false)
-
-    fun getDeviceSettings(): String = preferences.getString(PREF_DEVICE_SETTINGS, "") ?: ""
-
-    // Assume default state to be ON (i.e., return true), because that is default behavior when the preference
-    // has not yet been set
-    fun getBluetoothRecordingState(): Boolean = preferences.getBoolean(
-        PREF_BLUETOOTH_RECORDING_STATE, true
-    )
 
     fun getStatusUploadInterval(): StatusUploadInterval {
         val code = preferences.getInt(PREF_STATUS_UPLOAD_INTERVAL, -1)
@@ -71,27 +48,11 @@ class PreferencesHelper {
     fun setCameraRequested() =
         preferences.edit().putBoolean(PREF_CAMERA_REQUESTED, true).apply()
 
-    fun setDeviceSettings(data: String) =
-        preferences.edit().putString(PREF_DEVICE_SETTINGS, data).apply()
-
     private fun setCurrentElapsedTime(elapsed: Long) =
         preferences.edit().putLong(PREF_ELAPSED_TIME_AT_GOOGLE_TIMESTAMP, elapsed).apply()
 
     private fun setLastGoogleTimestamp(ts: Long) =
         preferences.edit().putLong(PREF_LAST_GOOGLE_TIMESTAMP, ts).apply()
-
-    fun setLocationPromptDisabled() =
-        preferences.edit().putBoolean(PREF_DISABLE_LOCATION_PROMPT, true).apply()
-
-    fun setPromptedLocation() =
-        preferences.edit().putBoolean(PREF_PROMPTED_LOCATION, true).apply()
-
-    fun setPromptedBluetooth() =
-        preferences.edit().putBoolean(PREF_PROMPTED_BLUETOOTH, true).apply()
-
-    fun setBluetoothRecordingState(btOn: Boolean) = preferences.edit().putBoolean(
-        PREF_BLUETOOTH_RECORDING_STATE, btOn
-    ).apply()
 
     fun saveTimestamps(currentElapsedTimeMS: Long, lastGoogleSyncTimestampMS: Long) {
         setCurrentElapsedTime(currentElapsedTimeMS)
@@ -135,13 +96,8 @@ class PreferencesHelper {
         private const val PREF_LOCATION_REQUESTED = "location_requested"
         private const val PREF_BLUETOOTH_REQUESTED = "bluetooth_requested"
         private const val PREF_NOTIFICATIONS_REQUESTED = "notifications_requested"
-        private const val PREF_PROMPTED_BLUETOOTH = "has_prompted_bluetooth"
-        private const val PREF_PROMPTED_LOCATION = "has_prompted_location"
-        private const val PREF_DEVICE_SETTINGS = "device_settings"
         private const val PREF_ELAPSED_TIME_AT_GOOGLE_TIMESTAMP = "elapsedTimeAtGoogleTimestamp"
         private const val PREF_LAST_GOOGLE_TIMESTAMP = "lastGoogleTimestamp"
-        private const val PREF_DISABLE_LOCATION_PROMPT = "disableLocationPrompt"
-        private const val PREF_BLUETOOTH_RECORDING_STATE = "bluetooth_recording_state"
         private const val PREF_USER_FONT_SIZE = "user_font_size"
         private const val PREF_AUTO_GOOGLE_SIGN_IN = "auto_google_sign_in"
 

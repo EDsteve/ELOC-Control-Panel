@@ -16,8 +16,13 @@
     </declare-styleable>
 
     <declare-styleable name="ListItem">
-        <attr name="itemLabel" format="string" />
-        <attr name="itemValue" format="string" />
-        <attr name="showDivider" format="boolean" />
+        <attr name="keyText" format="string" />
+        <attr name="valueText" format="string" />
+        <attr name="itemType" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="button" value="1" />
+            <enum name="toggle" value="2" />
+        </attr>
+        <attr name="indent" format="dimension" />
     </declare-styleable>
 </resources>

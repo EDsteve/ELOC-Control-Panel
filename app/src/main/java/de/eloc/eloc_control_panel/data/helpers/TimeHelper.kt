@@ -25,7 +25,7 @@ object TimeHelper {
     fun formatMillis(context: Context, millis: Number, useSeconds: Boolean = false) =
         formatSeconds(context, millis.toDouble() / 1000, useSeconds)
 
-    fun formatSeconds(
+    private fun formatSeconds(
         context: Context,
         seconds: Double,
         useSeconds: Boolean = false
@@ -55,7 +55,7 @@ object TimeHelper {
 
     fun toSeconds(hours: Number) = hours.toDouble() * ONE_HOUR_SECONDS
 
-    fun synchronizeClock(updateEloc: Boolean = false, callback: StringCallback? = null) {
+    fun syncBoardClock(updateEloc: Boolean = false, callback: StringCallback? = null) {
         SNTPClient.getDate(
             5000,
             Calendar.getInstance().timeZone
@@ -78,7 +78,7 @@ object TimeHelper {
                 }
                 if (updateEloc) {
                     val seconds = (googletimestampMillis / 1000.0).toLong()
-                    DeviceDriver.setTime(seconds, differenceMillis, timeZoneOffsetHours)
+                    DeviceDriver.syncTime(seconds, differenceMillis, timeZoneOffsetHours)
                 }
 
                 PreferencesHelper.instance.saveTimestamps(
