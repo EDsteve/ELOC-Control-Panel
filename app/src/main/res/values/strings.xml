@@ -30,6 +30,7 @@
     <string name="none">(None)</string>
     <string name="off">OFF</string>
     <string name="on">ON</string>
+    <string name="important">Important</string>
     <string name="open_drawer_menu">Open drawer menu</string>
     <string name="open_settings">Open settings</string>
     <string name="permission_required">Permission required</string>
@@ -136,4 +137,26 @@
     <string name="seconds_per_file">Seconds Per File</string>
     <string name="node_device_name">Node/Device Name</string>
     <string name="getting_node_name">Getting node name…</string>
+    <string name="mode">Mode</string>
+    <string name="getting_mode">Getting mode…</string>
+    <string name="setting_mode">Setting mode…</string>
+    <string name="state_invalid">Invalid</string>
+    <string name="state_noun_record_off_detect_off">Stop</string>
+    <string name="state_noun_record_on_detect_off">Record</string>
+    <string name="state_noun_record_on_detect_on">Record with AI Detection</string>
+    <string name="state_noun_record_off_detect_on">AI Detection</string>
+    <string name="state_noun_record_on_event">Record On Event (AI Detection)</string>
+    <string name="state_verb_record_off_detect_off">Inactive</string>
+    <string name="state_verb_record_on_detect_off">Recording</string>
+    <string name="state_verb_record_on_detect_on">Recording with AI Detection</string>
+    <string name="state_verb_record_off_detect_on">AI Detection</string>
+    <string name="state_verb_record_on_event">Recording On Event</string>
+    <string name="select_mode">Select mode</string>
+    <string name="command_line">Command Line</string>
+    <string name="open">Open</string>
+    <string name="sending_command">Sending command…</string>
+    <string name="manual_command_info">You can manually send a command by entering it below and tapping on the send button.</string>
+    <string name="command_required">You must enter a command to send!</string>
+    <string name="clear">Clear</string>
+    <string name="confirm_clear_log">Are you sure you want to clear the log?</string>
 </resources>

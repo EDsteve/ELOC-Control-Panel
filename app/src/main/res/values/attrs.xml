@@ -25,4 +25,8 @@
         </attr>
         <attr name="indent" format="dimension" />
     </declare-styleable>
+
+    <declare-styleable name="ModeButton">
+        <attr name="isBusy" format="boolean" />
+    </declare-styleable>
 </resources>

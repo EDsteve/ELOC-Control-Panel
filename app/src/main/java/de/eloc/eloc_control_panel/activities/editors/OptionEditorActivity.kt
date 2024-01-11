@@ -5,6 +5,7 @@ import androidx.core.view.children
 import com.google.android.material.radiobutton.MaterialRadioButton
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.databinding.ActivityOptionEditorBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
@@ -20,6 +21,7 @@ class OptionEditorActivity : BaseEditorActivity() {
     }
 
     override fun applyData() {
+        binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.settingNameTextView.text = getString(R.string.text_editor_setting_name, settingName)
         binding.currentValueEditText.setText(currentValue)
         binding.saveButton.setOnClickListener { save() }

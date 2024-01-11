@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.openlocationcode.OpenLocationCode
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
@@ -16,24 +17,17 @@ import de.eloc.eloc_control_panel.data.RecordState
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.databinding.ActivityDeviceBinding
+import de.eloc.eloc_control_panel.databinding.LayoutModeChooserBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 
-// todo: show free space text under storage gauge
-// todo: show % of free storage in gauge after firmware update
-// todo: show battery % after firmware update
-// todo: STATUS section will have data loaded after firmware update.
-// todo: DETECTOR SETTINGS section -> RecordWhenDetected, Model, Communication -> after AI has been implemented
-// todo: detecting button to be activated when detection is implemented.
 // todo: add refresh menu item for old API levels
-// todo: is LabelColor enum used?
 
 class DeviceActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_DEVICE_ADDRESS = "device_address"
         const val EXTRA_RANGER_NAME = "ranger_name"
-        private const val CMD_SET_RECORD_MODE = "setRecordMode"
     }
 
     private var hasSDCardError = false
@@ -62,53 +56,20 @@ class DeviceActivity : AppCompatActivity() {
         }
     }
 
-    private val setCommandCompletedCallback = SetCommandCompletedCallback {success, type ->
+    private val setCommandCompletedCallback = SetCommandCompletedCallback { success, type ->
         runOnUiThread {
-            when(type) {
+            when (type) {
                 CommandType.SetRecordMode -> {
-                    setDeviceState(DeviceDriver.general.recordingState)
+                    setRecordingState()
                     if (success) {
                         DeviceDriver.getStatus()
                     }
                 }
+
                 else -> {}
             }
         }
     }
-
-    private var recordingState = RecordState.Invalid
-        set(value) {
-            field = value
-            // todo: update recording/detecting since labels correctly
-            binding.stopButton.visibility = View.GONE
-            binding.startRecordingButton.visibility = View.GONE
-            binding.startDetectingButton.visibility = View.GONE
-            binding.stopButton.isClickable = false
-            binding.stopButton.isFocusable = false
-            when (field) {
-                RecordState.Invalid, RecordState.RecordOffDetectOff -> {
-                    binding.startRecordingButton.visibility = View.VISIBLE
-                    binding.startDetectingButton.visibility = View.VISIBLE
-                }
-
-                else -> {
-                    binding.stopButton.text = getString(R.string.stop_recording)
-                    binding.stopButton.visibility = View.VISIBLE
-                    binding.stopButton.isClickable = true
-                    binding.stopButton.isFocusable = true
-                }
-
-
-                // todo fix enum values
-                /*
-                DeviceState.Detecting -> {
-                    binding.stopButton.text = getString(R.string.stop_detecting)
-                    binding.stopButton.visibility = View.VISIBLE
-                    binding.stopButton.isClickable = true
-                    binding.stopButton.isFocusable = true
-                }*/
-            }
-        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -116,7 +77,7 @@ class DeviceActivity : AppCompatActivity() {
         DeviceDriver.addOnSetCommandCompletedListener(setCommandCompletedCallback)
         DeviceDriver.addOnGetCommandCompletedListener(getCommandCompletedListener)
         setContentView(binding.root)
-        setDeviceState(RecordState.Invalid)
+        setRecordingState()
         initialize()
     }
 
@@ -200,7 +161,7 @@ class DeviceActivity : AppCompatActivity() {
         } else {
             binding.storageTextView.text = formatNumber(gb, "GB")
         }
-        setDeviceState(DeviceDriver.general.recordingState)
+        setRecordingState()
     }
 
     private fun setConfigData() {
@@ -228,8 +189,7 @@ class DeviceActivity : AppCompatActivity() {
     private fun setListeners() {
         DeviceDriver.registerConnectionChangedListener { onConnectionChanged(it) }
         binding.instructionsButton.setOnClickListener { showInstructions() }
-        binding.startRecordingButton.setOnClickListener { recordButtonClicked() }
-        binding.stopButton.setOnClickListener { stopRecording() }
+        binding.modeButton.addClickListener { modeButtonClicked() }
         binding.toolbar.setNavigationOnClickListener { goBack() }
         binding.backButton.setOnClickListener { goBack() }
         binding.recorderContainer.setOnClickListener {
@@ -247,9 +207,6 @@ class DeviceActivity : AppCompatActivity() {
                 connectToDevice()
             }
         }
-        binding.startDetectingButton.setOnClickListener {
-
-        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             binding.scrollView.setOnScrollChangeListener(scrollChangeListener)
@@ -257,7 +214,7 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun openSettings(showMicrophoneSection: Boolean = false) {
-        if (recordingState.isIdle) {
+        if (DeviceDriver.general.recordingState.isInactive) {
             val intent = Intent(this, DeviceSettingsActivity::class.java)
             intent.putExtra(DeviceSettingsActivity.EXTRA_SHOW_RECORDER, showMicrophoneSection)
             startActivity(intent)
@@ -349,61 +306,114 @@ class DeviceActivity : AppCompatActivity() {
         }
     }
 
-    private fun confirmIgnoreAccuracy() {
+    private fun confirmIgnoreAccuracy(state: RecordState) {
         showModalOptionAlert(
             getString(R.string.confirm),
             getString(R.string.please_wait_for_gps_accuracy),
             getString(R.string.record_anyway),
             getString(R.string.wait55),
-            { startRecording() },
+            { requestState(state, true) },
         )
     }
 
-    private fun recordButtonClicked() {
-        // todo fix after proper states
-        // this will not workk well until we get a proper enum or table of all states from fw devs
-        // for now, i will work with the 'isIdle' property.
-        if (!recordingState.isIdle) {
-            stopRecording()
-        } else {
-            if (hasSDCardError) {
-                showSDCardError()
-                return
-            }
-
-            if (locationAccuracy <= 8.1) {
-                startRecording()
-            } else {
-                confirmIgnoreAccuracy()
-            }
+    private fun modeButtonClicked() {
+        if (!binding.modeButton.isBusy) {
+            openModeChooser()
         }
     }
 
-    private fun stopRecording() {
-        DeviceDriver.stopRecording()
+    private fun openModeChooser() {
+        val modeSheet = BottomSheetDialog(this)
+        val modeSheetBinding = LayoutModeChooserBinding.inflate(layoutInflater)
+        modeSheetBinding.backButton.setOnClickListener {
+            modeSheet.dismiss()
+        }
+        modeSheetBinding.recordButton.setOnClickListener {
+            modeSheet.dismiss()
+            requestState(RecordState.RecordOnDetectOff)
+        }
+        modeSheetBinding.recordWithAiButton.setOnClickListener {
+            modeSheet.dismiss()
+            requestState(RecordState.RecordOnDetectOn)
+        }
+        modeSheetBinding.aiDetectionButton.setOnClickListener {
+            modeSheet.dismiss()
+            requestState(RecordState.RecordOffDetectOn)
+        }
+        modeSheetBinding.recordOnEventButton.setOnClickListener {
+            modeSheet.dismiss()
+            requestState(RecordState.RecordOnEvent)
+        }
+        modeSheetBinding.stopButton.setOnClickListener {
+            modeSheet.dismiss()
+            requestState(RecordState.RecordOffDetectOff, true)
+        }
+        modeSheet.setContentView(modeSheetBinding.root)
+        modeSheet.setCancelable(true)
+        modeSheet.show()
     }
 
-    private fun startRecording() {
-        DeviceDriver.startRecording(locationCode, locationAccuracy)
-        /*
+    private fun requestState(newMode: RecordState, ignoreLocationAccuracy: Boolean = false) {
+        if (newMode == DeviceDriver.general.recordingState) {
+            return
+        }
 
-       // todo: check if bt state while recording is maintained as set by user
+        if (hasSDCardError && (newMode != RecordState.Invalid) && (newMode != RecordState.RecordOffDetectOff)) {
+            showSDCardError()
+            return
+        }
 
-                // Respect the bt recording state setting
-                boolean btOnWhenRecording = preferencesHelper.getBluetoothRecordingState();
-                send("setGPS^" + locationCode + "#" + locationAccuracy);
+        if (ignoreLocationAccuracy || (locationAccuracy <= 8.1)) {
+            var proceed = true
 
+            val task = {
+                if (proceed) {
+                    binding.modeButton.busyText = R.string.setting_mode
+                    binding.modeButton.setButtonColor(R.color.detecting_off_button)
+                    binding.modeButton.isBusy = true
 
-                // If bt on ELOC must be off, it means app will lose connection; go back to main screen
-                if (!btOnWhenRecording) {
-                    String message = getString(R.string.connection_close_message);
-                    ActivityHelper.INSTANCE.showAlert(this, message, false, this::onBackPressed);
-                }*/
+                    when (newMode) {
+                        RecordState.RecordOffDetectOff -> DeviceDriver.setRecordState(newMode)
+                        else -> DeviceDriver.setRecordState(
+                            newMode,
+                            locationCode,
+                            locationAccuracy
+                        )
+                    }
+                }
+            }
+            if (DeviceDriver.bluetooth.enableDuringRecord) {
+                task()
+            } else {
+                showModalOptionAlert(
+                    getString(R.string.important),
+                    getString(R.string.connection_close_message),
+                    positiveButtonLabel = getString(R.string.yes_continue),
+                    positiveCallback = {
+                        task()
+                    },
+                    negativeCallback = {
+                        proceed = false
+                        task()
+                    }
+                )
+            }
+        } else {
+            confirmIgnoreAccuracy(newMode)
+        }
     }
 
-    private fun setDeviceState(state: RecordState, errorMessage: String = "") {
-        recordingState = state
+    private fun setRecordingState(errorMessage: String = "") {
         val err = errorMessage.trim()
+        val state = DeviceDriver.general.recordingState
+        binding.modeButton.text = state.getVerb()
+        binding.modeButton.isBusy = false
+        val backColor = if (state == RecordState.RecordOffDetectOff) {
+            R.color.recording_off_button
+        } else {
+            R.color.recording_on_button
+        }
+        binding.modeButton.setButtonColor(backColor)
         if (err.isNotEmpty()) {
             showModalAlert(getString(R.string.oops), err)
         }

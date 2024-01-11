@@ -22,6 +22,7 @@ import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SocketListener
+import de.eloc.eloc_control_panel.interfaces.StringCallback
 import org.json.JSONObject
 import java.io.IOException
 import java.util.UUID
@@ -265,6 +266,7 @@ object DeviceDriver : Runnable {
     val battery = Battery()
     val sdCard = SdCard()
     val general = General()
+    private var commandLineListener: StringCallback? = null
     private var connecting = false
     private var disconnecting = false
     private const val NEWLINE = "\n"
@@ -376,17 +378,16 @@ object DeviceDriver : Runnable {
         }
     }
 
-    fun stopRecording() {
-        write("setRecordMode#mode=recordOff_detectOff")
+    fun sendCustomCommand(command: String) {
+        write(command)
     }
 
-    fun startRecording(locationCode: String, locationAccuracy: Double) {
-        setLocation(locationCode, locationAccuracy.toInt())
-        write("setRecordMode#mode=recordOn_detectOff")
+    fun setCommandLineListener(listener: StringCallback) {
+        commandLineListener = listener
     }
 
-    fun startDetecting(locationCode: String, locationAccuracy: Double) {
-        setLocation(locationCode, locationAccuracy.toInt())
+    fun clearCommandLineListener() {
+        commandLineListener = null
     }
 
     fun syncTime(timestamp: Long, difference: Long, timezone: Int) {
@@ -760,6 +761,9 @@ object DeviceDriver : Runnable {
                         bytesCache = bytesCache.slice(startIndex..endIndex)
                         val jsonByteArray = jsonBytes.toByteArray()
                         val json = String(jsonByteArray)
+                        if (commandLineListener != null) {
+                            commandLineListener?.handler(json)
+                        }
                         var intercepted = interceptCompletedSetCommand(json)
                         if (!intercepted) {
                             intercepted = interceptCompletedGetCommand(json)
@@ -801,6 +805,27 @@ object DeviceDriver : Runnable {
     fun getDeviceInfo() {
         getStatus()
         getConfig()
+    }
+
+    fun setRecordState(
+        state: RecordState,
+        locationCode: String? = null,
+        locationAccuracy: Double? = null
+    ) {
+        if ((locationCode != null) && (locationAccuracy != null)) {
+            setLocation(locationCode, locationAccuracy.toInt())
+        }
+        val mode = when (state) {
+            RecordState.RecordOffDetectOff -> "recordOff_detectOff"
+            RecordState.RecordOnDetectOff -> "recordOn_detectOff"
+            RecordState.RecordOffDetectOn -> "recordOff_detectOn"
+            RecordState.RecordOnDetectOn -> "recordOn_detectOn"
+            RecordState.RecordOnEvent -> "recordOnEvent"
+            RecordState.Invalid -> ""
+        }
+        if (mode.isNotEmpty()) {
+            write("setRecordMode#mode=$mode")
+        }
     }
 
     private fun parseConfig(jsonObject: JSONObject) {

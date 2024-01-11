@@ -9,7 +9,6 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -219,7 +218,7 @@ class AuthHelper {
         if (user == null) {
             callback.handler(defaultErrorMessage)
         } else {
-            user!!.updateEmail(newEmailAddress).addOnCompleteListener { task ->
+            user!!.verifyBeforeUpdateEmail(newEmailAddress).addOnCompleteListener { task ->
                 val error = if (task.isSuccessful) {
                     user?.sendEmailVerification()
                     ""

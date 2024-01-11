@@ -38,6 +38,9 @@
         tools:ignore="AllowBackup,GoogleAppIndexingWarning"
         tools:targetApi="m">
         <activity
+            android:name=".activities.CommandLineActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.editors.OptionEditorActivity"
             android:exported="false" />
         <activity

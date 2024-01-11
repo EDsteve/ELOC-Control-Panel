@@ -420,10 +420,11 @@
                         tools:valueText="4354 MHz" />
                 </LinearLayout>
 
-                <LinearLayout  android:layout_marginVertical="24dp"
+                <LinearLayout
                     android:id="@+id/log_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginVertical="24dp"
                     android:orientation="vertical">
 
                     <TextView
@@ -492,64 +493,33 @@
                         tools:valueText="4354" />
                 </LinearLayout>
 
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/command_line_card"
+                <LinearLayout
+                    android:id="@+id/advanced_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    app:cardBackgroundColor="@color/cardview"
-                    app:cardCornerRadius="8dp"
-                    app:contentPadding="8dp">
+                    android:orientation="vertical">
 
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/advanced_section_text_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:background="?selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:text="@string/advanced"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        app:drawableEndCompat="@drawable/keyboard_arrow_down" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/advanced_command_line_item"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="4dp"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="@string/custom_command"
-                                android:textAllCaps="true"
-                                android:textStyle="bold" />
-
-                            <Button
-                                android:id="@+id/command_line_button"
-                                style="@style/AppTextButton"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/run"
-                                app:drawableEndCompat="@drawable/run"
-                                app:drawableTint="@color/colorPrimary" />
-
-                        </LinearLayout>
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="@string/command">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/custom_command_edit_text"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:imeOptions="actionDone"
-                                android:importantForAutofill="no"
-                                android:inputType="text"
-                                tools:ignore="TouchTargetSizeCheck"
-                                tools:text="ELOC18" />
-                        </com.google.android.material.textfield.TextInputLayout>
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/command_line"
+                        app:valueText="@string/open" />
+                </LinearLayout>
 
                 <Space
                     android:layout_width="match_parent"

@@ -5,6 +5,7 @@ import android.text.InputType
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.hideKeyboard
+import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.databinding.ActivityTextEditorBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
@@ -23,6 +24,7 @@ class TextEditorActivity : BaseEditorActivity() {
     }
 
     override fun applyData() {
+        binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.settingNameTextView.text = getString(R.string.text_editor_setting_name, settingName)
         binding.currentValueEditText.setText(currentValue)
         binding.saveButton.setOnClickListener { save() }

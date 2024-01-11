@@ -11,27 +11,23 @@ import de.eloc.eloc_control_panel.activities.editors.OptionEditorActivity
 import de.eloc.eloc_control_panel.activities.editors.TextEditorActivity
 import de.eloc.eloc_control_panel.data.Channel
 import de.eloc.eloc_control_panel.data.CommandType
-import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.data.GainType
 import de.eloc.eloc_control_panel.data.SampleRate
 import de.eloc.eloc_control_panel.data.TimePerFile
-import de.eloc.eloc_control_panel.data.helpers.JsonHelper
 import de.eloc.eloc_control_panel.databinding.ActivityDeviceSettingsBinding
 import de.eloc.eloc_control_panel.driver.BtConfig
 import de.eloc.eloc_control_panel.driver.Cpu
+import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.driver.General
 import de.eloc.eloc_control_panel.driver.Intruder
 import de.eloc.eloc_control_panel.driver.Logs
 import de.eloc.eloc_control_panel.driver.Microphone
-import de.eloc.eloc_control_panel.interfaces.BluetoothDeviceListener
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
-import org.json.JSONObject
 
 class DeviceSettingsActivity : ThemableActivity() {
     companion object {
         const val EXTRA_SHOW_RECORDER = "show_recorder"
-        private const val COMMAND = "command"
     }
 
     private lateinit var binding: ActivityDeviceSettingsBinding
@@ -71,17 +67,6 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
     }
 
-    private val commandListener = object : BluetoothDeviceListener() {
-        override fun onRead(data: ByteArray) {
-            try {
-                val json = String(data)
-                runOnUiThread { parseResponse(json) }
-            } catch (_: Exception) {
-
-            }
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDeviceSettingsBinding.inflate(layoutInflater)
@@ -96,6 +81,7 @@ class DeviceSettingsActivity : ThemableActivity() {
         setLogsSectionState(false)
         setCpuSectionState(false)
         setGeneralSectionState(false)
+        setAdvancedSectionState(false)
         setData()
 
         // Set the listeners after setting the data
@@ -117,7 +103,6 @@ class DeviceSettingsActivity : ThemableActivity() {
         super.onDestroy()
         DeviceDriver.removeOnSetCommandCompletedListener(onSetCommandCompletedCallback)
         DeviceDriver.removeOnGetCommandCompletedListener(onGetCommandCompletedCallback)
-        DeviceDriver.removeCommandListener(commandListener)
     }
 
     private fun setData() {
@@ -155,54 +140,9 @@ class DeviceSettingsActivity : ThemableActivity() {
         showContent()
     }
 
-    private fun parseResponse(json: String) {
-        try {
-
-            val KEY_CMD = "cmd"
-            val KEY_ECODE = "ecode"
-            val CMD_GET_CONFIG = "getConfig"
-            val CMD_GET_STATUS = "getStatus"
-            val CMD_SET_CONFIG = "setConfig"
-            val CMD_SET_STATUS = "setStatus"
-
-
-            val root = JSONObject(json)
-            val command = JsonHelper.getJSONStringAttribute(KEY_CMD, root).lowercase()
-            if (
-                (command == CMD_SET_STATUS.lowercase()) ||
-                (command == CMD_SET_CONFIG.lowercase())
-            ) {
-                val message = try {
-                    val errorCode =
-                        JsonHelper.getJSONNumberAttribute(KEY_ECODE, root, -1.0)
-                            .toInt()
-                    val messageResId = if (errorCode == 0)
-                        R.string.new_value_was_applied
-                    else
-                        R.string.something_went_wrong
-                    getString(messageResId)
-                } catch (e: Exception) {
-                    e.localizedMessage ?: getString(R.string.something_went_wrong)
-                }
-                binding.coordinator.showSnack(message)
-                binding.progressTextView.text = getString(R.string.updating_values)
-                DeviceDriver.getDeviceInfo()
-            } else if (
-                (command == CMD_GET_STATUS.lowercase()) ||
-                (command == CMD_GET_CONFIG.lowercase())
-            ) {
-                setData()
-            }
-        } catch (_: Exception) {
-
-        }
-    }
-
     private fun setListeners() {
         DeviceDriver.addOnSetCommandCompletedListener(onSetCommandCompletedCallback)
         DeviceDriver.addOnGetCommandCompletedListener(onGetCommandCompletedCallback)
-        DeviceDriver.addCommandListener(commandListener)
-        binding.commandLineButton.setOnClickListener { runCommandLine() }
         binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.toolbar.setNavigationOnClickListener { goBack() }
 
@@ -212,6 +152,17 @@ class DeviceSettingsActivity : ThemableActivity() {
         setIntruderListeners()
         setBtListeners()
         setMicrophoneListeners()
+        setAdvancedListeners()
+    }
+
+    private fun setAdvancedListeners() {
+        binding.advancedSectionTextView.setOnClickListener {
+            setAdvancedSectionState(binding.advancedCommandLineItem.visibility != View.VISIBLE)
+        }
+        binding.advancedCommandLineItem.setOnClickListener {
+            val intent = Intent(this, CommandLineActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     private fun setGeneralListeners() {
@@ -570,6 +521,28 @@ class DeviceSettingsActivity : ThemableActivity() {
         )
     }
 
+    private fun setAdvancedSectionState(expanded: Boolean) {
+        val state = if (expanded) View.VISIBLE else View.GONE
+        binding.advancedSection.children.forEach { child ->
+            if (child == binding.advancedSectionTextView) {
+                return@forEach
+            }
+            child.visibility = state
+        }
+
+        val icon = if (expanded) {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
+        } else {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
+        }
+        binding.advancedSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
+            null,
+            null,
+            icon,
+            null
+        )
+    }
+
     private fun setGeneralSectionState(expanded: Boolean) {
         val state = if (expanded) View.VISIBLE else View.GONE
         binding.generalSection.children.forEach { child ->
@@ -646,30 +619,4 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding.progressLayout.visibility = View.GONE
         binding.contentLayout.visibility = View.VISIBLE
     }
-
-
-    // OLD ------------------------------------------------
-
-
-    private fun runCommand(command: String) {
-        hideKeyboard()
-        val intent = Intent()
-        intent.putExtra(COMMAND, command)
-        setResult(RESULT_OK, intent)
-        finish()
-    }
-
-    private fun runCommandLine() {
-        val command = binding.customCommandEditText.text?.toString()?.trim() ?: ""
-        if (command.isEmpty()) {
-            showModalAlert(
-                getString(R.string.required),
-                getString(R.string.command_missing),
-            )
-        } else {
-            runCommand(command)
-        }
-    }
-
-
 }
