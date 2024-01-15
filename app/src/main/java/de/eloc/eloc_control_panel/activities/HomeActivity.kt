@@ -29,7 +29,6 @@ import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.LayoutNavHeaderBinding
 import de.eloc.eloc_control_panel.interfaces.VoidCallback
-import de.eloc.eloc_control_panel.old.TerminalActivity
 import de.eloc.eloc_control_panel.receivers.BluetoothDeviceReceiver
 import de.eloc.eloc_control_panel.services.StatusUploadService
 import kotlinx.coroutines.launch
@@ -329,19 +328,12 @@ class HomeActivity : ThemableActivity() {
 
     private fun showDevice(address: String) {
         BluetoothHelper.stopScan(this::scanUpdate)
-        val old = false
-        if (old) {
-            val intent = Intent(this, TerminalActivity::class.java)
-            intent.putExtra(TerminalActivity.EXTRA_RANGER_NAME, rangerName)
-            startActivity(intent)
-        } else {
-            val intent = Intent(this, DeviceActivity::class.java)
-                .apply {
-                    putExtra(DeviceActivity.EXTRA_RANGER_NAME, rangerName)
-                    putExtra(DeviceActivity.EXTRA_DEVICE_ADDRESS, address)
-                }
-            startActivity(intent)
-        }
+        val intent = Intent(this, DeviceActivity::class.java)
+            .apply {
+                putExtra(DeviceActivity.EXTRA_RANGER_NAME, rangerName)
+                putExtra(DeviceActivity.EXTRA_DEVICE_ADDRESS, address)
+            }
+        startActivity(intent)
     }
 
     private fun showMap() {

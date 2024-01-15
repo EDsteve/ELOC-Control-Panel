@@ -15,6 +15,7 @@ import de.eloc.eloc_control_panel.data.GainType
 import de.eloc.eloc_control_panel.data.SampleRate
 import de.eloc.eloc_control_panel.data.TimePerFile
 import de.eloc.eloc_control_panel.databinding.ActivityDeviceSettingsBinding
+import de.eloc.eloc_control_panel.driver.Battery
 import de.eloc.eloc_control_panel.driver.BtConfig
 import de.eloc.eloc_control_panel.driver.Cpu
 import de.eloc.eloc_control_panel.driver.DeviceDriver
@@ -82,6 +83,7 @@ class DeviceSettingsActivity : ThemableActivity() {
         setCpuSectionState(false)
         setGeneralSectionState(false)
         setAdvancedSectionState(false)
+        setBatterySectionState(false)
         setData()
 
         // Set the listeners after setting the data
@@ -121,11 +123,12 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding.intruderThresholdItem.valueText = DeviceDriver.intruder.threshold.toString()
         binding.intruderWindowsMsItem.valueText = DeviceDriver.intruder.windowsMs.toString()
 
+        val secs = " secs"
         binding.btEnableAtStartItem.setSwitch(DeviceDriver.bluetooth.enableAtStart)
         binding.btEnableOnTappingItem.setSwitch(DeviceDriver.bluetooth.enableOnTapping)
         binding.btEnableDuringRecordingItem.setSwitch(DeviceDriver.bluetooth.enableDuringRecord)
         binding.btOffTimeoutSecondsItem.valueText =
-            formatNumber(DeviceDriver.bluetooth.offTimeoutSeconds, " secs", 0)
+            formatNumber(DeviceDriver.bluetooth.offTimeoutSeconds, secs, 0)
 
         val mHz = " MHz"
         binding.cpuEnableLightSleepItem.setSwitch(DeviceDriver.cpu.enableLightSleep)
@@ -137,6 +140,13 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding.logsMaxFilesItem.valueText = DeviceDriver.logs.maxFiles.toString()
         binding.logsMaxFileSizeItem.valueText = DeviceDriver.logs.maxFileSize.toString()
 
+        binding.batteryNoBatModeItem.setSwitch(DeviceDriver.battery.noBatteryMode)
+        binding.batteryAverageSamplesItem.valueText = DeviceDriver.battery.avgSamples.toString()
+        binding.batteryAverageIntervalItem.valueText =
+            formatNumber(DeviceDriver.battery.avgIntervalSecs, secs, 0)
+        binding.batteryUpdateIntervalItem.valueText =
+            formatNumber(DeviceDriver.battery.updateIntervalSecs, secs, 0)
+
         showContent()
     }
 
@@ -146,6 +156,7 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.toolbar.setNavigationOnClickListener { goBack() }
 
+        setBatteryListeners()
         setGeneralListeners()
         setCpuListeners()
         setLogsListeners()
@@ -244,6 +255,47 @@ class DeviceSettingsActivity : ThemableActivity() {
                 getString(R.string.logs_max_file_size),
                 DeviceDriver.logs.maxFileSize.toString(),
                 true,
+            )
+        }
+    }
+
+    private fun setBatteryListeners() {
+        binding.batterySectionTextView.setOnClickListener {
+            setBatterySectionState(binding.batteryAverageSamplesItem.visibility != View.VISIBLE)
+        }
+        binding.batteryNoBatModeItem.setSwitchClickedListener {
+            val checked = binding.batteryNoBatModeItem.isChecked
+            if (DeviceDriver.setProperty(Battery.NO_BATTERY_MODE, checked.toString())) {
+                showProgress()
+            } else {
+                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+            }
+        }
+        binding.batteryAverageSamplesItem.setOnClickListener {
+            openTextEditor(
+                Battery.AVERAGE_SAMPLES,
+                getString(R.string.battery_average_samples),
+                DeviceDriver.battery.avgSamples.toString(),
+                isNumeric = true,
+                minimum = 1.0,
+            )
+        }
+        binding.batteryAverageIntervalItem.setOnClickListener {
+            openTextEditor(
+                Battery.AVERAGE_INTERVAL,
+                getString(R.string.battery_average_interval),
+                DeviceDriver.battery.avgIntervalSecs.toInt().toString(),
+                isNumeric = true,
+                minimum = 0.0,
+            )
+        }
+        binding.batteryUpdateIntervalItem.setOnClickListener {
+            openTextEditor(
+                Battery.UPDATE_INTERVAL,
+                getString(R.string.battery_update_interval),
+                DeviceDriver.battery.updateIntervalSecs.toInt().toString(),
+                isNumeric = true,
+                minimum = 5.0,
             )
         }
     }
@@ -558,6 +610,28 @@ class DeviceSettingsActivity : ThemableActivity() {
             ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
         }
         binding.generalSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
+            null,
+            null,
+            icon,
+            null
+        )
+    }
+
+    private fun setBatterySectionState(expanded: Boolean) {
+        val state = if (expanded) View.VISIBLE else View.GONE
+        binding.batterySection.children.forEach { child ->
+            if (child == binding.batterySectionTextView) {
+                return@forEach
+            }
+            child.visibility = state
+        }
+
+        val icon = if (expanded) {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
+        } else {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
+        }
+        binding.batterySectionTextView.setCompoundDrawablesWithIntrinsicBounds(
             null,
             null,
             icon,

@@ -220,19 +220,6 @@
     <string name="upload_eloc_status">Upload ELOC status</string>
     <string name="upload_profile_picture_error">Failed to upload profile picture!</string>
     <string name="uptime">Uptime</string>
-    <string name="user_action_required">User action required</string>
-    <string name="user_id">User ID:</string>
-    <string name="user_id_has_invalid_characters">User ID has invalid characters</string>
-    <string name="user_id_is_already_taken">User ID is already taken</string>
-    <string name="user_id_is_too_short">User ID is too short</string>
-    <string name="user_id_rules">User ID must\n* be at least 6 characters long\n* have only letters, digits, or underscores</string>
-    <string name="verification_message">A verification link was sent to %s.\n\nYou must verify your email address to be able to use to your account.</string>
-    <string name="verification_rationale">Your email address is not yet verified.\n\nPlease click the link that was sent to your email address.\nIt may take a few minutes for the message to arrive. Remember to check you junk mail folder, if the message is not in your inbox.</string>
-    <string name="verify_password">Verify password</string>
-    <string name="version_template">Version: %s</string>
 
-    <string name="yes_permissions">yes, grant permissions</string>
-    <string name="yes_update_now">Yes, Update now</string>
-    <string name="your_account_has_been_deleted">Your account has been deleted</string>
 
 </resources>

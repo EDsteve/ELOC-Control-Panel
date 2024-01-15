@@ -37,50 +37,55 @@ private const val KEY_RECORDING_TIME = "recordingTime[h]"
 private const val KEY_TOTAL_RECORDING_TIME = "totalRecordingTime[h]"
 private const val KEY_FIRMWARE = "firmware"
 private const val KEY_UPTIME = "Uptime[h]"
-private const val KEY_BATTERY = "battery"
-private const val KEY_BATTERY_LEVEL = "SoC[%]"
-private const val KEY_TYPE = "type"
-private const val KEY_VOLTAGE = "voltage[V]"
 private const val KEY_SDCARD_SIZE = "SdCardSize[GB]"
 private const val KEY_SDCARD_FREE_GB = "SdCardFreeSpace[GB]"
 private const val KEY_SDCARD_FREE_PERC = "SdCardFreeSpace[%]"
 private const val KEY_VAL = "val"
 
+private const val KEY_BATTERY = "battery"
+private const val KEY_BATTERY_LEVEL = "SoC[%]"
+private const val KEY_BATTERY_TYPE = "type"
+private const val KEY_BATTERY_VOLTAGE = "voltage[V]"
+internal const val KEY_BATTERY_UPDATE_INTERVAL_MS = "updateIntervalMs"
+internal const val KEY_BATTERY_AVG_SAMPLES = "avgSamples"
+internal const val KEY_BATTERY_AVG_INTERVAL_MS = "avgIntervalMs"
+internal const val KEY_BATTERY_NO_BAT_MODE = "noBatteryMode"
+
 private const val KEY_MICROPHONE = "mic"
-private const val KEY_MICROPHONE_SAMPLE_RATE = "MicSampleRate"
-private const val KEY_MICROPHONE_TYPE = "MicType"
-private const val KEY_MICROPHONE_CHANNEL = "MicChannel"
-private const val KEY_MICROPHONE_APPLL = "MicUseAPLL"
-private const val KEY_MICROPHONE_TIMING_FIX = "MicUseTimingFix"
-private const val KEY_MICROPHONE_GAIN = "MicBitShift"
+internal const val KEY_MICROPHONE_SAMPLE_RATE = "MicSampleRate"
+internal const val KEY_MICROPHONE_TYPE = "MicType"
+internal const val KEY_MICROPHONE_CHANNEL = "MicChannel"
+internal const val KEY_MICROPHONE_APPLL = "MicUseAPLL"
+internal const val KEY_MICROPHONE_TIMING_FIX = "MicUseTimingFix"
+internal const val KEY_MICROPHONE_GAIN = "MicBitShift"
 
 private const val KEY_CONFIG = "config"
 private const val KEY_LOCATION_CODE = "locationCode"
 private const val PATH_SEPARATOR = JsonHelper.PATH_SEPARATOR
 
 private const val KEY_INTRUDER_CONFIG = "intruderCfg"
-private const val KEY_INTRUDER_ENABLED = "enable"
-private const val KEY_INTRUDER_THRESHOLD = "threshold"
-private const val KEY_INTRUDER_WINDOWS_MS = "windowsMs"
+internal const val KEY_INTRUDER_ENABLED = "enable"
+internal const val KEY_INTRUDER_THRESHOLD = "threshold"
+internal const val KEY_INTRUDER_WINDOWS_MS = "windowsMs"
 
-private const val KEY_BT_ENABLE_DURING_RECORD = "bluetoothEnableDuringRecord"
-private const val KEY_BT_ENABLE_AT_START = "bluetoothEnableAtStart"
-private const val KEY_BT_ENABLE_ON_TAPPING = "bluetoothEnableOnTapping"
-private const val KEY_BT_OFF_TIMEOUT_SECONDS = "bluetoothOffTimeoutSeconds"
+internal const val KEY_BT_ENABLE_DURING_RECORD = "bluetoothEnableDuringRecord"
+internal const val KEY_BT_ENABLE_AT_START = "bluetoothEnableAtStart"
+internal const val KEY_BT_ENABLE_ON_TAPPING = "bluetoothEnableOnTapping"
+internal const val KEY_BT_OFF_TIMEOUT_SECONDS = "bluetoothOffTimeoutSeconds"
 
 private const val KEY_LOG_CONFIG = "logConfig"
-private const val KEY_LOGS_LOG_TO_SD_CARD = "logToSdCard"
-private const val KEY_LOGS_FILENAME = "filename"
-private const val KEY_LOGS_MAX_FILES = "maxFiles"
-private const val KEY_LOGS_MAX_FILE_SIZE = "maxFileSize"
+internal const val KEY_LOGS_LOG_TO_SD_CARD = "logToSdCard"
+internal const val KEY_LOGS_FILENAME = "filename"
+internal const val KEY_LOGS_MAX_FILES = "maxFiles"
+internal const val KEY_LOGS_MAX_FILE_SIZE = "maxFileSize"
 
-private const val KEY_CPU_MAX_FREQUENCY_MHZ = "cpuMaxFrequencyMHZ"
-private const val KEY_CPU_MIN_FREQUENCY_MHZ = "cpuMinFrequencyMHZ"
-private const val KEY_CPU_ENABLE_LIGHT_SLEEP = "cpuEnableLightSleep"
+internal const val KEY_CPU_MAX_FREQUENCY_MHZ = "cpuMaxFrequencyMHZ"
+internal const val KEY_CPU_MIN_FREQUENCY_MHZ = "cpuMinFrequencyMHZ"
+internal const val KEY_CPU_ENABLE_LIGHT_SLEEP = "cpuEnableLightSleep"
 
-private const val KEY_GENERAL_NODE_NAME = "nodeName"
-private const val KEY_GENERAL_FILE_HEADER = "fileHeader"
-private const val KEY_GENERAL_SECONDS_PER_FILE = "secondsPerFile"
+internal const val KEY_GENERAL_NODE_NAME = "nodeName"
+internal const val KEY_GENERAL_FILE_HEADER = "fileHeader"
+internal const val KEY_GENERAL_SECONDS_PER_FILE = "secondsPerFile"
 
 private const val KEY_CMD = "cmd"
 private const val KEY_ECODE = "ecode"
@@ -90,171 +95,6 @@ private const val CMD_SET_CONFIG = "setConfig"
 private const val CMD_SET_STATUS = "setStatus"
 private const val CMD_SET_TIME = "setTime"
 private const val CMD_SET_RECORD_MODE = "setRecordMode"
-
-class Battery {
-    var level = 0.0
-        internal set
-
-    var voltage = 0.0
-        internal set
-
-    var type = ""
-        internal set
-}
-
-class SdCard {
-    var freeGb = 0.0
-        internal set
-
-    var freePercentage = 0.0
-        internal set
-
-    var sizeGb = 0.0
-        internal set
-}
-
-class General {
-    companion object {
-        const val NODE_NAME = KEY_GENERAL_NODE_NAME
-        const val FILE_HEADER = KEY_GENERAL_FILE_HEADER
-        const val SECONDS_PER_FILE = KEY_GENERAL_SECONDS_PER_FILE
-    }
-
-    var nodeName = ""
-        internal set
-
-    var fileHeader = ""
-        internal set
-
-    var timePerFile = TimePerFile.Unknown
-        internal set
-
-    var recordingState = RecordState.Invalid
-        internal set
-
-    var recHoursSinceBoot = 0.0
-        internal set
-
-    var sessionId = ""
-        internal set
-
-    var lastLocation = ""
-        internal set
-
-    var recordingSeconds = 0.0
-        internal set
-
-    var version = ""
-        internal set
-
-    var uptimeHours = 0.0
-        internal set
-}
-
-class Cpu {
-    companion object {
-        const val MAX_FREQUENCY = KEY_CPU_MAX_FREQUENCY_MHZ
-        const val MIN_FREQUENCY = KEY_CPU_MIN_FREQUENCY_MHZ
-        const val ENABLE_LIGHT_SLEEP = KEY_CPU_ENABLE_LIGHT_SLEEP
-    }
-
-    var maxFrequencyMHz = 0
-        internal set
-
-    var minFrequencyMHz = 0
-        internal set
-
-    var enableLightSleep = false
-        internal set
-}
-
-class BtConfig {
-    companion object {
-        const val ENABLE_DURING_RECORD = KEY_BT_ENABLE_DURING_RECORD
-        const val ENABLE_AT_START = KEY_BT_ENABLE_AT_START
-        const val ENABLE_ON_TAPPING = KEY_BT_ENABLE_ON_TAPPING
-        const val OFF_TIME_OUT_SECONDS = KEY_BT_OFF_TIMEOUT_SECONDS
-    }
-
-    var enableAtStart = false
-        internal set
-
-    var enableOnTapping = false
-        internal set
-
-    var enableDuringRecord = false
-        internal set
-
-    var offTimeoutSeconds = 0
-        internal set
-}
-
-class Logs {
-    companion object {
-        const val LOG_TO_SD_CARD = KEY_LOGS_LOG_TO_SD_CARD
-        const val FILENAME = KEY_LOGS_FILENAME
-        const val MAX_FILES = KEY_LOGS_MAX_FILES
-        const val MAX_FILE_SIZE = KEY_LOGS_MAX_FILE_SIZE
-    }
-
-    var logToSdCard = true
-        internal set
-
-    var filename = ""
-        internal set
-
-    var maxFiles = 0
-        internal set
-
-    var maxFileSize = 0
-        internal set
-}
-
-class Intruder {
-    companion object {
-        const val ENABLED = KEY_INTRUDER_ENABLED
-        const val THRESHOLD = KEY_INTRUDER_THRESHOLD
-        const val WINDOWS_MS = KEY_INTRUDER_WINDOWS_MS
-    }
-
-    var enabled = false
-        internal set
-
-    var threshold = 0
-        internal set
-
-    var windowsMs = 0
-        internal set
-}
-
-class Microphone {
-    companion object {
-        const val TYPE = KEY_MICROPHONE_TYPE
-        const val GAIN = KEY_MICROPHONE_GAIN
-        const val CHANNEL = KEY_MICROPHONE_CHANNEL
-        const val SAMPLE_RATE = KEY_MICROPHONE_SAMPLE_RATE
-        const val USE_APLL = KEY_MICROPHONE_APPLL
-        const val USE_TIMING_FIX = KEY_MICROPHONE_TIMING_FIX
-    }
-
-    var sampleRate = SampleRate.Unknown
-        internal set
-
-    var type = ""
-        internal set
-
-    var gain = GainType.Low
-        internal set
-
-    var channel = Channel.Unknown
-        internal set
-
-    var useAPLL = false
-        internal set
-
-    var useTimingFix = false
-        internal set
-}
 
 object DeviceDriver : Runnable {
 
@@ -582,6 +422,44 @@ object DeviceDriver : Runnable {
                     ""
                 } else {
                     "setConfig#cfg={\"config\":{\"cpuEnableLightSleep\":$enable}}"
+                }
+            }
+
+            KEY_BATTERY_AVG_INTERVAL_MS -> {
+                val secs = propertyValue.toDoubleOrNull()
+                if (secs == null) {
+                    ""
+                } else {
+                    val intervalMillis = (secs * 1000).toInt()
+                    "setConfig#cfg={\"config\":{\"battery\":{\"avgIntervalMs\":$intervalMillis}}}"
+                }
+            }
+
+            KEY_BATTERY_AVG_SAMPLES -> {
+                val samples = propertyValue.toDoubleOrNull()?.toInt()
+                if (samples == null) {
+                    ""
+                } else {
+                    "setConfig#cfg={\"config\":{\"battery\":{\"avgSamples\":$samples}}}"
+                }
+            }
+
+            KEY_BATTERY_UPDATE_INTERVAL_MS -> {
+                val secs = propertyValue.toDoubleOrNull()
+                if (secs == null) {
+                    ""
+                } else {
+                    val intervalMillis = (secs * 1000).toInt()
+                    "setConfig#cfg={\"config\":{\"battery\":{\"updateIntervalMs\":$intervalMillis}}}"
+                }
+            }
+
+            KEY_BATTERY_NO_BAT_MODE -> {
+                val noBatteryMode = propertyValue.lowercase().toBooleanStrictOrNull()
+                if (noBatteryMode == null) {
+                    ""
+                } else {
+                    "setConfig#cfg={\"config\":{\"battery\":{\"noBatteryMode\":$noBatteryMode}}}"
                 }
             }
 
@@ -938,6 +816,25 @@ object DeviceDriver : Runnable {
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_CPU_ENABLE_LIGHT_SLEEP"
         cpu.enableLightSleep =
             JsonHelper.getJSONBooleanAttribute(cpuEnableLightSleepPath, jsonObject)
+
+        val batteryUpdateIntervalMsPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_BATTERY$PATH_SEPARATOR$KEY_BATTERY_UPDATE_INTERVAL_MS"
+        battery.updateIntervalSecs =
+            JsonHelper.getJSONNumberAttribute(batteryUpdateIntervalMsPath, jsonObject) / 1000.0
+
+        val batteryAvgSamplesPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_BATTERY$PATH_SEPARATOR$KEY_BATTERY_AVG_SAMPLES"
+        battery.avgSamples =
+            JsonHelper.getJSONNumberAttribute(batteryAvgSamplesPath, jsonObject).toInt()
+
+        val batteryAvgIntervalMsPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_BATTERY$PATH_SEPARATOR$KEY_BATTERY_AVG_INTERVAL_MS"
+        battery.avgIntervalSecs =
+            JsonHelper.getJSONNumberAttribute(batteryAvgIntervalMsPath, jsonObject) / 1000.0
+
+        val batteryNoBatModePath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_BATTERY$PATH_SEPARATOR$KEY_BATTERY_NO_BAT_MODE"
+        battery.noBatteryMode = JsonHelper.getJSONBooleanAttribute(batteryNoBatModePath, jsonObject)
     }
 
     private fun parseStatus(jsonObject: JSONObject) {
@@ -963,10 +860,12 @@ object DeviceDriver : Runnable {
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_BATTERY$PATH_SEPARATOR$KEY_BATTERY_LEVEL"
         battery.level = JsonHelper.getJSONNumberAttribute(batteryLevelPath, jsonObject)
 
-        val voltagePath = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_BATTERY$PATH_SEPARATOR$KEY_VOLTAGE"
+        val voltagePath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_BATTERY$PATH_SEPARATOR$KEY_BATTERY_VOLTAGE"
         battery.voltage = JsonHelper.getJSONNumberAttribute(voltagePath, jsonObject)
 
-        val batteryTypePath = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_BATTERY$PATH_SEPARATOR$KEY_TYPE"
+        val batteryTypePath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_BATTERY$PATH_SEPARATOR$KEY_BATTERY_TYPE"
         battery.type = JsonHelper.getJSONStringAttribute(batteryTypePath, jsonObject)
 
         val freeSpaceGbPath =
