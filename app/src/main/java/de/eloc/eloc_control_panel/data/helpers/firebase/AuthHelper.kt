@@ -14,13 +14,16 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.BuildConfig
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
+import de.eloc.eloc_control_panel.interfaces.GoogleSignInCallback
 import de.eloc.eloc_control_panel.interfaces.StringCallback
 import de.eloc.eloc_control_panel.interfaces.VoidCallback
+import java.util.UUID
 
 class AuthHelper {
 
@@ -91,57 +94,95 @@ class AuthHelper {
         googleSignInListeners.add(listener)
     }
 
-    suspend fun signInWithGoogle(errorCallback: StringCallback?) {
-        if (googleSignInRunning) {
-            return
-        }
-        googleSignInRunning = true
+    suspend fun signInWithGoogle(filter: Boolean, callback: GoogleSignInCallback?) {
         if (googleSignInCanceled) {
             googleSignInRunning = false
             return
         }
         googleSignInCanceled = false
+
+        if (isSignedIn) {
+            googleSignInRunning = false
+            callback?.handler(true, filter, "")
+            return
+        }
+
+        if (googleSignInRunning) {
+            return
+        }
+        googleSignInRunning = true
+
         try {
-            val response = getCredential()
+            val response = getCredential(filter)
             val credential = response.credential
             if (credential is CustomCredential) {
                 if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                    googleSignInCanceled = true
                     val tokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                    FirebaseAuth.getInstance().signInWithCustomToken(tokenCredential.idToken)
+                    val gAuthCredential =
+                        GoogleAuthProvider.getCredential(tokenCredential.idToken, null)
+                    FirebaseAuth.getInstance().signInWithCredential(gAuthCredential)
                         .addOnCompleteListener {
-                            PreferencesHelper.instance.setAutoGoogleSignIn(it.isSuccessful)
-                            if (it.isSuccessful) {
+                            val success = it.isSuccessful && isSignedIn
+                            val error = if (!success) {
                                 val exception = it.exception
-                                if (exception != null) {
-                                    // todo remove logged message
-                                    println(exception.localizedMessage ?: defaultErrorMessage)
-                                }
+                                exception?.localizedMessage ?: defaultErrorMessage
+                            } else {
+                                ""
                             }
+                            callback?.handler(success, filter, error)
+                            googleSignInRunning = false
+                            googleSignInCanceled = true
+                            PreferencesHelper.instance.setAutoGoogleSignIn(success)
                         }
+                } else {
+                    googleSignInRunning = false
+                    googleSignInCanceled = true
+                    callback?.handler(
+                        false,
+                        filter,
+                        App.instance.getString(R.string.invalid_token_credential)
+                    )
                 }
+            } else {
+                googleSignInCanceled = true
+                googleSignInRunning = false
+                callback?.handler(
+                    false,
+                    filter,
+                    App.instance.getString(R.string.invalid_credential_type)
+                )
             }
         } catch (_: GetCredentialCancellationException) {
             googleSignInCanceled = true
+            googleSignInRunning = false
         } catch (e: NoCredentialException) {
+            val error =
+                if (e.type == android.credentials.GetCredentialException.TYPE_NO_CREDENTIAL) {
+                    App.instance.getString(R.string.no_google_accounts_found)
+                } else {
+                    e.localizedMessage ?: defaultErrorMessage
+                }
+            callback?.handler(false, filter, error)
             googleSignInCanceled = true
-            if (e.type == android.credentials.GetCredentialException.TYPE_NO_CREDENTIAL) {
-                val message = App.instance.getString(R.string.no_google_accounts_found)
-                errorCallback?.handler(message)
-            } else {
-                errorCallback?.handler(e.localizedMessage ?: defaultErrorMessage)
-            }
+            googleSignInRunning = false
         } catch (e: Exception) {
-            errorCallback?.handler(e.localizedMessage ?: defaultErrorMessage)
+            val error = e.localizedMessage ?: defaultErrorMessage
+            callback?.handler(false, filter, error)
+            googleSignInCanceled = true
+            googleSignInRunning = false
         }
         googleSignInRunning = false
     }
 
-    private suspend fun getCredential(): GetCredentialResponse {
+    private suspend fun getCredential(filter: Boolean): GetCredentialResponse {
+        val nonce = buildString {
+            append(UUID.randomUUID().toString())
+            append(System.currentTimeMillis().toString())
+        }
         val options = GetGoogleIdOption.Builder()
-            .setNonce(System.currentTimeMillis().toString())
+            .setNonce(nonce)
             .setServerClientId(BuildConfig.GCLOUD_CLIENT_ID)
-            .setFilterByAuthorizedAccounts(false)
+            .setFilterByAuthorizedAccounts(filter)
             .setAutoSelectEnabled(true)
             .build()
 

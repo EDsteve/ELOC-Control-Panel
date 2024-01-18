@@ -5,6 +5,7 @@ import de.eloc.eloc_control_panel.data.helpers.firebase.StorageHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
+import de.eloc.eloc_control_panel.interfaces.GoogleSignInCallback
 import de.eloc.eloc_control_panel.interfaces.ProfileCallback
 import de.eloc.eloc_control_panel.interfaces.ProfileCheckCallback
 import de.eloc.eloc_control_panel.interfaces.StringCallback
@@ -29,8 +30,9 @@ class UserAccountRepository {
 
     suspend fun signOut() = authHelper.signOut()
 
-    suspend fun signInWithGoogle(errorCallback: StringCallback?) {
-        authHelper.signInWithGoogle(errorCallback)
+    suspend fun signInWithGoogle(filter: Boolean, callback: GoogleSignInCallback?) {
+        authHelper.clearGoogleSignInCanceled()
+        authHelper.signInWithGoogle(filter, callback)
     }
 
     fun register(email: String, password: String, callback: StringCallback) =

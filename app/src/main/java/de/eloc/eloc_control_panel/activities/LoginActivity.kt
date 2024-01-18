@@ -10,12 +10,13 @@ import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class LoginActivity : ThemableActivity() {
     private lateinit var binding: ActivityLoginBinding
     private lateinit var viewModel: UserAccountViewModel
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,7 +36,7 @@ class LoginActivity : ThemableActivity() {
         val autoGoogleSignIn = PreferencesHelper.instance.getAutoGoogleSignIn()
         val googleSignInCanceled = AuthHelper.instance.googleSignInCanceled
         if (autoGoogleSignIn && (!googleSignInCanceled)) {
-            signInWithGoogle()
+            signInWithGoogle(true)
         } else {
             checkAuthState()
         }
@@ -48,8 +49,7 @@ class LoginActivity : ThemableActivity() {
 
     private fun setListeners() {
         binding.googleSignInButton.setOnClickListener {
-            AuthHelper.instance.clearGoogleSignInCanceled()
-            signInWithGoogle()
+            signInWithGoogle(true)
         }
         binding.registerButton.setOnClickListener { open(RegisterActivity::class.java, true) }
         binding.loginButton.setOnClickListener { login() }
@@ -62,13 +62,24 @@ class LoginActivity : ThemableActivity() {
         }
     }
 
-    private fun signInWithGoogle() {
-        if (AuthHelper.instance.googleSignInRunning) {
-            return
+    private fun signInWithGoogle(filter: Boolean) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            viewModel.signInWithGoogle(filter, ::handleGoogleSignIn)
+            withContext(Dispatchers.Main) {
+                updateUiForGoogleSignIn()
+            }
         }
-        lifecycleScope.launch {
-            viewModel.signInWithGoogle { error -> showModalAlert(getString(R.string.oops), error) }
-            updateUiForGoogleSignIn()
+    }
+
+    private fun handleGoogleSignIn(signedIn: Boolean, filtered: Boolean, errorMessage: String) {
+        runOnUiThread {
+            if (signedIn) {
+                checkAuthState()
+            } else if (filtered) {
+                signInWithGoogle(false)
+            } else {
+                showModalAlert(getString(R.string.oops), errorMessage)
+            }
         }
     }
 
@@ -96,25 +107,27 @@ class LoginActivity : ThemableActivity() {
     }
 
     private fun updateUiForGoogleSignIn() {
-        binding.loginProgressIndicator.visibility = View.GONE
-        if (AuthHelper.instance.googleSignInRunning) {
-            binding.googleSignInButton.isEnabled = false
-            binding.googleSignInProgressIndicator.isEnabled = true
-            binding.googleSignInProgressIndicator.visibility = View.VISIBLE
-            binding.emailAddressLayout.isEnabled = false
-            binding.passwordLayout.isEnabled = false
-            binding.resetPasswordButton.isEnabled = false
-            binding.loginButton.isEnabled = false
-            binding.registerButton.isEnabled = false
-        } else {
-            binding.googleSignInButton.isEnabled = true
-            binding.googleSignInProgressIndicator.isEnabled = false
-            binding.googleSignInProgressIndicator.visibility = View.GONE
-            binding.emailAddressLayout.isEnabled = true
-            binding.passwordLayout.isEnabled = true
-            binding.resetPasswordButton.isEnabled = true
-            binding.loginButton.isEnabled = true
-            binding.registerButton.isEnabled = true
+        runOnUiThread {
+            binding.loginProgressIndicator.visibility = View.GONE
+            if (AuthHelper.instance.googleSignInRunning) {
+                binding.googleSignInButton.isEnabled = false
+                binding.googleSignInProgressIndicator.isEnabled = true
+                binding.googleSignInProgressIndicator.visibility = View.VISIBLE
+                binding.emailAddressLayout.isEnabled = false
+                binding.passwordLayout.isEnabled = false
+                binding.resetPasswordButton.isEnabled = false
+                binding.loginButton.isEnabled = false
+                binding.registerButton.isEnabled = false
+            } else {
+                binding.googleSignInButton.isEnabled = true
+                binding.googleSignInProgressIndicator.isEnabled = false
+                binding.googleSignInProgressIndicator.visibility = View.GONE
+                binding.emailAddressLayout.isEnabled = true
+                binding.passwordLayout.isEnabled = true
+                binding.resetPasswordButton.isEnabled = true
+                binding.loginButton.isEnabled = true
+                binding.registerButton.isEnabled = true
+            }
         }
     }
 
