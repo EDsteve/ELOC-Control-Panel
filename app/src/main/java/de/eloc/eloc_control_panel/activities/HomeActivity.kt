@@ -22,13 +22,11 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.data.ElocInfoAdapter
 import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
-import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.LayoutNavHeaderBinding
-import de.eloc.eloc_control_panel.interfaces.VoidCallback
 import de.eloc.eloc_control_panel.receivers.BluetoothDeviceReceiver
 import de.eloc.eloc_control_panel.services.StatusUploadService
 import kotlinx.coroutines.launch
@@ -405,18 +403,6 @@ class HomeActivity : ThemableActivity() {
             return
         } else if (inBackground) {
             StatusUploadService.start(this, true)
-        } else {
-            val fileName = FileSystemHelper.getUploadStatusFileName()
-            if (fileName?.isNotEmpty() == true) {
-                StatusUploadService.errorCallback = VoidCallback {
-                    runOnUiThread {
-                        binding.coordinator.showSnack(getString(R.string.nothing_to_upload))
-                    }
-                }
-                StatusUploadService.start(this, true)
-            } else {
-                binding.coordinator.showSnack(getString(R.string.nothing_to_upload))
-            }
         }
     }
 

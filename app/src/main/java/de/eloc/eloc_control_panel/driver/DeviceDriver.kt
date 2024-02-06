@@ -11,11 +11,12 @@ import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.data.Channel
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
-import de.eloc.eloc_control_panel.data.RecordState
 import de.eloc.eloc_control_panel.data.GainType
+import de.eloc.eloc_control_panel.data.RecordState
 import de.eloc.eloc_control_panel.data.SampleRate
 import de.eloc.eloc_control_panel.data.TimePerFile
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
+import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.JsonHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
@@ -23,6 +24,7 @@ import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SocketListener
 import de.eloc.eloc_control_panel.interfaces.StringCallback
+import de.eloc.eloc_control_panel.services.StatusUploadService
 import org.json.JSONObject
 import java.io.IOException
 import java.util.UUID
@@ -106,6 +108,9 @@ object DeviceDriver : Runnable {
     val battery = Battery()
     val sdCard = SdCard()
     val general = General()
+
+    private var configSaved = false
+    private var statusSaved = false
     private var commandLineListener: StringCallback? = null
     private var connecting = false
     private var disconnecting = false
@@ -521,9 +526,8 @@ object DeviceDriver : Runnable {
                 BluetoothHelper.stopScan {
                     doConnect()
                 }
-            } catch (e: Exception) {
-                // todo : remove
-                println(e.localizedMessage)
+            } catch (_: Exception) {
+
             }
             addCommandListener(dataListener)
         } catch (e: Exception) {
@@ -605,8 +609,22 @@ object DeviceDriver : Runnable {
             intercepted = (commandType != CommandType.Unknown)
             if (intercepted) {
                 when (commandType) {
-                    CommandType.GetConfig -> parseConfig(root)
-                    CommandType.GetStatus -> parseStatus(root)
+                    CommandType.GetConfig -> {
+                        if (!configSaved) {
+                            configSaved = FileSystemHelper.saveDataFile(true, json)
+                            StatusUploadService.start(App.instance)
+                        }
+                        parseConfig(root)
+                    }
+
+                    CommandType.GetStatus -> {
+                        if (!statusSaved) {
+                            statusSaved = FileSystemHelper.saveDataFile(false, json)
+                            StatusUploadService.start(App.instance)
+                        }
+                        parseStatus(root)
+                    }
+
                     else -> {}
                 }
 
@@ -680,7 +698,14 @@ object DeviceDriver : Runnable {
         write("getConfig")
     }
 
-    fun getDeviceInfo() {
+    fun getDeviceInfo(saveNextInfoResponse: Boolean = false) {
+        if (saveNextInfoResponse) {
+            configSaved = false
+            statusSaved = false
+        } else {
+            configSaved = true
+            statusSaved = true
+        }
         getStatus()
         getConfig()
     }
@@ -704,6 +729,7 @@ object DeviceDriver : Runnable {
         if (mode.isNotEmpty()) {
             write("setRecordMode#mode=$mode")
         }
+        getDeviceInfo(true)
     }
 
     private fun parseConfig(jsonObject: JSONObject) {

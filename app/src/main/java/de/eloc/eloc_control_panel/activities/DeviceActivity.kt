@@ -241,7 +241,7 @@ class DeviceActivity : AppCompatActivity() {
                     binding.swipeRefreshLayout.isEnabled = true
                     toggleContent(true)
                     menuInflater.inflate(R.menu.app_bar_settings, binding.toolbar.menu)
-                    DeviceDriver.getDeviceInfo()
+                    DeviceDriver.getDeviceInfo(true)
                 }
 
                 ConnectionStatus.Inactive -> {
@@ -374,11 +374,13 @@ class DeviceActivity : AppCompatActivity() {
 
                     when (newMode) {
                         RecordState.RecordOffDetectOff -> DeviceDriver.setRecordState(newMode)
-                        else -> DeviceDriver.setRecordState(
-                            newMode,
-                            locationCode,
-                            locationAccuracy
-                        )
+                        else -> {
+                            DeviceDriver.setRecordState(
+                                newMode,
+                                locationCode,
+                                locationAccuracy
+                            )
+                        }
                     }
                 }
             }

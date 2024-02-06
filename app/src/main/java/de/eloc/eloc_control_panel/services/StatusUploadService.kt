@@ -13,15 +13,13 @@ import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.App
+import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.HomeActivity
 import de.eloc.eloc_control_panel.data.UploadResult
-import de.eloc.eloc_control_panel.data.helpers.HttpHelper
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
-import de.eloc.eloc_control_panel.interfaces.StringCallback
-import de.eloc.eloc_control_panel.interfaces.VoidCallback
+import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import java.util.concurrent.Executors
 
 private const val EXTRA_STOP = "stop_service"
@@ -29,8 +27,6 @@ private const val EXTRA_STOP = "stop_service"
 class StatusUploadService : Service() {
 
     companion object {
-        var successCallback: StringCallback? = null
-        var errorCallback: VoidCallback? = null
         private var abort = false
 
         private var foregroundNotificationId: Int = -1
@@ -39,6 +35,7 @@ class StatusUploadService : Service() {
 
         private var skipWait = false
 
+        var uploadResult = UploadResult.Failed
         private var lastUsedNotificationId = 0
         private var statusUpdateIntervalMillis =
             PreferencesHelper.instance.getStatusUploadInterval().millis
@@ -60,7 +57,6 @@ class StatusUploadService : Service() {
     }
 
     private var elapsedMillis = 0L
-    private var uploadResult = UploadResult.Failed
     private val notificationManager = NotificationManagerCompat.from(App.instance)
     private var serviceNotificationBuilder: NotificationCompat.Builder? = null
 
@@ -136,8 +132,6 @@ class StatusUploadService : Service() {
         uploadResult = UploadResult.Failed
         abort = false
         isRunning = false
-        successCallback = null
-        errorCallback = null
         stopSelf()
     }
 
@@ -148,7 +142,7 @@ class StatusUploadService : Service() {
                 serviceNotificationBuilder!!.setContentText(message)
                 showNotification(foregroundNotificationId, serviceNotificationBuilder!!.build())
             }
-            uploadResult = HttpHelper.instance.uploadElocStatus(successCallback, errorCallback)
+            FirestoreHelper.instance.uploadDataFiles()
         } catch (_: Exception) {
         }
         elapsedMillis = 0L
