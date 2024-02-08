@@ -62,7 +62,7 @@ class StatusUploadService : Service() {
 
     private val uploadServiceNotificationChannel = NotificationChannelCompat.Builder(
         "Service",
-        NotificationManagerCompat.IMPORTANCE_HIGH
+        NotificationManagerCompat.IMPORTANCE_LOW
     ).setDescription("Uploading service notifications")
         .setName("Upload Notifications")
         .setShowBadge(false)
