@@ -118,10 +118,11 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical">
 
+                            <Space android:layout_width="match_parent" android:layout_height="16dp" />
+
                             <androidx.constraintlayout.widget.ConstraintLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginVertical="24dp">
+                                android:layout_height="wrap_content" >
 
                                 <de.eloc.eloc_control_panel.widgets.SimpleGauge
                                     android:id="@+id/battery_gauge"
@@ -244,23 +245,8 @@
                             <com.google.android.material.divider.MaterialDivider
                                 android:id="@+id/gauge_divider"
                                 android:layout_width="match_parent"
-                                android:layout_height="2dp"
+                                android:layout_height="2dp" android:layout_marginVertical="@dimen/divider_margin"
                                 app:dividerColor="@color/black"
-                                tools:viewBindingIgnore="true" />
-
-                            <TextView
-                                android:id="@+id/status_section_title"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginHorizontal="16dp"
-                                android:layout_marginTop="24dp"
-                                android:drawablePadding="8dp"
-                                android:text="@string/status"
-                                android:textAllCaps="true"
-                                android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-                                android:textColor="@color/status_grey"
-                                android:textStyle="bold"
-                                app:drawableEndCompat="@drawable/connected"
                                 tools:viewBindingIgnore="true" />
 
                             <de.eloc.eloc_control_panel.widgets.ListItem
@@ -283,7 +269,7 @@
                                 android:id="@+id/status_divider"
                                 android:layout_width="match_parent"
                                 android:layout_height="2dp"
-                                android:layout_marginVertical="24dp"
+                                android:layout_marginVertical="@dimen/divider_margin"
                                 app:dividerColor="@color/black"
                                 tools:viewBindingIgnore="true" />
 
@@ -326,7 +312,7 @@
                             <com.google.android.material.divider.MaterialDivider
                                 android:layout_width="match_parent"
                                 android:layout_height="2dp"
-                                android:layout_marginVertical="24dp"
+                                android:layout_marginVertical="@dimen/divider_margin"
                                 app:dividerColor="@color/black"
                                 tools:viewBindingIgnore="true" />
 
@@ -382,7 +368,7 @@
                             <com.google.android.material.divider.MaterialDivider
                                 android:layout_width="match_parent"
                                 android:layout_height="2dp"
-                                android:layout_marginVertical="24dp"
+                                android:layout_marginVertical="16dp"
                                 app:dividerColor="@color/black"
                                 tools:viewBindingIgnore="true" />
 
