@@ -7,46 +7,6 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:773327231765:android:45d4a91fe83031eb83e71c",
-        "android_client_info": {
-          "package_name": "de.eloc.eloc_control_panel"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "773327231765-vvfup5kj1ov380adk4n1d3ltd1fpsevn.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "de.eloc.eloc_control_panel",
-            "certificate_hash": "063c992a38f5aa366252b7695872418da08a6dc3"
-          }
-        },
-        {
-          "client_id": "773327231765-igglaupgt12mct4ii7kiil5ktda2nqfd.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyD_Uv9-vmxq56MXUTMbyMg5YpXr-3kO34k"
-        },
-        {
-          "current_key": "AIzaSyD5RPMudlS5aqp6uAwaDkKpNUlyAiFBJgA"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "773327231765-igglaupgt12mct4ii7kiil5ktda2nqfd.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
         "mobilesdk_app_id": "1:773327231765:android:93d9453408fc57b583e71c",
         "android_client_info": {
           "package_name": "de.eloc.eloc_control_panel_2"
@@ -54,11 +14,35 @@
       },
       "oauth_client": [
         {
-          "client_id": "773327231765-i222frf64bk6lh1n3bvqqnkvqmf0ofqt.apps.googleusercontent.com",
+          "client_id": "773327231765-1jnn9le0a1kt7361e9pd9j3hvnamoj80.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "de.eloc.eloc_control_panel_2",
+            "certificate_hash": "fdaa24afc970b9afbef336f1ea94061ce5c03528"
+          }
+        },
+        {
+          "client_id": "773327231765-1kjgrcrkocsc86r6p6cvsu91b8r2ce87.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "de.eloc.eloc_control_panel_2",
             "certificate_hash": "063c992a38f5aa366252b7695872418da08a6dc3"
+          }
+        },
+        {
+          "client_id": "773327231765-5dhbnaov0sschepo5801oamadts6dou0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "de.eloc.eloc_control_panel_2",
+            "certificate_hash": "6b99ebcd301afe002c791d3055fb1bbaadd70d17"
+          }
+        },
+        {
+          "client_id": "773327231765-vvfup5kj1ov380adk4n1d3ltd1fpsevn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "de.eloc.eloc_control_panel_2",
+            "certificate_hash": "a4ce9ea0fc87dad284cc7c81c1042618f91583e5"
           }
         },
         {
@@ -68,9 +52,6 @@
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyD_Uv9-vmxq56MXUTMbyMg5YpXr-3kO34k"
-        },
-        {
           "current_key": "AIzaSyD5RPMudlS5aqp6uAwaDkKpNUlyAiFBJgA"
         }
       ],
@@ -78,7 +59,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "773327231765-igglaupgt12mct4ii7kiil5ktda2nqfd.apps.googleusercontent.com",
+              "client_id": "773327231765-c7bnrohnpngb8n9vnec0e0g0ap6k52ra.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

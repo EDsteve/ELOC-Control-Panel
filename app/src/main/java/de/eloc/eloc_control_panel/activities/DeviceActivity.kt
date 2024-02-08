@@ -136,7 +136,25 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun setStatusData() {
-        binding.sessionIdItem.valueText = DeviceDriver.general.sessionId
+        binding.sessionIdItem.valueText = DeviceDriver.session.ID
+        val detectionDuration = if (DeviceDriver.session.detecting) {
+            DeviceDriver.session.detectingDurationSeconds.toInt()
+        } else {
+            -1
+        }
+        binding.detectionDurationItem.valueText = if ((detectionDuration <= 0)) {
+            getString(R.string.not_detecting)
+        } else {
+            TimeHelper.formatSeconds(this, detectionDuration)
+        }
+        val recordingDuration = DeviceDriver.session.recordingDurationSeconds.toInt()
+        binding.recordingDurationItem.valueText = if (recordingDuration <= 0) {
+            getString(R.string.not_recording)
+        } else {
+            TimeHelper.formatSeconds(this, recordingDuration)
+        }
+        binding.detectedEventsItem.valueText = DeviceDriver.session.eventsDetected.toString()
+        binding.aiModelItem.valueText = DeviceDriver.session.aiModel
         binding.recSinceBootItem.valueText =
             TimeHelper.formatHours(this, DeviceDriver.general.recHoursSinceBoot)
         binding.firmwareVersionItem.valueText = DeviceDriver.general.version
@@ -214,7 +232,7 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun openSettings(showMicrophoneSection: Boolean = false) {
-        if (DeviceDriver.general.recordingState.isInactive) {
+        if (DeviceDriver.session.recordingState.isInactive) {
             val intent = Intent(this, DeviceSettingsActivity::class.java)
             intent.putExtra(DeviceSettingsActivity.EXTRA_SHOW_RECORDER, showMicrophoneSection)
             startActivity(intent)
@@ -354,7 +372,7 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun requestState(newMode: RecordState, ignoreLocationAccuracy: Boolean = false) {
-        if (newMode == DeviceDriver.general.recordingState) {
+        if (newMode == DeviceDriver.session.recordingState) {
             return
         }
 
@@ -407,7 +425,7 @@ class DeviceActivity : AppCompatActivity() {
 
     private fun setRecordingState(errorMessage: String = "") {
         val err = errorMessage.trim()
-        val state = DeviceDriver.general.recordingState
+        val state = DeviceDriver.session.recordingState
         binding.modeButton.text = state.getVerb()
         binding.modeButton.isBusy = false
         val backColor = if (state == RecordState.RecordOffDetectOff) {

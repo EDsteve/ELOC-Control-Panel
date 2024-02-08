@@ -30,6 +30,7 @@ abstract class BaseEditorActivity : AppCompatActivity() {
     protected var settingName = ""
     protected var currentValue = ""
     protected var prefix = ""
+    private var saved = false
     protected var isNumeric = false
     protected var minimumValue: Double? = null
     protected var options = mutableMapOf<String, String>()
@@ -39,15 +40,18 @@ abstract class BaseEditorActivity : AppCompatActivity() {
     protected lateinit var contentLayout: View
     protected lateinit var progressTextView: TextView
     private val onGetDeviceInfoCompleted = GetCommandCompletedCallback {
-        if (!configUpdated && (it == CommandType.GetConfig)) {
-            configUpdated = true
-        }
-        if (!statusUpdated && (it == CommandType.GetStatus)) {
-            statusUpdated = true
-        }
-        if (statusUpdated && configUpdated) {
-            runOnUiThread {
-                goBack()
+        if (saved) {
+            if (!configUpdated && (it == CommandType.GetConfig)) {
+                configUpdated = true
+            }
+            if (!statusUpdated && (it == CommandType.GetStatus)) {
+                statusUpdated = true
+            }
+
+            if (statusUpdated && configUpdated) {
+                runOnUiThread {
+                    goBack()
+                }
             }
         }
     }
@@ -139,6 +143,7 @@ abstract class BaseEditorActivity : AppCompatActivity() {
         runOnUiThread {
             if (success) {
                 if (type.isSetCommand) {
+                    saved = true
                     progressTextView.text = getString(R.string.updating_values)
                     DeviceDriver.getDeviceInfo()
                 }

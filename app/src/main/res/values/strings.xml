@@ -30,7 +30,9 @@
     <string name="connected">Connected</string>
     <string name="connecting">Connecting…</string>
     <string name="cpu">CPU</string>
-    <string name="detecting_since">Detecting Since</string>
+    <string name="detected_events">Detected Events</string>
+    <string name="detection_duration">Detection Duration</string>
+    <string name="recording_duration">Recording Duration</string>
     <string name="detector_settings">Detector Settings</string>
     <string name="device_address_required">Device address is required!</string>
     <string name="device_name_required">Device name is required!</string>
@@ -179,6 +181,8 @@
     <string name="your_account_has_been_deleted">Your account has been deleted</string>
     <string name="invalid_token_credential">Invalid token credential!</string>
     <string name="invalid_credential_type">Invalid credential type!</string>
+    <string name="not_detecting">Not Detecting</string>
+    <string name="not_recording">Not Recording</string>
     <!--    <string name="verification_rationale">Your email address is not yet verified.\n\nPlease click the link that was sent to your email address.\nIt may take a few minutes for the message to arrive. Remember to check you junk mail folder, if the message is not in your inbox.</string>-->
     <!--    <string name="yes_permissions">yes, grant permissions</string>-->
     <!--    <string name="yes_update_now">Yes, Update now</string>-->

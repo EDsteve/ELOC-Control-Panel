@@ -250,19 +250,27 @@
                                 tools:viewBindingIgnore="true" />
 
                             <de.eloc.eloc_control_panel.widgets.ListItem
-                                android:id="@+id/detecting_since_item"
+                                android:id="@+id/detection_duration_item"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="16dp"
-                                app:keyText="@string/detecting_since"
+                                app:keyText="@string/detection_duration"
                                 tools:valueText="1d 10h 22m" />
 
                             <de.eloc.eloc_control_panel.widgets.ListItem
-                                android:id="@+id/recording_item"
+                                android:id="@+id/detected_events_item"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="16dp"
-                                app:keyText="@string/recording"
+                                app:keyText="@string/detected_events"
+                                tools:valueText="22" />
+
+                            <de.eloc.eloc_control_panel.widgets.ListItem
+                                android:id="@+id/recording_duration_item"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="16dp"
+                                app:keyText="@string/recording_duration"
                                 tools:valueText="OFF" />
 
                             <com.google.android.material.divider.MaterialDivider
@@ -294,7 +302,7 @@
                                 tools:valueText="ON" />
 
                             <de.eloc.eloc_control_panel.widgets.ListItem
-                                android:id="@+id/model_item"
+                                android:id="@+id/ai_model_item"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="16dp"

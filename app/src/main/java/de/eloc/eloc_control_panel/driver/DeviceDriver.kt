@@ -98,6 +98,12 @@ private const val CMD_SET_STATUS = "setStatus"
 private const val CMD_SET_TIME = "setTime"
 private const val CMD_SET_RECORD_MODE = "setRecordMode"
 
+private const val KEY_DETECTION = "detection"
+private const val KEY_STATE = "state"
+private const val KEY_DETECTING_TIME = "detectingTime[h]"
+private const val KEY_DETECTED_EVENTS = "detectedEvents"
+private const val KEY_AI_MODEL = "aiModel"
+
 object DeviceDriver : Runnable {
 
     val microphone = Microphone()
@@ -108,7 +114,9 @@ object DeviceDriver : Runnable {
     val battery = Battery()
     val sdCard = SdCard()
     val general = General()
+    val session = Session()
 
+private var cancelConnectionMonitor = false
     private var configSaved = false
     private var statusSaved = false
     private var commandLineListener: StringCallback? = null
@@ -130,6 +138,26 @@ object DeviceDriver : Runnable {
             onIOError(IOException("ELOC bluetooth disconnected in background!"))
 
             // disconnect now, else would be queued until UI re-attached
+            disconnect()
+        }
+    }
+
+    private val connectionMonitor = Runnable {
+        var elapsed = 0
+        var timeout = 30
+        cancelConnectionMonitor = false
+        while (elapsed <= timeout) {
+            if (cancelConnectionMonitor) {
+                break
+            }
+            try {
+                Thread.sleep(1000)
+            }catch (_: Exception) {}
+            elapsed++
+        }
+        if (!cancelConnectionMonitor) {
+            // If cancelConnectionMonitor is still false and the while loop above exited
+            // it means a connection was never made - Force a disconnection.
             disconnect()
         }
     }
@@ -475,6 +503,7 @@ object DeviceDriver : Runnable {
     }
 
     private fun onConnect() {
+        cancelConnectionMonitor = true
         for (l in dataListenerList) {
             l.onConnect()
         }
@@ -548,6 +577,7 @@ object DeviceDriver : Runnable {
 
     private fun doConnect() {
         try {
+            Executors.newSingleThreadExecutor().execute(connectionMonitor)
             bluetoothSocket?.connect()
         } catch (e: SecurityException) {
             onConnectionError(e)
@@ -865,11 +895,29 @@ object DeviceDriver : Runnable {
 
     private fun parseStatus(jsonObject: JSONObject) {
         val sessionIdPath = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_IDENTIFIER"
-        general.sessionId = JsonHelper.getJSONStringAttribute(sessionIdPath, jsonObject)
+        session.ID = JsonHelper.getJSONStringAttribute(sessionIdPath, jsonObject)
 
         val hoursPath = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_RECORDING_TIME"
         val recordingHours = JsonHelper.getJSONNumberAttribute(hoursPath, jsonObject)
-        general.recordingSeconds = TimeHelper.toSeconds(recordingHours)
+        session.recordingDurationSeconds = TimeHelper.toSeconds(recordingHours)
+
+        val detectionStatePath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_DETECTION$PATH_SEPARATOR$KEY_STATE"
+        session.detecting = JsonHelper.getJSONBooleanAttribute(detectionStatePath, jsonObject)
+
+        val detectionHoursPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_DETECTION$PATH_SEPARATOR$KEY_DETECTING_TIME"
+        val detectionHours = JsonHelper.getJSONNumberAttribute(detectionHoursPath, jsonObject)
+        session.detectingDurationSeconds = TimeHelper.toSeconds(detectionHours)
+
+        val detectedEventsPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_DETECTION$PATH_SEPARATOR$KEY_DETECTED_EVENTS"
+        session.eventsDetected =
+            JsonHelper.getJSONNumberAttribute(detectedEventsPath, jsonObject).toInt()
+
+        val aiModelPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_DETECTION$PATH_SEPARATOR$KEY_AI_MODEL"
+        session.aiModel = JsonHelper.getJSONStringAttribute(aiModelPath, jsonObject)
 
         val hoursSinceBootPath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_TOTAL_RECORDING_TIME"
@@ -909,7 +957,7 @@ object DeviceDriver : Runnable {
         val statePath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_RECORDING_STATE$PATH_SEPARATOR$KEY_VAL"
         val stateCode = JsonHelper.getJSONNumberAttribute(statePath, jsonObject).toInt()
-        general.recordingState = RecordState.parse(stateCode)
+        session.recordingState = RecordState.parse(stateCode)
     }
 
     private fun parseDeviceState(jsonObject: JSONObject) {
@@ -921,7 +969,7 @@ object DeviceDriver : Runnable {
                 "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_RECORDING_STATE$PATH_SEPARATOR$KEY_VAL",
                 jsonObject
             ).toInt()
-            general.recordingState = RecordState.parse(code)
+            session.recordingState = RecordState.parse(code)
         }
     }
 }

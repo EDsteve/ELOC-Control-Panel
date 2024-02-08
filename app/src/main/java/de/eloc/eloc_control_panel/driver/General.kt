@@ -1,6 +1,5 @@
 package de.eloc.eloc_control_panel.driver
 
-import de.eloc.eloc_control_panel.data.RecordState
 import de.eloc.eloc_control_panel.data.TimePerFile
 
 class General {
@@ -19,19 +18,10 @@ class General {
     var timePerFile = TimePerFile.Unknown
         internal set
 
-    var recordingState = RecordState.Invalid
-        internal set
-
     var recHoursSinceBoot = 0.0
         internal set
 
-    var sessionId = ""
-        internal set
-
     var lastLocation = ""
-        internal set
-
-    var recordingSeconds = 0.0
         internal set
 
     var version = ""

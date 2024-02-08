@@ -153,22 +153,30 @@ class StatusUploadService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val extras = intent?.extras
-        abort = extras?.getBoolean(EXTRA_STOP, false) ?: false
-        val title = getString(R.string.status_upload)
-        val messageResId = if (abort)
-            R.string.stopping_upload_service
-        else
-            R.string.checking_eloc_status_to_upload
-        val message = getString(messageResId)
-        val (id, notification) = createNotification(title, message, true)
-        if (foregroundNotificationId <= 0) {
-            foregroundNotificationId = id
-        }
-        startForeground(foregroundNotificationId, notification)
-        val doTask = skipWait || (!isRunning)
-        if (doTask) {
-            Executors.newSingleThreadExecutor().execute(task)
+        try {
+            val extras = intent?.extras
+            abort = extras?.getBoolean(EXTRA_STOP, false) ?: false
+            val title = getString(R.string.status_upload)
+            val messageResId = if (abort)
+                R.string.stopping_upload_service
+            else
+                R.string.checking_eloc_status_to_upload
+            val message = getString(messageResId)
+            val (id, notification) = createNotification(title, message, true)
+            if (foregroundNotificationId <= 0) {
+                foregroundNotificationId = id
+            }
+            // todo: there seems to be a condition that causes the code to
+            // fail calling startForeground() causing the app to crash
+            // when attempting to upload files. Remove the try-catch when root cause of
+            // issue has been isolated
+            startForeground(foregroundNotificationId, notification)
+            val doTask = skipWait || (!isRunning)
+            if (doTask) {
+                Executors.newSingleThreadExecutor().execute(task)
+            }
+        } catch (_: Exception) {
+            // todo: See notes inside try block.
         }
         return START_REDELIVER_INTENT
     }

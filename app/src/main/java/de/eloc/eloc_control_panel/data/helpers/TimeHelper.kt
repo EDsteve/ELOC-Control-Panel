@@ -25,6 +25,12 @@ object TimeHelper {
     fun formatMillis(context: Context, millis: Number, useSeconds: Boolean = false) =
         formatSeconds(context, millis.toDouble() / 1000, useSeconds)
 
+    fun formatSeconds(
+        context: Context,
+        seconds: Int,
+        useSeconds: Boolean = false
+    ) = formatSeconds(context, seconds.toDouble(), useSeconds)
+
     private fun formatSeconds(
         context: Context,
         seconds: Double,
