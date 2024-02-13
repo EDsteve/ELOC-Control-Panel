@@ -4,11 +4,8 @@ import android.graphics.Bitmap
 import androidx.collection.LruCache
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.ImageLoader
-import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import de.eloc.eloc_control_panel.App
-import de.eloc.eloc_control_panel.data.ElocDeviceInfo
-import de.eloc.eloc_control_panel.interfaces.ElocDeviceInfoListCallback
 
 class HttpHelper {
     companion object {
@@ -41,23 +38,7 @@ class HttpHelper {
             }
         }
     }
+
     val imageLoader: ImageLoader = ImageLoader(requestQueue, cache)
 
-    fun getElocDevicesAsync(rangerName: String, callback: ElocDeviceInfoListCallback?) {
-        // Volley will do request on background thread... no need for an executor.
-        // But that also means remember to use the callback!
-        val address = "http://128.199.206.198/ELOC/map/appmap.php"
-        val request = StringRequest(
-            address,
-            { response ->
-                val deviceInfos = ElocDeviceInfo.parseForRanger(response, rangerName)
-                callback?.handler(deviceInfos)
-            },
-            { _ ->
-                callback?.handler(ArrayList())
-            }
-        )
-        requestQueue.add(request)
-        requestQueue.start()
-    }
 }

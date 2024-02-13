@@ -45,7 +45,7 @@ object FileSystemHelper {
         try {
             val dateFormatter = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-z", Locale.US)
             val now = Date(System.currentTimeMillis())
-            val captureTimestamp = dateFormatter.format(now)
+            val captureTimestamp = dateFormatter.format(now).replace(":", "")
             val prefix = if (isConfig) {
                 PREFIX_CONFIG
             } else {

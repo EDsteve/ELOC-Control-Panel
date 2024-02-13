@@ -266,7 +266,6 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun startScan() {
-
         closeDrawer()
         val isOn = BluetoothHelper.isAdapterOn
         binding.statusTextView.text =

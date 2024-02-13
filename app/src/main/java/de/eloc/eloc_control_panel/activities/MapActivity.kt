@@ -21,7 +21,7 @@ import de.eloc.eloc_control_panel.databinding.ActivityMapBinding
 import de.eloc.eloc_control_panel.databinding.WindowLayoutBinding
 import de.eloc.eloc_control_panel.data.ElocDeviceInfo
 import de.eloc.eloc_control_panel.data.ElocMarker
-import de.eloc.eloc_control_panel.data.helpers.HttpHelper
+import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import java.util.Locale
 
 class MapActivity : ThemableActivity() {
@@ -42,14 +42,15 @@ class MapActivity : ThemableActivity() {
     }
 
     private var customZoom = 2
-    private val unknownDevices = ArrayList<String>()
+    private val unknownDevices = mutableSetOf<String>()
     private lateinit var binding: ActivityMapBinding
     private lateinit var rangerName: String
     private var map: GoogleMap? = null
     private var mapBounds: LatLngBounds? = null
-    private var devices: ArrayList<ElocDeviceInfo>? = null
+    private var devices = ArrayList<ElocDeviceInfo>()
     private var clusterManager: ClusterManager<ElocMarker>? = null
     private val usedLocations = HashSet<String>()
+    private var initializedMapData = false
 
     private val infoWindowAdapter: InfoWindowAdapter = object : InfoWindowAdapter {
         override fun getInfoContents(marker: Marker): View? {
@@ -59,8 +60,6 @@ class MapActivity : ThemableActivity() {
         override fun getInfoWindow(marker: Marker): View {
             // When a marker info window is shown, reset lastCustomZoom
             // so that when clusters are clicked on later, the map will not zoom too deep
-            customZoom = INITIAL_ZOOM
-            zoomTo(MARKER_ZOOM, marker.position)
             val windowLayoutBinding: WindowLayoutBinding =
                 WindowLayoutBinding.inflate(layoutInflater)
             windowLayoutBinding.titleTextView.text = marker.title
@@ -86,8 +85,8 @@ class MapActivity : ThemableActivity() {
                 showMap()
             }
 
-            HttpHelper.instance.getElocDevicesAsync(rangerName) { info ->
-                devices = info
+            FirestoreHelper.instance.getElocDevicesAsync(rangerName) { info ->
+                devices.add(info)
                 showMap()
             }
         } else {
@@ -129,9 +128,9 @@ class MapActivity : ThemableActivity() {
         binding.unknownDevicesTextView.visibility = View.GONE
     }
 
-    private fun zoomTo(zoomLevel: Int, position: LatLng) {
+    private fun zoomIn(position: LatLng) {
         // Set a delay so that cluster manager does not interfere with zoom animation
-        val delayMillis = 1200
+        val delayMillis = 800
         val handler = Handler(Looper.getMainLooper())
         handler.postDelayed(
             {
@@ -139,7 +138,7 @@ class MapActivity : ThemableActivity() {
                     return@postDelayed
                 }
                 val cameraPosition = CameraPosition.builder()
-                    .zoom(zoomLevel.toFloat())
+                    .zoom(map!!.cameraPosition.zoom + 3)
                     .target(position)
                     .build()
                 map?.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
@@ -153,21 +152,18 @@ class MapActivity : ThemableActivity() {
         clusterManager?.clearItems()
         usedLocations.clear()
         unknownDevices.clear()
-        if (devices != null) {
-            for (device: ElocDeviceInfo in devices!!) {
-                addMarker(device)
-            }
+        for (device: ElocDeviceInfo in devices) {
+            addMarker(device)
         }
         clusterManager?.cluster()
     }
 
     private fun updateUnknownDevices() {
-        val names = unknownDevices.toArray(arrayOf<String>())
+        val names = unknownDevices.sorted()
         binding.unknownDevicesTextView.text = if (names.isEmpty()) {
             getString(R.string.none)
         } else {
             val builder = StringBuilder()
-            names.sort()
             val maxIndex = names.size - 1
             for (i in 0..maxIndex) {
                 builder.append(names[i])
@@ -246,7 +242,7 @@ class MapActivity : ThemableActivity() {
 
     @SuppressLint("MissingPermission")
     private fun showMap() {
-        if (map == null || devices == null) {
+        if (map == null) {
             return
         }
         synchronized(map!!) {
@@ -254,26 +250,25 @@ class MapActivity : ThemableActivity() {
                 if (map == null) {
                     return@runOnUiThread
                 }
-                // Note: No need for permission check here
-                // because PermissionsActivity ensures that app will only launch
-                // when all required permission are granted, including location.
-                map?.isMyLocationEnabled = true
-                map?.uiSettings?.isMapToolbarEnabled = false
-                binding.mapView.visibility = View.VISIBLE
-                binding.loadingLayout.visibility = View.GONE
-                clusterManager = ClusterManager(this, map)
-                clusterManager?.markerCollection?.setInfoWindowAdapter(infoWindowAdapter)
-                clusterManager?.setOnClusterClickListener { cluster ->
-                    // Changing the zoom level on each tap so that map keeps zooming in.
-                    if (customZoom < INITIAL_ZOOM) {
-                        customZoom = INITIAL_ZOOM
-                    } else {
-                        customZoom += 5
+                if (!initializedMapData) {
+                    // Note: No need for permission check here
+                    // because PermissionsActivity ensures that app will only launch
+                    // when all required permission are granted, including location.
+                    map?.isMyLocationEnabled = true
+                    map?.uiSettings?.isMapToolbarEnabled = false
+                    binding.mapView.visibility = View.VISIBLE
+                    binding.loadingLayout.visibility = View.GONE
+                    clusterManager = ClusterManager(this, map)
+
+                    clusterManager?.markerCollection?.setInfoWindowAdapter(infoWindowAdapter)
+                    clusterManager?.setOnClusterClickListener { cluster ->
+                        // Changing the zoom level on each tap so that map keeps zooming in.
+                        zoomIn(cluster.position)
+                        true
                     }
-                    zoomTo(customZoom, cluster.position)
-                    true
+                    map?.setOnCameraIdleListener(clusterManager)
+                    initializedMapData = true
                 }
-                map?.setOnCameraIdleListener(clusterManager)
                 showDevices()
             }
         }
