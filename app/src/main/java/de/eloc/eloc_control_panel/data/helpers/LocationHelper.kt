@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.LocationListener
 import android.location.LocationManager
+import com.google.android.gms.maps.model.LatLng
+import com.google.openlocationcode.OpenLocationCode
 import de.eloc.eloc_control_panel.App
 
 object LocationHelper {
@@ -21,4 +23,20 @@ object LocationHelper {
             manager.removeUpdates(listener!!)
         }
     }
+
+    fun decodePlusCode(code: String): LatLng? {
+        try {
+            val decodedVal = OpenLocationCode.decode(code)
+            return LatLng(decodedVal.centerLatitude, decodedVal.centerLongitude)
+        } catch (_: IllegalArgumentException) {
+        }
+        return null
+    }
+
+    fun prettifyLocation(location: LatLng?): String =
+        if (location == null) {
+            "Unknown location"
+        } else {
+            "${location.latitude}:${location.latitude}"
+        }
 }

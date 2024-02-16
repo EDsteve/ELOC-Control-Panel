@@ -11,6 +11,7 @@ import de.eloc.eloc_control_panel.data.ElocDeviceInfo
 import de.eloc.eloc_control_panel.data.UploadResult
 import de.eloc.eloc_control_panel.data.UserProfile
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
+import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.interfaces.ElocDeviceInfoCallback
 import de.eloc.eloc_control_panel.interfaces.ProfileCallback
@@ -262,7 +263,8 @@ class FirestoreHelper {
             .addSnapshotListener { snapshot, _ ->
                 if (snapshot != null) {
                     for (doc in snapshot.documents) {
-                        val locationCode = doc.get("device.locationCode", String::class.java)
+                        val plusCode = doc.get("device.locationCode", String::class.java) ?: ""
+                        val location = LocationHelper.decodePlusCode(plusCode)
                         val locationAccuracy =
                             doc.get("device.locationAccuracy", Double::class.java)
                         val deviceName = doc.get("device.nodeName", String::class.java)
@@ -270,9 +272,9 @@ class FirestoreHelper {
                             doc.get("app_metadata.capture_timestamp", String::class.java)
                         val batteryVolts = -100.0
                         val recordingTimeSinceBoot = -100.0
-                        if ((locationCode != null) && (deviceName != null) && (capturedTime != null) && (locationAccuracy != null)) {
+                        if ((deviceName != null) && (capturedTime != null) && (locationAccuracy != null)) {
                             val info = ElocDeviceInfo(
-                                locationCode,
+                                location,
                                 deviceName,
                                 batteryVolts,
                                 capturedTime,

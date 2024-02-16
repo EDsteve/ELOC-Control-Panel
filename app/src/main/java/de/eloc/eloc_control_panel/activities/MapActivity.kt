@@ -15,42 +15,29 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.clustering.ClusterManager
-import com.google.openlocationcode.OpenLocationCode
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityMapBinding
 import de.eloc.eloc_control_panel.databinding.WindowLayoutBinding
 import de.eloc.eloc_control_panel.data.ElocDeviceInfo
 import de.eloc.eloc_control_panel.data.ElocMarker
+import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import java.util.Locale
 
 class MapActivity : ThemableActivity() {
     companion object {
-        /*
-           For reference, use the info below to help set default zoom level for when a marker is tapped:
-           1: World
-           5: Landmass/continent
-           10: City
-           15: Streets
-           20: Buildings
-        */
-
-        private const val MARKER_ZOOM = 12
-        private const val INITIAL_ZOOM = 10 // City level
-
         const val EXTRA_RANGER_NAME = "ranger_name"
     }
 
-    private var customZoom = 2
-    private val unknownDevices = mutableSetOf<String>()
     private lateinit var binding: ActivityMapBinding
+    private val unknownDevices = mutableSetOf<String>()
+    private val usedLocations = mutableSetOf<String>()
     private lateinit var rangerName: String
     private var map: GoogleMap? = null
+    private var mapDevices = mutableMapOf<String, ElocDeviceInfo>()
+    private var deviceCache = mutableListOf<ElocDeviceInfo>()
     private var mapBounds: LatLngBounds? = null
-    private var devices = ArrayList<ElocDeviceInfo>()
     private var clusterManager: ClusterManager<ElocMarker>? = null
-    private val usedLocations = HashSet<String>()
-    private var initializedMapData = false
 
     private val infoWindowAdapter: InfoWindowAdapter = object : InfoWindowAdapter {
         override fun getInfoContents(marker: Marker): View? {
@@ -72,6 +59,7 @@ class MapActivity : ThemableActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMapBinding.inflate(layoutInflater)
         binding.mapView.visibility = View.INVISIBLE
+        binding.loadingLayout.visibility = View.VISIBLE
 
         setContentView(binding.root)
         setListeners()
@@ -82,12 +70,16 @@ class MapActivity : ThemableActivity() {
                 supportFragmentManager.findFragmentById(binding.mapView.id) as SupportMapFragment?
             mapFragment?.getMapAsync { googleMap: GoogleMap ->
                 map = googleMap
-                showMap()
+                initializeMap()
             }
 
-            FirestoreHelper.instance.getElocDevicesAsync(rangerName) { info ->
-                devices.add(info)
-                showMap()
+            FirestoreHelper.instance.getElocDevicesAsync("edsteve2") { info ->
+                runOnUiThread {
+                    deviceCache.add(info)
+                    if (map != null) {
+                        showMarkers()
+                    }
+                }
             }
         } else {
             showModalAlert(
@@ -120,42 +112,13 @@ class MapActivity : ThemableActivity() {
         binding.upIcon.visibility = View.GONE
         binding.downIcon.visibility = View.VISIBLE
         binding.unknownDevicesTextView.visibility = View.VISIBLE
+        binding.unknownDevicesPanel.visibility = View.VISIBLE
     }
 
     private fun collapseUnknownDevices() {
         binding.upIcon.visibility = View.VISIBLE
         binding.downIcon.visibility = View.GONE
         binding.unknownDevicesTextView.visibility = View.GONE
-    }
-
-    private fun zoomIn(position: LatLng) {
-        // Set a delay so that cluster manager does not interfere with zoom animation
-        val delayMillis = 800
-        val handler = Handler(Looper.getMainLooper())
-        handler.postDelayed(
-            {
-                if (map == null) {
-                    return@postDelayed
-                }
-                val cameraPosition = CameraPosition.builder()
-                    .zoom(map!!.cameraPosition.zoom + 3)
-                    .target(position)
-                    .build()
-                map?.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
-            }, delayMillis
-                .toLong()
-        )
-    }
-
-    private fun showDevices() {
-        mapBounds = null
-        clusterManager?.clearItems()
-        usedLocations.clear()
-        unknownDevices.clear()
-        for (device: ElocDeviceInfo in devices) {
-            addMarker(device)
-        }
-        clusterManager?.cluster()
     }
 
     private fun updateUnknownDevices() {
@@ -173,66 +136,102 @@ class MapActivity : ThemableActivity() {
             }
             builder
         }
-
     }
 
-    private fun showUnknownDevices() {
-        binding.unknownDevicesPanel.visibility = View.VISIBLE
+    private fun zoomIn(position: LatLng) {
+        // Set a delay so that cluster manager does not interfere with zoom animation
+        val delayMillis = 800
+        val handler = Handler(Looper.getMainLooper())
+        handler.postDelayed(
+            {
+                if (map == null) {
+                    return@postDelayed
+                }
+
+                /*
+                For reference, use the info below to help set default zoom level for when a marker is tapped:
+                1: World
+                5: Landmass/continent
+                10: City
+                15: Streets
+                20: Buildings
+                */
+
+                val cameraPosition = CameraPosition.builder()
+                    .zoom(map!!.cameraPosition.zoom + 3)
+                    .target(position)
+                    .build()
+                map?.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+            }, delayMillis
+                .toLong()
+        )
     }
 
-    private fun addMarker(device: ElocDeviceInfo) {
-        var decodedVal: OpenLocationCode.CodeArea? = null
-        try {
-            decodedVal = OpenLocationCode.decode(device.plusCode)
-        } catch (_: IllegalArgumentException) {
+    private fun initializeMap() {
+        synchronized(map!!) {
+            runOnUiThread {
+                if (map == null) {
+                    return@runOnUiThread
+                }
+
+                // Note: No need for permission check here
+                // because PermissionsActivity ensures that app will only launch
+                // when all required permission are granted, including location.
+                @SuppressLint("MissingPermission")
+                map?.isMyLocationEnabled = true
+                map?.uiSettings?.isMapToolbarEnabled = false
+                binding.mapView.visibility = View.VISIBLE
+                binding.loadingLayout.visibility = View.GONE
+                clusterManager = ClusterManager(this, map)
+
+                clusterManager?.markerCollection?.setInfoWindowAdapter(infoWindowAdapter)
+                clusterManager?.setOnClusterClickListener { cluster ->
+                    // Changing the zoom level on each tap so that map keeps zooming in.
+                    zoomIn(cluster.position)
+                    true
+                }
+                map?.setOnCameraIdleListener(clusterManager)
+                showMarkers()
+            }
+        }
+    }
+
+
+    private fun showMarkers() {
+        var infoAdded = false
+        while (deviceCache.isNotEmpty()) {
+            val newInfo = deviceCache.removeFirst()
+            // Add to map (replace older)
+            val key = newInfo.name
+            var add = true
+            if (mapDevices.containsKey(key)) {
+                val oldInfo = mapDevices[key]
+                if (oldInfo != null) {
+                    if (oldInfo.time.compareTo(newInfo.time) > 1) {
+                        if (newInfo.location == null) {
+                            add = false
+                        }
+                    }
+                }
+            }
+
+            if (add) {
+                infoAdded = true
+                mapDevices[key] = newInfo
+            }
         }
 
-        // If location code is invalid, add to unknown list and skip
-        if (decodedVal == null) {
-            unknownDevices.add(device.name)
-            showUnknownDevices()
-            expandUnknownDevices()
+        if (infoAdded) {
+            mapBounds = null
+            clusterManager?.clearItems()
+            usedLocations.clear()
+            unknownDevices.clear()
             updateUnknownDevices()
-            return
-        }
-
-        var location = LatLng(decodedVal.centerLatitude, decodedVal.centerLongitude)
-        val stringifiedLocation = "" + location.latitude + ":" + location.latitude
-        var offset: Double = -1.0
-        if (usedLocations.contains(stringifiedLocation)) {
-            val offsetLocation = LatLng(location.latitude + 0.00005, location.longitude)
-            val distance = FloatArray(1)
-            Location.distanceBetween(
-                location.latitude,
-                location.longitude,
-                offsetLocation.latitude,
-                offsetLocation.longitude,
-                distance
-            )
-            location = offsetLocation
-            offset = distance[0].toDouble()
-        }
-        mapBounds = if (mapBounds == null) {
-            LatLngBounds(location, location)
-        } else {
-            mapBounds!!.including(location)
-        }
-        map?.setLatLngBoundsForCameraTarget(mapBounds)
-        if (clusterManager != null) {
-            var snippet = getString(
-                R.string.snippet_template,
-                device.time,
-                getPretty(device.accuracy),
-                getPretty(device.batteryVolts),
-                getPretty(device.recTime)
-            )
-            if (offset > 0) {
-                snippet += String.format(Locale.ENGLISH, "\n\n(Offset by ~ %.2fm)", offset)
+            collapseUnknownDevices()
+            for (info in mapDevices) {
+                addMarker(info.value)
             }
-            val added = clusterManager?.addItem(ElocMarker(device.name, snippet, location)) ?: false
-            if (added) {
-                usedLocations.add(stringifiedLocation)
-            }
+            clusterManager?.cluster()
         }
     }
 
@@ -240,36 +239,53 @@ class MapActivity : ThemableActivity() {
         return getString(R.string.pretty_double_template, value)
     }
 
-    @SuppressLint("MissingPermission")
-    private fun showMap() {
-        if (map == null) {
-            return
-        }
-        synchronized(map!!) {
-            runOnUiThread {
-                if (map == null) {
-                    return@runOnUiThread
+    private fun addMarker(device: ElocDeviceInfo) {
+        val loc = device.location
+        if (loc == null) {
+            unknownDevices.add(device.name)
+            updateUnknownDevices()
+            expandUnknownDevices()
+        } else {
+            var location = loc
+            var stringifiedLocation = LocationHelper.prettifyLocation(location)
+            var offset: Double = -1.0
+            while (usedLocations.contains(stringifiedLocation)) {
+                val offsetLocation =
+                    LatLng(location!!.latitude + 0.00005, location.longitude)
+                val distance = FloatArray(1)
+                Location.distanceBetween(
+                    location.latitude,
+                    location.longitude,
+                    offsetLocation.latitude,
+                    offsetLocation.longitude,
+                    distance
+                )
+                location = offsetLocation
+                stringifiedLocation = LocationHelper.prettifyLocation(location)
+                offset = distance[0].toDouble()
+            }
+            mapBounds = if (mapBounds == null) {
+                LatLngBounds(location!!, location)
+            } else {
+                mapBounds!!.including(location!!)
+            }
+            map?.setLatLngBoundsForCameraTarget(mapBounds)
+            if (clusterManager != null) {
+                var snippet = getString(
+                    R.string.snippet_template,
+                    device.time,
+                    getPretty(device.accuracy),
+                    getPretty(device.batteryVolts),
+                    getPretty(device.recTime)
+                )
+                if (offset > 0) {
+                    snippet += String.format(Locale.ENGLISH, "\n\n(Offset by ~ %.2fm)", offset)
                 }
-                if (!initializedMapData) {
-                    // Note: No need for permission check here
-                    // because PermissionsActivity ensures that app will only launch
-                    // when all required permission are granted, including location.
-                    map?.isMyLocationEnabled = true
-                    map?.uiSettings?.isMapToolbarEnabled = false
-                    binding.mapView.visibility = View.VISIBLE
-                    binding.loadingLayout.visibility = View.GONE
-                    clusterManager = ClusterManager(this, map)
-
-                    clusterManager?.markerCollection?.setInfoWindowAdapter(infoWindowAdapter)
-                    clusterManager?.setOnClusterClickListener { cluster ->
-                        // Changing the zoom level on each tap so that map keeps zooming in.
-                        zoomIn(cluster.position)
-                        true
-                    }
-                    map?.setOnCameraIdleListener(clusterManager)
-                    initializedMapData = true
+                val added =
+                    clusterManager?.addItem(ElocMarker(device.name, snippet, location)) ?: false
+                if (added) {
+                    usedLocations.add(stringifiedLocation)
                 }
-                showDevices()
             }
         }
     }
