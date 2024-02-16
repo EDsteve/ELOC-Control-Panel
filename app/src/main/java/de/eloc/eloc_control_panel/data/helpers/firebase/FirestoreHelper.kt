@@ -12,6 +12,7 @@ import de.eloc.eloc_control_panel.data.UploadResult
 import de.eloc.eloc_control_panel.data.UserProfile
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
+import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.interfaces.ElocDeviceInfoCallback
 import de.eloc.eloc_control_panel.interfaces.ProfileCallback
@@ -268,11 +269,12 @@ class FirestoreHelper {
                         val locationAccuracy =
                             doc.get("device.locationAccuracy", Double::class.java)
                         val deviceName = doc.get("device.nodeName", String::class.java)
-                        val capturedTime =
+                        val dirtyCapturedTime =
                             doc.get("app_metadata.capture_timestamp", String::class.java)
+                        val capturedTime = TimeHelper.prettify(dirtyCapturedTime)
                         val batteryVolts = -100.0
                         val recordingTimeSinceBoot = -100.0
-                        if ((deviceName != null) && (capturedTime != null) && (locationAccuracy != null)) {
+                        if ((deviceName != null) && (locationAccuracy != null)) {
                             val info = ElocDeviceInfo(
                                 location,
                                 deviceName,

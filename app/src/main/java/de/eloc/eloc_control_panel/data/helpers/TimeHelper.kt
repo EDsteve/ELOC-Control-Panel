@@ -101,4 +101,18 @@ object TimeHelper {
             }
         }
     }
+
+    fun prettify(s: String?): String {
+        val dirty = s ?: ""
+        val parts = dirty.split("-")
+        if (parts.size >= 7) {
+            val date = "${parts[0]}/${parts[1]}/${parts[2]}"
+            val time = "${parts[3]}:${parts[4]}:${parts[5]}"
+            val timeZone = parts[6]
+                .replace("+0", " +")
+                .replace(":00", "")
+            return "$date $time $timeZone"
+        }
+        return ""
+    }
 }
