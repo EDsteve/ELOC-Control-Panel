@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Bundle
-import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import androidx.activity.OnBackPressedCallback
@@ -19,7 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.data.ElocInfoAdapter
+import de.eloc.eloc_control_panel.data.adapters.ElocInfoAdapter
 import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper

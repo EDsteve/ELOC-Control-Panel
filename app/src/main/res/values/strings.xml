@@ -63,6 +63,12 @@
     <string name="getting_ranger_profile">Getting ranger profile…</string>
     <string name="go_back">Go back</string>
     <string name="gps_accuracy">GPS Accuracy</string>
+    <string name="gps_accuracy_template">GPS Accuracy: %.1fm</string>
+    <string name="gps_location_template">GPS Location: (%f, %f)</string>
+    <string name="gps_location_not_available">GPS Location: Not Available</string>
+    <string name="battery_template">Battery: %.1fV</string>
+    <string name="recording_time_template">Recording Time: %.1fh</string>
+    <string name="timestamp_template">Last Update: %s</string>
     <string name="grid_id">Grid ID</string>
     <string name="important">Important</string>
     <string name="important_delete_prompt"><u>IMPORTANT</u>\nThis operation is NOT reversible!</string>

@@ -6,18 +6,19 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.ArrayAdapter
+import android.widget.ListAdapter
 import androidx.activity.ComponentDialog
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatDialog
 import androidx.fragment.app.DialogFragment
-import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.databinding.LayoutUnknownLocationBinding
+import androidx.fragment.app.FragmentManager
+import de.eloc.eloc_control_panel.databinding.LayoutListViewDialogBinding
 import de.eloc.eloc_control_panel.interfaces.VoidCallback
 
-class UnknowLocationDialog(
+class ListViewDialog(
+    private val title: String,
     private val height: Int,
-    private val items: List<String>,
+    private val adapter: ListAdapter,
     private val showListener: VoidCallback,
     private val dismissListener: VoidCallback
 ) :
@@ -30,15 +31,9 @@ class UnknowLocationDialog(
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val binding = LayoutUnknownLocationBinding.inflate(inflater, container, false)
+        val binding = LayoutListViewDialogBinding.inflate(inflater, container, false)
+        binding.titleTextView.text = title
         binding.backButton.setOnClickListener { close() }
-        val sortedItems = if (items.isEmpty()) {
-            listOf(getString(R.string.none))
-        } else {
-            items.sorted()
-        }
-        val adapter =
-            ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, sortedItems)
         binding.listView.adapter = adapter
         return binding.root
     }
@@ -67,5 +62,9 @@ class UnknowLocationDialog(
             WindowManager.LayoutParams.MATCH_PARENT,
             height
         )
+    }
+
+    fun show(manager: FragmentManager) {
+        show(manager, "listviewdialog")
     }
 }

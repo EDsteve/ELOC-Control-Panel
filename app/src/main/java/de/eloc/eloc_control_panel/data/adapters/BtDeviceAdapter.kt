@@ -1,9 +1,11 @@
-package de.eloc.eloc_control_panel.data
+package de.eloc.eloc_control_panel.data.adapters
 
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import de.eloc.eloc_control_panel.data.BtDevice
+import de.eloc.eloc_control_panel.data.viewholders.BtDeviceViewHolder
 import de.eloc.eloc_control_panel.databinding.LayoutElocInfoBinding
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.interfaces.StringCallback

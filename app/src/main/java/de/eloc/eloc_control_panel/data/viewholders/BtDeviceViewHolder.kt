@@ -1,9 +1,9 @@
-package de.eloc.eloc_control_panel.data
-
+package de.eloc.eloc_control_panel.data.viewholders
 
 import android.view.View
 
 import androidx.recyclerview.widget.RecyclerView
+import de.eloc.eloc_control_panel.data.BtDevice
 
 import de.eloc.eloc_control_panel.databinding.LayoutElocInfoBinding
 import de.eloc.eloc_control_panel.interfaces.StringCallback

@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.TypedValue
 import android.view.View
+import android.widget.ArrayAdapter
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter
@@ -19,11 +20,12 @@ import com.google.maps.android.clustering.ClusterManager
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.data.ElocDeviceInfo
 import de.eloc.eloc_control_panel.data.ElocMarker
+import de.eloc.eloc_control_panel.data.adapters.MapInfoAdapter
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.databinding.ActivityMapBinding
 import de.eloc.eloc_control_panel.databinding.WindowLayoutBinding
-import de.eloc.eloc_control_panel.dialogs.UnknowLocationDialog
+import de.eloc.eloc_control_panel.dialogs.ListViewDialog
 import java.util.Locale
 
 class MapActivity : ThemableActivity() {
@@ -76,7 +78,7 @@ class MapActivity : ThemableActivity() {
                 initializeMap()
             }
 
-            FirestoreHelper.instance.getElocDevicesAsync("edsteve2") { info ->
+            FirestoreHelper.instance.getElocDevicesAsync(rangerName) { info ->
                 runOnUiThread {
                     deviceCache.add(info)
                     if (map != null) {
@@ -105,6 +107,7 @@ class MapActivity : ThemableActivity() {
         binding.toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.mnu_unknown_location -> showElocsWithUnknownLocation()
+                R.id.mnu_list_view -> showElocList()
             }
             true
         }
@@ -291,12 +294,39 @@ class MapActivity : ThemableActivity() {
     }
 
     private fun showElocsWithUnknownLocation() {
+        val sortedItems = if (unknownDevices.isEmpty()) {
+            listOf(getString(R.string.none))
+        } else {
+            unknownDevices.sorted()
+        }
+        val adapter =
+            ArrayAdapter(this, android.R.layout.simple_list_item_1, sortedItems)
         val height = calculateDialogHeight()
-        val dialog = UnknowLocationDialog(
-            height, unknownDevices.toList(),
+        val dialog = ListViewDialog(
+            getString(R.string.elocs_with_unknown_location),
+            height,
+            adapter,
             { binding.dialogBackground.visibility = View.VISIBLE },
             { binding.dialogBackground.visibility = View.GONE }
         )
-        dialog.show(supportFragmentManager, "unknownlocationelocs")
+        dialog.show(supportFragmentManager)
+    }
+
+    private fun showElocList() {
+        val sortedItems = mapDevices.values.toList().sortedWith { a, b ->
+            a.name.compareTo(b.name)
+        }
+
+        val adapter = MapInfoAdapter(this, R.layout.layout_map_table_item)
+        adapter.addAll(sortedItems)
+        val height = calculateDialogHeight()
+        val dialog = ListViewDialog(
+            getString(R.string.my_elocs),
+            height,
+            adapter,
+            { binding.dialogBackground.visibility = View.VISIBLE },
+            { binding.dialogBackground.visibility = View.GONE }
+        )
+        dialog.show(supportFragmentManager)
     }
 }
