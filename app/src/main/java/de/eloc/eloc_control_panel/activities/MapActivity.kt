@@ -1,16 +1,12 @@
 package de.eloc.eloc_control_panel.activities
 
 import android.annotation.SuppressLint
-import android.app.Dialog
 import android.location.Location
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.TypedValue
 import android.view.View
-import android.view.ViewGroup
-import android.view.WindowManager
-import android.widget.ArrayAdapter
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter
@@ -26,8 +22,8 @@ import de.eloc.eloc_control_panel.data.ElocMarker
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.databinding.ActivityMapBinding
-import de.eloc.eloc_control_panel.databinding.LayoutUnknownLocationBinding
 import de.eloc.eloc_control_panel.databinding.WindowLayoutBinding
+import de.eloc.eloc_control_panel.dialogs.UnknowLocationDialog
 import java.util.Locale
 
 class MapActivity : ThemableActivity() {
@@ -295,34 +291,12 @@ class MapActivity : ThemableActivity() {
     }
 
     private fun showElocsWithUnknownLocation() {
-        val dialog = Dialog(this, android.R.style.Theme_Material_NoActionBar_Fullscreen)
-        dialog.window?.setLayout(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            calculateDialogHeight()
+        val height = calculateDialogHeight()
+        val dialog = UnknowLocationDialog(
+            height, unknownDevices.toList(),
+            { binding.dialogBackground.visibility = View.VISIBLE },
+            { binding.dialogBackground.visibility = View.GONE }
         )
-        dialog.setOnDismissListener {
-            binding.dialogBackground.visibility = View.GONE
-        }
-        dialog.setOnShowListener {
-            binding.dialogBackground.visibility = View.VISIBLE
-        }
-        val dialogBinding = LayoutUnknownLocationBinding.inflate(layoutInflater)
-        dialogBinding.backButton.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        val items = if (unknownDevices.isEmpty()) {
-            listOf(getString(R.string.none))
-        } else {
-            unknownDevices.sorted()
-        }
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, items)
-        dialogBinding.listView.adapter = adapter
-        val params = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-        dialog.addContentView(dialogBinding.root, params)
-        dialog.show()
+        dialog.show(supportFragmentManager, "unknownlocationelocs")
     }
 }
