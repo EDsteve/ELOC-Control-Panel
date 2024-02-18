@@ -1,11 +1,16 @@
 package de.eloc.eloc_control_panel.activities
 
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.location.Location
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.TypedValue
 import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
+import android.widget.ArrayAdapter
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter
@@ -16,12 +21,13 @@ import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.clustering.ClusterManager
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.databinding.ActivityMapBinding
-import de.eloc.eloc_control_panel.databinding.WindowLayoutBinding
 import de.eloc.eloc_control_panel.data.ElocDeviceInfo
 import de.eloc.eloc_control_panel.data.ElocMarker
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
+import de.eloc.eloc_control_panel.databinding.ActivityMapBinding
+import de.eloc.eloc_control_panel.databinding.LayoutUnknownLocationBinding
+import de.eloc.eloc_control_panel.databinding.WindowLayoutBinding
 import java.util.Locale
 
 class MapActivity : ThemableActivity() {
@@ -60,11 +66,12 @@ class MapActivity : ThemableActivity() {
         binding = ActivityMapBinding.inflate(layoutInflater)
         binding.mapView.visibility = View.INVISIBLE
         binding.loadingLayout.visibility = View.VISIBLE
+        binding.dialogBackground.visibility = View.GONE
 
         setContentView(binding.root)
+        menuInflater.inflate(R.menu.find_elocs_menu, binding.toolbar.menu)
         setListeners()
-        updateUnknownDevices()
-        collapseUnknownDevices()
+
         if (hasRangerName()) {
             val mapFragment =
                 supportFragmentManager.findFragmentById(binding.mapView.id) as SupportMapFragment?
@@ -98,43 +105,12 @@ class MapActivity : ThemableActivity() {
     }
 
     private fun setListeners() {
-        binding.unknownDevicesButton.setOnClickListener {
-            if (binding.upIcon.visibility == View.VISIBLE) {
-                expandUnknownDevices()
-            } else {
-                collapseUnknownDevices()
-            }
-        }
         binding.toolbar.setNavigationOnClickListener { goBack() }
-    }
-
-    private fun expandUnknownDevices() {
-        binding.upIcon.visibility = View.GONE
-        binding.downIcon.visibility = View.VISIBLE
-        binding.unknownDevicesTextView.visibility = View.VISIBLE
-        binding.unknownDevicesPanel.visibility = View.VISIBLE
-    }
-
-    private fun collapseUnknownDevices() {
-        binding.upIcon.visibility = View.VISIBLE
-        binding.downIcon.visibility = View.GONE
-        binding.unknownDevicesTextView.visibility = View.GONE
-    }
-
-    private fun updateUnknownDevices() {
-        val names = unknownDevices.sorted()
-        binding.unknownDevicesTextView.text = if (names.isEmpty()) {
-            getString(R.string.none)
-        } else {
-            val builder = StringBuilder()
-            val maxIndex = names.size - 1
-            for (i in 0..maxIndex) {
-                builder.append(names[i])
-                if (i < maxIndex) {
-                    builder.append(", ")
-                }
+        binding.toolbar.setOnMenuItemClickListener {
+            when (it.itemId) {
+                R.id.mnu_unknown_location -> showElocsWithUnknownLocation()
             }
-            builder
+            true
         }
     }
 
@@ -179,7 +155,6 @@ class MapActivity : ThemableActivity() {
                 // when all required permission are granted, including location.
                 @SuppressLint("MissingPermission")
                 map?.isMyLocationEnabled = true
-                map?.uiSettings?.isMapToolbarEnabled = false
                 binding.mapView.visibility = View.VISIBLE
                 binding.loadingLayout.visibility = View.GONE
                 clusterManager = ClusterManager(this, map)
@@ -226,8 +201,6 @@ class MapActivity : ThemableActivity() {
             clusterManager?.clearItems()
             usedLocations.clear()
             unknownDevices.clear()
-            updateUnknownDevices()
-            collapseUnknownDevices()
             for (info in mapDevices) {
                 addMarker(info.value)
             }
@@ -243,8 +216,6 @@ class MapActivity : ThemableActivity() {
         val loc = device.location
         if (loc == null) {
             unknownDevices.add(device.name)
-            updateUnknownDevices()
-            expandUnknownDevices()
         } else {
             var location = loc
             var stringifiedLocation = LocationHelper.prettifyLocation(location)
@@ -269,7 +240,15 @@ class MapActivity : ThemableActivity() {
             } else {
                 mapBounds!!.including(location!!)
             }
-            map?.setLatLngBoundsForCameraTarget(mapBounds)
+
+            // Move camera to center of map bounds, but do not set bounds on map/camera
+            //map?.setLatLngBoundsForCameraTarget(mapBounds)
+            val centerOfMapBounds = CameraPosition.builder()
+                .target(mapBounds!!.center)
+                .zoom(8f)
+                .build()
+            map?.animateCamera(CameraUpdateFactory.newCameraPosition(centerOfMapBounds))
+
             if (clusterManager != null) {
                 var snippet = getString(
                     R.string.snippet_template,
@@ -288,5 +267,62 @@ class MapActivity : ThemableActivity() {
                 }
             }
         }
+    }
+
+    @SuppressLint("InternalInsetResource", "DiscouragedApi")
+    private fun getStatusBarHeight(): Int {
+        val resId = resources.getIdentifier("status_bar_height", "dimen", "android")
+        return if (resId > 0) {
+            resources.getDimensionPixelSize(resId)
+        } else {
+            (resources.displayMetrics.density * 25).toInt()
+        }
+    }
+
+    private fun getActionBarSize(): Int {
+        val tv = TypedValue()
+        return if (theme.resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+            TypedValue.complexToDimensionPixelSize(tv.data, resources.displayMetrics)
+        } else {
+            (resources.displayMetrics.heightPixels * 36)
+        }
+    }
+
+    private fun calculateDialogHeight(): Int {
+        val statusBarHeight = getStatusBarHeight()
+        val screenHeight = resources.displayMetrics.heightPixels
+        return screenHeight - getActionBarSize() - statusBarHeight //- statusBarHeight
+    }
+
+    private fun showElocsWithUnknownLocation() {
+        val dialog = Dialog(this, android.R.style.Theme_Material_NoActionBar_Fullscreen)
+        dialog.window?.setLayout(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            calculateDialogHeight()
+        )
+        dialog.setOnDismissListener {
+            binding.dialogBackground.visibility = View.GONE
+        }
+        dialog.setOnShowListener {
+            binding.dialogBackground.visibility = View.VISIBLE
+        }
+        val dialogBinding = LayoutUnknownLocationBinding.inflate(layoutInflater)
+        dialogBinding.backButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        val items = if (unknownDevices.isEmpty()) {
+            listOf(getString(R.string.none))
+        } else {
+            unknownDevices.sorted()
+        }
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, items)
+        dialogBinding.listView.adapter = adapter
+        val params = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        dialog.addContentView(dialogBinding.root, params)
+        dialog.show()
     }
 }

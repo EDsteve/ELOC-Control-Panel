@@ -183,6 +183,8 @@
     <string name="invalid_credential_type">Invalid credential type!</string>
     <string name="not_detecting">Not Detecting</string>
     <string name="not_recording">Not Recording</string>
+    <string name="map_view">Map View</string>
+    <string name="list_view">List View</string>
     <!--    <string name="verification_rationale">Your email address is not yet verified.\n\nPlease click the link that was sent to your email address.\nIt may take a few minutes for the message to arrive. Remember to check you junk mail folder, if the message is not in your inbox.</string>-->
     <!--    <string name="yes_permissions">yes, grant permissions</string>-->
     <!--    <string name="yes_update_now">Yes, Update now</string>-->

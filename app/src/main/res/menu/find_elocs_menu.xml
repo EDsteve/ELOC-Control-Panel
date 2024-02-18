@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/mnu_list_view"
+        android:icon="@drawable/list_view"
+        android:title="@string/list_view"
+        app:showAsAction="ifRoom|withText" />
+
+    <item
+        android:id="@+id/mnu_unknown_location"
+        android:icon="@drawable/not_listed_location"
+        android:title="@string/elocs_with_unknown_location"
+        app:showAsAction="ifRoom|withText" />
+</menu>
