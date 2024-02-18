@@ -313,12 +313,18 @@ class MapActivity : ThemableActivity() {
     }
 
     private fun showElocList() {
-        val sortedItems = mapDevices.values.toList().sortedWith { a, b ->
-            a.name.compareTo(b.name)
+        val adapter = if (mapDevices.isEmpty()) {
+            ArrayAdapter(
+                this,
+                android.R.layout.simple_list_item_1,
+                listOf(getString(R.string.none))
+            )
+        } else {
+            val sortedItems = mapDevices.values.toList().sortedWith { a, b ->
+                a.name.compareTo(b.name)
+            }
+            MapInfoAdapter(this, R.layout.layout_map_table_item, sortedItems)
         }
-
-        val adapter = MapInfoAdapter(this, R.layout.layout_map_table_item)
-        adapter.addAll(sortedItems)
         val height = calculateDialogHeight()
         val dialog = ListViewDialog(
             getString(R.string.my_elocs),

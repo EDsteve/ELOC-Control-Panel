@@ -9,8 +9,13 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.data.ElocDeviceInfo
 import de.eloc.eloc_control_panel.databinding.LayoutMapTableItemBinding
 
-class MapInfoAdapter(context: Context, resource: Int) :
+class MapInfoAdapter(context: Context, resource: Int, items: List<ElocDeviceInfo>) :
     ArrayAdapter<ElocDeviceInfo>(context, resource) {
+
+    init {
+        addAll(items)
+    }
+
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val context = parent.context
         val inflater = LayoutInflater.from(context)
