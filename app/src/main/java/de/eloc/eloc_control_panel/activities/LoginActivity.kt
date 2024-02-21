@@ -81,7 +81,7 @@ class LoginActivity : NetworkMonitoringActivity() {
 
     private fun signInWithGoogle(filter: Boolean) {
         lifecycleScope.launch(Dispatchers.IO) {
-            viewModel.signInWithGoogle(filter, ::handleGoogleSignIn)
+            viewModel.signInWithGoogle(this@LoginActivity, filter, ::handleGoogleSignIn)
             withContext(Dispatchers.Main) {
                 updateUiForGoogleSignIn()
             }

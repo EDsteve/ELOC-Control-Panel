@@ -18,6 +18,7 @@ import com.google.firebase.auth.GoogleAuthProvider
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.BuildConfig
+import de.eloc.eloc_control_panel.activities.LoginActivity
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.interfaces.GoogleSignInCallback
@@ -94,7 +95,7 @@ class AuthHelper {
         googleSignInListeners.add(listener)
     }
 
-    suspend fun signInWithGoogle(filter: Boolean, callback: GoogleSignInCallback?) {
+    suspend fun signInWithGoogle(activity: LoginActivity, filter: Boolean, callback: GoogleSignInCallback?) {
         if (googleSignInCanceled) {
             googleSignInRunning = false
             return
@@ -113,7 +114,7 @@ class AuthHelper {
         googleSignInRunning = true
 
         try {
-            val response = getCredential(filter)
+            val response = getCredential(activity, filter)
             val credential = response.credential
             if (credential is CustomCredential) {
                 if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
@@ -129,10 +130,10 @@ class AuthHelper {
                             } else {
                                 ""
                             }
-                            callback?.handler(success, filter, error)
                             googleSignInRunning = false
                             googleSignInCanceled = true
                             PreferencesHelper.instance.setAutoGoogleSignIn(success)
+                            callback?.handler(success, filter, error)
                         }
                 } else {
                     googleSignInRunning = false
@@ -171,10 +172,9 @@ class AuthHelper {
             googleSignInCanceled = true
             googleSignInRunning = false
         }
-        googleSignInRunning = false
     }
 
-    private suspend fun getCredential(filter: Boolean): GetCredentialResponse {
+    private suspend fun getCredential(activity: LoginActivity, filter: Boolean): GetCredentialResponse {
         val nonce = buildString {
             append(UUID.randomUUID().toString())
             append(System.currentTimeMillis().toString())
@@ -189,7 +189,7 @@ class AuthHelper {
         val request = GetCredentialRequest.Builder()
             .addCredentialOption(options)
             .build()
-        return credentialManager.getCredential(App.instance.applicationContext, request)
+        return credentialManager.getCredential(activity, request)
     }
 
     private suspend fun clearCredential() {

@@ -1,6 +1,7 @@
 package de.eloc.eloc_control_panel.data
 
 import android.graphics.Bitmap
+import de.eloc.eloc_control_panel.activities.LoginActivity
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.StorageHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
@@ -30,9 +31,9 @@ class UserAccountRepository {
 
     suspend fun signOut() = authHelper.signOut()
 
-    suspend fun signInWithGoogle(filter: Boolean, callback: GoogleSignInCallback?) {
+    suspend fun signInWithGoogle(activity: LoginActivity, filter: Boolean, callback: GoogleSignInCallback?) {
         authHelper.clearGoogleSignInCanceled()
-        authHelper.signInWithGoogle(filter, callback)
+        authHelper.signInWithGoogle(activity, filter, callback)
     }
 
     fun register(email: String, password: String, callback: StringCallback) =

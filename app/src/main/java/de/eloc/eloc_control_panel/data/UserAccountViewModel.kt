@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import de.eloc.eloc_control_panel.activities.LoginActivity
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.interfaces.GoogleSignInCallback
 import de.eloc.eloc_control_panel.interfaces.ProfileCheckCallback
@@ -55,8 +56,12 @@ class UserAccountViewModel(application: Application) : AndroidViewModel(applicat
     fun changePassword(newPassword: String, oldPassword: String, callback: StringCallback) =
         repository.changePassword(newPassword, oldPassword, callback)
 
-    suspend fun signInWithGoogle(filter: Boolean, callback: GoogleSignInCallback?) =
-        repository.signInWithGoogle(filter, callback)
+    suspend fun signInWithGoogle(
+        activity: LoginActivity,
+        filter: Boolean,
+        callback: GoogleSignInCallback?
+    ) =
+        repository.signInWithGoogle(activity, filter, callback)
 
     fun register(email: String, password: String, callback: StringCallback) =
         repository.register(email, password, callback)
