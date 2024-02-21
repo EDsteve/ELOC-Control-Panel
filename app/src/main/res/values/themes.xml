@@ -4,8 +4,8 @@
     <style name="ElocToolbarStyle" parent="Widget.Material3.Toolbar">
         <item name="navigationIconTint">@color/white</item>
         <item name="subtitleTextAppearance">@style/TextAppearance.Material3.TitleSmall</item>
-        <item name="subtitleTextColor">@color/user_label</item>
+        <item name="subtitleTextColor">@color/colorAccent</item>
         <item name="titleTextAppearance">@style/TextAppearance.Material3.ActionBar.Title</item>
-        <item name="android:background">@color/colorPrimary</item>
+        <item name="android:background">@color/actionbar</item>
     </style>
 </resources>
