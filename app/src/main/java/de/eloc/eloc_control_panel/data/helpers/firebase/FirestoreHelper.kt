@@ -128,10 +128,15 @@ class FirestoreHelper {
                     }
                     callback?.handler(hasUserId, false)
                 } else {
-                    val exception = it.exception as? FirebaseFirestoreException
-                    val code = exception?.code?.name
-                    val unavailable = (code == "UNAVAILABLE")
-                    callback?.handler(false, unavailable)
+                    // Check if accounts is saved in preferences
+                    if (FileSystemHelper.isProvisionedProfile(documentId)) {
+                        callback?.handler(hasProfile = true, unavailable = true)
+                    } else {
+                        val exception = it.exception as? FirebaseFirestoreException
+                        val code = exception?.code?.name
+                        val unavailable = (code == "UNAVAILABLE")
+                        callback?.handler(false, unavailable)
+                    }
                 }
             }
     }
@@ -154,9 +159,15 @@ class FirestoreHelper {
             }
     }
 
-    fun getProfile(id: String, emailAddress: String, callback: ProfileCallback?) {
+    fun getProfile(
+        id: String,
+        emailAddress: String,
+        profileCallback: ProfileCallback,
+        uiCallback: VoidCallback?
+    ) {
         val documentId = id.trim().ifEmpty {
-            callback?.handler(null)
+            profileCallback.handler(null)
+            uiCallback?.handler()
             return
         }
         accountsNode
@@ -176,7 +187,8 @@ class FirestoreHelper {
                         profile.emailAddress = emailAddress
                     }
                 }
-                callback?.handler(profile)
+                profileCallback.handler(profile)
+                uiCallback?.handler()
             }
     }
 

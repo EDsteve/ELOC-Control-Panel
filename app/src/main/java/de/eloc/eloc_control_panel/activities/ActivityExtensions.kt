@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
+import android.os.Bundle
 import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.ComponentActivity
@@ -92,8 +93,11 @@ fun AppCompatActivity.setChipColors(chipBinding: LayoutAppChipBinding) {
     }
 }
 
-fun AppCompatActivity.open(target: Class<*>, finishTask: Boolean = false) {
+fun AppCompatActivity.open(target: Class<*>, finishTask: Boolean = false, bundle: Bundle? = null) {
     val intent = Intent(this, target)
+    if (bundle != null) {
+        intent.putExtras(bundle)
+    }
     startActivity(intent)
     if (finishTask) {
         finish()

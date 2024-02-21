@@ -87,7 +87,13 @@ class VerifyEmailActivity : ThemableActivity() {
             if (viewModel.isEmailVerified) {
                 viewModel.hasProfile { hasProfile, firebaseUnavailable ->
                     if (firebaseUnavailable) {
-                        updateUI(UiState.Offline)
+                        if (hasProfile) {
+                            val bundle = Bundle()
+                            bundle.putBoolean(HomeActivity.EXTRA_IS_OFFLINE_MODE, true)
+                            open(HomeActivity::class.java, true, bundle)
+                        } else {
+                            updateUI(UiState.Offline)
+                        }
                     } else {
                         val target =
                             if (hasProfile) HomeActivity::class.java else ProfileSetupActivity::class.java

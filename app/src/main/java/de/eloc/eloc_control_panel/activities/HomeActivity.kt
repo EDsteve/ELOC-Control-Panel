@@ -20,7 +20,9 @@ import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.data.adapters.ElocInfoAdapter
 import de.eloc.eloc_control_panel.data.UserAccountViewModel
+import de.eloc.eloc_control_panel.data.UserProfile
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
+import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
@@ -33,12 +35,17 @@ import kotlinx.coroutines.launch
 // todo: use cached profile picture
 
 class HomeActivity : ThemableActivity() {
+    companion object {
+        const val EXTRA_IS_OFFLINE_MODE = "is_offline_mode"
+    }
+
     private var firstScanDone = false
     private lateinit var binding: ActivityHomeBinding
     private lateinit var leftHeaderBinding: LayoutNavHeaderBinding
     private lateinit var rightHeaderBinding: LayoutNavHeaderBinding
     private lateinit var viewModel: UserAccountViewModel
     private lateinit var rangerName: String
+    private var isOfflineMode = true
     private val elocAdapter = ElocInfoAdapter(this::onListUpdated, this::showDevice)
     private val elocReceiver = BluetoothDeviceReceiver(elocAdapter::add)
     private lateinit var preferencesLauncher: ActivityResultLauncher<Intent>
@@ -58,6 +65,7 @@ class HomeActivity : ThemableActivity() {
         leftHeaderBinding = LayoutNavHeaderBinding.bind(leftHeader)
         rightHeaderBinding = LayoutNavHeaderBinding.bind(rightHeader)
 
+        isOfflineMode = intent.extras?.getBoolean(EXTRA_IS_OFFLINE_MODE, false) ?: false
         setLaunchers()
         setListeners()
         setViewModel()
@@ -72,10 +80,8 @@ class HomeActivity : ThemableActivity() {
 
     override fun onResume() {
         super.onResume()
-
-        viewModel.getProfileAsync()
+        viewModel.getProfileAsync(isOfflineMode, ::initialize)
         setAppBar()
-        runFirstScan()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -221,29 +227,36 @@ class HomeActivity : ThemableActivity() {
 
     private fun setViewModel() {
         viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
-        viewModel.profile.observe(this) {
-            if (it != null) {
-                val isFirstRun = (!::rangerName.isInitialized)
-                rangerName = it.userId
+        viewModel.profile.observe(this, ::profileReceived)
+    }
 
-                leftHeaderBinding.profilePictureImageView.setImageUrl(
-                    it.profilePictureUrl,
-                    HttpHelper.instance.imageLoader
-                )
-                rightHeaderBinding.profilePictureImageView.setImageUrl(
-                    it.profilePictureUrl,
-                    HttpHelper.instance.imageLoader
-                )
-                leftHeaderBinding.userIdTextView.text = it.userId
-                rightHeaderBinding.userIdTextView.text = it.userId
-                leftHeaderBinding.emailAddressTextView.text = it.emailAddress
-                rightHeaderBinding.emailAddressTextView.text = it.emailAddress
-                binding.toolbar.subtitle = getString(R.string.eloc_user, it.userId)
+    private fun profileReceived(profile: UserProfile?) {
+        val p = if (profile == null) {
+            UserProfile("", "", "")
+        } else {
+            FileSystemHelper.saveProfile(profile)
+            profile
+        }
 
-                if (isFirstRun) {
-                    initialize()
-                }
-            }
+        val isFirstRun = (!::rangerName.isInitialized)
+        rangerName = p.userId
+
+        leftHeaderBinding.profilePictureImageView.setImageUrl(
+            p.profilePictureUrl,
+            HttpHelper.instance.imageLoader
+        )
+        rightHeaderBinding.profilePictureImageView.setImageUrl(
+            p.profilePictureUrl,
+            HttpHelper.instance.imageLoader
+        )
+        leftHeaderBinding.userIdTextView.text = p.userId
+        rightHeaderBinding.userIdTextView.text = p.userId
+        leftHeaderBinding.emailAddressTextView.text = p.emailAddress
+        rightHeaderBinding.emailAddressTextView.text = p.emailAddress
+        binding.toolbar.subtitle = getString(R.string.eloc_user, p.userId)
+
+        if (isFirstRun) {
+            initialize()
         }
     }
 

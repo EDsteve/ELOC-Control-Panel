@@ -1,6 +1,7 @@
 package de.eloc.eloc_control_panel.data
 
 import android.graphics.Bitmap
+import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.StorageHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
@@ -16,7 +17,6 @@ class UserAccountRepository {
     companion object {
 
         val instance get() = UserAccountRepository()
-
     }
 
     private val authHelper: AuthHelper = AuthHelper.instance
@@ -57,8 +57,24 @@ class UserAccountRepository {
         authHelper.sendVerificationLink(callback)
     }
 
-    fun getProfile(callback: ProfileCallback) =
-        FirestoreHelper.instance.getProfile(authHelper.userId, emailAddress, callback)
+    fun getProfile(
+        offlineProfile: Boolean,
+        profileCallback: ProfileCallback,
+        uiCallback: VoidCallback?
+    ) {
+        if (offlineProfile) {
+            val profile = FileSystemHelper.getSavedProfile()
+            profileCallback.handler(profile)
+            uiCallback?.handler()
+        } else {
+            FirestoreHelper.instance.getProfile(
+                authHelper.userId,
+                emailAddress,
+                profileCallback,
+                uiCallback
+            )
+        }
+    }
 
     fun uploadProfilePicture(bitmap: Bitmap, callback: StringCallback) =
         storageHelper.uploadProfilePicture(authHelper.userId, bitmap, callback)

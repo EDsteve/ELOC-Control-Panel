@@ -25,8 +25,8 @@ class UserAccountViewModel(application: Application) : AndroidViewModel(applicat
 
     val isEmailVerified get() = repository.isUserEmailVerified
 
-    fun getProfileAsync() {
-        repository.getProfile(userProfileLiveData::setValue)
+    fun getProfileAsync(offlineProfile: Boolean, uiCallback: VoidCallback?) {
+        repository.getProfile(offlineProfile, userProfileLiveData::setValue, uiCallback)
     }
 
     suspend fun signOut() = repository.signOut()

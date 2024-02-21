@@ -7,8 +7,6 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.data.PreferredFontSize
 import de.eloc.eloc_control_panel.data.StatusUploadInterval
 
-// todo: remove dead code
-
 class PreferencesHelper {
     private val preferences: SharedPreferences =
         PreferenceManager.getDefaultSharedPreferences(App.instance)

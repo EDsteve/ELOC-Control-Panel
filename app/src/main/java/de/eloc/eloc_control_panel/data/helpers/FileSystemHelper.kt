@@ -1,15 +1,20 @@
 package de.eloc.eloc_control_panel.data.helpers
 
 import de.eloc.eloc_control_panel.App
+import de.eloc.eloc_control_panel.data.UserProfile
+import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import org.json.JSONObject
 import java.io.File
+import java.security.MessageDigest
 import java.text.SimpleDateFormat
+import java.util.Base64
 import java.util.Date
 import java.util.Locale
 
 private const val UPLOAD_CACHE_NAME = "upload_cache"
+private const val PROFILES_DIR_NAME = "profiles"
 
 private const val RANGER_SEPARATOR = "_r_"
 private const val NAME_SEPARATOR = "_e_"
@@ -28,6 +33,24 @@ object FileSystemHelper {
             if (field == null) {
                 val parent = App.instance.filesDir
                 val dir = File(parent, UPLOAD_CACHE_NAME)
+
+                if (dir.exists() && (!dir.isDirectory)) {
+                    dir.delete()
+                }
+                if (!dir.exists()) {
+                    dir.mkdirs()
+                }
+
+                field = dir
+            }
+            return field
+        }
+
+    private var profilesDir: File? = null
+        get() {
+            if (field == null) {
+                val parent = App.instance.filesDir
+                val dir = File(parent, PROFILES_DIR_NAME)
 
                 if (dir.exists() && (!dir.isDirectory)) {
                     dir.delete()
@@ -127,4 +150,61 @@ object FileSystemHelper {
             append(FirestoreHelper.instance.rangerName)
             append(JSON_EXT)
         }
+
+    private fun generateProfileFilename() = generateProfileFilename(AuthHelper.instance.userId)
+
+    private fun generateProfileFilename(profileId: String): String {
+        val toHex = fun(b: Byte) = "%02x".format(b)
+        return MessageDigest.getInstance("SHA-256")
+            .digest(profileId.toByteArray())
+            .map {
+                toHex(it)
+            }
+            .toList()
+            .joinToString("")
+    }
+
+    fun saveProfile(profile: UserProfile) {
+        val filename = generateProfileFilename()
+        val profileFile = File(profilesDir, filename)
+        if (profileFile.exists()) {
+            profileFile.delete()
+        }
+        val content = buildString {
+            appendLine(profile.userId)
+            appendLine(profile.emailAddress)
+            appendLine(profile.profilePictureUrl)
+        }
+        val bytes = Base64.getEncoder().encode(content.toByteArray())
+        profileFile.writeBytes(bytes)
+    }
+
+    fun isProvisionedProfile(profileId: String): Boolean {
+        val localId = generateProfileFilename(profileId)
+        val files = profilesDir!!.listFiles()
+        if (files != null) {
+            for (f in files) {
+                if (f.isFile && f.name == localId) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    fun getSavedProfile(): UserProfile {
+        val profileFilename = generateProfileFilename()
+        val files = profilesDir!!.listFiles()
+        if (files != null) {
+            for (f in files) {
+                if (f.name == profileFilename) {
+                    val profile = UserProfile.from(f)
+                    if (profile != null) {
+                        return profile
+                    }
+                }
+            }
+        }
+        return UserProfile("", "", "")
+    }
 }
