@@ -17,7 +17,7 @@
     <string name="camera_permission_rationale">%s needs permission to use the camera to take a photo.\nDo you want to grant the permission?</string>
     <string name="cancel">Cancel</string>
     <string name="channel">Channel</string>
-    <string name="check_internet_connection">Check internet connection!</string>
+    <string name="no_internet_connection">No internet connection!</string>
     <string name="checking_eloc_status_to_upload">Checking ELOC status to upload…</string>
     <string name="clear">Clear</string>
     <string name="command_line">Command Line</string>
@@ -36,7 +36,7 @@
     <string name="detector_settings">Detector Settings</string>
     <string name="device_address_required">Device address is required!</string>
     <string name="device_name_required">Device name is required!</string>
-    <string name="device_offline">Failed to connect to server.\n\nPlease check your internet connection and make sure it is active.</string>
+    <string name="device_offline">Please check your internet connection and make sure it is active.</string>
     <string name="device_settings_not_available">Device settings are not available while it is recording or detecting.</string>
     <string name="disconnected_swipe_to_reconnect">Disconnected\n\nSwipe down to reconnect</string>
     <string name="editor">Editor</string>
@@ -192,4 +192,6 @@
     <string name="map_view">Map View</string>
     <string name="list_view">List View</string>
     <string name="checking_internet_connection">Checking internet connection…</string>
+    <string name="wait_for_location">Please wait for a GPS location to be received.</string>
+    <string name="location_required">Location Required</string>
 </resources>

@@ -9,6 +9,7 @@ import com.google.openlocationcode.OpenLocationCode
 import de.eloc.eloc_control_panel.App
 
 object LocationHelper {
+    const val UNKNOWN = "UNKNOWN"
     private var listener: LocationListener? = null
     private val manager = App.instance.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
@@ -39,4 +40,9 @@ object LocationHelper {
         } else {
             "${location.latitude}:${location.latitude}"
         }
+
+    fun isValidLocationCode(code: String): Boolean {
+        val locationCode = code.trim()
+        return (locationCode.isNotEmpty() && (locationCode.uppercase() != UNKNOWN))
+    }
 }

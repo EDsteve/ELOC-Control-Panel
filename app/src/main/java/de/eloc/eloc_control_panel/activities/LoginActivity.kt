@@ -10,26 +10,45 @@ import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
+import de.eloc.eloc_control_panel.interfaces.VoidCallback
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class LoginActivity : ThemableActivity() {
+class LoginActivity : NetworkMonitoringActivity() {
     private lateinit var binding: ActivityLoginBinding
     private lateinit var viewModel: UserAccountViewModel
-    private var hasInternetAccess = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         binding.signInLayout.visibility = View.GONE
         binding.checkInternetAccessProgressIndicator.visibility = View.VISIBLE
+        networkChangedHandler = VoidCallback {
+            binding.signInLayout.visibility = View.GONE
+            binding.checkInternetAccessProgressIndicator.visibility = View.GONE
+            binding.offlineLayout.visibility = View.GONE
+            when (hasInternetAccess) {
+                true -> binding.signInLayout.visibility = View.VISIBLE
+                false -> binding.offlineLayout.visibility = View.VISIBLE
+                null -> binding.checkInternetAccessProgressIndicator.visibility = View.VISIBLE
+            }
+        }
+
+        AuthHelper.instance.registerGoogleSignInListener(::updateUiForGoogleSignIn)
+        viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
+        setListeners()
+        setTextWatchers()
+        updateUiForGoogleSignIn()
+        updateUI(false)
     }
 
     override fun onResume() {
         super.onResume()
-        if (hasInternetAccess) {
+        onNetworkChanged()
+        if (hasInternetAccess != null) {
             val autoGoogleSignIn = PreferencesHelper.instance.getAutoGoogleSignIn()
             val googleSignInCanceled = AuthHelper.instance.googleSignInCanceled
             if (autoGoogleSignIn && (!googleSignInCanceled)) {
@@ -38,15 +57,6 @@ class LoginActivity : ThemableActivity() {
                 checkAuthState()
             }
         }
-    }
-
-    private fun initialize() {
-        AuthHelper.instance.registerGoogleSignInListener(::updateUiForGoogleSignIn)
-        viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
-        setListeners()
-        setTextWatchers()
-        updateUiForGoogleSignIn()
-        updateUI(false)
     }
 
     private fun setTextWatchers() {

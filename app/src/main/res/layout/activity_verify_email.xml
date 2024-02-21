@@ -93,54 +93,25 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/offline_layout"
+    <LinearLayout
+        android:id="@+id/offline_layout_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:gravity="top"
+        android:orientation="vertical"
         tools:visibility="visible">
 
-        <TextView
-            android:id="@+id/offline_title"
+        <de.eloc.eloc_control_panel.widgets.OfflineLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="@string/check_internet_connection"
-            android:textSize="18sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:viewBindingIgnore="true" />
-
-        <ImageView
-            android:id="@+id/offline_icon"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_marginTop="16dp"
-            android:contentDescription="@string/offline"
-            android:src="@drawable/wifi_off"
-            app:layout_constraintEnd_toEndOf="@id/offline_title"
-            app:layout_constraintStart_toStartOf="@id/offline_title"
-            app:layout_constraintTop_toBottomOf="@id/offline_title"
-            app:tint="@color/status_grey"
-            tools:viewBindingIgnore="true" />
-
-        <TextView
-            android:id="@+id/offline_message_text_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:text="@string/device_offline"
-            android:textAlignment="center"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/offline_icon"
-            tools:viewBindingIgnore="true" />
+            android:layout_gravity="center" />
 
         <Button
             android:id="@+id/retry_button"
             android:layout_width="@dimen/auth_input_width"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:layout_marginTop="32dp"
             android:text="@string/try_again"
             android:textAllCaps="true"
@@ -148,5 +119,5 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/offline_message_text_view" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 </FrameLayout>

@@ -16,6 +16,16 @@ class ProgressIndicator : LinearLayout {
             binding.textView.text = field
         }
 
+    var infoMode = false
+        set(value) {
+            field = value
+            binding.linearProgressIndicator.visibility = if (field) {
+                View.GONE
+            } else {
+                View.VISIBLE
+            }
+        }
+
     private var compact = false
         set(value) {
             field = value

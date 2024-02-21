@@ -7,8 +7,9 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityRegisterBinding
 import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
+import de.eloc.eloc_control_panel.interfaces.VoidCallback
 
-class RegisterActivity : ThemableActivity() {
+class RegisterActivity : NetworkMonitoringActivity() {
     private lateinit var binding: ActivityRegisterBinding
     private lateinit var viewModel: UserAccountViewModel
 
@@ -18,10 +19,25 @@ class RegisterActivity : ThemableActivity() {
         setContentView(binding.root)
 
         viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
+        networkChangedHandler = VoidCallback {
+            binding.registrationLayout.visibility = View.GONE
+            binding.checkInternetAccessProgressIndicator.visibility = View.GONE
+            binding.offlineLayout.visibility = View.GONE
+            when (hasInternetAccess) {
+                true -> binding.registrationLayout.visibility = View.VISIBLE
+                false -> binding.offlineLayout.visibility = View.VISIBLE
+                null -> binding.checkInternetAccessProgressIndicator.visibility = View.VISIBLE
+            }
+        }
 
         setListeners()
         setWatchers()
         updateUI(false)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        onNetworkChanged()
     }
 
     private fun setWatchers() {

@@ -18,6 +18,7 @@ import de.eloc.eloc_control_panel.data.TimePerFile
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.JsonHelper
+import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
@@ -116,7 +117,7 @@ object DeviceDriver : Runnable {
     val general = General()
     val session = Session()
 
-private var cancelConnectionMonitor = false
+    private var cancelConnectionMonitor = false
     private var configSaved = false
     private var statusSaved = false
     private var commandLineListener: StringCallback? = null
@@ -144,7 +145,7 @@ private var cancelConnectionMonitor = false
 
     private val connectionMonitor = Runnable {
         var elapsed = 0
-        var timeout = 30
+        val timeout = 30
         cancelConnectionMonitor = false
         while (elapsed <= timeout) {
             if (cancelConnectionMonitor) {
@@ -152,7 +153,8 @@ private var cancelConnectionMonitor = false
             }
             try {
                 Thread.sleep(1000)
-            }catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
             elapsed++
         }
         if (!cancelConnectionMonitor) {
@@ -640,19 +642,22 @@ private var cancelConnectionMonitor = false
             if (intercepted) {
                 when (commandType) {
                     CommandType.GetConfig -> {
-                        if (!configSaved) {
-                            configSaved = FileSystemHelper.saveDataFile(true, json)
-                            StatusUploadService.start(App.instance)
-                        }
                         parseConfig(root)
+                        // Only upload config if it has a valid location
+                        if (LocationHelper.isValidLocationCode(general.lastLocation)) {
+                            if (!configSaved) {
+                                configSaved = FileSystemHelper.saveDataFile(true, json)
+                                StatusUploadService.start(App.instance)
+                            }
+                        }
                     }
 
                     CommandType.GetStatus -> {
+                        parseStatus(root)
                         if (!statusSaved) {
                             statusSaved = FileSystemHelper.saveDataFile(false, json)
                             StatusUploadService.start(App.instance)
                         }
-                        parseStatus(root)
                     }
 
                     else -> {}

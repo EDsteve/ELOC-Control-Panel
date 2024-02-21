@@ -32,7 +32,7 @@ class DeviceActivity : AppCompatActivity() {
 
     private var hasSDCardError = false
     private var locationAccuracy = 100.0 // Start with very inaccurate value of 100 meters.
-    private var locationCode = "UNKNOWN"
+    private var locationCode = LocationHelper.UNKNOWN
     private lateinit var binding: ActivityDeviceBinding
     private var deviceAddress = ""
     private var rangerName = ""
@@ -95,8 +95,6 @@ class DeviceActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         LocationHelper.stopUpdates()
-        locationAccuracy = 100.0
-        locationCode = "UNKNOWN"
     }
 
     override fun onDestroy() {
@@ -265,7 +263,7 @@ class DeviceActivity : AppCompatActivity() {
                 ConnectionStatus.Inactive -> {
                     binding.swipeRefreshLayout.isEnabled = true
                     toggleContent(false)
-                    binding.progressIndicator.visibility = View.GONE
+                    binding.progressIndicator.infoMode = true
                     binding.progressIndicator.text =
                         getString(R.string.disconnected_swipe_to_reconnect)
                 }
@@ -273,7 +271,7 @@ class DeviceActivity : AppCompatActivity() {
                 ConnectionStatus.Pending -> {
                     binding.swipeRefreshLayout.isEnabled = false
                     toggleContent(false)
-                    binding.progressIndicator.visibility = View.VISIBLE
+                    binding.progressIndicator.infoMode = false
                     binding.progressIndicator.text = getString(R.string.connecting)
                 }
             }
@@ -379,6 +377,14 @@ class DeviceActivity : AppCompatActivity() {
 
         if (hasSDCardError && (newMode != RecordState.Invalid) && (newMode != RecordState.RecordOffDetectOff)) {
             showSDCardError()
+            return
+        }
+
+        if (!LocationHelper.isValidLocationCode(locationCode)) {
+            showModalAlert(
+                getString(R.string.location_required),
+                getString(R.string.wait_for_location)
+            )
             return
         }
 

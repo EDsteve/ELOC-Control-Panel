@@ -181,7 +181,7 @@ class MapActivity : ThemableActivity() {
             if (mapDevices.containsKey(key)) {
                 val oldInfo = mapDevices[key]
                 if (oldInfo != null) {
-                    if (oldInfo.time.compareTo(newInfo.time) > 1) {
+                    if (oldInfo.time.compareTo(newInfo.time) < 1) {
                         if (newInfo.location == null) {
                             add = false
                         }

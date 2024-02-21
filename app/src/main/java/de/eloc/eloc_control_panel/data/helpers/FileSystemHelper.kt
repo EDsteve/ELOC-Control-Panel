@@ -74,6 +74,7 @@ object FileSystemHelper {
             } else {
                 PREFIX_STATUS
             }
+
             val fileName =
                 generateDataFileName(prefix, DeviceDriver.name, captureTimestamp)
             val file = File(uploadCache, fileName)
