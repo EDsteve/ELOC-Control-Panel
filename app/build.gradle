@@ -14,8 +14,8 @@ android {
         minSdk 21
         //noinspection EditedTargetSdkVersion
         targetSdk 34
-        versionCode 33
-        versionName '4.712'
+        versionCode 38
+        versionName '5.17'
         versionNameSuffix 'AppBeta'
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
