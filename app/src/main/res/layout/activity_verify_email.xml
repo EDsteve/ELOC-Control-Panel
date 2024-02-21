@@ -8,13 +8,12 @@
     android:padding="16dp"
     tools:context=".activities.VerifyEmailActivity">
 
-    <com.google.android.material.progressindicator.LinearProgressIndicator
-        android:id="@+id/progress_horizontal"
-        android:layout_width="@dimen/auth_input_width"
+    <de.eloc.eloc_control_panel.widgets.ProgressIndicator
+        android:id="@+id/progress_indicator"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:indeterminate="true"
-        tools:visibility="invisible" />
+        app:compact="true" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/message_layout"

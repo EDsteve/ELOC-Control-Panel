@@ -63,7 +63,7 @@ class MapActivity : ThemableActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMapBinding.inflate(layoutInflater)
         binding.mapView.visibility = View.INVISIBLE
-        binding.loadingLayout.visibility = View.VISIBLE
+        binding.progressIndicator.visibility = View.VISIBLE
         binding.dialogBackground.visibility = View.GONE
 
         setContentView(binding.root)
@@ -155,7 +155,7 @@ class MapActivity : ThemableActivity() {
                 @SuppressLint("MissingPermission")
                 map?.isMyLocationEnabled = true
                 binding.mapView.visibility = View.VISIBLE
-                binding.loadingLayout.visibility = View.GONE
+                binding.progressIndicator.visibility = View.GONE
                 clusterManager = ClusterManager(this, map)
 
                 clusterManager?.markerCollection?.setInfoWindowAdapter(infoWindowAdapter)

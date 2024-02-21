@@ -3,7 +3,6 @@ package de.eloc.eloc_control_panel.activities.editors
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import android.widget.TextView
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.showModalAlert
@@ -13,6 +12,7 @@ import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.driver.General
 import de.eloc.eloc_control_panel.driver.Microphone
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
+import de.eloc.eloc_control_panel.widgets.ProgressIndicator
 
 internal const val NOT_SET = "not_set"
 abstract class BaseEditorActivity : AppCompatActivity() {
@@ -36,9 +36,8 @@ abstract class BaseEditorActivity : AppCompatActivity() {
     protected var options = mutableMapOf<String, String>()
     private var configUpdated = false
     private var statusUpdated = false
-    protected lateinit var progressLayout: View
     protected lateinit var contentLayout: View
-    protected lateinit var progressTextView: TextView
+    protected lateinit var progressIndicator: ProgressIndicator
     private val onGetDeviceInfoCompleted = GetCommandCompletedCallback {
         if (saved) {
             if (!configUpdated && (it == CommandType.GetConfig)) {
@@ -129,13 +128,13 @@ abstract class BaseEditorActivity : AppCompatActivity() {
     }
 
     protected fun showProgress() {
-        progressTextView.text = getString(R.string.applying_changes)
-        progressLayout.visibility = View.VISIBLE
+        progressIndicator.text = getString(R.string.applying_changes)
+        progressIndicator.visibility = View.VISIBLE
         contentLayout.visibility = View.INVISIBLE
     }
 
     private fun showContent() {
-        progressLayout.visibility = View.INVISIBLE
+        progressIndicator.visibility = View.INVISIBLE
         contentLayout.visibility = View.VISIBLE
     }
 
@@ -144,7 +143,7 @@ abstract class BaseEditorActivity : AppCompatActivity() {
             if (success) {
                 if (type.isSetCommand) {
                     saved = true
-                    progressTextView.text = getString(R.string.updating_values)
+                    progressIndicator.text = getString(R.string.updating_values)
                     DeviceDriver.getDeviceInfo()
                 }
             } else {

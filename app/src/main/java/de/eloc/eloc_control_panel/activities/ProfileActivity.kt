@@ -130,10 +130,10 @@ class ProfileActivity : MediaActivity() {
     private fun updateUI(showProgress: Boolean) {
         if (showProgress) {
             binding.fieldsLayout.visibility = View.GONE
-            binding.progressLayout.visibility = View.VISIBLE
+            binding.progressIndicator.visibility = View.VISIBLE
         } else {
             binding.fieldsLayout.visibility = View.VISIBLE
-            binding.progressLayout.visibility = View.GONE
+            binding.progressIndicator.visibility = View.GONE
         }
     }
 

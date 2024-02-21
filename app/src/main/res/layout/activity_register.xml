@@ -127,12 +127,11 @@
         android:text="@string/create_new_account"
         android:textAllCaps="true" />
 
-    <com.google.android.material.progressindicator.LinearProgressIndicator
-        android:id="@+id/progress_horizontal"
-        android:layout_width="@dimen/auth_input_width"
+    <de.eloc.eloc_control_panel.widgets.ProgressIndicator
+        android:id="@+id/progress_indicator"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginVertical="16dp"
-        android:indeterminate="true" />
+        app:compact="true" />
 
     <Button
         android:id="@+id/login_button"

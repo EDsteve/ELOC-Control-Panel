@@ -36,30 +36,12 @@
             android:text="@string/instructions"
             android:textAlignment="center" />
 
-        <LinearLayout
-            android:id="@+id/progress_layout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="16dp"
-            tools:visibility="invisible">
-
-            <TextView
-                android:id="@+id/progress_text_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/sending_command" />
-
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="16dp" />
-
-            <com.google.android.material.progressindicator.LinearProgressIndicator
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:indeterminate="true" />
-        </LinearLayout>
+        <de.eloc.eloc_control_panel.widgets.ProgressIndicator
+            android:id="@+id/progress_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:text="@string/sending_command" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/content_layout"

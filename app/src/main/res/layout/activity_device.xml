@@ -43,7 +43,7 @@
                     android:layout_height="match_parent"
                     android:gravity="center"
                     android:orientation="vertical"
-                    tools:visibility="invisible">
+                    tools:visibility="visible">
 
                     <ImageButton
                         android:id="@+id/back_button"
@@ -61,24 +61,11 @@
                         android:layout_height="0dp"
                         android:layout_weight="1" />
 
-                    <TextView
-                        android:id="@+id/connection_status_text_view"
+                    <de.eloc.eloc_control_panel.widgets.ProgressIndicator
+                        android:id="@+id/progress_indicator"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:text="@string/connecting"
-                        android:textAlignment="center" />
-
-                    <Space
-                        android:layout_width="1dp"
-                        android:layout_height="32dp" />
-
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/connection_progress_indicator"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="32dp"
-                        android:indeterminate="true" />
+                        app:text="@string/connecting" />
 
                     <Space
                         android:layout_width="match_parent"
@@ -91,7 +78,7 @@
                     android:id="@+id/content_layout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    tools:visibility="visible">
+                    tools:visibility="invisible">
 
                     <de.eloc.eloc_control_panel.widgets.ModeButton
                         android:id="@+id/mode_button"
@@ -118,11 +105,13 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical">
 
-                            <Space android:layout_width="match_parent" android:layout_height="16dp" />
+                            <Space
+                                android:layout_width="match_parent"
+                                android:layout_height="16dp" />
 
                             <androidx.constraintlayout.widget.ConstraintLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="wrap_content" >
+                                android:layout_height="wrap_content">
 
                                 <de.eloc.eloc_control_panel.widgets.SimpleGauge
                                     android:id="@+id/battery_gauge"
@@ -245,7 +234,8 @@
                             <com.google.android.material.divider.MaterialDivider
                                 android:id="@+id/gauge_divider"
                                 android:layout_width="match_parent"
-                                android:layout_height="2dp" android:layout_marginVertical="@dimen/divider_margin"
+                                android:layout_height="2dp"
+                                android:layout_marginVertical="@dimen/divider_margin"
                                 app:dividerColor="@color/black"
                                 tools:viewBindingIgnore="true" />
 

@@ -112,11 +112,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/user_id_layout" />
 
-    <com.google.android.material.progressindicator.LinearProgressIndicator
-        android:id="@+id/progress_horizontal"
-        android:layout_width="@dimen/auth_input_width"
+    <de.eloc.eloc_control_panel.widgets.ProgressIndicator
+        android:id="@+id/progress_indicator"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:indeterminate="true"
+        app:compact="true"
         app:layout_constraintBottom_toBottomOf="@id/done_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

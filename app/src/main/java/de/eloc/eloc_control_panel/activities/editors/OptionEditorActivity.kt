@@ -39,8 +39,7 @@ class OptionEditorActivity : BaseEditorActivity() {
     }
 
     override fun setViews() {
-        progressTextView = binding.progressTextView
-        progressLayout = binding.progressLayout
+        progressIndicator = binding.progressIndicator
         contentLayout = binding.contentLayout
     }
 

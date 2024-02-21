@@ -74,7 +74,7 @@ class HomeActivity : ThemableActivity() {
         binding.swipeRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.colorPrimary)
 
         binding.drawer.visibility = View.GONE
-        binding.progressLayout.visibility = View.VISIBLE
+        binding.progressIndicator.visibility = View.VISIBLE
         prepareStatusUpload(true)
     }
 
@@ -130,7 +130,7 @@ class HomeActivity : ThemableActivity() {
 
     private fun initialize() {
         binding.drawer.visibility = View.VISIBLE
-        binding.progressLayout.visibility = View.GONE
+        binding.progressIndicator.visibility = View.GONE
         closeDrawer()
         registerReceiver(elocReceiver, IntentFilter(BluetoothDevice.ACTION_FOUND))
         setupListView()

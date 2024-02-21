@@ -47,12 +47,12 @@ class VerifyEmailActivity : ThemableActivity() {
     }
 
     private fun updateUI(state: UiState) {
-        binding.progressHorizontal.visibility = View.GONE
+        binding.progressIndicator.visibility = View.GONE
         binding.messageLayout.visibility = View.GONE
         binding.offlineLayout.visibility = View.GONE
         when (state) {
             UiState.InProgress -> {
-                binding.progressHorizontal.visibility = View.VISIBLE
+                binding.progressIndicator.visibility = View.VISIBLE
             }
 
             UiState.Idle -> {

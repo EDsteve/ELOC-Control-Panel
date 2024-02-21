@@ -3,7 +3,6 @@ package de.eloc.eloc_control_panel.activities
 import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.text.InputType
 import android.view.View
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityCommandLineBinding
@@ -74,12 +73,12 @@ class CommandLineActivity : AppCompatActivity() {
 
     private fun showProgress() {
         hideKeyboard()
-        binding.progressLayout.visibility = View.VISIBLE
+        binding.progressIndicator.visibility = View.VISIBLE
         binding.contentLayout.visibility = View.GONE
     }
 
     private fun showContent() {
-        binding.progressLayout.visibility = View.GONE
+        binding.progressIndicator.visibility = View.GONE
         binding.contentLayout.visibility = View.VISIBLE
     }
 

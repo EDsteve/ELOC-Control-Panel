@@ -55,7 +55,7 @@ class DeviceSettingsActivity : ThemableActivity() {
         runOnUiThread {
             if (success) {
                 if (type.isSetCommand) {
-                    binding.progressTextView.text = getString(R.string.updating_values)
+                    binding.progressIndicator.text = getString(R.string.updating_values)
                     DeviceDriver.getDeviceInfo()
                 }
             } else {
@@ -684,13 +684,13 @@ class DeviceSettingsActivity : ThemableActivity() {
     }
 
     private fun showProgress() {
-        binding.progressTextView.text = getString(R.string.applying_changes)
-        binding.progressLayout.visibility = View.VISIBLE
+        binding.progressIndicator.text = getString(R.string.applying_changes)
+        binding.progressIndicator.visibility = View.VISIBLE
         binding.contentLayout.visibility = View.GONE
     }
 
     private fun showContent() {
-        binding.progressLayout.visibility = View.GONE
+        binding.progressIndicator.visibility = View.GONE
         binding.contentLayout.visibility = View.VISIBLE
     }
 }

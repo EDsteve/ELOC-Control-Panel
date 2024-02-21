@@ -29,4 +29,9 @@
     <declare-styleable name="ModeButton">
         <attr name="isBusy" format="boolean" />
     </declare-styleable>
+
+    <declare-styleable name="ProgressIndicator">
+        <attr name="text" format="string" />
+        <attr name="compact" format="boolean" />
+    </declare-styleable>
 </resources>

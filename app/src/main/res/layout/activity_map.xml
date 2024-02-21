@@ -33,32 +33,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
-            <LinearLayout
-                android:id="@+id/loading_layout"
-                android:layout_width="match_parent"
+            <de.eloc.eloc_control_panel.widgets.ProgressIndicator
+                android:id="@+id/progress_indicator"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:layout_margin="16dp"
-                android:gravity="center"
-                android:orientation="vertical"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <TextView
-                    android:id="@+id/message_text_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/loading_map" />
-
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginVertical="16dp"
-                    android:indeterminate="true" />
-
-            </LinearLayout>
+                app:layout_constraintTop_toTopOf="parent"
+                app:text="@string/loading_map" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

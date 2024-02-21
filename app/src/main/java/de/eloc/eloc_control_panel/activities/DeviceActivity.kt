@@ -199,8 +199,8 @@ class DeviceActivity : AppCompatActivity() {
         binding.toolbar.visibility = View.GONE
         binding.contentLayout.visibility = View.GONE
         binding.loadingLinearLayout.visibility = View.VISIBLE
-        binding.connectionProgressIndicator.visibility = View.VISIBLE
-        binding.connectionStatusTextView.setText(R.string.connecting)
+        binding.progressIndicator.visibility = View.VISIBLE
+        binding.progressIndicator.text = getString(R.string.connecting)
         connectToDevice()
     }
 
@@ -265,15 +265,16 @@ class DeviceActivity : AppCompatActivity() {
                 ConnectionStatus.Inactive -> {
                     binding.swipeRefreshLayout.isEnabled = true
                     toggleContent(false)
-                    binding.connectionProgressIndicator.visibility = View.GONE
-                    binding.connectionStatusTextView.setText(R.string.disconnected_swipe_to_reconnect)
+                    binding.progressIndicator.visibility = View.GONE
+                    binding.progressIndicator.text =
+                        getString(R.string.disconnected_swipe_to_reconnect)
                 }
 
                 ConnectionStatus.Pending -> {
                     binding.swipeRefreshLayout.isEnabled = false
                     toggleContent(false)
-                    binding.connectionProgressIndicator.visibility = View.VISIBLE
-                    binding.connectionStatusTextView.setText(R.string.connecting)
+                    binding.progressIndicator.visibility = View.VISIBLE
+                    binding.progressIndicator.text = getString(R.string.connecting)
                 }
             }
         }

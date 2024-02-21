@@ -17,29 +17,36 @@ import kotlinx.coroutines.withContext
 class LoginActivity : ThemableActivity() {
     private lateinit var binding: ActivityLoginBinding
     private lateinit var viewModel: UserAccountViewModel
+    private var hasInternetAccess = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.signInLayout.visibility = View.GONE
+        binding.checkInternetAccessProgressIndicator.visibility = View.VISIBLE
+    }
 
+    override fun onResume() {
+        super.onResume()
+        if (hasInternetAccess) {
+            val autoGoogleSignIn = PreferencesHelper.instance.getAutoGoogleSignIn()
+            val googleSignInCanceled = AuthHelper.instance.googleSignInCanceled
+            if (autoGoogleSignIn && (!googleSignInCanceled)) {
+                signInWithGoogle(true)
+            } else {
+                checkAuthState()
+            }
+        }
+    }
+
+    private fun initialize() {
         AuthHelper.instance.registerGoogleSignInListener(::updateUiForGoogleSignIn)
         viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
         setListeners()
         setTextWatchers()
         updateUiForGoogleSignIn()
         updateUI(false)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        val autoGoogleSignIn = PreferencesHelper.instance.getAutoGoogleSignIn()
-        val googleSignInCanceled = AuthHelper.instance.googleSignInCanceled
-        if (autoGoogleSignIn && (!googleSignInCanceled)) {
-            signInWithGoogle(true)
-        } else {
-            checkAuthState()
-        }
     }
 
     private fun setTextWatchers() {

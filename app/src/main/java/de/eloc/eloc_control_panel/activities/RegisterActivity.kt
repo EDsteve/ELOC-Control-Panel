@@ -86,7 +86,7 @@ class RegisterActivity : ThemableActivity() {
     }
 
     private fun updateUI(locked: Boolean) {
-        binding.progressHorizontal.visibility = if (locked) View.VISIBLE else View.INVISIBLE
+        binding.progressIndicator.visibility = if (locked) View.VISIBLE else View.INVISIBLE
         binding.emailAddressLayout.isEnabled = !locked
         binding.passwordLayout.isEnabled = !locked
         binding.verifyPasswordLayout.isEnabled = !locked

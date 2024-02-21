@@ -24,26 +24,12 @@
         android:layout_height="match_parent"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
-        <LinearLayout
-            android:id="@+id/progress_layout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="vertical"
-            tools:visibility="gone">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/saving" />
-
-            <com.google.android.material.progressindicator.LinearProgressIndicator
-                android:layout_width="@dimen/auth_input_width"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="16dp"
-                android:indeterminate="true" />
-
-        </LinearLayout>
+        <de.eloc.eloc_control_panel.widgets.ProgressIndicator
+            android:id="@id/progress_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:text="@string/saving" />
 
         <ScrollView
             android:id="@+id/fields_layout"

@@ -107,7 +107,7 @@ class ProfileSetupActivity : MediaActivity() {
             binding.cameraButton.isEnabled = false
             binding.galleryButton.isEnabled = false
             binding.userIdLayout.isEnabled = false
-            binding.progressHorizontal.visibility = View.VISIBLE
+            binding.progressIndicator.visibility = View.VISIBLE
             binding.doneButton.visibility = View.INVISIBLE
             binding.galleryButton.alpha = 0.25f
             binding.cameraButton.alpha = 0.25f
@@ -115,7 +115,7 @@ class ProfileSetupActivity : MediaActivity() {
             binding.cameraButton.isEnabled = true
             binding.galleryButton.isEnabled = true
             binding.userIdLayout.isEnabled = true
-            binding.progressHorizontal.visibility = View.GONE
+            binding.progressIndicator.visibility = View.GONE
             binding.doneButton.visibility = View.VISIBLE
             binding.galleryButton.alpha = 1f
             binding.cameraButton.alpha = 1f

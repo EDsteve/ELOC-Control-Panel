@@ -31,12 +31,12 @@ class ChangeEmailAddressActivity : ThemableActivity() {
             binding.textEditLayout.isEnabled = false
             binding.passwordLayout.isEnabled = false
             binding.submitButton.isEnabled = false
-            binding.progressHorizontal.visibility = View.VISIBLE
+            binding.progressIndicator.visibility = View.VISIBLE
         } else {
             binding.textEditLayout.isEnabled = true
             binding.passwordLayout.isEnabled = true
             binding.submitButton.isEnabled = true
-            binding.progressHorizontal.visibility = View.GONE
+            binding.progressIndicator.visibility = View.GONE
         }
     }
 
