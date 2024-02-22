@@ -380,6 +380,9 @@ class DeviceActivity : AppCompatActivity() {
             return
         }
 
+
+        /*
+        // Allow recording, even without a valid location
         if (!LocationHelper.isValidLocationCode(locationCode)) {
             showModalAlert(
                 getString(R.string.location_required),
@@ -387,6 +390,7 @@ class DeviceActivity : AppCompatActivity() {
             )
             return
         }
+        */
 
         if (ignoreLocationAccuracy || (locationAccuracy <= 8.1)) {
             var proceed = true
