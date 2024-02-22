@@ -5,6 +5,8 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.LocalCacheSettings
+import com.google.firebase.firestore.PersistentCacheSettings
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.Source
 import de.eloc.eloc_control_panel.data.ElocDeviceInfo
@@ -273,29 +275,33 @@ class FirestoreHelper {
         FirebaseFirestore.getInstance()
             .collection(COL_CONFIG)
             .whereEqualTo("app_metadata.ranger", rangerName)
-            .addSnapshotListener { snapshot, _ ->
-                if (snapshot != null) {
-                    for (doc in snapshot.documents) {
-                        val plusCode = doc.get("device.locationCode", String::class.java) ?: ""
-                        val location = LocationHelper.decodePlusCode(plusCode)
-                        val locationAccuracy =
-                            doc.get("device.locationAccuracy", Double::class.java)
-                        val deviceName = doc.get("device.nodeName", String::class.java)
-                        val dirtyCapturedTime =
-                            doc.get("app_metadata.capture_timestamp", String::class.java)
-                        val capturedTime = TimeHelper.prettify(dirtyCapturedTime)
-                        val batteryVolts = -100.0
-                        val recordingTimeSinceBoot = -100.0
-                        if ((deviceName != null) && (locationAccuracy != null)) {
-                            val info = ElocDeviceInfo(
-                                location,
-                                deviceName,
-                                batteryVolts,
-                                capturedTime,
-                                recordingTimeSinceBoot,
-                                locationAccuracy
-                            )
-                            callback?.handler(info)
+            .get()
+            .addOnCompleteListener {
+                if (it.isSuccessful) {
+                    val snapshot = it.result
+                    if (snapshot != null) {
+                        for (doc in snapshot.documents) {
+                            val plusCode = doc.get("device.locationCode", String::class.java) ?: ""
+                            val location = LocationHelper.decodePlusCode(plusCode)
+                            val locationAccuracy =
+                                doc.get("device.locationAccuracy", Double::class.java)
+                            val deviceName = doc.get("device.nodeName", String::class.java)
+                            val dirtyCapturedTime =
+                                doc.get("app_metadata.capture_timestamp", String::class.java)
+                            val capturedTime = TimeHelper.prettify(dirtyCapturedTime)
+                            val batteryVolts = -100.0
+                            val recordingTimeSinceBoot = -100.0
+                            if ((deviceName != null) && (locationAccuracy != null)) {
+                                val info = ElocDeviceInfo(
+                                    location,
+                                    deviceName,
+                                    batteryVolts,
+                                    capturedTime,
+                                    recordingTimeSinceBoot,
+                                    locationAccuracy
+                                )
+                                callback?.handler(info)
+                            }
                         }
                     }
                 }
