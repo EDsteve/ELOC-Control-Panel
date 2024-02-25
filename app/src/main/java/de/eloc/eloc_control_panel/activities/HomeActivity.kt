@@ -80,7 +80,7 @@ class HomeActivity : ThemableActivity() {
 
     override fun onResume() {
         super.onResume()
-        viewModel.getProfileAsync(isOfflineMode, ::initialize)
+        viewModel.getProfileAsync(isOfflineMode, viewModel, ::initialize)
         setAppBar()
     }
 

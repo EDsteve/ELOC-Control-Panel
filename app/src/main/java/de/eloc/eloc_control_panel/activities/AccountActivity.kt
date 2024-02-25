@@ -23,7 +23,7 @@ class AccountActivity : ThemableActivity() {
 
     override fun onResume() {
         super.onResume()
-        viewModel.getProfileAsync(false, null)
+        viewModel.getProfileAsync(false, viewModel, null)
     }
 
     private fun setViewModel() {

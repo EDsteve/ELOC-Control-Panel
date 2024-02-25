@@ -3,13 +3,12 @@ package de.eloc.eloc_control_panel.data.helpers
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.data.UserProfile
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
-import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import org.json.JSONObject
 import java.io.File
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
-import java.util.Base64
+import android.util.Base64
 import java.util.Date
 import java.util.Locale
 
@@ -64,7 +63,7 @@ object FileSystemHelper {
             return field
         }
 
-    fun saveDataFile(isConfig: Boolean, json: String): Boolean {
+    fun saveDataFile(isConfig: Boolean, rangerName: String, json: String): Boolean {
         try {
             val dateFormatter = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-z", Locale.US)
             val now = Date(System.currentTimeMillis())
@@ -76,7 +75,7 @@ object FileSystemHelper {
             }
 
             val fileName =
-                generateDataFileName(prefix, DeviceDriver.name, captureTimestamp)
+                generateDataFileName(prefix, rangerName, DeviceDriver.name, captureTimestamp)
             val file = File(uploadCache, fileName)
             file.writeText(json)
             return true
@@ -139,6 +138,7 @@ object FileSystemHelper {
 
     private fun generateDataFileName(
         prefix: String,
+        rangerName: String,
         elocName: String,
         captureTimestamp: String
     ): String =
@@ -148,7 +148,7 @@ object FileSystemHelper {
             append(NAME_SEPARATOR)
             append(elocName)
             append(RANGER_SEPARATOR)
-            append(FirestoreHelper.instance.rangerName)
+            append(rangerName)
             append(JSON_EXT)
         }
 
@@ -176,7 +176,7 @@ object FileSystemHelper {
             appendLine(profile.emailAddress)
             appendLine(profile.profilePictureUrl)
         }
-        val bytes = Base64.getEncoder().encode(content.toByteArray())
+        val bytes = Base64.encode(content.toByteArray(), Base64.DEFAULT)
         profileFile.writeBytes(bytes)
     }
 

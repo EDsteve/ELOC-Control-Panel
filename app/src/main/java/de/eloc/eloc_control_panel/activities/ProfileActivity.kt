@@ -45,7 +45,7 @@ class ProfileActivity : MediaActivity() {
         setLaunchers()
         setListeners()
         updateUI(false)
-        viewModel.getProfileAsync(false, null)
+        viewModel.getProfileAsync(false, viewModel, null)
     }
 
     override fun takePhoto() {
@@ -118,11 +118,11 @@ class ProfileActivity : MediaActivity() {
     private fun updateField(value: String) {
         val completedCallback = fun() {
             updateUI(false)
-            viewModel.getProfileAsync(false, null)
+            viewModel.getProfileAsync(false, viewModel, null)
         }
         updateUI(true)
         if (currentField == ProfileField.ProfilePicture) {
-            viewModel.updateProfilePicture(value, completedCallback)
+            viewModel.updateProfilePicture(value, viewModel, completedCallback)
         }
         currentField = null
     }

@@ -16,7 +16,6 @@ import de.eloc.eloc_control_panel.interfaces.VoidCallback
 class UserAccountRepository {
 
     companion object {
-
         val instance get() = UserAccountRepository()
     }
 
@@ -31,7 +30,11 @@ class UserAccountRepository {
 
     suspend fun signOut() = authHelper.signOut()
 
-    suspend fun signInWithGoogle(activity: LoginActivity, filter: Boolean, callback: GoogleSignInCallback?) {
+    suspend fun signInWithGoogle(
+        activity: LoginActivity,
+        filter: Boolean,
+        callback: GoogleSignInCallback?
+    ) {
         authHelper.clearGoogleSignInCanceled()
         authHelper.signInWithGoogle(activity, filter, callback)
     }
@@ -39,8 +42,12 @@ class UserAccountRepository {
     fun register(email: String, password: String, callback: StringCallback) =
         authHelper.register(email, password, callback)
 
-    fun updateProfile(data: HashMap<String, Any>, callback: BooleanCallback) =
-        FirestoreHelper.instance.updateProfile(authHelper.userId, data, callback)
+    fun updateProfile(
+        data: HashMap<String, Any>,
+        viewModel: UserAccountViewModel,
+        callback: BooleanCallback
+    ) =
+        FirestoreHelper.instance.updateProfile(authHelper.userId, data, viewModel, callback)
 
     fun hasProfile(callback: ProfileCheckCallback) =
         FirestoreHelper.instance.hasProfile(authHelper.userId, callback)
@@ -60,18 +67,20 @@ class UserAccountRepository {
 
     fun getProfile(
         offlineProfile: Boolean,
+        viewModel: UserAccountViewModel,
         profileCallback: ProfileCallback,
         uiCallback: VoidCallback?
     ) {
         if (offlineProfile) {
             val profile = FileSystemHelper.getSavedProfile()
+            viewModel.saveRangerName(profile.userId)
+            viewModel.saveProfilePictureUrl(profile.profilePictureUrl)
             profileCallback.handler(profile)
             uiCallback?.handler()
         } else {
             FirestoreHelper.instance.getProfile(
                 authHelper.userId,
-                emailAddress,
-                profileCallback,
+                viewModel,
                 uiCallback
             )
         }
@@ -80,8 +89,8 @@ class UserAccountRepository {
     fun uploadProfilePicture(bitmap: Bitmap, callback: StringCallback) =
         storageHelper.uploadProfilePicture(authHelper.userId, bitmap, callback)
 
-    fun updateProfilePicture(url: String, callback: VoidCallback) =
-        FirestoreHelper.instance.updateProfilePicture(url, authHelper.userId, callback)
+    fun updateProfilePicture(url: String, viewModel: UserAccountViewModel, callback: VoidCallback) =
+        FirestoreHelper.instance.updateProfilePicture(url, authHelper.userId, viewModel, callback)
 
     fun changeEmailAddress(emailAddress: String, password: String, callback: StringCallback) =
         authHelper.changeEmailAddress(emailAddress, password, callback)

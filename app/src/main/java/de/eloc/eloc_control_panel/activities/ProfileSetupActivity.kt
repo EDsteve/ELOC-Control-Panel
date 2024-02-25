@@ -181,7 +181,7 @@ class ProfileSetupActivity : MediaActivity() {
     }
 
     private fun uploadProfile(data: HashMap<String, Any>) =
-        viewModel.updateProfile(data, this::onProfileUploadCompleted)
+        viewModel.updateProfile(data, viewModel, this::onProfileUploadCompleted)
 
     private fun onProfileUploadCompleted(success: Boolean) {
         updateUI(false)

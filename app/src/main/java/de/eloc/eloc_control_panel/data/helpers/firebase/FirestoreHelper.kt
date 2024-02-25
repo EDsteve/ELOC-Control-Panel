@@ -5,19 +5,16 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
-import com.google.firebase.firestore.LocalCacheSettings
-import com.google.firebase.firestore.PersistentCacheSettings
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.Source
 import de.eloc.eloc_control_panel.data.ElocDeviceInfo
 import de.eloc.eloc_control_panel.data.UploadResult
-import de.eloc.eloc_control_panel.data.UserProfile
+import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.interfaces.ElocDeviceInfoCallback
-import de.eloc.eloc_control_panel.interfaces.ProfileCallback
 import de.eloc.eloc_control_panel.interfaces.ProfileCheckCallback
 import de.eloc.eloc_control_panel.interfaces.VoidCallback
 import de.eloc.eloc_control_panel.services.StatusUploadService
@@ -43,20 +40,25 @@ class FirestoreHelper {
     }
 
     private val accountsNode: CollectionReference
-    var rangerName: String = "unknown_ranger"
 
     init {
         val firestore = FirebaseFirestore.getInstance()
         accountsNode = firestore.collection("accounts")
     }
 
-    fun updateProfilePicture(url: String, id: String, callback: VoidCallback) =
-        updateProfileField(url, FIELD_PROFILE_PICTURE, id, callback)
+    fun updateProfilePicture(
+        url: String,
+        id: String,
+        viewModel: UserAccountViewModel,
+        callback: VoidCallback
+    ) =
+        updateProfileField(url, FIELD_PROFILE_PICTURE, id, viewModel, callback)
 
     private fun updateProfileField(
         value: String,
         fieldName: String,
         id: String,
+        viewModel: UserAccountViewModel,
         callback: VoidCallback?
     ) {
 
@@ -78,14 +80,19 @@ class FirestoreHelper {
             .addOnCompleteListener {
                 if (it.isSuccessful) {
                     if (FIELD_USER_ID == fieldName) {
-                        rangerName = fieldValue
+                        viewModel.saveRangerName(fieldValue)
                     }
                 }
                 callback?.handler()
             }
     }
 
-    fun updateProfile(id: String, data: HashMap<String, Any>, callback: BooleanCallback?) {
+    fun updateProfile(
+        id: String,
+        data: HashMap<String, Any>,
+        viewModel: UserAccountViewModel,
+        callback: BooleanCallback?
+    ) {
         val documentId = id.trim()
         if (documentId.isEmpty() || data.isEmpty()) {
             callback?.handler(false)
@@ -99,7 +106,7 @@ class FirestoreHelper {
             .addOnCompleteListener {
                 if (it.isSuccessful) {
                     if (data.containsKey(FIELD_USER_ID)) {
-                        rangerName = data[FIELD_USER_ID].toString()
+                        viewModel.saveRangerName(data[FIELD_USER_ID].toString())
                     }
                     callback?.handler(true)
                 } else {
@@ -163,12 +170,10 @@ class FirestoreHelper {
 
     fun getProfile(
         id: String,
-        emailAddress: String,
-        profileCallback: ProfileCallback,
+        viewModel: UserAccountViewModel,
         uiCallback: VoidCallback?
     ) {
         val documentId = id.trim().ifEmpty {
-            profileCallback.handler(null)
             uiCallback?.handler()
             return
         }
@@ -176,20 +181,16 @@ class FirestoreHelper {
             .document(documentId)
             .get(Source.SERVER)
             .addOnCompleteListener {
-                var profile: UserProfile? = null
                 if (it.isSuccessful) {
                     val snapshot = it.result
                     val profilePictureUrl =
                         snapshot.get(FIELD_PROFILE_PICTURE, String::class.java)
                     val userId = snapshot.get(FIELD_USER_ID, String::class.java)
                     if (userId != null) {
-                        rangerName = userId
-                        profile = UserProfile(userId)
-                        profile.profilePictureUrl = profilePictureUrl ?: ""
-                        profile.emailAddress = emailAddress
+                        viewModel.saveRangerName(userId)
+                        viewModel.saveProfilePictureUrl(profilePictureUrl ?: "")
                     }
                 }
-                profileCallback.handler(profile)
                 uiCallback?.handler()
             }
     }

@@ -14,6 +14,10 @@ import de.eloc.eloc_control_panel.interfaces.VoidCallback
 
 class UserAccountViewModel(application: Application) : AndroidViewModel(application) {
 
+    companion object {
+        var rangerName: String = ""
+    }
+
     private val repository = UserAccountRepository.instance
 
     private val userProfileLiveData = MutableLiveData<UserProfile?>()
@@ -26,8 +30,12 @@ class UserAccountViewModel(application: Application) : AndroidViewModel(applicat
 
     val isEmailVerified get() = repository.isUserEmailVerified
 
-    fun getProfileAsync(offlineProfile: Boolean, uiCallback: VoidCallback?) {
-        repository.getProfile(offlineProfile, userProfileLiveData::setValue, uiCallback)
+    fun getProfileAsync(
+        offlineProfile: Boolean,
+        viewModel: UserAccountViewModel,
+        uiCallback: VoidCallback?
+    ) {
+        repository.getProfile(offlineProfile, viewModel, userProfileLiveData::setValue, uiCallback)
     }
 
     suspend fun signOut() = repository.signOut()
@@ -47,8 +55,8 @@ class UserAccountViewModel(application: Application) : AndroidViewModel(applicat
     fun uploadProfilePicture(bitmap: Bitmap, callback: StringCallback) =
         repository.uploadProfilePicture(bitmap, callback)
 
-    fun updateProfilePicture(url: String, callback: VoidCallback) =
-        repository.updateProfilePicture(url, callback)
+    fun updateProfilePicture(url: String, viewModel: UserAccountViewModel, callback: VoidCallback) =
+        repository.updateProfilePicture(url, viewModel, callback)
 
     fun changeEmailAddress(emailAddress: String, password: String, callback: StringCallback) =
         repository.changeEmailAddress(emailAddress, password, callback)
@@ -66,8 +74,12 @@ class UserAccountViewModel(application: Application) : AndroidViewModel(applicat
     fun register(email: String, password: String, callback: StringCallback) =
         repository.register(email, password, callback)
 
-    fun updateProfile(data: HashMap<String, Any>, callback: BooleanCallback) =
-        repository.updateProfile(data, callback)
+    fun updateProfile(
+        data: HashMap<String, Any>,
+        viewModel: UserAccountViewModel,
+        callback: BooleanCallback
+    ) =
+        repository.updateProfile(data, viewModel, callback)
 
     fun hasProfile(callback: ProfileCheckCallback) =
         repository.hasProfile(callback)
@@ -80,4 +92,13 @@ class UserAccountViewModel(application: Application) : AndroidViewModel(applicat
 
     fun sendPasswordResetLink(emailAddress: String, callback: BooleanCallback) =
         repository.sendPasswordResetLink(emailAddress, callback)
+
+    fun saveRangerName(name: String) {
+        userProfileLiveData.value?.userId = name
+        rangerName = name
+    }
+
+    fun saveProfilePictureUrl(url: String) {
+        userProfileLiveData.value?.profilePictureUrl = url
+    }
 }
