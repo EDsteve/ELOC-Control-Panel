@@ -1,14 +1,14 @@
 package de.eloc.eloc_control_panel.data.helpers
 
+import android.util.Base64
 import de.eloc.eloc_control_panel.App
-import de.eloc.eloc_control_panel.data.UserProfile
+import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import org.json.JSONObject
 import java.io.File
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
-import android.util.Base64
 import java.util.Date
 import java.util.Locale
 
@@ -63,7 +63,11 @@ object FileSystemHelper {
             return field
         }
 
-    fun saveDataFile(isConfig: Boolean, rangerName: String, json: String): Boolean {
+    fun saveConfig(json: String) = saveDataFile(true, json)
+
+    fun saveStatus(json: String) = saveDataFile(false, json)
+
+    private fun saveDataFile(isConfig: Boolean, json: String): Boolean {
         try {
             val dateFormatter = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-z", Locale.US)
             val now = Date(System.currentTimeMillis())
@@ -74,8 +78,12 @@ object FileSystemHelper {
                 PREFIX_STATUS
             }
 
-            val fileName =
-                generateDataFileName(prefix, rangerName, DeviceDriver.name, captureTimestamp)
+            val fileName = generateDataFileName(
+                prefix,
+                AppState.rangerName,
+                DeviceDriver.name,
+                captureTimestamp
+            )
             val file = File(uploadCache, fileName)
             file.writeText(json)
             return true
@@ -165,16 +173,16 @@ object FileSystemHelper {
             .joinToString("")
     }
 
-    fun saveProfile(profile: UserProfile) {
+    fun saveProfile() {
         val filename = generateProfileFilename()
         val profileFile = File(profilesDir, filename)
         if (profileFile.exists()) {
             profileFile.delete()
         }
         val content = buildString {
-            appendLine(profile.userId)
-            appendLine(profile.emailAddress)
-            appendLine(profile.profilePictureUrl)
+            appendLine(AppState.rangerName)
+            appendLine(AppState.emailAddress)
+            appendLine(AppState.profilePictureUrl)
         }
         val bytes = Base64.encode(content.toByteArray(), Base64.DEFAULT)
         profileFile.writeBytes(bytes)
@@ -193,19 +201,16 @@ object FileSystemHelper {
         return false
     }
 
-    fun getSavedProfile(): UserProfile {
+    fun getSavedProfileFile(): File? {
         val profileFilename = generateProfileFilename()
         val files = profilesDir!!.listFiles()
         if (files != null) {
             for (f in files) {
                 if (f.name == profileFilename) {
-                    val profile = UserProfile.from(f)
-                    if (profile != null) {
-                        return profile
-                    }
+                    return f
                 }
             }
         }
-        return UserProfile("", "", "")
+        return null
     }
 }

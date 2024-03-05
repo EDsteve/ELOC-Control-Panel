@@ -12,13 +12,13 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
-import androidx.lifecycle.ViewModelProvider
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.old.DataHelper
-import de.eloc.eloc_control_panel.databinding.ActivityProfileSetupBinding
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
+import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
+import de.eloc.eloc_control_panel.data.helpers.firebase.StorageHelper
+import de.eloc.eloc_control_panel.databinding.ActivityProfileSetupBinding
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
+import de.eloc.eloc_control_panel.old.DataHelper
 
 class ProfileSetupActivity : MediaActivity() {
     private lateinit var binding: ActivityProfileSetupBinding
@@ -26,15 +26,15 @@ class ProfileSetupActivity : MediaActivity() {
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
     private var avatar: Bitmap? = null
     private var photoUri: Uri? = null
-    private lateinit var viewModel: UserAccountViewModel
-    private val profile = HashMap<String, Any>()
+    private val data = HashMap<String, Any>()
+    private val authHelper = AuthHelper.instance
+    private val storageHelper = StorageHelper.instance
+    private val firestoreHelper = FirestoreHelper.instance
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityProfileSetupBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
         setLaunchers()
         setListeners()
         setTextWatchers()
@@ -137,9 +137,9 @@ class ProfileSetupActivity : MediaActivity() {
         }
 
         updateUI(true)
-        profile[FirestoreHelper.FIELD_USER_ID] = userId
-        profile[FirestoreHelper.FIELD_PROFILE_PICTURE] = ""
-        viewModel.userIdExists(userId, this::onUserIdChecked)
+        data[FirestoreHelper.FIELD_USER_ID] = userId
+        data[FirestoreHelper.FIELD_PROFILE_PICTURE] = ""
+        firestoreHelper.userIdExists(userId, ::onUserIdChecked)
     }
 
     private fun userIdHasValidChars(userId: String): Boolean {
@@ -159,9 +159,13 @@ class ProfileSetupActivity : MediaActivity() {
             updateUI(false)
         } else {
             if (avatar != null) {
-                viewModel.uploadProfilePicture(avatar!!, this::onProfilePictureUploaded)
+                storageHelper.uploadProfilePicture(
+                    authHelper.userId,
+                    avatar!!,
+                    this::onProfilePictureUploaded
+                )
             } else {
-                uploadProfile(profile)
+                uploadProfile(data)
             }
         }
     }
@@ -176,17 +180,17 @@ class ProfileSetupActivity : MediaActivity() {
             )
             return
         }
-        profile[FirestoreHelper.FIELD_PROFILE_PICTURE] = address
-        uploadProfile(profile)
+        data[FirestoreHelper.FIELD_PROFILE_PICTURE] = address
+        uploadProfile(data)
     }
 
     private fun uploadProfile(data: HashMap<String, Any>) =
-        viewModel.updateProfile(data, viewModel, this::onProfileUploadCompleted)
+        firestoreHelper.updateProfile(authHelper.userId, data, this::onProfileUploadCompleted)
 
     private fun onProfileUploadCompleted(success: Boolean) {
         updateUI(false)
         if (success) {
-            open(HomeActivity::class.java, true)
+            open(LoadProfileActivity::class.java, true)
         } else {
             showModalAlert(
                 getString(R.string.oops),

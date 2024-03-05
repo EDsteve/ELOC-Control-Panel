@@ -15,7 +15,6 @@ import de.eloc.eloc_control_panel.data.GainType
 import de.eloc.eloc_control_panel.data.RecordState
 import de.eloc.eloc_control_panel.data.SampleRate
 import de.eloc.eloc_control_panel.data.TimePerFile
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.JsonHelper
@@ -647,11 +646,7 @@ object DeviceDriver : Runnable {
                         // Only upload config if it has a valid location
                         if (LocationHelper.isValidLocationCode(general.lastLocation)) {
                             if (!configSaved) {
-                                configSaved = FileSystemHelper.saveDataFile(
-                                    true,
-                                    UserAccountViewModel.rangerName,
-                                    json
-                                )
+                                configSaved = FileSystemHelper.saveConfig(json)
                                 StatusUploadService.start(App.instance)
                             }
                         }
@@ -660,11 +655,7 @@ object DeviceDriver : Runnable {
                     CommandType.GetStatus -> {
                         parseStatus(root)
                         if (!statusSaved) {
-                            statusSaved = FileSystemHelper.saveDataFile(
-                                false,
-                                UserAccountViewModel.rangerName,
-                                json
-                            )
+                            statusSaved = FileSystemHelper.saveStatus(json)
                             StatusUploadService.start(App.instance)
                         }
                     }

@@ -39,6 +39,9 @@
         tools:ignore="AllowBackup,GoogleAppIndexingWarning"
         tools:targetApi="tiramisu">
         <activity
+            android:name=".activities.LoadProfileActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.CommandLineActivity"
             android:exported="false" />
         <activity

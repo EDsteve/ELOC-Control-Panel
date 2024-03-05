@@ -11,22 +11,23 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.graphics.decodeBitmap
-import androidx.lifecycle.ViewModelProvider
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.old.DataHelper
 import de.eloc.eloc_control_panel.databinding.ActivityProfileBinding
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
-import de.eloc.eloc_control_panel.data.UserProfile
+import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
+import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
+import de.eloc.eloc_control_panel.data.helpers.firebase.StorageHelper
 import java.io.IOException
 
 class ProfileActivity : MediaActivity() {
     private lateinit var binding: ActivityProfileBinding
-    private lateinit var viewModel: UserAccountViewModel
     private var imagePicker: ActivityResultLauncher<PickVisualMediaRequest>? = null
     private var cameraLauncher: ActivityResultLauncher<Intent>? = null
     private var photoUri: Uri? = null
     private var originalProfilePicture = ""
+    private val authHelper = AuthHelper.instance
 
     private enum class ProfileField {
         ProfilePicture,
@@ -40,12 +41,15 @@ class ProfileActivity : MediaActivity() {
         binding.avatarImageView.setDefaultImageResId(R.drawable.person)
         binding.avatarImageView.setErrorImageResId(R.drawable.person)
         setContentView(binding.root)
-        setViewModel()
         setItemTitles()
         setLaunchers()
         setListeners()
         updateUI(false)
-        viewModel.getProfileAsync(false, viewModel, null)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        setItemValues()
     }
 
     override fun takePhoto() {
@@ -72,7 +76,11 @@ class ProfileActivity : MediaActivity() {
             bitmap = downScaleAvatar(bitmap)
             updateUI(true)
             binding.avatarImageView.setImageBitmap(bitmap)
-            viewModel.uploadProfilePicture(bitmap, this::profilePictureUploadCompleted)
+            StorageHelper.instance.uploadProfilePicture(
+                authHelper.userId,
+                bitmap,
+                ::profilePictureUploadCompleted
+            )
         } catch (_: IOException) {
         }
     }
@@ -94,35 +102,28 @@ class ProfileActivity : MediaActivity() {
         }
     }
 
-    private fun setViewModel() {
-        viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
-        viewModel.profile.observe(this, this::setItemValues)
-    }
-
     private fun setItemTitles() {
         binding.userIdItem.titleTextView.setText(R.string.user_id)
         binding.userIdItem.chevron.visibility = View.GONE
         binding.userIdItem.button.background = null
     }
 
-    private fun setItemValues(profile: UserProfile?) {
+    private fun setItemValues() {
         updateUI(false)
-        originalProfilePicture = profile?.profilePictureUrl ?: ""
+        originalProfilePicture = AppState.profilePictureUrl
         binding.avatarImageView.setImageUrl(
-            profile?.profilePictureUrl,
+            AppState.profilePictureUrl,
             HttpHelper.instance.imageLoader
         )
-        binding.userIdItem.valueTextView.text = profile?.userId
+        binding.userIdItem.valueTextView.text = AppState.rangerName
     }
 
     private fun updateField(value: String) {
-        val completedCallback = fun() {
-            updateUI(false)
-            viewModel.getProfileAsync(false, viewModel, null)
-        }
         updateUI(true)
         if (currentField == ProfileField.ProfilePicture) {
-            viewModel.updateProfilePicture(value, viewModel, completedCallback)
+            FirestoreHelper.instance.updateProfilePicture(value, authHelper.userId) {
+                runOnUiThread { updateUI(false) }
+            }
         }
         currentField = null
     }

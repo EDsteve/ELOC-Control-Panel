@@ -11,14 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class StorageHelper {
     companion object {
         private const val REF_PROFILE_PICTURES = "profile_pictures"
-        private var instance: StorageHelper? = null
-
-        fun getInstance(): StorageHelper {
-            if (instance == null) {
-                instance = StorageHelper()
-            }
-            return instance!!
-        }
+        val instance = StorageHelper()
     }
 
     private val profilePicturesFolder =

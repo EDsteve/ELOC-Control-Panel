@@ -194,4 +194,7 @@
     <string name="checking_internet_connection">Checking internet connection…</string>
     <string name="wait_for_location">Please wait for a GPS location to be received.</string>
     <string name="location_required">Location Required</string>
+    <string name="ranger_profile_missing">Ranger profile missing</string>
+    <string name="ranger_profile_missing_details">Failed to load the ranger profile.\nYou will be signed out now.</string>
+    <string name="loading_ranger_profile">Loading ranger profile…</string>
 </resources>
