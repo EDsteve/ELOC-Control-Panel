@@ -12,40 +12,31 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.GravityCompat
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.data.adapters.ElocInfoAdapter
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
-import de.eloc.eloc_control_panel.data.UserProfile
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
-import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
+import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.LayoutNavHeaderBinding
 import de.eloc.eloc_control_panel.receivers.BluetoothDeviceReceiver
 import de.eloc.eloc_control_panel.services.StatusUploadService
-import kotlinx.coroutines.launch
 
 // todo: use cached profile picture
 
 class HomeActivity : ThemableActivity() {
-    companion object {
-        const val EXTRA_IS_OFFLINE_MODE = "is_offline_mode"
-    }
 
     private var firstScanDone = false
     private lateinit var binding: ActivityHomeBinding
     private lateinit var leftHeaderBinding: LayoutNavHeaderBinding
     private lateinit var rightHeaderBinding: LayoutNavHeaderBinding
-    private lateinit var viewModel: UserAccountViewModel
-    private lateinit var rangerName: String
-    private var isOfflineMode = true
+    private var isFirstRun = true
     private val elocAdapter = ElocInfoAdapter(this::onListUpdated, this::showDevice)
     private val elocReceiver = BluetoothDeviceReceiver(elocAdapter::add)
     private lateinit var preferencesLauncher: ActivityResultLauncher<Intent>
@@ -65,10 +56,8 @@ class HomeActivity : ThemableActivity() {
         leftHeaderBinding = LayoutNavHeaderBinding.bind(leftHeader)
         rightHeaderBinding = LayoutNavHeaderBinding.bind(rightHeader)
 
-        isOfflineMode = intent.extras?.getBoolean(EXTRA_IS_OFFLINE_MODE, false) ?: false
         setLaunchers()
         setListeners()
-        setViewModel()
 
         binding.swipeRefreshLayout.setColorSchemeColors(Color.WHITE)
         binding.swipeRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.colorPrimary)
@@ -80,8 +69,8 @@ class HomeActivity : ThemableActivity() {
 
     override fun onResume() {
         super.onResume()
-        viewModel.getProfileAsync(isOfflineMode, viewModel, ::initialize)
         setAppBar()
+        setProfileInfo()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -98,8 +87,7 @@ class HomeActivity : ThemableActivity() {
         }
         val deviceCount = binding.devicesRecyclerView.adapter?.itemCount ?: 0
         val hasNoDevices = (deviceCount == 0)
-        val hasRangerName = ::rangerName.isInitialized
-        if (hasNoDevices && hasRangerName) {
+        if (hasNoDevices) {
             startScan()
         }
     }
@@ -225,39 +213,33 @@ class HomeActivity : ThemableActivity() {
         }
     }
 
-    private fun setViewModel() {
-        viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
-        viewModel.profile.observe(this, ::profileReceived)
-    }
-
-    private fun profileReceived(profile: UserProfile?) {
-        val p = if (profile == null) {
-            UserProfile("", "", "")
-        } else {
-            FileSystemHelper.saveProfile(profile)
-            profile
+    private fun setProfileInfo() {
+        if (!AppState.hasValidProfile) {
+            showModalAlert(
+                getString(R.string.ranger_profile_missing),
+                getString(R.string.ranger_profile_missing_details)
+            )
+            return
         }
 
-        val isFirstRun = (!::rangerName.isInitialized)
-        rangerName = p.userId
-
         leftHeaderBinding.profilePictureImageView.setImageUrl(
-            p.profilePictureUrl,
+            AppState.profilePictureUrl,
             HttpHelper.instance.imageLoader
         )
         rightHeaderBinding.profilePictureImageView.setImageUrl(
-            p.profilePictureUrl,
+            AppState.profilePictureUrl,
             HttpHelper.instance.imageLoader
         )
-        leftHeaderBinding.userIdTextView.text = p.userId
-        rightHeaderBinding.userIdTextView.text = p.userId
-        leftHeaderBinding.emailAddressTextView.text = p.emailAddress
-        rightHeaderBinding.emailAddressTextView.text = p.emailAddress
-        binding.toolbar.subtitle = getString(R.string.eloc_user, p.userId)
+        leftHeaderBinding.userIdTextView.text = AppState.rangerName
+        rightHeaderBinding.userIdTextView.text = AppState.rangerName
+        leftHeaderBinding.emailAddressTextView.text = AppState.emailAddress
+        rightHeaderBinding.emailAddressTextView.text = AppState.emailAddress
+        binding.toolbar.subtitle = getString(R.string.eloc_user, AppState.rangerName)
 
         if (isFirstRun) {
             initialize()
         }
+        isFirstRun = false
     }
 
     private fun editProfile() {
@@ -333,7 +315,6 @@ class HomeActivity : ThemableActivity() {
         BluetoothHelper.stopScan(this::scanUpdate)
         val intent = Intent(this, DeviceActivity::class.java)
             .apply {
-                putExtra(DeviceActivity.EXTRA_RANGER_NAME, rangerName)
                 putExtra(DeviceActivity.EXTRA_DEVICE_ADDRESS, address)
             }
         startActivity(intent)
@@ -341,7 +322,6 @@ class HomeActivity : ThemableActivity() {
 
     private fun showMap() {
         val intent = Intent(this, MapActivity::class.java)
-        intent.putExtra(MapActivity.EXTRA_RANGER_NAME, rangerName)
         startActivity(intent)
     }
 
@@ -418,12 +398,7 @@ class HomeActivity : ThemableActivity() {
             title = title,
             message = message,
             positiveButtonLabel = getString(R.string.yes),
-            positiveCallback = {
-                lifecycleScope.launch {
-                    viewModel.signOut()
-                    open(LoginActivity::class.java, true)
-                }
-            },
+            positiveCallback = { AuthHelper.instance.signOut(this@HomeActivity) },
         )
     }
 

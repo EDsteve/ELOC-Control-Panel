@@ -2,23 +2,19 @@ package de.eloc.eloc_control_panel.activities
 
 import android.os.Bundle
 import android.view.View
-import androidx.lifecycle.ViewModelProvider
-
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.databinding.ActivityChangePasswordBinding
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
 
 class ChangePasswordActivity : ThemableActivity() {
 
     private lateinit var binding: ActivityChangePasswordBinding
-    private lateinit var viewModel: UserAccountViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityChangePasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
         setListeners()
         updateUI(false)
     }
@@ -78,7 +74,7 @@ class ChangePasswordActivity : ThemableActivity() {
         }
 
         updateUI(true)
-        viewModel.changePassword(newPassword, currentPassword, this::newPasswordSubmitted)
+        AuthHelper.instance.changePassword(newPassword, currentPassword, ::newPasswordSubmitted)
     }
 
     private fun newPasswordSubmitted(error: String) {

@@ -2,13 +2,12 @@ package de.eloc.eloc_control_panel.activities
 
 import android.os.Bundle
 import android.view.View
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityLoginBinding
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
+import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
 import de.eloc.eloc_control_panel.interfaces.VoidCallback
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +16,7 @@ import kotlinx.coroutines.withContext
 
 class LoginActivity : NetworkMonitoringActivity() {
     private lateinit var binding: ActivityLoginBinding
-    private lateinit var viewModel: UserAccountViewModel
+    private val authHelper = AuthHelper.instance
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,8 +36,7 @@ class LoginActivity : NetworkMonitoringActivity() {
             }
         }
 
-        AuthHelper.instance.registerGoogleSignInListener(::updateUiForGoogleSignIn)
-        viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
+        authHelper.registerGoogleSignInListener(::updateUiForGoogleSignIn)
         setListeners()
         setTextWatchers()
         updateUiForGoogleSignIn()
@@ -50,7 +48,7 @@ class LoginActivity : NetworkMonitoringActivity() {
         onNetworkChanged()
         if (hasInternetAccess != null) {
             val autoGoogleSignIn = PreferencesHelper.instance.getAutoGoogleSignIn()
-            val googleSignInCanceled = AuthHelper.instance.googleSignInCanceled
+            val googleSignInCanceled = authHelper.googleSignInCanceled
             if (autoGoogleSignIn && (!googleSignInCanceled)) {
                 signInWithGoogle(true)
             } else {
@@ -81,7 +79,8 @@ class LoginActivity : NetworkMonitoringActivity() {
 
     private fun signInWithGoogle(filter: Boolean) {
         lifecycleScope.launch(Dispatchers.IO) {
-            viewModel.signInWithGoogle(this@LoginActivity, filter, ::handleGoogleSignIn)
+            authHelper.clearGoogleSignInCanceled()
+            authHelper.signInWithGoogle(this@LoginActivity, filter, ::handleGoogleSignIn)
             withContext(Dispatchers.Main) {
                 updateUiForGoogleSignIn()
             }
@@ -101,18 +100,18 @@ class LoginActivity : NetworkMonitoringActivity() {
     }
 
     private fun checkAuthState() {
-        if (AuthHelper.instance.googleSignInRunning) {
+        if (authHelper.googleSignInRunning) {
             return
         }
 
-        if (viewModel.isSignedIn) {
-            if (viewModel.isEmailVerified) {
-                viewModel.hasProfile { profileFound, firebaseUnavailable ->
+        if (authHelper.isSignedIn) {
+            if (authHelper.isEmailAddressVerified) {
+                FirestoreHelper.instance.hasProfile(authHelper.userId) { profileFound, firebaseUnavailable ->
                     if (firebaseUnavailable) {
                         updateUI(false)
                     } else {
                         open(
-                            if (profileFound) HomeActivity::class.java else ProfileSetupActivity::class.java,
+                            if (profileFound) LoadProfileActivity::class.java else ProfileSetupActivity::class.java,
                             true
                         )
                     }
@@ -126,7 +125,7 @@ class LoginActivity : NetworkMonitoringActivity() {
     private fun updateUiForGoogleSignIn() {
         runOnUiThread {
             binding.loginProgressIndicator.visibility = View.GONE
-            if (AuthHelper.instance.googleSignInRunning) {
+            if (authHelper.googleSignInRunning) {
                 binding.googleSignInButton.isEnabled = false
                 binding.googleSignInProgressIndicator.isEnabled = true
                 binding.googleSignInProgressIndicator.visibility = View.VISIBLE
@@ -186,7 +185,7 @@ class LoginActivity : NetworkMonitoringActivity() {
         }
 
         updateUI(true)
-        viewModel.signIn(emailAddress, password, this::onLoginCompleted)
+        authHelper.signIn(emailAddress, password, this::onLoginCompleted)
     }
 
     private fun onLoginCompleted(error: String) {

@@ -18,6 +18,7 @@ import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.clustering.ClusterManager
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.data.ElocDeviceInfo
 import de.eloc.eloc_control_panel.data.ElocMarker
 import de.eloc.eloc_control_panel.data.adapters.MapInfoAdapter
@@ -29,14 +30,10 @@ import de.eloc.eloc_control_panel.dialogs.ListViewDialog
 import java.util.Locale
 
 class MapActivity : ThemableActivity() {
-    companion object {
-        const val EXTRA_RANGER_NAME = "ranger_name"
-    }
 
     private lateinit var binding: ActivityMapBinding
     private val unknownDevices = mutableSetOf<String>()
     private val usedLocations = mutableSetOf<String>()
-    private lateinit var rangerName: String
     private var map: GoogleMap? = null
     private var mapDevices = mutableMapOf<String, ElocDeviceInfo>()
     private var deviceCache = mutableListOf<ElocDeviceInfo>()
@@ -70,7 +67,7 @@ class MapActivity : ThemableActivity() {
         menuInflater.inflate(R.menu.find_elocs_menu, binding.toolbar.menu)
         setListeners()
 
-        if (hasRangerName()) {
+        if (AppState.hasValidProfile) {
             val mapFragment =
                 supportFragmentManager.findFragmentById(binding.mapView.id) as SupportMapFragment?
             mapFragment?.getMapAsync { googleMap: GoogleMap ->
@@ -78,7 +75,7 @@ class MapActivity : ThemableActivity() {
                 initializeMap()
             }
 
-            FirestoreHelper.instance.getElocDevicesAsync(rangerName) { info ->
+            FirestoreHelper.instance.getElocDevicesAsync { info ->
                 runOnUiThread {
                     deviceCache.add(info)
                     if (map != null) {
@@ -94,12 +91,6 @@ class MapActivity : ThemableActivity() {
                 goBack()
             }
         }
-    }
-
-    private fun hasRangerName(): Boolean {
-        rangerName = intent.extras?.getString(EXTRA_RANGER_NAME, "") ?: ""
-        rangerName = rangerName.trim()
-        return rangerName.isNotEmpty()
     }
 
     private fun setListeners() {

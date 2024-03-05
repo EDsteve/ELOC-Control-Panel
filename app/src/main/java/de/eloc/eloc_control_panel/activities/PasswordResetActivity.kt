@@ -2,23 +2,18 @@ package de.eloc.eloc_control_panel.activities
 
 import android.os.Bundle
 import android.view.View
-
-import androidx.lifecycle.ViewModelProvider
-
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.databinding.ActivityPasswordResetBinding
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
 
 class PasswordResetActivity : ThemableActivity() {
     private lateinit var binding: ActivityPasswordResetBinding
-    private lateinit var viewModel: UserAccountViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityPasswordResetBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
         updateUI(false)
         setListeners()
     }
@@ -44,7 +39,7 @@ class PasswordResetActivity : ThemableActivity() {
             return
         }
         updateUI(true)
-        viewModel.sendPasswordResetLink(emailAddress, this::onResult)
+        AuthHelper.instance.sendResetLink(emailAddress, ::onResult)
     }
 
     private fun onResult(sent: Boolean) {

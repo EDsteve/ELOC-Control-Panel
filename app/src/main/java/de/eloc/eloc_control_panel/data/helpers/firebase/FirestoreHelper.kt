@@ -7,9 +7,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.Source
+import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.data.ElocDeviceInfo
 import de.eloc.eloc_control_panel.data.UploadResult
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
@@ -46,53 +46,27 @@ class FirestoreHelper {
         accountsNode = firestore.collection("accounts")
     }
 
-    fun updateProfilePicture(
-        url: String,
-        id: String,
-        viewModel: UserAccountViewModel,
-        callback: VoidCallback
-    ) =
-        updateProfileField(url, FIELD_PROFILE_PICTURE, id, viewModel, callback)
-
-    private fun updateProfileField(
-        value: String,
-        fieldName: String,
-        id: String,
-        viewModel: UserAccountViewModel,
-        callback: VoidCallback?
-    ) {
+    fun updateProfilePicture(url: String, id: String, callback: VoidCallback?) {
 
         val documentId = id.trim().ifEmpty {
             callback?.handler()
             return
         }
 
-        val fieldValue = value.trim().ifEmpty {
+        val fieldValue = url.trim().ifEmpty {
             callback?.handler()
             return
         }
 
         val data = HashMap<String, Any>()
-        data[fieldName] = fieldValue
+        data[FIELD_PROFILE_PICTURE] = fieldValue
         accountsNode
             .document(documentId)
             .update(data)
-            .addOnCompleteListener {
-                if (it.isSuccessful) {
-                    if (FIELD_USER_ID == fieldName) {
-                        viewModel.saveRangerName(fieldValue)
-                    }
-                }
-                callback?.handler()
-            }
+            .addOnCompleteListener { callback?.handler() }
     }
 
-    fun updateProfile(
-        id: String,
-        data: HashMap<String, Any>,
-        viewModel: UserAccountViewModel,
-        callback: BooleanCallback?
-    ) {
+    fun updateProfile(id: String, data: HashMap<String, Any>, callback: BooleanCallback?) {
         val documentId = id.trim()
         if (documentId.isEmpty() || data.isEmpty()) {
             callback?.handler(false)
@@ -106,7 +80,7 @@ class FirestoreHelper {
             .addOnCompleteListener {
                 if (it.isSuccessful) {
                     if (data.containsKey(FIELD_USER_ID)) {
-                        viewModel.saveRangerName(data[FIELD_USER_ID].toString())
+                        AppState.rangerName = data[FIELD_USER_ID].toString()
                     }
                     callback?.handler(true)
                 } else {
@@ -168,11 +142,7 @@ class FirestoreHelper {
             }
     }
 
-    fun getProfile(
-        id: String,
-        viewModel: UserAccountViewModel,
-        uiCallback: VoidCallback?
-    ) {
+    fun getProfile(id: String, uiCallback: VoidCallback?) {
         val documentId = id.trim().ifEmpty {
             uiCallback?.handler()
             return
@@ -185,11 +155,10 @@ class FirestoreHelper {
                     val snapshot = it.result
                     val profilePictureUrl =
                         snapshot.get(FIELD_PROFILE_PICTURE, String::class.java)
-                    val userId = snapshot.get(FIELD_USER_ID, String::class.java)
-                    if (userId != null) {
-                        viewModel.saveRangerName(userId)
-                        viewModel.saveProfilePictureUrl(profilePictureUrl ?: "")
-                    }
+                    val rangerName = snapshot.get(FIELD_USER_ID, String::class.java)
+                    AppState.rangerName = rangerName ?: ""
+                    AppState.profilePictureUrl = profilePictureUrl ?: ""
+                    FileSystemHelper.saveProfile()
                 }
                 uiCallback?.handler()
             }
@@ -272,10 +241,10 @@ class FirestoreHelper {
         }
     }
 
-    fun getElocDevicesAsync(rangerName: String, callback: ElocDeviceInfoCallback?) {
+    fun getElocDevicesAsync(callback: ElocDeviceInfoCallback?) {
         FirebaseFirestore.getInstance()
             .collection(COL_CONFIG)
-            .whereEqualTo("app_metadata.ranger", rangerName)
+            .whereEqualTo("app_metadata.ranger", AppState.rangerName)
             .get()
             .addOnCompleteListener {
                 if (it.isSuccessful) {

@@ -2,26 +2,22 @@ package de.eloc.eloc_control_panel.activities
 
 import android.os.Bundle
 import android.view.View
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
+import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
+import de.eloc.eloc_control_panel.data.helpers.firebase.StorageHelper
 import de.eloc.eloc_control_panel.databinding.ActivityDeleteAccountBinding
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
-import kotlinx.coroutines.launch
 
 class DeleteAccountActivity : ThemableActivity() {
 
     private lateinit var binding: ActivityDeleteAccountBinding
-    private lateinit var viewModel: UserAccountViewModel
+    private val authHelper = AuthHelper.instance
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDeleteAccountBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
-
         setListeners()
         updateUI(false)
     }
@@ -56,13 +52,13 @@ class DeleteAccountActivity : ThemableActivity() {
         }
 
         updateUI(true)
-        viewModel.verifyPassword(password, this::onPasswordVerificationCompleted)
+        authHelper.reauthenticate(password, this::onPasswordVerificationCompleted)
     }
 
     private fun onPasswordVerificationCompleted(err: String) {
         val error = err.trim()
         if (error.isEmpty()) {
-            viewModel.deleteRemoteFiles(this::onRemoteFilesDeleted)
+            StorageHelper.instance.deleteAccount(authHelper.userId, ::onRemoteFilesDeleted)
         } else {
             showModalAlert(getString(R.string.account), error) { updateUI(false) }
         }
@@ -70,7 +66,7 @@ class DeleteAccountActivity : ThemableActivity() {
 
     private fun onRemoteFilesDeleted(success: Boolean) {
         if (success) {
-            viewModel.deleteProfile(this::onProfileDeleted)
+            FirestoreHelper.instance.deleteProfile(authHelper.userId, ::onProfileDeleted)
         } else {
             showModalAlert(
                 getString(R.string.oops),
@@ -81,7 +77,7 @@ class DeleteAccountActivity : ThemableActivity() {
 
     private fun onProfileDeleted(success: Boolean) {
         if (success) {
-            viewModel.deleteAuthAccount(this::onAuthAccountDeleted)
+            authHelper.deleteAccount(::onAuthAccountDeleted)
         } else {
             showModalAlert(
                 getString(R.string.oops),
@@ -95,18 +91,12 @@ class DeleteAccountActivity : ThemableActivity() {
             showModalAlert(
                 getString(R.string.account),
                 getString(R.string.your_account_has_been_deleted)
-            ) {
-                lifecycleScope.launch {
-                    viewModel.signOut()
-                    open(LoginActivity::class.java, true)
-                }
-            }
+            ) { authHelper.signOut(this@DeleteAccountActivity) }
         } else {
             showModalAlert(
                 getString(R.string.oops),
                 getString(R.string.failed_to_remove_account),
             ) { updateUI(false) }
-
         }
     }
 }

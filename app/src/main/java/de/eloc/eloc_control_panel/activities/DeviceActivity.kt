@@ -11,6 +11,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.openlocationcode.OpenLocationCode
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
 import de.eloc.eloc_control_panel.data.RecordState
@@ -27,7 +28,6 @@ import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 class DeviceActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_DEVICE_ADDRESS = "device_address"
-        const val EXTRA_RANGER_NAME = "ranger_name"
     }
 
     private var hasSDCardError = false
@@ -35,7 +35,6 @@ class DeviceActivity : AppCompatActivity() {
     private var locationCode = LocationHelper.UNKNOWN
     private lateinit var binding: ActivityDeviceBinding
     private var deviceAddress = ""
-    private var rangerName = ""
     private var firstResume = true
     private var refreshing = false
     private val scrollChangeListener =
@@ -115,8 +114,7 @@ class DeviceActivity : AppCompatActivity() {
                 ::goBack
             )
         } else {
-            rangerName = extras?.getString(EXTRA_RANGER_NAME, "")?.trim() ?: ""
-            if (rangerName.isEmpty()) {
+            if (!AppState.hasValidProfile) {
                 showModalAlert(
                     getString(R.string.required),
                     getString(R.string.ranger_name_required),
@@ -124,7 +122,7 @@ class DeviceActivity : AppCompatActivity() {
                 )
             } else {
                 binding.toolbar.title = getString(R.string.getting_node_name)
-                binding.toolbar.subtitle = getString(R.string.eloc_user, rangerName)
+                binding.toolbar.subtitle = getString(R.string.eloc_user, AppState.rangerName)
                 binding.appVersionItem.valueText = App.versionName
                 updateGpsViews()
                 setListeners()

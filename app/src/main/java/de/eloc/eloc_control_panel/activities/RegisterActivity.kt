@@ -2,23 +2,20 @@ package de.eloc.eloc_control_panel.activities
 
 import android.os.Bundle
 import android.view.View
-import androidx.lifecycle.ViewModelProvider
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityRegisterBinding
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
+import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
 import de.eloc.eloc_control_panel.interfaces.VoidCallback
 
 class RegisterActivity : NetworkMonitoringActivity() {
     private lateinit var binding: ActivityRegisterBinding
-    private lateinit var viewModel: UserAccountViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
         networkChangedHandler = VoidCallback {
             binding.registrationLayout.visibility = View.GONE
             binding.checkInternetAccessProgressIndicator.visibility = View.GONE
@@ -88,7 +85,7 @@ class RegisterActivity : NetworkMonitoringActivity() {
         }
 
         updateUI(true)
-        viewModel.register(emailAddress, password, this::registrationHandler)
+        AuthHelper.instance.register(emailAddress, password, ::registrationHandler)
     }
 
     private fun registrationHandler(error: String) {

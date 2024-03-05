@@ -2,25 +2,21 @@ package de.eloc.eloc_control_panel.activities
 
 import android.os.Bundle
 import android.view.View
-import androidx.lifecycle.ViewModelProvider
-
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.data.AppState
+import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.databinding.ActivityChangeEmailAddressBinding
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
 
 class ChangeEmailAddressActivity : ThemableActivity() {
 
     private lateinit var binding: ActivityChangeEmailAddressBinding
-    private lateinit var viewModel: UserAccountViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityChangeEmailAddressBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
-        binding.currentEmailAddressTextView.text = viewModel.emailAddress
+        binding.currentEmailAddressTextView.text = AppState.emailAddress
 
         setListeners()
         updateUI(false)
@@ -66,7 +62,7 @@ class ChangeEmailAddressActivity : ThemableActivity() {
         }
 
         updateUI(true)
-        viewModel.changeEmailAddress(emailAddress, password, this::emailAddressSubmitted)
+        AuthHelper.instance.changeEmailAddress(emailAddress, password, ::emailAddressSubmitted)
     }
 
     private fun emailAddressSubmitted(error4: String) {

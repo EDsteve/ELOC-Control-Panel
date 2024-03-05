@@ -7,6 +7,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.NoCredentialException
+import androidx.lifecycle.lifecycleScope
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.EmailAuthProvider
@@ -19,11 +20,17 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.BuildConfig
 import de.eloc.eloc_control_panel.activities.LoginActivity
+import de.eloc.eloc_control_panel.activities.ThemableActivity
+import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.interfaces.GoogleSignInCallback
 import de.eloc.eloc_control_panel.interfaces.StringCallback
 import de.eloc.eloc_control_panel.interfaces.VoidCallback
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 
 class AuthHelper {
@@ -95,7 +102,11 @@ class AuthHelper {
         googleSignInListeners.add(listener)
     }
 
-    suspend fun signInWithGoogle(activity: LoginActivity, filter: Boolean, callback: GoogleSignInCallback?) {
+    suspend fun signInWithGoogle(
+        activity: LoginActivity,
+        filter: Boolean,
+        callback: GoogleSignInCallback?
+    ) {
         if (googleSignInCanceled) {
             googleSignInRunning = false
             return
@@ -174,7 +185,10 @@ class AuthHelper {
         }
     }
 
-    private suspend fun getCredential(activity: LoginActivity, filter: Boolean): GetCredentialResponse {
+    private suspend fun getCredential(
+        activity: LoginActivity,
+        filter: Boolean
+    ): GetCredentialResponse {
         val nonce = buildString {
             append(UUID.randomUUID().toString())
             append(System.currentTimeMillis().toString())
@@ -197,9 +211,15 @@ class AuthHelper {
         credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
 
-    suspend fun signOut() {
-        clearCredential()
-        FirebaseAuth.getInstance().signOut()
+    fun signOut(activity: ThemableActivity) {
+        activity.lifecycleScope.launch(Dispatchers.IO) {
+            clearCredential()
+            withContext(Dispatchers.Main) {
+                AppState.clear()
+                FirebaseAuth.getInstance().signOut()
+                activity.open(LoginActivity::class.java, true)
+            }
+        }
     }
 
     fun sendResetLink(emailAddress: String, callback: BooleanCallback) {

@@ -2,14 +2,11 @@ package de.eloc.eloc_control_panel.activities
 
 import android.os.Bundle
 import android.view.View
-
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.data.AppState
+import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
+import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.databinding.ActivityVerifyEmailBinding
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
-import kotlinx.coroutines.launch
 
 private enum class UiState {
     Offline, InProgress, Idle
@@ -17,13 +14,12 @@ private enum class UiState {
 
 class VerifyEmailActivity : ThemableActivity() {
     private lateinit var binding: ActivityVerifyEmailBinding
-    private lateinit var viewModel: UserAccountViewModel
+    private val authHelper = AuthHelper.instance
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityVerifyEmailBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
         setListeners()
     }
 
@@ -35,16 +31,13 @@ class VerifyEmailActivity : ThemableActivity() {
     private fun setListeners() {
         binding.retryButton.setOnClickListener { checkAuthState() }
         binding.verifiedButton.setOnClickListener { signIn() }
-        binding.resendButton.setOnClickListener { viewModel.sendEmailVerificationLink(this::onResendCompleted) }
+        binding.resendButton.setOnClickListener {
+            authHelper.sendVerificationLink(::onResendCompleted)
+        }
         binding.signOutButton.setOnClickListener { signOut() }
     }
 
-    private fun signOut() {
-        lifecycleScope.launch {
-            viewModel.signOut()
-            open(LoginActivity::class.java, true)
-        }
-    }
+    private fun signOut() = authHelper.signOut(this@VerifyEmailActivity)
 
     private fun updateUI(state: UiState) {
         binding.progressIndicator.visibility = View.GONE
@@ -83,25 +76,26 @@ class VerifyEmailActivity : ThemableActivity() {
 
     private fun checkAuthState() {
         updateUI(UiState.InProgress)
-        if (viewModel.isSignedIn) {
-            if (viewModel.isEmailVerified) {
-                viewModel.hasProfile { hasProfile, firebaseUnavailable ->
+        if (AppState.isSignedIn) {
+            if (AppState.isEmailAddressVerified) {
+                FirestoreHelper.instance.hasProfile(authHelper.userId)
+                { hasProfile, firebaseUnavailable ->
                     if (firebaseUnavailable) {
                         if (hasProfile) {
                             val bundle = Bundle()
-                            bundle.putBoolean(HomeActivity.EXTRA_IS_OFFLINE_MODE, true)
-                            open(HomeActivity::class.java, true, bundle)
+                            bundle.putBoolean(LoadProfileActivity.EXTRA_IS_OFFLINE_MODE, true)
+                            open(LoadProfileActivity::class.java, true, bundle)
                         } else {
                             updateUI(UiState.Offline)
                         }
                     } else {
                         val target =
-                            if (hasProfile) HomeActivity::class.java else ProfileSetupActivity::class.java
+                            if (hasProfile) LoadProfileActivity::class.java else ProfileSetupActivity::class.java
                         open(target, true)
                     }
                 }
             } else {
-                val message = getString(R.string.verification_message, viewModel.emailAddress)
+                val message = getString(R.string.verification_message, AppState.emailAddress)
                 binding.messageTextView.text = message
                 updateUI(UiState.Idle)
             }

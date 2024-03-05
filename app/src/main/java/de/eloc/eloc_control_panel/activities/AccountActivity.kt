@@ -1,34 +1,24 @@
 package de.eloc.eloc_control_panel.activities
 
 import android.os.Bundle
-import androidx.lifecycle.ViewModelProvider
-
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.databinding.ActivityAccountBinding
-import de.eloc.eloc_control_panel.data.UserAccountViewModel
-import de.eloc.eloc_control_panel.data.UserProfile
 
 class AccountActivity : ThemableActivity() {
     private lateinit var binding: ActivityAccountBinding
-    private lateinit var viewModel: UserAccountViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAccountBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setViewModel()
         setItemTitles()
         setListeners()
     }
 
     override fun onResume() {
         super.onResume()
-        viewModel.getProfileAsync(false, viewModel, null)
-    }
-
-    private fun setViewModel() {
-        viewModel = ViewModelProvider(this)[UserAccountViewModel::class.java]
-        viewModel.profile.observe(this, ::setItemValues)
+        setItemValues()
     }
 
     private fun setItemTitles() {
@@ -38,8 +28,8 @@ class AccountActivity : ThemableActivity() {
         binding.deleteAccountItem.titleTextView.setText(R.string.delete_account)
     }
 
-    private fun setItemValues(profile: UserProfile?) {
-        binding.changeEmailAddressItem.valueTextView.text = profile?.emailAddress ?: ""
+    private fun setItemValues() {
+        binding.changeEmailAddressItem.valueTextView.text = AppState.emailAddress
     }
 
     private fun setListeners() {
