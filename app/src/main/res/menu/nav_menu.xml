@@ -19,10 +19,6 @@
             android:id="@+id/mnu_upload_eloc_status"
             android:icon="@drawable/cloud_upload"
             android:title="@string/upload_eloc_status" />
-        <item
-            android:id="@+id/mnu_sync_clock"
-            android:icon="@drawable/access_time"
-            android:title="@string/synchronize_clock" />
     </group>
 
     <group android:id="@+id/group3">

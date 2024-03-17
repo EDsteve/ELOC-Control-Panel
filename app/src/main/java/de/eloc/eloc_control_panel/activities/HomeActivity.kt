@@ -338,11 +338,6 @@ class HomeActivity : ThemableActivity() {
                 return true
             }
 
-            R.id.mnu_sync_clock -> {
-                TimeHelper.syncBoardClock { message -> binding.coordinator.showSnack(message) }
-                return true
-            }
-
             R.id.mnu_preferences -> {
                 openUserPrefs()
                 return true

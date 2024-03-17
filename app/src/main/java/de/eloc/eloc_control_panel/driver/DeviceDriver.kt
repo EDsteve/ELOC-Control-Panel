@@ -267,9 +267,9 @@ object DeviceDriver : Runnable {
         commandLineListener = null
     }
 
-    fun syncTime(timestampInSeconds: Long, deltaMillis: Long, timezone: Int) {
+    fun syncTime(timestampInSeconds: Long, timezone: Int) {
         val command =
-            "setTime#time={\"seconds\":$timestampInSeconds, \"ms\" : $deltaMillis, \"timezone\" : $timezone}"
+            "setTime#time={\"seconds\":$timestampInSeconds, \"ms\":0 ,\"timezone\" : $timezone}"
         write(command)
     }
 

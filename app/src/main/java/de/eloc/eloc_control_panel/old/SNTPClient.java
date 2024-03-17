@@ -31,8 +31,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import android.content.SharedPreferences;
+import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -269,28 +272,29 @@ public class SNTPClient {
         buffer[offset++] = (byte) (Math.random() * 255.0);
     }
 
-    public static void getDate(int timeoutMS, TimeZone _timeZone, Listener _listener) {
+    private static void syncTask(int timeoutMS, TimeZone _timeZone, Listener _listener )  {
+        SNTPClient sntpClient = new SNTPClient(_listener);
 
-        new Thread(() -> {
+        if (sntpClient.requestTime("time.google.com", timeoutMS)) {
 
-            SNTPClient sntpClient = new SNTPClient(_listener);
+            long nowAsPerDeviceTimeZone = sntpClient.getNtpTime();
+            gElapsedRealtimeAtLastGoogleSync = SystemClock.elapsedRealtime();
 
-            if (sntpClient.requestTime("time.google.com", timeoutMS)) {
+            SIMPLE_DATE_FORMAT.setTimeZone(_timeZone);
+            String rawDate = SIMPLE_DATE_FORMAT.format(nowAsPerDeviceTimeZone);
 
-                long nowAsPerDeviceTimeZone = sntpClient.getNtpTime();
-                gElapsedRealtimeAtLastGoogleSync = SystemClock.elapsedRealtime();
+            try {
+                Date date = SIMPLE_DATE_FORMAT.parse(rawDate);
+                new Handler(Looper.getMainLooper()).post(() -> _listener.onTimeResponse(rawDate, date, nowAsPerDeviceTimeZone, null));
 
-                SIMPLE_DATE_FORMAT.setTimeZone(_timeZone);
-                String rawDate = SIMPLE_DATE_FORMAT.format(nowAsPerDeviceTimeZone);
-
-                try {
-                    Date date = SIMPLE_DATE_FORMAT.parse(rawDate);
-                    new Handler(Looper.getMainLooper()).post(() -> _listener.onTimeResponse(rawDate, date, nowAsPerDeviceTimeZone, null));
-
-                } catch (ParseException e) {
-                    new Handler(Looper.getMainLooper()).post(() -> _listener.onTimeResponse(null, null, 0L, e));
-                }
+            } catch (ParseException e) {
+                Log.d("TAG", "syncTask: "  + e.getLocalizedMessage());
+                new Handler(Looper.getMainLooper()).post(() -> _listener.onTimeResponse(null, null, 0L, e));
             }
-        }).start();
+        }
+    }
+
+    public static void getDate(int timeoutMS, TimeZone _timeZone, Listener _listener) {
+        Executors.newSingleThreadExecutor().execute(() -> syncTask(timeoutMS, _timeZone, _listener));
     }
 }
