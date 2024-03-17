@@ -5,6 +5,6 @@
         android:id="@+id/mnu_settings"
         android:icon="@drawable/settings_outline"
         app:iconTint="#74000000"
-        android:title="@string/more"
+        android:title="@string/settings"
         app:showAsAction="always|withText" />
 </menu>
