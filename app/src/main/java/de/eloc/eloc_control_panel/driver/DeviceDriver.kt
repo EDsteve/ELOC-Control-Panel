@@ -182,8 +182,10 @@ object DeviceDriver : Runnable {
 
     private var connectionStatus = ConnectionStatus.Inactive
         set(value) {
-            field = value
-            notifyClients()
+            if (field != value) {
+                field = value
+                notifyClients()
+            }
         }
 
     private fun notifyClients() {
@@ -265,9 +267,9 @@ object DeviceDriver : Runnable {
         commandLineListener = null
     }
 
-    fun syncTime(timestamp: Long, difference: Long, timezone: Int) {
+    fun syncTime(timestampInSeconds: Long, deltaMillis: Long, timezone: Int) {
         val command =
-            "setTime#time={\"seconds\":$timestamp, \"ms\" : $difference, \"timezone\" : $timezone}"
+            "setTime#time={\"seconds\":$timestampInSeconds, \"ms\" : $deltaMillis, \"timezone\" : $timezone}"
         write(command)
     }
 
@@ -566,7 +568,6 @@ object DeviceDriver : Runnable {
         } finally {
             connectionStatus =
                 if (bluetoothSocket?.isConnected == true) {
-                    TimeHelper.syncBoardClock(true)
                     ConnectionStatus.Active
                 } else if (hadError) {
                     ConnectionStatus.Inactive

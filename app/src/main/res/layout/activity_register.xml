@@ -38,7 +38,7 @@
             android:layout_height="48dp"
             android:layout_gravity="start"
             android:layout_margin="16dp"
-            android:background="?selectableItemBackground"
+            android:background="@android:color/transparent"
             android:contentDescription="@string/go_back"
             android:padding="8dp"
             android:scaleType="fitXY"

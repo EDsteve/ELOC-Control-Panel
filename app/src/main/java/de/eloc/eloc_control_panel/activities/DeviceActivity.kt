@@ -30,12 +30,20 @@ class DeviceActivity : AppCompatActivity() {
         const val EXTRA_DEVICE_ADDRESS = "device_address"
     }
 
+    private enum class ViewMode {
+        ConnectingView,
+        SyncingTimeView,
+        ContentView,
+        Disconnected,
+    }
+
     private var hasSDCardError = false
     private var locationAccuracy = 100.0 // Start with very inaccurate value of 100 meters.
     private var locationCode = LocationHelper.UNKNOWN
     private lateinit var binding: ActivityDeviceBinding
     private var deviceAddress = ""
     private var firstResume = true
+    private var timeSyncHandled = false
     private var refreshing = false
     private val scrollChangeListener =
         View.OnScrollChangeListener { _, _, y, _, _ ->
@@ -65,6 +73,8 @@ class DeviceActivity : AppCompatActivity() {
                     }
                 }
 
+                CommandType.SetTime -> timeSyncCompleted()
+
                 else -> {}
             }
         }
@@ -73,9 +83,9 @@ class DeviceActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDeviceBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         DeviceDriver.addOnSetCommandCompletedListener(setCommandCompletedCallback)
         DeviceDriver.addOnGetCommandCompletedListener(getCommandCompletedListener)
-        setContentView(binding.root)
         setRecordingState()
         initialize()
     }
@@ -129,6 +139,25 @@ class DeviceActivity : AppCompatActivity() {
                 connect()
             }
         }
+    }
+
+    private fun skipTimeSync() {
+
+        showModalAlert(
+            getString(R.string.time_sync),
+            getString(R.string.time_sync_rationale),
+        ) {
+            timeSyncCompleted()
+        }
+    }
+
+    private fun timeSyncCompleted() {
+        timeSyncHandled = true
+        binding.swipeRefreshLayout.isEnabled = true
+        setViewMode(ViewMode.ContentView)
+        binding.toolbar.menu.clear()
+        menuInflater.inflate(R.menu.app_bar_settings, binding.toolbar.menu)
+        DeviceDriver.getDeviceInfo(true)
     }
 
     private fun setStatusData() {
@@ -194,7 +223,9 @@ class DeviceActivity : AppCompatActivity() {
     private fun connect() {
         binding.toolbar.visibility = View.GONE
         binding.contentLayout.visibility = View.GONE
-        binding.loadingLinearLayout.visibility = View.VISIBLE
+        binding.initLayout.visibility = View.VISIBLE
+        binding.skipButton.visibility = View.GONE
+        binding.progressIndicator.text = getString(R.string.connecting)
         binding.progressIndicator.visibility = View.VISIBLE
         binding.progressIndicator.text = getString(R.string.connecting)
         connectToDevice()
@@ -202,6 +233,7 @@ class DeviceActivity : AppCompatActivity() {
 
     private fun setListeners() {
         DeviceDriver.registerConnectionChangedListener { onConnectionChanged(it) }
+        binding.skipButton.setOnClickListener { skipTimeSync() }
         binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.modeButton.addClickListener { modeButtonClicked() }
         binding.toolbar.setNavigationOnClickListener { goBack() }
@@ -241,8 +273,18 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun connectToDevice() {
+        timeSyncHandled = false
         DeviceDriver.connect(deviceAddress)
         binding.swipeRefreshLayout.isRefreshing = true
+    }
+
+    private fun synchronizeTime() {
+        if (timeSyncHandled) {
+            timeSyncCompleted()
+        } else {
+            setViewMode(ViewMode.SyncingTimeView)
+            TimeHelper.syncBoardClock()
+        }
     }
 
     private fun onConnectionChanged(status: ConnectionStatus) {
@@ -251,40 +293,58 @@ class DeviceActivity : AppCompatActivity() {
             binding.swipeRefreshLayout.isRefreshing = false
             binding.toolbar.menu.clear()
             when (status) {
-                ConnectionStatus.Active -> {
-                    binding.swipeRefreshLayout.isEnabled = true
-                    toggleContent(true)
-                    menuInflater.inflate(R.menu.app_bar_settings, binding.toolbar.menu)
-                    DeviceDriver.getDeviceInfo(true)
-                }
+                ConnectionStatus.Active -> synchronizeTime()
 
                 ConnectionStatus.Inactive -> {
                     binding.swipeRefreshLayout.isEnabled = true
-                    toggleContent(false)
-                    binding.progressIndicator.infoMode = true
-                    binding.progressIndicator.text =
-                        getString(R.string.disconnected_swipe_to_reconnect)
+                    timeSyncHandled = false
+                    setViewMode(ViewMode.Disconnected)
                 }
 
                 ConnectionStatus.Pending -> {
+                    timeSyncHandled = false
                     binding.swipeRefreshLayout.isEnabled = false
-                    toggleContent(false)
-                    binding.progressIndicator.infoMode = false
-                    binding.progressIndicator.text = getString(R.string.connecting)
+                    setViewMode(ViewMode.ConnectingView)
                 }
             }
         }
     }
 
-    private fun toggleContent(visible: Boolean) {
-        if (visible) {
-            binding.toolbar.visibility = View.VISIBLE
-            binding.contentLayout.visibility = View.VISIBLE
-            binding.loadingLinearLayout.visibility = View.GONE
-        } else {
-            binding.toolbar.visibility = View.GONE
-            binding.contentLayout.visibility = View.GONE
-            binding.loadingLinearLayout.visibility = View.VISIBLE
+    private fun setViewMode(mode: ViewMode) {
+        when (mode) {
+            ViewMode.ConnectingView -> {
+                binding.toolbar.visibility = View.GONE
+                binding.contentLayout.visibility = View.GONE
+                binding.initLayout.visibility = View.VISIBLE
+                binding.skipButton.visibility = View.GONE
+                binding.progressIndicator.infoMode = false
+                binding.progressIndicator.text = getString(R.string.connecting)
+            }
+
+            ViewMode.SyncingTimeView -> {
+                binding.toolbar.visibility = View.GONE
+                binding.contentLayout.visibility = View.GONE
+                binding.initLayout.visibility = View.VISIBLE
+                binding.skipButton.visibility = View.VISIBLE
+                binding.progressIndicator.infoMode = false
+                binding.progressIndicator.text = getString(R.string.syncing_time)
+            }
+
+            ViewMode.ContentView -> {
+                binding.toolbar.visibility = View.VISIBLE
+                binding.contentLayout.visibility = View.VISIBLE
+                binding.initLayout.visibility = View.GONE
+            }
+
+            ViewMode.Disconnected -> {
+                binding.toolbar.visibility = View.GONE
+                binding.contentLayout.visibility = View.GONE
+                binding.initLayout.visibility = View.VISIBLE
+                binding.skipButton.visibility = View.GONE
+                binding.progressIndicator.infoMode = true
+                binding.progressIndicator.text =
+                    getString(R.string.disconnected_swipe_to_reconnect)
+            }
         }
     }
 
