@@ -20,12 +20,13 @@ import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.databinding.ActivityDeviceBinding
 import de.eloc.eloc_control_panel.databinding.LayoutModeChooserBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
+import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 
 // todo: add refresh menu item for old API levels
 
-class DeviceActivity : AppCompatActivity() {
+class DeviceActivity : AppCompatActivity(), ConnectionStatusListener {
     companion object {
         const val EXTRA_DEVICE_ADDRESS = "device_address"
     }
@@ -45,6 +46,7 @@ class DeviceActivity : AppCompatActivity() {
     private var firstResume = true
     private var timeSyncHandled = false
     private var refreshing = false
+    private var paused = false
     private val scrollChangeListener =
         View.OnScrollChangeListener { _, _, y, _, _ ->
             binding.swipeRefreshLayout.isEnabled = (y <= 5)
@@ -92,6 +94,7 @@ class DeviceActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        paused = false
         if (firstResume) {
             firstResume = false
         } else {
@@ -103,18 +106,43 @@ class DeviceActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        paused = true
         LocationHelper.stopUpdates()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        DeviceDriver.clearConnectionStatusListener()
         DeviceDriver.removeOnSetCommandCompletedListener(setCommandCompletedCallback)
         DeviceDriver.removeOnGetCommandCompletedListener(getCommandCompletedListener)
         DeviceDriver.disconnect()
     }
 
+    override fun onStatusChanged(status: ConnectionStatus) {
+        runOnUiThread {
+            refreshing = false
+            binding.swipeRefreshLayout.isRefreshing = false
+            binding.toolbar.menu.clear()
+            when (status) {
+                ConnectionStatus.Active -> synchronizeTime()
+
+                ConnectionStatus.Inactive -> {
+                    binding.swipeRefreshLayout.isEnabled = true
+                    timeSyncHandled = false
+                    setViewMode(ViewMode.Disconnected)
+                }
+
+                ConnectionStatus.Pending -> {
+                    timeSyncHandled = false
+                    binding.swipeRefreshLayout.isEnabled = false
+                    setViewMode(ViewMode.ConnectingView)
+                }
+            }
+        }
+    }
+
     private fun initialize() {
-        onConnectionChanged(ConnectionStatus.Inactive)
+        onStatusChanged(ConnectionStatus.Inactive)
         val extras = intent.extras
         deviceAddress = extras?.getString(EXTRA_DEVICE_ADDRESS, "")?.trim() ?: ""
         if (deviceAddress.isEmpty()) {
@@ -232,7 +260,7 @@ class DeviceActivity : AppCompatActivity() {
     }
 
     private fun setListeners() {
-        DeviceDriver.registerConnectionChangedListener { onConnectionChanged(it) }
+        DeviceDriver.registerConnectionStatusListener(this)
         binding.skipButton.setOnClickListener { skipTimeSync() }
         binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.modeButton.addClickListener { modeButtonClicked() }
@@ -284,29 +312,6 @@ class DeviceActivity : AppCompatActivity() {
         } else {
             setViewMode(ViewMode.SyncingTimeView)
             TimeHelper.syncBoardClock()
-        }
-    }
-
-    private fun onConnectionChanged(status: ConnectionStatus) {
-        runOnUiThread {
-            refreshing = false
-            binding.swipeRefreshLayout.isRefreshing = false
-            binding.toolbar.menu.clear()
-            when (status) {
-                ConnectionStatus.Active -> synchronizeTime()
-
-                ConnectionStatus.Inactive -> {
-                    binding.swipeRefreshLayout.isEnabled = true
-                    timeSyncHandled = false
-                    setViewMode(ViewMode.Disconnected)
-                }
-
-                ConnectionStatus.Pending -> {
-                    timeSyncHandled = false
-                    binding.swipeRefreshLayout.isEnabled = false
-                    setViewMode(ViewMode.ConnectingView)
-                }
-            }
         }
     }
 

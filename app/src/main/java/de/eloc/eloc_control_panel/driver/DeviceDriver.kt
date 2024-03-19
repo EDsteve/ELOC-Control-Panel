@@ -23,7 +23,6 @@ import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
-import de.eloc.eloc_control_panel.interfaces.SocketListener
 import de.eloc.eloc_control_panel.interfaces.StringCallback
 import de.eloc.eloc_control_panel.services.StatusUploadService
 import org.json.JSONObject
@@ -130,14 +129,11 @@ object DeviceDriver : Runnable {
     private val BLUETOOTH_SPP = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     private var device: BluetoothDevice? = null
     private var bytesCache = emptyList<Byte>()
-    private val clients = mutableListOf<ConnectionStatusListener>()
-    private val dataListenerList = mutableListOf<SocketListener>()
+    private var statusListener: ConnectionStatusListener? = null
     private val onSetCommandCompletedListeners = mutableListOf<SetCommandCompletedCallback?>()
     private val onGetCommandCompletedListeners = mutableListOf<GetCommandCompletedCallback?>()
     private val disconnectBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            onIOError(IOException("ELOC bluetooth disconnected in background!"))
-
             // disconnect now, else would be queued until UI re-attached
             disconnect()
         }
@@ -184,15 +180,9 @@ object DeviceDriver : Runnable {
         set(value) {
             if (field != value) {
                 field = value
-                notifyClients()
+                statusListener?.onStatusChanged(field)
             }
         }
-
-    private fun notifyClients() {
-        for (c in clients) {
-            c.onStatusChanged(connectionStatus)
-        }
-    }
 
     fun disconnect() {
         disconnecting = true
@@ -206,7 +196,6 @@ object DeviceDriver : Runnable {
         } catch (_: Exception) {
         }
         connectionStatus = ConnectionStatus.Inactive
-        dataListenerList.clear()
         disconnecting = false
     }
 
@@ -230,16 +219,6 @@ object DeviceDriver : Runnable {
         onGetCommandCompletedListeners.remove(listener)
     }
 
-    fun addCommandListener(listener: SocketListener?) {
-        if ((listener != null) && (!dataListenerList.contains(listener))) {
-            dataListenerList.add(listener)
-        }
-    }
-
-    fun removeCommandListener(listener: SocketListener) {
-        dataListenerList.remove(listener)
-    }
-
     private fun write(command: String) {
         try {
             if (bluetoothSocket?.isConnected == true) {
@@ -251,7 +230,6 @@ object DeviceDriver : Runnable {
             }
         } catch (e: IOException) {
             disconnect()
-            onIOError(e)
         }
     }
 
@@ -508,41 +486,18 @@ object DeviceDriver : Runnable {
 
     private fun onConnect() {
         cancelConnectionMonitor = true
-        for (l in dataListenerList) {
-            l.onConnect()
-        }
     }
 
-    private fun onConnectionError(e: Exception) {
-        for (l in dataListenerList) {
-            l.onConnectionError(e)
-        }
+    fun registerConnectionStatusListener(listener: ConnectionStatusListener) {
+        statusListener = listener
     }
 
-    private fun onRead(data: ByteArray) {
-        for (l in dataListenerList) {
-            l.onRead(data)
-        }
-    }
-
-    private fun onIOError(e: Exception) {
-        for (l in dataListenerList) {
-            l.onIOError(e)
-        }
-    }
-
-
-    fun registerConnectionChangedListener(callback: ConnectionStatusListener? = null) {
-        if ((callback != null) && (!clients.contains(callback))) {
-            clients.add(callback)
-        }
+    fun clearConnectionStatusListener() {
+        statusListener = null
     }
 
     @SuppressLint("MissingPermission")
-    fun connect(
-        deviceAddress: String,
-        dataListener: SocketListener? = null
-    ) {
+    fun connect(deviceAddress: String) {
         connecting = true
         var hadError = false
         try {
@@ -562,7 +517,6 @@ object DeviceDriver : Runnable {
             } catch (_: Exception) {
 
             }
-            addCommandListener(dataListener)
         } catch (e: Exception) {
             hadError = true
         } finally {
@@ -583,7 +537,6 @@ object DeviceDriver : Runnable {
             Executors.newSingleThreadExecutor().execute(connectionMonitor)
             bluetoothSocket?.connect()
         } catch (e: SecurityException) {
-            onConnectionError(e)
             disconnect()
             return
         }
@@ -696,12 +649,9 @@ object DeviceDriver : Runnable {
                         if (commandLineListener != null) {
                             commandLineListener?.handler(json)
                         }
-                        var intercepted = interceptCompletedSetCommand(json)
+                        val intercepted = interceptCompletedSetCommand(json)
                         if (!intercepted) {
-                            intercepted = interceptCompletedGetCommand(json)
-                            if (!intercepted) {
-                                onRead(jsonByteArray)
-                            }
+                            interceptCompletedGetCommand(json)
                         }
                     }
                 } catch (e: Exception) {
@@ -709,8 +659,6 @@ object DeviceDriver : Runnable {
                         // Ignore and don't report the crash that happens while connecting
                         return
                     }
-
-                    onIOError(e)
                     disconnect()
                 }
                 try {
@@ -720,7 +668,6 @@ object DeviceDriver : Runnable {
             }
 
         } catch (e: SecurityException) {
-            onConnectionError(e)
             disconnect()
             return
         }

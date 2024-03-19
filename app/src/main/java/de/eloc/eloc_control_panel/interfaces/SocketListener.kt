@@ -7,10 +7,3 @@ interface SocketListener {
     fun onIOError(e: Exception)
 }
 
-abstract class BluetoothDeviceListener : SocketListener {
-    override fun onConnect() {}
-    override fun onConnectionError(e: Exception) {}
-    override fun onIOError(e: Exception) {}
-    override fun onRead(data: ByteArray) {}
-}
-
