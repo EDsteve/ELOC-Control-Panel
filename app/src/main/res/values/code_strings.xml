@@ -2,4 +2,5 @@
 <resources>
     <string name="status_updates_url">http://128.199.206.198/ELOC/files/?C=M;O=D</string>
     <string name="instructions_url">https://wildlifebug.com</string>
+    <string name="store_url">https://play.google.com/store/apps/details?id=de.eloc.eloc_control_panel_2</string>
 </resources>

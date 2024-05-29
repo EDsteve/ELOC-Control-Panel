@@ -39,6 +39,12 @@
         tools:ignore="AllowBackup,GoogleAppIndexingWarning"
         tools:targetApi="tiramisu">
         <activity
+            android:name=".activities.UpdateAppActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.ProtocolVersionActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.TimeSyncActivity"
             android:exported="false"
             android:launchMode="singleInstance"

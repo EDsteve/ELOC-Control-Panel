@@ -16,7 +16,9 @@ import androidx.core.content.ContextCompat
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.HomeActivity
+import de.eloc.eloc_control_panel.activities.UpdateAppActivity
 import de.eloc.eloc_control_panel.data.UploadResult
+import de.eloc.eloc_control_panel.data.helpers.HttpHelper
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
@@ -73,7 +75,24 @@ class StatusUploadService : Service() {
         elapsedMillis = 0
         uploadResult = UploadResult.Failed
         abort = false
-        doUpload()
+        val appProtocolVersion = HttpHelper.instance.getAppProtocolVersion()
+        if (App.APP_PROTOCOL_VERSION < appProtocolVersion) {
+
+            // If different, notify user and download new app version
+            val (id, notification) = createNotification(
+                getString(R.string.app_name),
+                getString(R.string.update_app),
+            )
+            val intent = Intent(this, UpdateAppActivity::class.java)
+            notification.contentIntent =
+                PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+
+            showNotification(id, notification)
+            notificationManager.cancel(foregroundNotificationId)
+            stopSelf()
+            isRunning = false
+            return@Runnable
+        }
 
         val uploadCompleted = fun() =
             ((uploadResult == UploadResult.NoData) || (uploadResult == UploadResult.Uploaded))
@@ -98,7 +117,7 @@ class StatusUploadService : Service() {
             elapsedMillis += sleepInterval
             val updateIntervalMillis = statusUpdateIntervalMillis
             if (elapsedMillis >= updateIntervalMillis) {
-                doUpload()
+                doUploada()
             }
 
             if (uploadCompleted()) {
@@ -135,7 +154,7 @@ class StatusUploadService : Service() {
         stopSelf()
     }
 
-    private fun doUpload() {
+    private fun doUploada() {
         try {
             if (serviceNotificationBuilder != null) {
                 val message = getString(R.string.uploading_status)

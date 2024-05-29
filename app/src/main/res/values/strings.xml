@@ -201,4 +201,6 @@
     <string name="syncing_time">Syncing time… Please wait</string>
     <string name="time_sync">Time Sync</string>
     <string name="time_sync_rationale">The time for the ELOC may be incorrect.\n\nIf you need the time to be set correctly, please reconnect or manually synchronize the time.</string>
+    <string name="update_app">To upload records, you must update your app to the latest version.</string>
+    <string name="update_now">Update Now</string>
 </resources>

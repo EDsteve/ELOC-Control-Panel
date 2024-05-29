@@ -18,6 +18,7 @@ class App : Application() {
 
     companion object {
         private var cInstance: App? = null
+          const val APP_PROTOCOL_VERSION = 1.0
 
         val instance: App
             get() {
