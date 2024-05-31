@@ -45,17 +45,21 @@ class HttpHelper {
     val imageLoader: ImageLoader = ImageLoader(requestQueue, cache)
 
     fun getAppProtocolVersion(): Double {
-        val endpoint = "https://eloc-b1e63.web.app/api/protocol_version.json"
-        val connection = URL(endpoint).openConnection() as? HttpsURLConnection
-        connection?.connectTimeout = 30000
-        val statusCode = connection?.responseCode ?: -1
-        if ((statusCode >= 200) && (statusCode < 300)) {
-            val response = connection?.inputStream?.bufferedReader().use { it?.readText() } ?: ""
-            val data = JSONObject(response)
-            val versionKey = "version";
-            if (data.has(versionKey)) {
-                return data.getDouble(versionKey)
+        try {
+            val endpoint = "https://eloc-b1e63.web.app/api/protocol_version.json"
+            val connection = URL(endpoint).openConnection() as? HttpsURLConnection
+            connection?.connectTimeout = 30000
+            val statusCode = connection?.responseCode ?: -1
+            if ((statusCode >= 200) && (statusCode < 300)) {
+                val response =
+                    connection?.inputStream?.bufferedReader().use { it?.readText() } ?: ""
+                val data = JSONObject(response)
+                val versionKey = "version"
+                if (data.has(versionKey)) {
+                    return data.getDouble(versionKey)
+                }
             }
+        } catch (_: Exception) {
         }
         return 0.0
     }

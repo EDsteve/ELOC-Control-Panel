@@ -117,7 +117,7 @@ class StatusUploadService : Service() {
             elapsedMillis += sleepInterval
             val updateIntervalMillis = statusUpdateIntervalMillis
             if (elapsedMillis >= updateIntervalMillis) {
-                doUploada()
+                doUpload()
             }
 
             if (uploadCompleted()) {
@@ -154,7 +154,7 @@ class StatusUploadService : Service() {
         stopSelf()
     }
 
-    private fun doUploada() {
+    private fun doUpload() {
         try {
             if (serviceNotificationBuilder != null) {
                 val message = getString(R.string.uploading_status)

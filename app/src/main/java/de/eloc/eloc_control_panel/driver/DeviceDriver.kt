@@ -35,19 +35,11 @@ private const val KEY_RECORDING_STATE = "recordingState"
 private const val KEY_SESSION = "session"
 private const val KEY_IDENTIFIER = "identifier"
 private const val KEY_DEVICE = "device"
-private const val KEY_RECORDING_TIME = "recordingTime[h]"
-private const val KEY_TOTAL_RECORDING_TIME = "totalRecordingTime[h]"
 private const val KEY_FIRMWARE = "firmware"
-private const val KEY_UPTIME = "Uptime[h]"
-private const val KEY_SDCARD_SIZE = "SdCardSize[GB]"
-private const val KEY_SDCARD_FREE_GB = "SdCardFreeSpace[GB]"
-private const val KEY_SDCARD_FREE_PERC = "SdCardFreeSpace[%]"
 private const val KEY_VAL = "val"
 
 private const val KEY_BATTERY = "battery"
-private const val KEY_BATTERY_LEVEL = "SoC[%]"
 private const val KEY_BATTERY_TYPE = "type"
-private const val KEY_BATTERY_VOLTAGE = "voltage[V]"
 internal const val KEY_BATTERY_UPDATE_INTERVAL_MS = "updateIntervalMs"
 internal const val KEY_BATTERY_AVG_SAMPLES = "avgSamples"
 internal const val KEY_BATTERY_AVG_INTERVAL_MS = "avgIntervalMs"
@@ -100,9 +92,35 @@ private const val CMD_SET_RECORD_MODE = "setRecordMode"
 
 private const val KEY_DETECTION = "detection"
 private const val KEY_STATE = "state"
-private const val KEY_DETECTING_TIME = "detectingTime[h]"
 private const val KEY_DETECTED_EVENTS = "detectedEvents"
 private const val KEY_AI_MODEL = "aiModel"
+
+private const val KEY_RECORDING_TIME = "recordingTime"
+private const val KEY_B_RECORDING_TIME = "recordingTime[h]"
+
+private const val KEY_TOTAL_RECORDING_TIME = "totalRecordingTime"
+private const val KEY_B_TOTAL_RECORDING_TIME = "totalRecordingTime[h]"
+
+private const val KEY_UPTIME = "Uptime"
+private const val KEY_B_UPTIME = "Uptime[h]"
+
+private const val KEY_SDCARD_SIZE = "SdCardSize"
+private const val KEY_B_SDCARD_SIZE = "SdCardSize[GB]"
+
+private const val KEY_SDCARD_FREE_GB = "SdCardFreeSpaceGB"
+private const val KEY_B_SDCARD_FREE_GB = "SdCardFreeSpace[GB]"
+
+private const val KEY_SDCARD_FREE_PERC = "SdCardFreeSpacePerc"
+private const val KEY_B_SDCARD_FREE_PERC = "SdCardFreeSpace[%]"
+
+private const val KEY_BATTERY_LEVEL = "SoC"
+private const val KEY_B_BATTERY_LEVEL = "SoC[%]"
+
+private const val KEY_BATTERY_VOLTAGE = "voltage"
+private const val KEY_B_BATTERY_VOLTAGE = "voltage[V]"
+
+private const val KEY_DETECTING_TIME = "detectingTime"
+private const val KEY_B_DETECTING_TIME = "detectingTime[h]"
 
 object DeviceDriver : Runnable {
 
@@ -627,6 +645,18 @@ object DeviceDriver : Runnable {
         return intercepted
     }
 
+    private fun sanitize(s: String): String {
+        return s.replace(KEY_B_DETECTING_TIME, KEY_DETECTING_TIME)
+            .replace(KEY_B_BATTERY_VOLTAGE, KEY_BATTERY_VOLTAGE)
+            .replace(KEY_B_BATTERY_LEVEL, KEY_BATTERY_LEVEL)
+            .replace(KEY_B_SDCARD_FREE_PERC, KEY_SDCARD_FREE_PERC)
+            .replace(KEY_B_SDCARD_FREE_GB, KEY_SDCARD_FREE_GB)
+            .replace(KEY_B_SDCARD_SIZE, KEY_SDCARD_SIZE)
+            .replace(KEY_B_UPTIME, KEY_UPTIME)
+            .replace(KEY_B_TOTAL_RECORDING_TIME, KEY_TOTAL_RECORDING_TIME)
+            .replace(KEY_B_RECORDING_TIME, KEY_RECORDING_TIME)
+    }
+
     override fun run() {
         try {
             val buffer = ByteArray(1024)
@@ -645,7 +675,7 @@ object DeviceDriver : Runnable {
                         val endIndex = bytesCache.size - 1
                         bytesCache = bytesCache.slice(startIndex..endIndex)
                         val jsonByteArray = jsonBytes.toByteArray()
-                        val json = String(jsonByteArray)
+                        val json = sanitize(String(jsonByteArray))
                         if (commandLineListener != null) {
                             commandLineListener?.handler(json)
                         }
