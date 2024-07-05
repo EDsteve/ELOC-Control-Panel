@@ -67,45 +67,6 @@ object TimeHelper {
         DeviceDriver.syncTime(seconds, timeZoneOffsetHours())
     }
 
-    fun syncBoardClock_old(callback: StringCallback? = null) {
-        SNTPClient.getDate(
-            5000,
-            Calendar.getInstance().timeZone
-        ) { _,
-            _,
-            googletimestampMillis,
-            _
-            ->
-            run {
-                val timeZoneOffsetHours = timeZoneOffsetHours()
-                var differenceMillis = 0L
-                var isLocal = false
-                val timestamp = if (googletimestampMillis == 0L) {
-                    // If we cannot get google time, use phone time
-                    isLocal = true
-                    System.currentTimeMillis()
-                } else {
-                    differenceMillis = System.currentTimeMillis() - googletimestampMillis
-                    googletimestampMillis
-                }
-                val seconds = (googletimestampMillis / 1000.0).toLong()
-                //DeviceDriver.syncTime(seconds, differenceMillis, timeZoneOffsetHours)
-
-                PreferencesHelper.instance.saveTimestamps(
-                    SystemClock.elapsedRealtime(),
-                    timestamp
-                )
-
-                val message = if (isLocal) {
-                    App.instance.getString(R.string.sync_template_withno_difference)
-                } else {
-                    App.instance.getString(R.string.sync_template_with_difference, differenceMillis)
-                }
-                callback?.handler(message)
-            }
-        }
-    }
-
     fun prettify(s: String?): String {
         val dirty = s ?: ""
         val parts = dirty.split("-")

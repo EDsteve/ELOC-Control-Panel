@@ -93,7 +93,7 @@ class ProfileSetupActivity : MediaActivity() {
         cameraLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
-            if ((result != null) && (result.resultCode == RESULT_OK)) {
+            if (result.resultCode == RESULT_OK) {
                 if (photoUri != null) {
                     setImage(photoUri!!)
                     photoUri = null
