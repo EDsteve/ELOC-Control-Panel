@@ -185,7 +185,7 @@ class DeviceActivity : AppCompatActivity(), ConnectionStatusListener {
         setViewMode(ViewMode.ContentView)
         binding.toolbar.menu.clear()
         menuInflater.inflate(R.menu.app_bar_settings, binding.toolbar.menu)
-        DeviceDriver.getDeviceInfo(true)
+        DeviceDriver.getStatusAndConfig(true)
     }
 
     private fun setStatusData() {

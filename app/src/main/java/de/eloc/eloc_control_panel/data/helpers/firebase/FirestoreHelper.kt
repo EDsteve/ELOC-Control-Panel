@@ -29,6 +29,7 @@ class FirestoreHelper {
         private const val COL_UPLOADS = "eloc_app/uploads"
         private const val COL_CONFIG = "$COL_UPLOADS/config"
         private const val COL_STATUS = "$COL_UPLOADS/status"
+        private const val COL_MAP = "$COL_UPLOADS/map"
 
         val instance
             get():  FirestoreHelper {
@@ -179,6 +180,8 @@ class FirestoreHelper {
         val pendingUploads = FileSystemHelper.pendingUploads
         val pattern = Regex("_[er]_")
         val totalCount = pendingUploads.size
+        var completed = false
+        var wait = true
         if (totalCount == 0) {
             StatusUploadService.uploadResult = UploadResult.NoData
         }
@@ -187,6 +190,7 @@ class FirestoreHelper {
         for (fileName in pendingUploads) {
             val isConfig = FileSystemHelper.isConfig(fileName)
             val isStatus = FileSystemHelper.isStatus(fileName)
+            val isMapData = FileSystemHelper.isMapData(fileName)
             var prefix: String
             var document: DocumentReference
             if (isConfig) {
@@ -197,26 +201,37 @@ class FirestoreHelper {
                 prefix = FileSystemHelper.PREFIX_STATUS
                 document = FirebaseFirestore.getInstance()
                     .document("$COL_STATUS/$fileName")
+            } else if (isMapData) {
+                prefix = FileSystemHelper.PREFIX_MAP
+                document = FirebaseFirestore.getInstance()
+                    .document("$COL_MAP/$fileName")
             } else {
                 continue
             }
 
-            val data = FileSystemHelper.readDataFile(fileName)
+            val data = if (isMapData) {
+                FileSystemHelper.readMapDataFile(fileName)
+            } else {
+                FileSystemHelper.readDataFile(fileName)
+            }
+
             if (data.isNullOrEmpty()) {
                 continue
             }
 
-            val metadata = fileName
-                .replace(prefix, "")
-                .replace(FileSystemHelper.JSON_EXT, "")
-                .split(pattern)
-            if (metadata.size >= 3) {
-                data[KEY_APP_METADATA] = hashMapOf(
-                    "capture_timestamp" to metadata[0],
-                    "ranger" to metadata[2],
-                    "device_name" to metadata[1],
-                    "upload_timestamp" to FieldValue.serverTimestamp()
-                )
+            if (!isMapData) {
+                val metadata = fileName
+                    .replace(prefix, "")
+                    .replace(FileSystemHelper.JSON_EXT, "")
+                    .split(pattern)
+                if (metadata.size >= 3) {
+                    data[KEY_APP_METADATA] = hashMapOf(
+                        "capture_timestamp" to metadata[0],
+                        "ranger" to metadata[2],
+                        "device_name" to metadata[1],
+                        "upload_timestamp" to FieldValue.serverTimestamp()
+                    )
+                }
             }
 
             document.set(data)
@@ -228,7 +243,7 @@ class FirestoreHelper {
                         failCount++
                     }
 
-                    val completed = ((successCount + failCount) == pendingUploads.size)
+                      completed = ((successCount + failCount) == pendingUploads.size)
                     if (completed) {
                         if (successCount == totalCount) {
                             StatusUploadService.uploadResult = UploadResult.Uploaded
@@ -236,8 +251,17 @@ class FirestoreHelper {
                             StatusUploadService.uploadResult = UploadResult.Failed
                         }
                         callback?.handler()
+                        wait = false
                     }
                 }
+        }
+
+        // Safe to wait, since function runs on background thread
+        while (wait) {
+            try {
+                Thread.sleep(1000)
+            } catch (_: Exception) {
+            }
         }
     }
 

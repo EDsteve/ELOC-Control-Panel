@@ -144,7 +144,7 @@ abstract class BaseEditorActivity : AppCompatActivity() {
                 if (type.isSetCommand) {
                     saved = true
                     progressIndicator.text = getString(R.string.updating_values)
-                    DeviceDriver.getDeviceInfo()
+                    DeviceDriver.getStatusAndConfig()
                 }
             } else {
                 showContent()

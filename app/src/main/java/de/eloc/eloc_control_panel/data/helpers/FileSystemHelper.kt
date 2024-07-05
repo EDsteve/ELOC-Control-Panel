@@ -3,6 +3,7 @@ package de.eloc.eloc_control_panel.data.helpers
 import android.util.Base64
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.data.AppState
+import de.eloc.eloc_control_panel.data.UploadType
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import org.json.JSONObject
@@ -23,6 +24,7 @@ object FileSystemHelper {
     const val JSON_EXT = ".json"
     const val PREFIX_CONFIG = "config_"
     const val PREFIX_STATUS = "status_"
+    const val PREFIX_MAP = "map_"
 
     val pendingUploads: Array<String>
         get() = uploadCache?.list() ?: arrayOf()
@@ -63,27 +65,26 @@ object FileSystemHelper {
             return field
         }
 
-    fun saveConfig(json: String) = saveDataFile(true, json)
-
-    fun saveStatus(json: String) = saveDataFile(false, json)
-
-    private fun saveDataFile(isConfig: Boolean, json: String): Boolean {
+    fun saveDataFile(json: String, uploadType: UploadType, saveTime: Date): Boolean {
         try {
             val dateFormatter = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-z", Locale.US)
-            val now = Date(System.currentTimeMillis())
-            val captureTimestamp = dateFormatter.format(now).replace(":", "")
-            val prefix = if (isConfig) {
-                PREFIX_CONFIG
-            } else {
-                PREFIX_STATUS
+            val captureTimestamp = dateFormatter.format(saveTime).replace(":", "")
+            val prefix = when (uploadType) {
+                UploadType.Config -> PREFIX_CONFIG
+                UploadType.Status -> PREFIX_STATUS
+                UploadType.Map -> ""
             }
 
-            val fileName = generateDataFileName(
-                prefix,
-                AppState.rangerName,
-                DeviceDriver.name,
-                captureTimestamp
-            )
+            val fileName = if (uploadType == UploadType.Map) {
+                generateMapDataFileName(DeviceDriver.name)
+            } else {
+                generateDataFileName(
+                    prefix,
+                    AppState.rangerName,
+                    DeviceDriver.name,
+                    captureTimestamp
+                )
+            }
             val file = File(uploadCache, fileName)
             file.writeText(json)
             return true
@@ -99,6 +100,9 @@ object FileSystemHelper {
     fun isStatus(fileName: String) =
         fileName.startsWith(PREFIX_STATUS) && fileName.endsWith(JSON_EXT)
 
+    fun isMapData(fileName: String) =
+        fileName.startsWith(PREFIX_MAP) && fileName.endsWith(JSON_EXT)
+
     fun readDataFile(fileName: String): HashMap<String, Any>? {
         val file = File(uploadCache, fileName)
         if (file.exists()) {
@@ -107,6 +111,21 @@ object FileSystemHelper {
         }
         return null
     }
+
+    fun readMapDataFile(fileName: String): HashMap<String, Any>? =
+        try {
+            val file = File(uploadCache, fileName)
+            if (file.exists()) {
+                val json = file.readText()
+                val root = JSONObject(json)
+                toMap(root)
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
+        }
+
 
     private fun parsePayloadMap(json: String): HashMap<String, Any>? =
         try {
@@ -143,6 +162,13 @@ object FileSystemHelper {
             localFile.delete()
         }
     }
+
+    private fun generateMapDataFileName(elocName: String): String =
+        buildString {
+            append(PREFIX_MAP)
+            append(elocName)
+            append(JSON_EXT)
+        }
 
     private fun generateDataFileName(
         prefix: String,

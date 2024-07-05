@@ -56,7 +56,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             if (success) {
                 if (type.isSetCommand) {
                     binding.progressIndicator.text = getString(R.string.updating_values)
-                    DeviceDriver.getDeviceInfo()
+                    DeviceDriver.getStatusAndConfig()
                 }
             } else {
                 showContent()

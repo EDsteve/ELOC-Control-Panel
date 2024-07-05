@@ -98,7 +98,9 @@ class StatusUploadService : Service() {
             ((uploadResult == UploadResult.NoData) || (uploadResult == UploadResult.Uploaded))
 
         val sleepInterval = 1000L
+        doUpload()
         while (!uploadCompleted()) {
+
             if (abort) {
                 break
             }
@@ -112,7 +114,7 @@ class StatusUploadService : Service() {
                 break
             }
 
-            // Try an upload is interval has elapsed
+            // Try an upload if interval has elapsed
             updateStatusUpdateInterval()
             elapsedMillis += sleepInterval
             val updateIntervalMillis = statusUpdateIntervalMillis

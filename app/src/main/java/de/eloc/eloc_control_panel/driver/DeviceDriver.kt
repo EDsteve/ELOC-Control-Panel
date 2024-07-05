@@ -7,18 +7,20 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.data.Channel
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
 import de.eloc.eloc_control_panel.data.GainType
+import de.eloc.eloc_control_panel.data.InfoType
 import de.eloc.eloc_control_panel.data.RecordState
 import de.eloc.eloc_control_panel.data.SampleRate
 import de.eloc.eloc_control_panel.data.TimePerFile
+import de.eloc.eloc_control_panel.data.UploadType
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.JsonHelper
-import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
@@ -27,6 +29,7 @@ import de.eloc.eloc_control_panel.interfaces.StringCallback
 import de.eloc.eloc_control_panel.services.StatusUploadService
 import org.json.JSONObject
 import java.io.IOException
+import java.util.Date
 import java.util.UUID
 import java.util.concurrent.Executors
 
@@ -122,6 +125,14 @@ private const val KEY_B_BATTERY_VOLTAGE = "voltage[V]"
 private const val KEY_DETECTING_TIME = "detectingTime"
 private const val KEY_B_DETECTING_TIME = "detectingTime[h]"
 
+private const val KEY_BATTERY_VOLTS = "batteryVolts"
+private const val KEY_GPS_ACCURACY_METERS = "gpsAccuracyMeters"
+private const val KEY_LATITUDE = "latitude"
+private const val KEY_LONGITUDE = "longitude"
+private const val KEY_RANGER_NAME = "rangerName"
+private const val KEY_REC_TIME_HOURS = "recTimeHours"
+const val KEY_TIMESTAMP = "timestamp"
+
 object DeviceDriver : Runnable {
 
     val microphone = Microphone()
@@ -134,9 +145,13 @@ object DeviceDriver : Runnable {
     val general = General()
     val session = Session()
 
+    private var cachedStatus = ""
+    private var cachedConfig = ""
+    private var infoType: InfoType? = null
     private var cancelConnectionMonitor = false
     private var configSaved = false
     private var statusSaved = false
+    private var combinedStatusAndConfigTime: Date? = null
     private var commandLineListener: StringCallback? = null
     private var connecting = false
     private var disconnecting = false
@@ -525,15 +540,25 @@ object DeviceDriver : Runnable {
 
             // Connection success and most connection errors are returned asynchronously to listener
             try {
-                App.instance.registerReceiver(
-                    disconnectBroadcastReceiver, IntentFilter(INTENT_ACTION_DISCONNECT)
-                )
+                val filter = IntentFilter(INTENT_ACTION_DISCONNECT)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    App.instance.registerReceiver(
+                        disconnectBroadcastReceiver,
+                        filter,
+                        Context.RECEIVER_NOT_EXPORTED,
+                    )
+                } else {
+                    App.instance.registerReceiver(
+                        disconnectBroadcastReceiver,
+                        filter,
+                    )
+                }
                 bluetoothSocket = device?.createRfcommSocketToServiceRecord(BLUETOOTH_SPP)
                 BluetoothHelper.stopScan {
                     doConnect()
                 }
-            } catch (_: Exception) {
-
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         } catch (e: Exception) {
             hadError = true
@@ -615,20 +640,17 @@ object DeviceDriver : Runnable {
                 when (commandType) {
                     CommandType.GetConfig -> {
                         parseConfig(root)
-                        // Only upload config if it has a valid location
-                        if (LocationHelper.isValidLocationCode(general.lastLocation)) {
-                            if (!configSaved) {
-                                configSaved = FileSystemHelper.saveConfig(json)
-                                StatusUploadService.start(App.instance)
-                            }
+                        if (!configSaved) {
+                            cachedConfig = json
+                            saveLocal()
                         }
                     }
 
                     CommandType.GetStatus -> {
                         parseStatus(root)
                         if (!statusSaved) {
-                            statusSaved = FileSystemHelper.saveStatus(json)
-                            StatusUploadService.start(App.instance)
+                            cachedStatus = json
+                            saveLocal()
                         }
                     }
 
@@ -643,6 +665,86 @@ object DeviceDriver : Runnable {
 
         }
         return intercepted
+    }
+
+    private fun saveLocal() {
+        val now = Date(System.currentTimeMillis())
+
+        when (infoType) {
+            InfoType.Status -> {
+                if (!statusSaved && cachedStatus.isNotEmpty()) {
+                    statusSaved =
+                        FileSystemHelper.saveDataFile(
+                            cachedStatus,
+                            UploadType.Status,
+                            now,
+                        )
+                    if (statusSaved) {
+                        cachedStatus = ""
+                        StatusUploadService.start(App.instance)
+                    }
+                }
+            }
+
+            InfoType.StatusWithConfig -> {
+                if (combinedStatusAndConfigTime == null) {
+                    combinedStatusAndConfigTime = now
+                }
+                if (!statusSaved && cachedStatus.isNotEmpty()) {
+                    statusSaved = FileSystemHelper.saveDataFile(
+                        cachedStatus,
+                        UploadType.Status,
+                        combinedStatusAndConfigTime!!,
+                    )
+                }
+                if (!configSaved && cachedConfig.isNotEmpty()) {
+                    configSaved = FileSystemHelper.saveDataFile(
+                        cachedConfig,
+                        UploadType.Config,
+                        combinedStatusAndConfigTime!!,
+                    )
+                }
+
+                if (statusSaved && configSaved) {
+                    // Save map data before clearing cached data.
+                    val batteryVolts = 1.23
+                    val gpsAccuracy = 3.4
+                    val latitude = 1000
+                    val longitude = -1000
+                    val rangerName = "fredo"
+                    val recTime = 0.5
+                    val timestamp = System.currentTimeMillis()
+                    var locationData = """{
+                            "$KEY_BATTERY_VOLTS": $batteryVolts,
+                            "$KEY_GPS_ACCURACY_METERS": $gpsAccuracy,
+                            "$KEY_LATITUDE": $latitude,
+                            "$KEY_LONGITUDE": $longitude,
+                            "$KEY_RANGER_NAME": "$rangerName",
+                            "$KEY_REC_TIME_HOURS": $recTime,
+                            "$KEY_TIMESTAMP": $timestamp
+                            }"""
+                    val doubleSpace = "  "
+                    val singleSpace = " "
+                    while (locationData.contains(doubleSpace)) {
+                        locationData = locationData.replace(doubleSpace, singleSpace)
+                    }
+                    FileSystemHelper.saveDataFile(
+                        locationData,
+                        UploadType.Map,
+                        combinedStatusAndConfigTime!!
+                    )
+
+                    // Clear cached data and try uploading files
+                    cachedStatus = ""
+                    cachedConfig = ""
+                    infoType = null
+                    combinedStatusAndConfigTime = null
+                    StatusUploadService.start(App.instance)
+                }
+            }
+
+            null -> {}
+        }
     }
 
     private fun sanitize(s: String): String {
@@ -704,14 +806,19 @@ object DeviceDriver : Runnable {
     }
 
     fun getStatus() {
+        infoType = InfoType.Status
+        sendGetStatusCommand()
+    }
+
+    private fun sendGetStatusCommand() {
         write("getStatus")
     }
 
-    private fun getConfig() {
+    private fun sendGetConfigCommand() {
         write("getConfig")
     }
 
-    fun getDeviceInfo(saveNextInfoResponse: Boolean = false) {
+    fun getStatusAndConfig(saveNextInfoResponse: Boolean = false) {
         if (saveNextInfoResponse) {
             configSaved = false
             statusSaved = false
@@ -719,8 +826,9 @@ object DeviceDriver : Runnable {
             configSaved = true
             statusSaved = true
         }
-        getStatus()
-        getConfig()
+        infoType = InfoType.StatusWithConfig
+        sendGetStatusCommand()
+        sendGetConfigCommand()
     }
 
     fun setRecordState(
@@ -742,7 +850,7 @@ object DeviceDriver : Runnable {
         if (mode.isNotEmpty()) {
             write("setRecordMode#mode=$mode")
         }
-        getDeviceInfo(true)
+        getStatusAndConfig(true)
     }
 
     private fun parseConfig(jsonObject: JSONObject) {
