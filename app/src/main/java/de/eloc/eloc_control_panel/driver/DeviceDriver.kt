@@ -879,6 +879,7 @@ object DeviceDriver : Runnable {
         val generalNodeNamePath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_GENERAL_NODE_NAME"
         general.nodeName = JsonHelper.getJSONStringAttribute(generalNodeNamePath, jsonObject)
+        BluetoothHelper.changeName(device, general.nodeName)
 
         val generalLocationAccuracyPath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_GENERAL_LOCATION_ACCURACY"

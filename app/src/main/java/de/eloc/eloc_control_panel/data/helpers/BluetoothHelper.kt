@@ -180,4 +180,16 @@ object BluetoothHelper {
         }
         executorHandle = null
     }
+
+      fun changeName(device: BluetoothDevice?, name: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(
+                    App.instance,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                device?.setAlias(name)
+            }
+        }
+    }
 }
