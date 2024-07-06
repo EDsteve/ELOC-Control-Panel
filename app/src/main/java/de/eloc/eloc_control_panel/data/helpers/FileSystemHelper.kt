@@ -141,7 +141,7 @@ object FileSystemHelper {
         for (key in root.keys()) {
             val value = root.get(key)
             val isPrimitiveType =
-                (value is Int) || (value is String) || (value is Boolean) || (value is Double)
+                (value is Int) || (value is Long) || (value is String) || (value is Boolean) || (value is Double)
             if (isPrimitiveType) {
                 map[key] = value
             } else if (value is JSONObject) {

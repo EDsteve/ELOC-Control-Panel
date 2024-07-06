@@ -202,7 +202,6 @@ class StatusUploadService : Service() {
         return START_REDELIVER_INTENT
     }
 
-
     private fun createNotification(
         title: String,
         message: String,

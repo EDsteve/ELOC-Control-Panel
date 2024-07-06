@@ -137,7 +137,7 @@ object BluetoothHelper {
             }
             scannerElapsed = 0
             executorHandle =
-                Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+                Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
                     {
                         if (scannerElapsed >= SCAN_DURATION) {
                             stopScan(callback)

@@ -24,6 +24,9 @@ class General {
     var lastLocation = ""
         internal set
 
+    var locationAccuracy = 0
+        internal set
+
     var version = ""
         internal set
 

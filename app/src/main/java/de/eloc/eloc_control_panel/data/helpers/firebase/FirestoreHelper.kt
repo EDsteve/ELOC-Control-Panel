@@ -13,6 +13,7 @@ import de.eloc.eloc_control_panel.data.UploadResult
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
+import de.eloc.eloc_control_panel.driver.KEY_TIMESTAMP
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.interfaces.ElocDeviceInfoCallback
 import de.eloc.eloc_control_panel.interfaces.ProfileCheckCallback
@@ -180,13 +181,34 @@ class FirestoreHelper {
         val pendingUploads = FileSystemHelper.pendingUploads
         val pattern = Regex("_[er]_")
         val totalCount = pendingUploads.size
-        var completed = false
+        var completed: Boolean
         var wait = true
         if (totalCount == 0) {
             StatusUploadService.uploadResult = UploadResult.NoData
         }
         var failCount = 0
         var successCount = 0
+
+        val completeListener = fun(successful: Boolean, fileName: String) {
+            if (successful) {
+                successCount++
+                FileSystemHelper.deleteUploadedFile(fileName)
+            } else {
+                failCount++
+            }
+
+            completed = ((successCount + failCount) == pendingUploads.size)
+            if (completed) {
+                if (successCount == totalCount) {
+                    StatusUploadService.uploadResult = UploadResult.Uploaded
+                } else {
+                    StatusUploadService.uploadResult = UploadResult.Failed
+                }
+                callback?.handler()
+                wait = false
+            }
+        }
+
         for (fileName in pendingUploads) {
             val isConfig = FileSystemHelper.isConfig(fileName)
             val isStatus = FileSystemHelper.isStatus(fileName)
@@ -219,7 +241,15 @@ class FirestoreHelper {
                 continue
             }
 
-            if (!isMapData) {
+            if (isMapData) {
+                val serverDocumentTimestamp = getMapDataTimestamp(document)
+                val str = data[KEY_TIMESTAMP].toString()
+                val localDocumentTimestamp = str.toLongOrNull() ?: -1L
+                if (localDocumentTimestamp <= serverDocumentTimestamp) {
+                    completeListener(true, fileName)
+                    continue
+                }
+            } else {
                 val metadata = fileName
                     .replace(prefix, "")
                     .replace(FileSystemHelper.JSON_EXT, "")
@@ -234,26 +264,9 @@ class FirestoreHelper {
                 }
             }
 
-            document.set(data)
-                .addOnCompleteListener {
-                    if (it.isSuccessful) {
-                        successCount++
-                        FileSystemHelper.deleteUploadedFile(fileName)
-                    } else {
-                        failCount++
-                    }
-
-                      completed = ((successCount + failCount) == pendingUploads.size)
-                    if (completed) {
-                        if (successCount == totalCount) {
-                            StatusUploadService.uploadResult = UploadResult.Uploaded
-                        } else {
-                            StatusUploadService.uploadResult = UploadResult.Failed
-                        }
-                        callback?.handler()
-                        wait = false
-                    }
-                }
+            document
+                .set(data)
+                .addOnCompleteListener { completeListener(it.isSuccessful, fileName) }
         }
 
         // Safe to wait, since function runs on background thread
@@ -263,6 +276,29 @@ class FirestoreHelper {
             } catch (_: Exception) {
             }
         }
+    }
+
+    private fun getMapDataTimestamp(doc: DocumentReference): Long {
+        var timestamp = -1L
+        var wait = true
+        doc.get().addOnCompleteListener {
+            if (it.isSuccessful) {
+                val snapshot = it.result
+                if (snapshot != null) {
+                    val str = snapshot.get(KEY_TIMESTAMP).toString()
+                    timestamp = str.toLongOrNull() ?: -1L
+                }
+            }
+            wait = false
+        }
+        while (wait) {
+            try {
+                Thread.sleep(500)
+            } catch (_: Exception) {
+            }
+        }
+
+        return timestamp
     }
 
     fun getElocDevicesAsync(callback: ElocDeviceInfoCallback?) {

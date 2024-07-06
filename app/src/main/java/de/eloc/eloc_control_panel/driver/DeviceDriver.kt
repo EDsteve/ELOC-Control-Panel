@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import de.eloc.eloc_control_panel.App
+import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.data.Channel
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
@@ -21,6 +22,7 @@ import de.eloc.eloc_control_panel.data.UploadType
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.JsonHelper
+import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
@@ -83,6 +85,7 @@ internal const val KEY_CPU_ENABLE_LIGHT_SLEEP = "cpuEnableLightSleep"
 internal const val KEY_GENERAL_NODE_NAME = "nodeName"
 internal const val KEY_GENERAL_FILE_HEADER = "fileHeader"
 internal const val KEY_GENERAL_SECONDS_PER_FILE = "secondsPerFile"
+internal const val KEY_GENERAL_LOCATION_ACCURACY = "locationAccuracy"
 
 private const val KEY_CMD = "cmd"
 private const val KEY_ECODE = "ecode"
@@ -195,6 +198,10 @@ object DeviceDriver : Runnable {
 
     val name
         get() : String {
+            if (general.nodeName.isNotEmpty()) {
+                return general.nodeName
+            }
+
             var buffer = try {
                 device?.name?.trim() ?: ""
             } catch (_: SecurityException) {
@@ -280,13 +287,13 @@ object DeviceDriver : Runnable {
 
     fun syncTime(timestampInSeconds: Long, timezone: Int) {
         val command =
-            "setTime#time={\"seconds\":$timestampInSeconds, \"ms\":0 ,\"timezone\" : $timezone}"
+            """setTime#time={"seconds":$timestampInSeconds, "ms":0 ,"timezone" : $timezone}"""
         write(command)
     }
 
     private fun setLocation(code: String, accuracy: Int) {
         val command =
-            "setConfig#cfg={\"device\":{\"locationCode\":\"$code\",\"locationAccuracy\":$accuracy}}"
+            """setConfig#cfg={"device":{"locationCode":"$code","locationAccuracy":$accuracy}}"""
         write(command)
     }
 
@@ -296,24 +303,24 @@ object DeviceDriver : Runnable {
         }
 
         val command = when (property) {
-            KEY_GENERAL_NODE_NAME -> "setConfig#cfg={\"device\":{\"nodeName\":\"$propertyValue\"}}"
-            KEY_GENERAL_FILE_HEADER -> "setConfig#cfg={\"device\":{\"fileHeader\":\"$propertyValue\"}}"
+            KEY_GENERAL_NODE_NAME -> """setConfig#cfg={"device":{"nodeName":"$propertyValue"}}"""
+            KEY_GENERAL_FILE_HEADER -> """setConfig#cfg={"device":{"fileHeader":"$propertyValue"}}"""
             KEY_GENERAL_SECONDS_PER_FILE -> {
                 val secs = propertyValue.toDoubleOrNull()?.toInt()
                 if (secs == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"secondsPerFile\":$secs}}"
+                    """setConfig#cfg={"config":{"secondsPerFile":$secs}}"""
                 }
             }
 
-            KEY_MICROPHONE_TYPE -> "setConfig#cfg={\"mic\":{\"MicType\":\"$propertyValue\"}}"
+            KEY_MICROPHONE_TYPE -> """setConfig#cfg={"mic":{"MicType":"$propertyValue"}}"""
             KEY_MICROPHONE_GAIN -> {
                 val newGain = GainType.fromValue(propertyValue)
                 if (newGain == GainType.Unknown) {
                     ""
                 } else {
-                    "setConfig#cfg={\"mic\":{\"MicBitShift\":${newGain.value}}}"
+                    """setConfig#cfg={"mic":{"MicBitShift":${newGain.value}}}"""
                 }
             }
 
@@ -322,7 +329,7 @@ object DeviceDriver : Runnable {
                 if (newChannel == Channel.Unknown) {
                     ""
                 } else {
-                    "setConfig#cfg={\"mic\":{\"MicChannel\":\"${newChannel.value}\"}}"
+                    """setConfig#cfg={"mic":{"MicChannel":"${newChannel.value}"}}"""
                 }
             }
 
@@ -332,7 +339,7 @@ object DeviceDriver : Runnable {
                 if (newRate == SampleRate.Unknown) {
                     ""
                 } else {
-                    "setConfig#cfg={\"mic\":{\"MicSampleRate\":${newRate.code}}}"
+                    """setConfig#cfg={"mic":{"MicSampleRate":${newRate.code}}}"""
                 }
             }
 
@@ -341,7 +348,7 @@ object DeviceDriver : Runnable {
                 if (enabled == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"mic\":{\"MicUseAPLL\":$enabled}}"
+                    """setConfig#cfg={"mic":{"MicUseAPLL":$enabled}}"""
                 }
             }
 
@@ -350,7 +357,7 @@ object DeviceDriver : Runnable {
                 if (enabled == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"mic\":{\"MicUseTimingFix\":$enabled}}"
+                    """setConfig#cfg={"mic":{"MicUseTimingFix":$enabled}}"""
                 }
             }
 
@@ -359,7 +366,7 @@ object DeviceDriver : Runnable {
                 if (enabled == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"intruderCfg\":{\"enable\":$enabled}}}"
+                    """setConfig#cfg={"config":{"intruderCfg":{"enable":$enabled}}}"""
                 }
             }
 
@@ -368,7 +375,7 @@ object DeviceDriver : Runnable {
                 if (threshold == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"intruderCfg\":{\"threshold\":$threshold}}}"
+                    """setConfig#cfg={"config":{"intruderCfg":{"threshold":$threshold}}}"""
                 }
             }
 
@@ -377,7 +384,7 @@ object DeviceDriver : Runnable {
                 if (windowsMs == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"intruderCfg\":{\"windowsMs\":$windowsMs}}}"
+                    """setConfig#cfg={"config":{"intruderCfg":{"windowsMs":$windowsMs}}}"""
                 }
             }
 
@@ -386,18 +393,18 @@ object DeviceDriver : Runnable {
                 if (enabled == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"logConfig\":{\"logToSdCard\":$enabled}}}"
+                    """setConfig#cfg={"config":{"logConfig":{"logToSdCard":$enabled}}}"""
                 }
             }
 
-            KEY_LOGS_FILENAME -> "setConfig#cfg={\"config\":{\"logConfig\":{\"filename\":\"$propertyValue\"}}}"
+            KEY_LOGS_FILENAME -> """setConfig#cfg={"config":{"logConfig":{"filename":"$propertyValue"}}}"""
 
             KEY_LOGS_MAX_FILES -> {
                 val maxFiles = propertyValue.toDoubleOrNull()?.toInt()
                 if (maxFiles == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"logConfig\":{\"maxFiles\":$maxFiles}}}"
+                    """setConfig#cfg={"config":{"logConfig":{"maxFiles":$maxFiles}}}"""
                 }
             }
 
@@ -406,7 +413,7 @@ object DeviceDriver : Runnable {
                 if (maxFileSize == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"logConfig\":{\"maxFileSize\":$maxFileSize}}}"
+                    """setConfig#cfg={"config":{"logConfig":{"maxFileSize":$maxFileSize}}}"""
                 }
             }
 
@@ -415,7 +422,7 @@ object DeviceDriver : Runnable {
                 if (timeout == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"bluetoothOffTimeoutSeconds\":$timeout}}"
+                    """setConfig#cfg={"config":{"bluetoothOffTimeoutSeconds":$timeout}}"""
                 }
             }
 
@@ -424,7 +431,7 @@ object DeviceDriver : Runnable {
                 if (enable == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"bluetoothEnableAtStart\":$enable}}"
+                    """setConfig#cfg={"config":{"bluetoothEnableAtStart":$enable}}"""
                 }
             }
 
@@ -433,7 +440,7 @@ object DeviceDriver : Runnable {
                 if (enable == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"bluetoothEnableOnTapping\":$enable}}"
+                    """setConfig#cfg={"config":{"bluetoothEnableOnTapping":$enable}}"""
                 }
             }
 
@@ -442,7 +449,7 @@ object DeviceDriver : Runnable {
                 if (enable == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"bluetoothEnableDuringRecord\":$enable}}"
+                    """setConfig#cfg={"config":{"bluetoothEnableDuringRecord":$enable}}"""
                 }
             }
 
@@ -451,7 +458,7 @@ object DeviceDriver : Runnable {
                 if (min == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"cpuMinFrequencyMHZ\":$min}}"
+                    """setConfig#cfg={"config":{"cpuMinFrequencyMHZ":$min}}"""
                 }
             }
 
@@ -460,7 +467,7 @@ object DeviceDriver : Runnable {
                 if (max == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"cpuMaxFrequencyMHZ\":$max}}"
+                    """setConfig#cfg={"config":{"cpuMaxFrequencyMHZ":$max}}"""
                 }
             }
 
@@ -469,7 +476,7 @@ object DeviceDriver : Runnable {
                 if (enable == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"cpuEnableLightSleep\":$enable}}"
+                    """setConfig#cfg={"config":{"cpuEnableLightSleep":$enable}}"""
                 }
             }
 
@@ -479,7 +486,7 @@ object DeviceDriver : Runnable {
                     ""
                 } else {
                     val intervalMillis = (secs * 1000).toInt()
-                    "setConfig#cfg={\"config\":{\"battery\":{\"avgIntervalMs\":$intervalMillis}}}"
+                    """setConfig#cfg={"config":{"battery":{"avgIntervalMs":$intervalMillis}}}"""
                 }
             }
 
@@ -488,7 +495,7 @@ object DeviceDriver : Runnable {
                 if (samples == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"battery\":{\"avgSamples\":$samples}}}"
+                    """setConfig#cfg={"config":{"battery":{"avgSamples":$samples}}}"""
                 }
             }
 
@@ -498,7 +505,7 @@ object DeviceDriver : Runnable {
                     ""
                 } else {
                     val intervalMillis = (secs * 1000).toInt()
-                    "setConfig#cfg={\"config\":{\"battery\":{\"updateIntervalMs\":$intervalMillis}}}"
+                    """setConfig#cfg={"config":{"battery":{"updateIntervalMs":$intervalMillis}}}"""
                 }
             }
 
@@ -507,7 +514,7 @@ object DeviceDriver : Runnable {
                 if (noBatteryMode == null) {
                     ""
                 } else {
-                    "setConfig#cfg={\"config\":{\"battery\":{\"noBatteryMode\":$noBatteryMode}}}"
+                    """setConfig#cfg={"config":{"battery":{"noBatteryMode":$noBatteryMode}}}"""
                 }
             }
 
@@ -557,10 +564,9 @@ object DeviceDriver : Runnable {
                 BluetoothHelper.stopScan {
                     doConnect()
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
+            } catch (_: Exception) {
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             hadError = true
         } finally {
             connectionStatus =
@@ -579,7 +585,7 @@ object DeviceDriver : Runnable {
         try {
             Executors.newSingleThreadExecutor().execute(connectionMonitor)
             bluetoothSocket?.connect()
-        } catch (e: SecurityException) {
+        } catch (_: SecurityException) {
             disconnect()
             return
         }
@@ -707,14 +713,17 @@ object DeviceDriver : Runnable {
 
                 if (statusSaved && configSaved) {
                     // Save map data before clearing cached data.
-                    val batteryVolts = 1.23
-                    val gpsAccuracy = 3.4
-                    val latitude = 1000
-                    val longitude = -1000
-                    val rangerName = "fredo"
-                    val recTime = 0.5
-                    val timestamp = System.currentTimeMillis()
-                    var locationData = """{
+                    // Only save map data if there is a valid location
+                    val location = LocationHelper.decodePlusCode(general.lastLocation)
+                    if (location != null) {
+                        val batteryVolts = battery.voltage
+                        val gpsAccuracy = general.locationAccuracy
+                        val latitude = location.latitude
+                        val longitude = location.longitude
+                        val rangerName = AppState.rangerName
+                        val recTime = general.recHoursSinceBoot
+                        val timestamp = System.currentTimeMillis()
+                        var locationData = """{
                             "$KEY_BATTERY_VOLTS": $batteryVolts,
                             "$KEY_GPS_ACCURACY_METERS": $gpsAccuracy,
                             "$KEY_LATITUDE": $latitude,
@@ -723,16 +732,17 @@ object DeviceDriver : Runnable {
                             "$KEY_REC_TIME_HOURS": $recTime,
                             "$KEY_TIMESTAMP": $timestamp
                             }"""
-                    val doubleSpace = "  "
-                    val singleSpace = " "
-                    while (locationData.contains(doubleSpace)) {
-                        locationData = locationData.replace(doubleSpace, singleSpace)
+                        val doubleSpace = "  "
+                        val singleSpace = " "
+                        while (locationData.contains(doubleSpace)) {
+                            locationData = locationData.replace(doubleSpace, singleSpace)
+                        }
+                        FileSystemHelper.saveDataFile(
+                            locationData,
+                            UploadType.Map,
+                            combinedStatusAndConfigTime!!
+                        )
                     }
-                    FileSystemHelper.saveDataFile(
-                        locationData,
-                        UploadType.Map,
-                        combinedStatusAndConfigTime!!
-                    )
 
                     // Clear cached data and try uploading files
                     cachedStatus = ""
@@ -827,8 +837,10 @@ object DeviceDriver : Runnable {
             statusSaved = true
         }
         infoType = InfoType.StatusWithConfig
-        sendGetStatusCommand()
+
+        // Get config first - so that eloc name will be loaded as soon as possible
         sendGetConfigCommand()
+        sendGetStatusCommand()
     }
 
     fun setRecordState(
@@ -867,6 +879,16 @@ object DeviceDriver : Runnable {
         val generalNodeNamePath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_GENERAL_NODE_NAME"
         general.nodeName = JsonHelper.getJSONStringAttribute(generalNodeNamePath, jsonObject)
+
+        val generalLocationAccuracyPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_GENERAL_LOCATION_ACCURACY"
+        general.locationAccuracy =
+            JsonHelper.getJSONNumberAttribute(
+                generalLocationAccuracyPath,
+                jsonObject,
+                defaultValue = 100.0,
+            )
+                .toInt()
 
         val sampleRatePath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_MICROPHONE$PATH_SEPARATOR$KEY_MICROPHONE_SAMPLE_RATE"
