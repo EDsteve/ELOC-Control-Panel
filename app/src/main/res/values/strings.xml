@@ -40,7 +40,7 @@
     <string name="device_settings_not_available">Device settings are not available while it is recording or detecting.</string>
     <string name="disconnected_swipe_to_reconnect">Disconnected\n\nSwipe down to reconnect</string>
     <string name="editor">Editor</string>
-    <string name="eloc_status_uploaded">ELOC status was successfully uploaded</string>
+    <string name="eloc_info_uploaded">ELOC information was successfully uploaded</string>
     <string name="eloc_user">USER: %s</string>
     <string name="enable_at_start">Enable At Start</string>
     <string name="enable_during_recording">Enable During Recording</string>

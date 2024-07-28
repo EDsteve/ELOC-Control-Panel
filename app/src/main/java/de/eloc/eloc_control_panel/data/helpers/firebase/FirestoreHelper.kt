@@ -17,6 +17,7 @@ import de.eloc.eloc_control_panel.driver.KEY_TIMESTAMP
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.interfaces.ElocDeviceInfoCallback
 import de.eloc.eloc_control_panel.interfaces.ProfileCheckCallback
+import de.eloc.eloc_control_panel.interfaces.UploadCallback
 import de.eloc.eloc_control_panel.interfaces.VoidCallback
 import de.eloc.eloc_control_panel.services.StatusUploadService
 
@@ -177,18 +178,19 @@ class FirestoreHelper {
             .addOnCompleteListener { callback?.handler(it.isSuccessful) }
     }
 
-    fun uploadDataFiles(callback: VoidCallback? = null) {
+    fun uploadDataFiles(): UploadResult {
         val pendingUploads = FileSystemHelper.pendingUploads
         val pattern = Regex("_[er]_")
         val totalCount = pendingUploads.size
         var completed: Boolean
         var wait = true
         if (totalCount == 0) {
-            StatusUploadService.uploadResult = UploadResult.NoData
+            return UploadResult.NoData
         }
+
         var failCount = 0
         var successCount = 0
-
+        var result = UploadResult.NoData
         val completeListener = fun(successful: Boolean, fileName: String) {
             if (successful) {
                 successCount++
@@ -199,12 +201,11 @@ class FirestoreHelper {
 
             completed = ((successCount + failCount) == pendingUploads.size)
             if (completed) {
-                if (successCount == totalCount) {
-                    StatusUploadService.uploadResult = UploadResult.Uploaded
+                result = if (successCount == totalCount) {
+                    UploadResult.Uploaded
                 } else {
-                    StatusUploadService.uploadResult = UploadResult.Failed
+                    UploadResult.Failed
                 }
-                callback?.handler()
                 wait = false
             }
         }
@@ -276,6 +277,7 @@ class FirestoreHelper {
             } catch (_: Exception) {
             }
         }
+        return result
     }
 
     private fun getMapDataTimestamp(doc: DocumentReference): Long {

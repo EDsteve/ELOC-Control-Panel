@@ -21,7 +21,6 @@ import de.eloc.eloc_control_panel.data.adapters.ElocInfoAdapter
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
-import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.LayoutNavHeaderBinding
@@ -378,11 +377,11 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun prepareStatusUpload(inBackground: Boolean = false) {
-        if (StatusUploadService.isRunning) {
+        if (StatusUploadService.isRunningTask) {
             binding.coordinator.showSnack(getString(R.string.upload_in_progress))
             return
         } else if (inBackground) {
-            StatusUploadService.start(this, true)
+            StatusUploadService.start(this)
         }
     }
 

@@ -29,25 +29,17 @@ private const val EXTRA_STOP = "stop_service"
 class StatusUploadService : Service() {
 
     companion object {
-        private var abort = false
+        private var stopRequested = false
 
         private var foregroundNotificationId: Int = -1
-        var isRunning = false
+        var isRunningTask = false
             private set
 
-        private var skipWait = false
-
-        var uploadResult = UploadResult.Failed
         private var lastUsedNotificationId = 0
         private var statusUpdateIntervalMillis =
             PreferencesHelper.instance.getStatusUploadInterval().millis
 
-        fun updateStatusUpdateInterval() {
-            statusUpdateIntervalMillis = PreferencesHelper.instance.getStatusUploadInterval().millis
-        }
-
-        fun start(context: Context, skipWait: Boolean = false) {
-            StatusUploadService.skipWait = skipWait
+        fun start(context: Context) {
             val serviceIntent = Intent(context, StatusUploadService::class.java)
             ContextCompat.startForegroundService(context, serviceIntent)
         }
@@ -70,11 +62,10 @@ class StatusUploadService : Service() {
         .setShowBadge(false)
         .build()
 
-    private val task = Runnable {
-        isRunning = true
+    private val uploadTask = Runnable {
+        isRunningTask = true
         elapsedMillis = 0
-        uploadResult = UploadResult.Failed
-        abort = false
+        var taskResult = UploadResult.Failed
         val appProtocolVersion = HttpHelper.instance.getAppProtocolVersion()
         if (App.APP_PROTOCOL_VERSION < appProtocolVersion) {
 
@@ -89,84 +80,76 @@ class StatusUploadService : Service() {
 
             showNotification(id, notification)
             notificationManager.cancel(foregroundNotificationId)
-            stopSelf()
-            isRunning = false
+            abortService()
             return@Runnable
         }
 
-        val uploadCompleted = fun() =
-            ((uploadResult == UploadResult.NoData) || (uploadResult == UploadResult.Uploaded))
-
         val sleepInterval = 1000L
-        doUpload()
-        while (!uploadCompleted()) {
-
-            if (abort) {
+        var firstIteration = true
+        while (true) {
+            if (stopRequested || (taskResult == UploadResult.NoData) || (taskResult == UploadResult.Uploaded)) {
                 break
+            }
+
+            // Interval can be changed at any time in app settings,
+            // so get the latest value for every loop iteration
+            statusUpdateIntervalMillis = PreferencesHelper.instance.getStatusUploadInterval().millis
+
+            // Try an upload if interval has elapsed
+            elapsedMillis += sleepInterval
+            if (firstIteration || (elapsedMillis >= statusUpdateIntervalMillis)) {
+                firstIteration = false
+                taskResult = doUpload()
+            }
+
+            if (serviceNotificationBuilder != null) {
+                val remainingMillis = statusUpdateIntervalMillis - elapsedMillis
+                val remaining =
+                    TimeHelper.formatMillis(applicationContext, remainingMillis, true)
+                val message = getString(R.string.retrying_in_time, remaining)
+                serviceNotificationBuilder!!.setContentText(message)
+                showNotification(foregroundNotificationId, serviceNotificationBuilder!!.build())
             }
 
             try {
                 Thread.sleep(sleepInterval)
             } catch (_: Exception) {
             }
-
-            if (abort) {
-                break
-            }
-
-            // Try an upload if interval has elapsed
-            updateStatusUpdateInterval()
-            elapsedMillis += sleepInterval
-            val updateIntervalMillis = statusUpdateIntervalMillis
-            if (elapsedMillis >= updateIntervalMillis) {
-                doUpload()
-            }
-
-            if (uploadCompleted()) {
-                break
-            } else {
-                if (serviceNotificationBuilder != null) {
-                    val remainingMillis = updateIntervalMillis - elapsedMillis
-                    val remaining =
-                        TimeHelper.formatMillis(applicationContext, remainingMillis, true)
-                    val message = getString(R.string.retrying_in_time, remaining)
-                    serviceNotificationBuilder!!.setContentText(message)
-                    showNotification(foregroundNotificationId, serviceNotificationBuilder!!.build())
-                }
-            }
         }
-        if (uploadResult == UploadResult.Uploaded) {
+
+        if (taskResult == UploadResult.Uploaded) {
             val (id, notification) = createNotification(
                 getString(R.string.status_upload),
-                getString(R.string.eloc_status_uploaded)
+                getString(R.string.eloc_info_uploaded)
             )
             showNotification(id, notification)
         }
-        stopService()
+        abortService()
     }
 
-    private fun stopService() {
+    private fun abortService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)
         }
         elapsedMillis = 0
-        uploadResult = UploadResult.Failed
-        abort = false
-        isRunning = false
+        stopRequested = false
+        isRunningTask = false
         stopSelf()
     }
 
-    private fun doUpload() {
+    private fun doUpload(): UploadResult {
+        var result = UploadResult.NoData
         try {
             if (serviceNotificationBuilder != null) {
                 val message = getString(R.string.uploading_status)
                 serviceNotificationBuilder!!.setContentText(message)
                 showNotification(foregroundNotificationId, serviceNotificationBuilder!!.build())
             }
-            FirestoreHelper.instance.uploadDataFiles()
+            result = FirestoreHelper.instance.uploadDataFiles()
         } catch (_: Exception) {
         }
         elapsedMillis = 0L
+        return result
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -174,30 +157,22 @@ class StatusUploadService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        try {
-            val extras = intent?.extras
-            abort = extras?.getBoolean(EXTRA_STOP, false) ?: false
-            val title = getString(R.string.status_upload)
-            val messageResId = if (abort)
-                R.string.stopping_upload_service
-            else
-                R.string.checking_eloc_status_to_upload
-            val message = getString(messageResId)
-            val (id, notification) = createNotification(title, message, true)
-            if (foregroundNotificationId <= 0) {
-                foregroundNotificationId = id
-            }
-            // todo: there seems to be a condition that causes the code to
-            // fail calling startForeground() causing the app to crash
-            // when attempting to upload files. Remove the try-catch when root cause of
-            // issue has been isolated
-            startForeground(foregroundNotificationId, notification)
-            val doTask = skipWait || (!isRunning)
-            if (doTask) {
-                Executors.newSingleThreadExecutor().execute(task)
-            }
-        } catch (_: Exception) {
-            // todo: See notes inside try block.
+        val extras = intent?.extras
+        stopRequested = extras?.getBoolean(EXTRA_STOP, false) ?: false
+        val title = getString(R.string.status_upload)
+        val messageResId = if (stopRequested)
+            R.string.stopping_upload_service
+        else
+            R.string.checking_eloc_status_to_upload
+        val message = getString(messageResId)
+        val (id, notification) = createNotification(title, message, true)
+        if (foregroundNotificationId <= 0) {
+            foregroundNotificationId = id
+        }
+
+        startForeground(foregroundNotificationId, notification)
+        if (!isRunningTask) {
+            Executors.newSingleThreadExecutor().execute(uploadTask)
         }
         return START_REDELIVER_INTENT
     }
