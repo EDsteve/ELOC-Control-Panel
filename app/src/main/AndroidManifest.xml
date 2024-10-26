@@ -10,12 +10,18 @@
         android:required="true" />
 
     <uses-permission android:name="android.permission.CAMERA" /> <!-- Old BT permissions -->
+
+    <!--
+    Official Android reference recomments setting  the maxSdkVersion for BLUETOOTH to 30.
+    However, some ROMs (like MIUI still ask for the old permission when API level is higher
+    that 30. For now, keep the setting at 40. In future, set higher values if needed.
+     -->
     <uses-permission
         android:name="android.permission.BLUETOOTH"
-        android:maxSdkVersion="30" />
+        android:maxSdkVersion="40" />
     <uses-permission
         android:name="android.permission.BLUETOOTH_ADMIN"
-        android:maxSdkVersion="30" /> <!-- New BT permissions -->
+        android:maxSdkVersion="40" /> <!-- New BT permissions -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />

@@ -61,6 +61,7 @@ object BluetoothHelper {
         get() {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
                 arrayOf(
+                    Manifest.permission.BLUETOOTH,
                     Manifest.permission.BLUETOOTH_SCAN,
                     Manifest.permission.BLUETOOTH_CONNECT
                 )
