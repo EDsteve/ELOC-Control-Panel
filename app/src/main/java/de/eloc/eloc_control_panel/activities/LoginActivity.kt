@@ -3,6 +3,7 @@ package de.eloc.eloc_control_panel.activities
 import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.lifecycleScope
+import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityLoginBinding
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
@@ -14,7 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class LoginActivity : NetworkMonitoringActivity() {
+class LoginActivity : ThemableActivity() {
     private lateinit var binding: ActivityLoginBinding
     private val authHelper = AuthHelper.instance
 
@@ -25,14 +26,16 @@ class LoginActivity : NetworkMonitoringActivity() {
 
         binding.signInLayout.visibility = View.GONE
         binding.checkInternetAccessProgressIndicator.visibility = View.VISIBLE
-        networkChangedHandler = VoidCallback {
-            binding.signInLayout.visibility = View.GONE
-            binding.checkInternetAccessProgressIndicator.visibility = View.GONE
-            binding.offlineLayout.visibility = View.GONE
-            when (hasInternetAccess) {
-                true -> binding.signInLayout.visibility = View.VISIBLE
-                false -> binding.offlineLayout.visibility = View.VISIBLE
-                null -> binding.checkInternetAccessProgressIndicator.visibility = View.VISIBLE
+        App.instance.addNetworkChangedHandler(this.localClassName) {
+            runOnUiThread {
+                binding.signInLayout.visibility = View.GONE
+                binding.checkInternetAccessProgressIndicator.visibility = View.GONE
+                binding.offlineLayout.visibility = View.GONE
+                when (App.instance.isOnline()) {
+                    true -> binding.signInLayout.visibility = View.VISIBLE
+                    false -> binding.offlineLayout.visibility = View.VISIBLE
+                    null -> binding.checkInternetAccessProgressIndicator.visibility = View.VISIBLE
+                }
             }
         }
 
@@ -45,8 +48,8 @@ class LoginActivity : NetworkMonitoringActivity() {
 
     override fun onResume() {
         super.onResume()
-        onNetworkChanged()
-        if (hasInternetAccess != null) {
+        App.instance.onNetworkChanged()
+        if (App.instance.isOnline() != null) {
             val autoGoogleSignIn = PreferencesHelper.instance.getAutoGoogleSignIn()
             val googleSignInCanceled = authHelper.googleSignInCanceled
             if (autoGoogleSignIn && (!googleSignInCanceled)) {

@@ -18,6 +18,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
+// TODO: wait for internet status to be non-null
+
 class PermissionsSetupActivity : ThemableActivity() {
     private var paused = false
         set(value) {

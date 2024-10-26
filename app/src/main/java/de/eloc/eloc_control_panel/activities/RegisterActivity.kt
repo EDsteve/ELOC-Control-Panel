@@ -2,13 +2,14 @@ package de.eloc.eloc_control_panel.activities
 
 import android.os.Bundle
 import android.view.View
+import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityRegisterBinding
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
 import de.eloc.eloc_control_panel.interfaces.VoidCallback
 
-class RegisterActivity : NetworkMonitoringActivity() {
+class RegisterActivity : ThemableActivity() {
     private lateinit var binding: ActivityRegisterBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,14 +17,16 @@ class RegisterActivity : NetworkMonitoringActivity() {
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        networkChangedHandler = VoidCallback {
+        App.instance.addNetworkChangedHandler(localClassName) {
+            runOnUiThread {
             binding.registrationLayout.visibility = View.GONE
             binding.checkInternetAccessProgressIndicator.visibility = View.GONE
             binding.offlineLayout.visibility = View.GONE
-            when (hasInternetAccess) {
+            when (App.instance.isOnline()) {
                 true -> binding.registrationLayout.visibility = View.VISIBLE
                 false -> binding.offlineLayout.visibility = View.VISIBLE
                 null -> binding.checkInternetAccessProgressIndicator.visibility = View.VISIBLE
+            }
             }
         }
 
@@ -34,7 +37,7 @@ class RegisterActivity : NetworkMonitoringActivity() {
 
     override fun onResume() {
         super.onResume()
-        onNetworkChanged()
+        App.instance.onNetworkChanged()
     }
 
     private fun setWatchers() {
