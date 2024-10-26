@@ -14,8 +14,8 @@ android {
         minSdk 21
         //noinspection EditedTargetSdkVersion
         targetSdk 34
-        versionCode 48
-        versionName '5.22'
+        versionCode 50
+        versionName '5.24'
         versionNameSuffix 'AppBeta'
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
