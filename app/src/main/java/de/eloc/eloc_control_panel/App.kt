@@ -14,24 +14,22 @@ class App : Application() {
     private lateinit var appVersionName: String
     private lateinit var appPackageName: String
     private var hasInternetAccess: Boolean? = true
-    private var networkChangedHandlers : HashMap<String, VoidCallback> = hashMapOf()
+    private var networkChangedHandlers: HashMap<String, VoidCallback> = hashMapOf()
     private var connectivityManager: ConnectivityManager? = null
-    private var currentNetworkId = ""
+    private var activeNetworkIds: HashSet<String> = hashSetOf()
 
     private val networkCallback = object : NetworkCallback() {
         override fun onAvailable(network: Network) {
             super.onAvailable(network)
             hasInternetAccess = true
-            currentNetworkId = network.toString()
+            activeNetworkIds.add(network.toString())
             onNetworkChanged()
         }
 
         override fun onLost(network: Network) {
             super.onLost(network)
-            val netid = network.toString()
-            if (currentNetworkId == netid) {
-                hasInternetAccess = false
-            }
+            activeNetworkIds.remove(network.toString())
+            hasInternetAccess = activeNetworkIds.isNotEmpty()
             onNetworkChanged()
         }
     }
@@ -56,10 +54,10 @@ class App : Application() {
         return hasInternetAccess
     }
 
-     fun onNetworkChanged() {
-      for (entry in networkChangedHandlers) {
-          entry.value.handler()
-      }
+    fun onNetworkChanged() {
+        for (entry in networkChangedHandlers) {
+            entry.value.handler()
+        }
     }
 
     fun addNetworkChangedHandler(id: String, handler: VoidCallback) {
@@ -100,7 +98,7 @@ class App : Application() {
 
     companion object {
         private var cInstance: App? = null
-          const val APP_PROTOCOL_VERSION = 1.0
+        const val APP_PROTOCOL_VERSION = 1.0
 
         val instance: App
             get() {
