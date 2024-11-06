@@ -4,16 +4,23 @@ import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import android.companion.AssociationInfo
+import android.companion.AssociationRequest
+import android.companion.BluetoothDeviceFilter
+import android.companion.CompanionDeviceManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.App
+import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.ThemableActivity
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.interfaces.IntCallback
@@ -31,6 +38,21 @@ object BluetoothHelper {
     private var executorHandle: ScheduledFuture<*>? = null
     private val bluetoothManager: BluetoothManager? =
         App.instance.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?
+
+    private val cdmAssociationCallback = @RequiresApi(Build.VERSION_CODES.O)
+    object : CompanionDeviceManager.Callback() {
+        override fun onAssociationCreated(associationInfo: AssociationInfo) {
+            super.onAssociationCreated(associationInfo)
+        }
+
+        override fun onAssociationPending(intentSender: IntentSender) {
+            super.onAssociationPending(intentSender)
+        }
+
+        override fun onFailure(p0: CharSequence?) {
+            Log.d("TAG", "onFailure: Failed association")
+        }
+    }
 
     val needsBluetoothPermissions: Boolean
         get() {
@@ -183,14 +205,40 @@ object BluetoothHelper {
     }
 
       fun changeName(device: BluetoothDevice?, name: String) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ActivityCompat.checkSelfPermission(
-                    App.instance,
-                    Manifest.permission.BLUETOOTH_CONNECT
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                device?.setAlias(name)
-            }
+          try {
+              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                  if (ActivityCompat.checkSelfPermission(
+                          App.instance,
+                          Manifest.permission.BLUETOOTH_CONNECT
+                      ) == PackageManager.PERMISSION_GRANTED
+                  ) {
+                      device?.setAlias(name)
+                  }
+              }
+          } catch (e: Exception) {
+              val message = e.localizedMessage ?: ""
+             Logger.d(message)
+            // TODO: handle case where bt error is thrown on some devices
+              /* java.lang.SecurityException: The application with package name de.eloc.eloc_control_panel_2 does not have a CDM association with the Bluetooth Device */
+          }
+    }
+
+    private fun associateWithCDM__( address: String?) {
+        if (address == null) {
+            return
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val filter = BluetoothDeviceFilter.Builder().setAddress(address).build()
+            val request = AssociationRequest.Builder()
+                // Find only devices that match this request filter.
+                .addDeviceFilter(filter)
+                // Stop scanning as soon as one device matching the filter is found.
+                .setSingleDevice(true)
+                .build()
+
+            val deviceManager = App.instance.applicationContext.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
+            deviceManager.associate(request, cdmAssociationCallback,null )
+
         }
     }
 }
