@@ -1,15 +1,17 @@
 package de.eloc.eloc_control_panel.activities
 
+import android.app.Activity
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.GravityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,6 +22,7 @@ import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.data.adapters.ElocInfoAdapter
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper
+import de.eloc.eloc_control_panel.data.helpers.Logger
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
@@ -30,15 +33,15 @@ import de.eloc.eloc_control_panel.services.StatusUploadService
 // todo: use cached profile picture
 
 class HomeActivity : ThemableActivity() {
-
     private var firstScanDone = false
     private lateinit var binding: ActivityHomeBinding
     private lateinit var leftHeaderBinding: LayoutNavHeaderBinding
     private lateinit var rightHeaderBinding: LayoutNavHeaderBinding
     private var isFirstRun = true
-    private val elocAdapter = ElocInfoAdapter(this::onListUpdated, this::showDevice)
+    private val elocAdapter = ElocInfoAdapter(false, this::onListUpdated, this::showDevice)
     private val elocReceiver = BluetoothDeviceReceiver(elocAdapter::add)
     private lateinit var preferencesLauncher: ActivityResultLauncher<Intent>
+    private lateinit var associationLauncher: ActivityResultLauncher<IntentSenderRequest>
     private val backPressedHandler = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
             backPressed()
@@ -168,8 +171,18 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun setLaunchers() {
+        associationLauncher =
+            registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    Logger.d("Associated")
+                    Logger.d(result.data.toString())
+                } else {
+                    Logger.d("Association denined")
+                }
+            }
+
         preferencesLauncher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == RESULT_OK) {
                     val fontSizeChanged = result.data?.getBooleanExtra(
                         UserPrefsActivity.EXTRA_FONT_SIZE_CHANGED,
@@ -312,11 +325,13 @@ class HomeActivity : ThemableActivity() {
 
     private fun showDevice(address: String) {
         BluetoothHelper.stopScan(this::scanUpdate)
-        val intent = Intent(this, DeviceActivity::class.java)
-            .apply {
-                putExtra(DeviceActivity.EXTRA_DEVICE_ADDRESS, address)
-            }
-        startActivity(intent)
+        BluetoothHelper.associateDevice(this, address, associationLauncher) {
+            val intent = Intent(this, DeviceActivity::class.java)
+                .apply {
+                    putExtra(DeviceActivity.EXTRA_DEVICE_ADDRESS, address)
+                }
+            startActivity(intent)
+        }
     }
 
     private fun showMap() {
@@ -343,7 +358,7 @@ class HomeActivity : ThemableActivity() {
             }
 
             R.id.mnu_bluetooth_settings -> {
-                BluetoothHelper.openSettings(this)
+                showBluetoothSettings()
                 return true
             }
 
@@ -398,6 +413,15 @@ class HomeActivity : ThemableActivity() {
 
     private fun manageAccount() {
         open(AccountActivity::class.java, false)
+    }
+
+    private fun showBluetoothSettings() {
+        // CompanionDeviceManager is only available after Oreo
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            open(BluetoothSettingsActivity::class.java)
+        } else {
+            BluetoothHelper.openSettings(this)
+        }
     }
 
     private fun showAboutApp() {

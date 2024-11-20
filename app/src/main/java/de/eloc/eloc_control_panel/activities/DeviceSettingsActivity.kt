@@ -231,7 +231,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             var prefix = ""
             if (filename.contains(splitter)) {
                 val parts = filename.split(splitter).toMutableList()
-                filename = parts.removeLast()
+                filename = parts.removeAt(parts.size - 1)
                 prefix = parts.joinToString(splitter) + splitter
             }
             openTextEditor(

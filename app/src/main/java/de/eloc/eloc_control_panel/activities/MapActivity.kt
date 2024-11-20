@@ -165,7 +165,7 @@ class MapActivity : ThemableActivity() {
     private fun showMarkers() {
         var infoAdded = false
         while (deviceCache.isNotEmpty()) {
-            val newInfo = deviceCache.removeFirst()
+            val newInfo = deviceCache.removeAt(0)
             // Add to map (replace older)
             val key = newInfo.name
             var add = true

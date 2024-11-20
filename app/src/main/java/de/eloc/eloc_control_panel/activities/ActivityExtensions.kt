@@ -144,10 +144,10 @@ fun AppCompatActivity.showModalAlert(
 
 private fun AppCompatActivity.showAlert(
     title: String,
-    message1: String = "",
+    message: String = "",
     callback: VoidCallback? = null
 ) {
-    val dialogMessage = message1.trim().ifEmpty {
+    val dialogMessage = message.trim().ifEmpty {
         return
     }
     val binding = LayoutAlertOkBinding.inflate(layoutInflater)
@@ -161,20 +161,6 @@ private fun AppCompatActivity.showAlert(
     }
     dialog.setCancelable(false)
     dialog.show()
-}
-
-fun AppCompatActivity.showModalOptionAlert(
-    title: String,
-    message: String,
-    positiveCallback: VoidCallback?
-) {
-    this.showModalOptionAlert(
-        title,
-        message,
-        getString(android.R.string.ok),
-        getString(android.R.string.cancel),
-        positiveCallback,
-    )
 }
 
 fun AppCompatActivity.showModalOptionAlert(

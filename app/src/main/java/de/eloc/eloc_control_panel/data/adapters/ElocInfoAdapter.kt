@@ -13,11 +13,12 @@ import de.eloc.eloc_control_panel.interfaces.StringCallback
 import java.util.ArrayList
 
 class ElocInfoAdapter(
-    val callback: BooleanCallback,
-    private val itemCallback: StringCallback
+    private val checkable: Boolean,
+    val callback: BooleanCallback? = null,
+    private val itemCallback: StringCallback? = null
 ) :
     RecyclerView.Adapter<BtDeviceViewHolder>() {
-    private val deviceInfos = ArrayList<BtDevice>()
+    private val deviceList = mutableListOf<BtDevice>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BtDeviceViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -25,25 +26,36 @@ class ElocInfoAdapter(
         return BtDeviceViewHolder(binding.root)
     }
 
-    override fun getItemCount(): Int = deviceInfos.size
+    override fun getItemCount(): Int = deviceList.size
 
     override fun onBindViewHolder(holder: BtDeviceViewHolder, position: Int) {
-        val info = deviceInfos[position]
-        holder.setInfo(info, itemCallback)
+        val info = deviceList[position]
+        holder.setInfo(info, checkable, itemCallback)
+    }
+
+    fun getSelected(): List<BtDevice> {
+        val selected = mutableListOf<BtDevice>()
+        for (device in deviceList) {
+            if (device.selected) {
+                selected.add(device)
+            }
+        }
+        return selected
     }
 
     @SuppressLint("NotifyDataSetChanged")
     fun clear() {
-        deviceInfos.clear()
+        deviceList.clear()
         notifyDataSetChanged()
     }
 
-    fun add(device: BtDevice) {
-        if (BtDevice.isEloc(device)) {
-            if (!deviceInfos.contains(device)) {
-                deviceInfos.add(device)
-                notifyItemInserted(deviceInfos.size - 1)
-                callback.handler(false)
+    fun add(device: BtDevice, skipElocCheck: Boolean = false) {
+        val validDevice = if (skipElocCheck) true else device.isEloc()
+        if (validDevice) {
+            if (!deviceList.contains(device)) {
+                deviceList.add(device)
+                notifyItemInserted(deviceList.size - 1)
+                callback?.handler(false)
             }
         }
     }

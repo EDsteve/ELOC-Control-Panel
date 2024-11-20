@@ -14,9 +14,11 @@ import android.content.IntentFilter
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
-import android.util.Log
-import androidx.annotation.RequiresApi
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import de.eloc.eloc_control_panel.App
@@ -24,6 +26,8 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.ThemableActivity
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.interfaces.IntCallback
+import de.eloc.eloc_control_panel.interfaces.VoidCallback
+import de.eloc.eloc_control_panel.data.AssociatedDeviceInfo
 import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
@@ -38,21 +42,6 @@ object BluetoothHelper {
     private var executorHandle: ScheduledFuture<*>? = null
     private val bluetoothManager: BluetoothManager? =
         App.instance.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?
-
-    private val cdmAssociationCallback = @RequiresApi(Build.VERSION_CODES.O)
-    object : CompanionDeviceManager.Callback() {
-        override fun onAssociationCreated(associationInfo: AssociationInfo) {
-            super.onAssociationCreated(associationInfo)
-        }
-
-        override fun onAssociationPending(intentSender: IntentSender) {
-            super.onAssociationPending(intentSender)
-        }
-
-        override fun onFailure(p0: CharSequence?) {
-            Log.d("TAG", "onFailure: Failed association")
-        }
-    }
 
     val needsBluetoothPermissions: Boolean
         get() {
@@ -204,41 +193,148 @@ object BluetoothHelper {
         executorHandle = null
     }
 
-      fun changeName(device: BluetoothDevice?, name: String) {
-          try {
-              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                  if (ActivityCompat.checkSelfPermission(
-                          App.instance,
-                          Manifest.permission.BLUETOOTH_CONNECT
-                      ) == PackageManager.PERMISSION_GRANTED
-                  ) {
-                      device?.setAlias(name)
-                  }
-              }
-          } catch (e: Exception) {
-              val message = e.localizedMessage ?: ""
-             Logger.d(message)
-            // TODO: handle case where bt error is thrown on some devices
-              /* java.lang.SecurityException: The application with package name de.eloc.eloc_control_panel_2 does not have a CDM association with the Bluetooth Device */
-          }
+    private fun isDeviceAssociated(context: Context, devAddress: String): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val existingAssociations = associatedDevices(context)
+            for (info in existingAssociations) {
+                if (info.address?.uppercase() == devAddress.uppercase()) {
+                    return true
+                }
+            }
+            return false
+        } else {
+            return true
+        }
     }
 
-    private fun associateWithCDM__( address: String?) {
-        if (address == null) {
-            return
+    fun changeName(device: BluetoothDevice?, name: String) {
+        try {
+            if (device == null) {
+                Logger.d("BluetoothDevice is null.")
+                return
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ActivityCompat.checkSelfPermission(
+                        App.instance,
+                        Manifest.permission.BLUETOOTH_CONNECT
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    Logger.d("BLUETOOTH_CONNECT permission not granted.")
+                    return
+                }
+
+                Logger.d("Attempting to set alias to $name for device ${device.name}")
+                device.setAlias(name)  // Critical line that could crash
+                Logger.d("Alias successfully set to $name for device ${device.name}")
+            } else {
+                Logger.d("setAlias is not supported on devices below Android 13.")
+            }
+        } catch (securityException: SecurityException) {
+            Logger.d("Permission issue: ${securityException.localizedMessage}")
+        } catch (illegalArgumentException: IllegalArgumentException) {
+            Logger.d("Invalid argument: ${illegalArgumentException.localizedMessage}")
+        } catch (unsupportedOperationException: UnsupportedOperationException) {
+            Logger.d("Operation not supported: ${unsupportedOperationException.localizedMessage}")
+        } catch (e: Exception) {
+            Logger.d("Unexpected error: ${e.localizedMessage}")
         }
+    }
+
+    fun associatedDevices(context: Context): List<AssociatedDeviceInfo> {
+        val existingAssociations = mutableListOf<AssociatedDeviceInfo>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val filter = BluetoothDeviceFilter.Builder().setAddress(address).build()
-            val request = AssociationRequest.Builder()
-                // Find only devices that match this request filter.
-                .addDeviceFilter(filter)
-                // Stop scanning as soon as one device matching the filter is found.
-                .setSingleDevice(true)
-                .build()
+            val deviceManager =
+                context.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager?
+            if (deviceManager != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    for (info in deviceManager.myAssociations) {
+                        val assocInfo = AssociatedDeviceInfo(
+                            id = info.id,
+                            address = info.deviceMacAddress.toString().uppercase()
+                        )
+                        existingAssociations.add(assocInfo)
+                    }
+                } else {
+                    @Suppress("DEPRECATION")
+                    for (assoc in deviceManager.associations) {
+                        val assocInfo = AssociatedDeviceInfo(
+                            address = assoc.uppercase()
+                        )
+                        existingAssociations.add(assocInfo)
+                    }
+                }
+            }
+        }
+        return existingAssociations
+    }
 
-            val deviceManager = App.instance.applicationContext.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
-            deviceManager.associate(request, cdmAssociationCallback,null )
+    fun disassociateDevice(context: Context, info: AssociatedDeviceInfo) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val deviceManager =
+                context.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager?
+            if (deviceManager != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (info.id != null) {
+                        deviceManager.disassociate(info.id!!)
+                    }
+                } else {
+                    if (info.address != null) {
+                        @Suppress("DEPRECATION")
+                        deviceManager.disassociate(info.address!!)
+                    }
+                }
+            }
+        }
+    }
 
+    fun associateDevice(
+        context: Context, address: String,
+        associationLauncher: ActivityResultLauncher<IntentSenderRequest>,
+        associationCompletedCallback: VoidCallback,
+    ) {
+        if (isDeviceAssociated(context, address)) {
+            associationCompletedCallback.handler()
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val deviceManager =
+                context.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager?
+            if (deviceManager != null) {
+                val filter = BluetoothDeviceFilter.Builder()
+                    .setAddress(address)
+                    .build()
+
+                val associationRequest = AssociationRequest.Builder()
+                    .addDeviceFilter(filter)
+                    .setSingleDevice(true)
+                    .build()
+
+                val associationCallback = object : CompanionDeviceManager.Callback() {
+                    override fun onAssociationCreated(associationInfo: AssociationInfo) {
+                        super.onAssociationCreated(associationInfo)
+                        Logger.d("Association created")
+                        associationCompletedCallback.handler()
+                    }
+
+                    override fun onAssociationPending(intentSender: IntentSender) {
+                        super.onAssociationPending(intentSender)
+                        Logger.d("Association pending")
+                        val senderRequest = IntentSenderRequest.Builder(intentSender).build()
+                        associationLauncher.launch(senderRequest)
+                    }
+
+                    override fun onFailure(p0: CharSequence?) {
+                        Logger.d("Association failed")
+                    }
+                }
+
+                deviceManager.associate(
+                    associationRequest,
+                    associationCallback,
+                    Handler(Looper.getMainLooper())
+                )
+            }
+        } else {
+            associationCompletedCallback.handler()
         }
     }
 }

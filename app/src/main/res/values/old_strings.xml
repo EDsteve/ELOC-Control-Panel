@@ -168,7 +168,6 @@
     <string name="refresh">Refresh</string>
     <string name="refresh_list">Refresh List</string>
     <string name="refreshing">Refreshing…</string>
-    <string name="required">Required!</string>
     <string name="resend_failed">Failed to re-send the link to your email address</string>
     <string name="resend_message">Another link was sent to your email address.\n\nIt should arrive within 10 minutes. If the message is not in your inbox, remember to check the junk mail folder too.</string>
     <string name="resend_verification_message">Resend verification message</string>
@@ -219,6 +218,6 @@
     <string name="upload_eloc_status">Upload ELOC status</string>
     <string name="upload_profile_picture_error">Failed to upload profile picture!</string>
     <string name="uptime">Uptime</string>
-
+<string name="no_paired_devices_selected">Select a device to unpair!</string>
 
 </resources>

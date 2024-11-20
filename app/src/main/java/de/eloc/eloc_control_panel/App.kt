@@ -45,7 +45,7 @@ class App : Application() {
         cInstance = this
         FirebaseApp.initializeApp(this)
         val info = packageManager.getPackageInfo(packageName, 0)
-        appVersionName = info.versionName
+        appVersionName = info.versionName ?: "<version-missing>"
         appPackageName = info.packageName
         registerNetworkCallback()
     }
@@ -68,10 +68,6 @@ class App : Application() {
         networkChangedHandlers[id] = handler
     }
 
-    fun removeNetworkChangedHandler(id: String) {
-        networkChangedHandlers.remove(id)
-    }
-
     private fun registerNetworkCallback() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as? ConnectivityManager
@@ -91,7 +87,7 @@ class App : Application() {
     override fun onTerminate() {
         super.onTerminate()
         for (entry in networkChangedHandlers) {
-            removeNetworkChangedHandler(entry.key)
+            networkChangedHandlers.remove(entry.key)
         }
         connectivityManager?.unregisterNetworkCallback(networkCallback)
     }
