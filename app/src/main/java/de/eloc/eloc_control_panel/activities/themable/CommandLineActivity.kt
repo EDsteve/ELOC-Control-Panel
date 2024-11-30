@@ -1,14 +1,18 @@
-package de.eloc.eloc_control_panel.activities
+package de.eloc.eloc_control_panel.activities.themable
 
 import android.graphics.Typeface
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityCommandLineBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
+import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.showModalOptionAlert
+import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.activities.hideKeyboard
+import de.eloc.eloc_control_panel.activities.showInstructions
 
-class CommandLineActivity : AppCompatActivity() {
+class CommandLineActivity : ThemableActivity() {
     private lateinit var binding: ActivityCommandLineBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {

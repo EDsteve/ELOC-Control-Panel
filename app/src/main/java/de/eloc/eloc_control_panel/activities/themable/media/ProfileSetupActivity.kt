@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities
+package de.eloc.eloc_control_panel.activities.themable.media
 
 import android.content.Intent
 import android.graphics.Bitmap
@@ -19,6 +19,11 @@ import de.eloc.eloc_control_panel.data.helpers.firebase.StorageHelper
 import de.eloc.eloc_control_panel.databinding.ActivityProfileSetupBinding
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
 import de.eloc.eloc_control_panel.old.DataHelper
+import de.eloc.eloc_control_panel.activities.getPickImageRequest
+import de.eloc.eloc_control_panel.activities.hideKeyboard
+import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.activities.themable.LoadProfileActivity
 
 class ProfileSetupActivity : MediaActivity() {
     private lateinit var binding: ActivityProfileSetupBinding

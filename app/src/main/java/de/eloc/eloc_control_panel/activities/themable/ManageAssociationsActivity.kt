@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities
+package de.eloc.eloc_control_panel.activities.themable
 
 import android.os.Bundle
 import android.view.View
@@ -9,6 +9,8 @@ import de.eloc.eloc_control_panel.data.BtDevice
 import de.eloc.eloc_control_panel.data.adapters.ElocInfoAdapter
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.databinding.ActivityManageAssociationsBinding
+import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.showModalAlert
 
 class ManageAssociationsActivity : ThemableActivity() {
     private lateinit var binding: ActivityManageAssociationsBinding

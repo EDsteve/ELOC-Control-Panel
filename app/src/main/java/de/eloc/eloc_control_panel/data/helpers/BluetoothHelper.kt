@@ -23,7 +23,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.activities.ThemableActivity
+import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.interfaces.IntCallback
 import de.eloc.eloc_control_panel.interfaces.VoidCallback

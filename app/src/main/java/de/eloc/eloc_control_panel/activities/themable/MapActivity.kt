@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities
+package de.eloc.eloc_control_panel.activities.themable
 
 import android.annotation.SuppressLint
 import android.location.Location
@@ -28,6 +28,8 @@ import de.eloc.eloc_control_panel.databinding.ActivityMapBinding
 import de.eloc.eloc_control_panel.databinding.WindowLayoutBinding
 import de.eloc.eloc_control_panel.dialogs.ListViewDialog
 import java.util.Locale
+import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.showModalAlert
 
 class MapActivity : ThemableActivity() {
 
@@ -86,7 +88,7 @@ class MapActivity : ThemableActivity() {
         } else {
             showModalAlert(
                 getString(R.string.required),
-                getString(R.string.ranger_name_required)
+                getString(R.string.aranger_name_required)
             ) {
                 goBack()
             }

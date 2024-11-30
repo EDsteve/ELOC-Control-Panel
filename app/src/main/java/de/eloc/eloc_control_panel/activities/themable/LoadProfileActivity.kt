@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities
+package de.eloc.eloc_control_panel.activities.themable
 
 import android.os.Bundle
 import de.eloc.eloc_control_panel.R
@@ -6,6 +6,8 @@ import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
+import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.activities.showModalAlert
 
 class LoadProfileActivity : ThemableActivity() {
     companion object {

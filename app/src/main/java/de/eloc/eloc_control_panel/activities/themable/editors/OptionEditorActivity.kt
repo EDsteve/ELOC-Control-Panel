@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities.editors
+package de.eloc.eloc_control_panel.activities.themable.editors
 
 import android.os.Bundle
 import androidx.core.view.children

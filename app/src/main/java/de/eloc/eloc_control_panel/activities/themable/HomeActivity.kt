@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities
+package de.eloc.eloc_control_panel.activities.themable
 
 import android.app.Activity
 import android.bluetooth.BluetoothDevice
@@ -29,6 +29,13 @@ import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.LayoutNavHeaderBinding
 import de.eloc.eloc_control_panel.receivers.BluetoothDeviceReceiver
 import de.eloc.eloc_control_panel.services.StatusUploadService
+import de.eloc.eloc_control_panel.activities.showInstructions
+import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.activities.showModalOptionAlert
+import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.activities.showSnack
+import de.eloc.eloc_control_panel.activities.openUrl
+import de.eloc.eloc_control_panel.activities.themable.media.ProfileActivity
 
 // todo: use cached profile picture
 

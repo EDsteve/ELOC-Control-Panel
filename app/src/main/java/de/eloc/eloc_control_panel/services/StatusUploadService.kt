@@ -15,8 +15,8 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.activities.HomeActivity
-import de.eloc.eloc_control_panel.activities.UpdateAppActivity
+import de.eloc.eloc_control_panel.activities.themable.HomeActivity
+import de.eloc.eloc_control_panel.activities.themable.UpdateAppActivity
 import de.eloc.eloc_control_panel.data.UploadResult
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper

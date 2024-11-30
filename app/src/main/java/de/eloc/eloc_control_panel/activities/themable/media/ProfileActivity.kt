@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities
+package de.eloc.eloc_control_panel.activities.themable.media
 
 import android.content.Intent
 import android.graphics.ImageDecoder
@@ -20,6 +20,9 @@ import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.StorageHelper
 import java.io.IOException
+import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.getPickImageRequest
+import de.eloc.eloc_control_panel.activities.showModalAlert
 
 class ProfileActivity : MediaActivity() {
     private lateinit var binding: ActivityProfileBinding

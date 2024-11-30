@@ -1,14 +1,5 @@
 <resources>
-    <string name="_10s">10 secs</string>
-    <string name="_12h">12 hrs</string>
-    <string name="_16k">16 kHz</string>
-    <string name="_1h">1 hr</string>
-    <string name="_1m">1 min</string>
-    <string name="_22k">22 kHz</string>
-    <string name="_32k">32 kHz</string>
-    <string name="_44k">44 kHz</string>
-    <string name="_4h">4 hrs</string>
-    <string name="_8k">8 kHz</string>
+
     <string name="a_few_things_must_be_done_to_proceed">A few things must be done to proceed…</string>
     <string name="about_app">About app</string>
     <string name="account">Account</string>
@@ -156,7 +147,7 @@
     <string name="profile_picture_upload_error">Failed to upload profile picture.\nTry again later</string>
     <string name="profile_setup">Profile setup</string>
     <string name="ranger">Ranger</string>
-    <string name="ranger_name_required">Ranger name (user ID) is required!</string>
+
     <string name="ready">Ready</string>
     <string name="reboot_update_firmware">Reboot and update firmware</string>
 

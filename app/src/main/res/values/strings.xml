@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="_10s">10 secs</string>
+    <string name="_12h">12 hrs</string>
+    <string name="_16k">16 kHz</string>
+    <string name="_1h">1 hr</string>
+    <string name="_1m">1 min</string>
+    <string name="_22k">22 kHz</string>
+    <string name="_32k">32 kHz</string>
+    <string name="_44k">44 kHz</string>
+    <string name="_4h">4 hrs</string>
+    <string name="_8k">8 kHz</string>
     <string name="app_name">ELOC Control Panel</string>
     <string name="app_version">App Version</string>
     <string name="applying_changes">Applying changes…</string>
+    <string name="aranger_name_required">Ranger name (user ID) is required!</string>
     <string name="arm_during_recording">Arm During Recording</string>
     <string name="average_interval">Average Interval</string>
     <string name="average_samples">Average Samples</string>

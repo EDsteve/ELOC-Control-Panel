@@ -67,8 +67,10 @@ dependencies {
     implementation 'com.google.android.gms:play-services-base:18.5.0'
     implementation 'com.google.android.gms:play-services-auth:21.2.0'
     implementation 'com.google.android.gms:play-services-maps:19.0.0'
+    implementation "com.google.android.gms:play-services-basement:18.5.0"
 
     // Keep BOM at 32.6 so that API 21 (Android 5) devices are supported
+    //noinspection GradleDependency
     implementation platform('com.google.firebase:firebase-bom:32.6.0')
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-storage'
@@ -77,5 +79,4 @@ dependencies {
     implementation 'com.android.volley:volley:1.2.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'
     implementation 'androidx.activity:activity-ktx:1.9.3'
-    implementation 'androidx.activity:activity:1.9.3'
 }

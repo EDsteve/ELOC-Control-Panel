@@ -19,8 +19,8 @@ import com.google.firebase.auth.GoogleAuthProvider
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.BuildConfig
-import de.eloc.eloc_control_panel.activities.LoginActivity
-import de.eloc.eloc_control_panel.activities.ThemableActivity
+import de.eloc.eloc_control_panel.activities.themable.LoginActivity
+import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.activities.open
 import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper

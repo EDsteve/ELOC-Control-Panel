@@ -1,9 +1,11 @@
-package de.eloc.eloc_control_panel.activities
+package de.eloc.eloc_control_panel.activities.themable
 
 import android.content.Intent
 import android.os.Bundle
 import android.widget.CompoundButton
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.setChipColors
 import de.eloc.eloc_control_panel.databinding.ActivityUserPrefsBinding
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.data.PreferredFontSize

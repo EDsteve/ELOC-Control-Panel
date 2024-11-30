@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities
+package de.eloc.eloc_control_panel.activities.themable
 
 import android.content.Intent
 import android.os.Bundle
@@ -6,9 +6,9 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.activities.editors.BaseEditorActivity
-import de.eloc.eloc_control_panel.activities.editors.OptionEditorActivity
-import de.eloc.eloc_control_panel.activities.editors.TextEditorActivity
+import de.eloc.eloc_control_panel.activities.themable.editors.BaseEditorActivity
+import de.eloc.eloc_control_panel.activities.themable.editors.OptionEditorActivity
+import de.eloc.eloc_control_panel.activities.themable.editors.TextEditorActivity
 import de.eloc.eloc_control_panel.data.Channel
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.GainType
@@ -25,6 +25,11 @@ import de.eloc.eloc_control_panel.driver.Logs
 import de.eloc.eloc_control_panel.driver.Microphone
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
+import de.eloc.eloc_control_panel.activities.formatNumber
+import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.activities.showInstructions
+import de.eloc.eloc_control_panel.activities.goBack
+
 
 class DeviceSettingsActivity : ThemableActivity() {
     companion object {

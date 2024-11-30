@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities
+package de.eloc.eloc_control_panel.activities.themable
 
 import android.os.Bundle
 import android.view.View
@@ -7,6 +7,10 @@ import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.databinding.ActivityChangeEmailAddressBinding
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
+import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.hideKeyboard
+import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.activities.showModalAlert
 
 class ChangeEmailAddressActivity : ThemableActivity() {
 

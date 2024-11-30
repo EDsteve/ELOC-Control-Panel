@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities
+package de.eloc.eloc_control_panel.activities.themable
 
 import android.Manifest
 import android.content.Context
@@ -10,13 +10,14 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.content.ContextCompat
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.databinding.ActivityPermissionsSetupBinding
+import de.eloc.eloc_control_panel.activities.openLocationSettings
+import de.eloc.eloc_control_panel.activities.openSystemAppSettings
+import de.eloc.eloc_control_panel.activities.showModalOptionAlert
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
+import de.eloc.eloc_control_panel.databinding.ActivityPermissionsSetupBinding
 import de.eloc.eloc_control_panel.receivers.BluetoothWatcher
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
+import java.lang.Thread.sleep
 
 // TODO: wait for internet status to be non-null
 
@@ -31,9 +32,10 @@ class PermissionsSetupActivity : ThemableActivity() {
             }
         }
     private lateinit var binding: ActivityPermissionsSetupBinding
-    private lateinit var checkerHandle: ScheduledFuture<*>
     private val bluetoothWatcher = BluetoothWatcher(this::runChecks)
     private val preferencesHelper = PreferencesHelper.instance
+    private var stopChecks = false
+    private var checksThread: Thread? = null
 
     private val needsLocationPermission1: Boolean
         get() {
@@ -77,31 +79,33 @@ class PermissionsSetupActivity : ThemableActivity() {
             BluetoothHelper.broadcastFilter,
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
-
-        checkerHandle = Executors.newSingleThreadScheduledExecutor()
-            .scheduleAtFixedRate(
-                { runOnUiThread(::runChecks) },
-                0,
-                500,
-                TimeUnit.MILLISECONDS
-            )
     }
 
     override fun onPause() {
         super.onPause()
         paused = true
+        stopChecks = true
     }
 
     override fun onResume() {
         super.onResume()
         paused = false
-        runChecks()
+        checksThread = Thread {
+            while (true) {
+                runChecks()
+                sleep(500)
+                if (stopChecks) {
+                    checksThread = null
+                    break
+                }
+            }
+        }
+        checksThread?.start()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(bluetoothWatcher)
-        checkerHandle.cancel(true)
     }
 
     private fun setListeners() {

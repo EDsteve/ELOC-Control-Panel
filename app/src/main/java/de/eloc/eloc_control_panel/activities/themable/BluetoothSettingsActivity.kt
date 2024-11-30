@@ -1,8 +1,10 @@
-package de.eloc.eloc_control_panel.activities
+package de.eloc.eloc_control_panel.activities.themable
 
 import android.os.Bundle
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.databinding.ActivityBluetoothSettingsBinding
+import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.activities.goBack
 
 class BluetoothSettingsActivity : ThemableActivity() {
     private lateinit var binding: ActivityBluetoothSettingsBinding

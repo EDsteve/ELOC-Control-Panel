@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities
+package de.eloc.eloc_control_panel.activities.themable.media
 
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -12,7 +12,10 @@ import android.os.Bundle
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
+import de.eloc.eloc_control_panel.activities.showModalOptionAlert
+import de.eloc.eloc_control_panel.activities.openSystemAppSettings
 
 private const val CAMERA_PERMISSION = Manifest.permission.CAMERA
 

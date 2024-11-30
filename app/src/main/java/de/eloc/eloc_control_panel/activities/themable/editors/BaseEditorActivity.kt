@@ -1,11 +1,11 @@
-package de.eloc.eloc_control_panel.activities.editors
+package de.eloc.eloc_control_panel.activities.themable.editors
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.SampleRate
 import de.eloc.eloc_control_panel.driver.DeviceDriver
@@ -15,7 +15,7 @@ import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.widgets.ProgressIndicator
 
 internal const val NOT_SET = "not_set"
-abstract class BaseEditorActivity : AppCompatActivity() {
+abstract class BaseEditorActivity : ThemableActivity() {
     companion object {
         const val EXTRA_SETTING_NAME = "setting_name"
         const val EXTRA_CURRENT_VALUE = "current_value"

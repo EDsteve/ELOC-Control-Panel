@@ -1,9 +1,11 @@
-package de.eloc.eloc_control_panel.activities
+package de.eloc.eloc_control_panel.activities.themable
 
 import android.os.Bundle
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.databinding.ActivityAccountBinding
+import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.open
 
 class AccountActivity : ThemableActivity() {
     private lateinit var binding: ActivityAccountBinding

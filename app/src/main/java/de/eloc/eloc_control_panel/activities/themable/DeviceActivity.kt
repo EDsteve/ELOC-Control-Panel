@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities
+package de.eloc.eloc_control_panel.activities.themable
 
 import android.content.Intent
 import android.location.Location
@@ -6,7 +6,6 @@ import android.location.LocationListener
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.openlocationcode.OpenLocationCode
 import de.eloc.eloc_control_panel.App
@@ -23,10 +22,15 @@ import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
+import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.formatNumber
+import de.eloc.eloc_control_panel.activities.showInstructions
+import de.eloc.eloc_control_panel.activities.showModalOptionAlert
 
 // todo: add refresh menu item for old API levels
 
-class DeviceActivity : AppCompatActivity(), ConnectionStatusListener {
+class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
     companion object {
         const val EXTRA_DEVICE_ADDRESS = "device_address"
     }
@@ -155,7 +159,7 @@ class DeviceActivity : AppCompatActivity(), ConnectionStatusListener {
             if (!AppState.hasValidProfile) {
                 showModalAlert(
                     getString(R.string.required),
-                    getString(R.string.ranger_name_required),
+                    getString(R.string.aranger_name_required),
                     ::goBack
                 )
             } else {
