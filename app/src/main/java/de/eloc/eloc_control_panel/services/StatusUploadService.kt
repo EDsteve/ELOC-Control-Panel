@@ -19,7 +19,7 @@ import de.eloc.eloc_control_panel.activities.themable.HomeActivity
 import de.eloc.eloc_control_panel.activities.themable.UpdateAppActivity
 import de.eloc.eloc_control_panel.data.UploadResult
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper
-import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
+import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import java.util.concurrent.Executors
@@ -36,8 +36,7 @@ class StatusUploadService : Service() {
             private set
 
         private var lastUsedNotificationId = 0
-        private var statusUpdateIntervalMillis =
-            PreferencesHelper.instance.getStatusUploadInterval().millis
+        private var statusUpdateIntervalMillis = Preferences.statusUploadInterval.millis
 
         fun start(context: Context) {
             val serviceIntent = Intent(context, StatusUploadService::class.java)
@@ -93,7 +92,7 @@ class StatusUploadService : Service() {
 
             // Interval can be changed at any time in app settings,
             // so get the latest value for every loop iteration
-            statusUpdateIntervalMillis = PreferencesHelper.instance.getStatusUploadInterval().millis
+            statusUpdateIntervalMillis = Preferences.statusUploadInterval.millis
 
             // Try an upload if interval has elapsed
             elapsedMillis += sleepInterval

@@ -12,17 +12,17 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.graphics.decodeBitmap
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.data.AppState
-import de.eloc.eloc_control_panel.old.DataHelper
-import de.eloc.eloc_control_panel.databinding.ActivityProfileBinding
+import de.eloc.eloc_control_panel.activities.getPickImageRequest
+import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.StorageHelper
+import de.eloc.eloc_control_panel.data.util.Preferences
+import de.eloc.eloc_control_panel.databinding.ActivityProfileBinding
+import de.eloc.eloc_control_panel.old.DataHelper
 import java.io.IOException
-import de.eloc.eloc_control_panel.activities.goBack
-import de.eloc.eloc_control_panel.activities.getPickImageRequest
-import de.eloc.eloc_control_panel.activities.showModalAlert
 
 class ProfileActivity : MediaActivity() {
     private lateinit var binding: ActivityProfileBinding
@@ -113,12 +113,12 @@ class ProfileActivity : MediaActivity() {
 
     private fun setItemValues() {
         updateUI(false)
-        originalProfilePicture = AppState.profilePictureUrl
+        originalProfilePicture = Preferences.profilePictureUrl
         binding.avatarImageView.setImageUrl(
-            AppState.profilePictureUrl,
+            originalProfilePicture,
             HttpHelper.instance.imageLoader
         )
-        binding.userIdItem.valueTextView.text = AppState.rangerName
+        binding.userIdItem.valueTextView.text = Preferences.rangerName
     }
 
     private fun updateField(value: String) {

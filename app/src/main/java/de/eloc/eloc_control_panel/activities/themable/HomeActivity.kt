@@ -18,24 +18,23 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.data.AppState
+import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.activities.openUrl
+import de.eloc.eloc_control_panel.activities.showInstructions
+import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.activities.showModalOptionAlert
+import de.eloc.eloc_control_panel.activities.showSnack
+import de.eloc.eloc_control_panel.activities.themable.media.ProfileActivity
 import de.eloc.eloc_control_panel.data.adapters.ElocInfoAdapter
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper
 import de.eloc.eloc_control_panel.data.helpers.Logger
-import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
+import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.LayoutNavHeaderBinding
 import de.eloc.eloc_control_panel.receivers.BluetoothDeviceReceiver
 import de.eloc.eloc_control_panel.services.StatusUploadService
-import de.eloc.eloc_control_panel.activities.showInstructions
-import de.eloc.eloc_control_panel.activities.showModalAlert
-import de.eloc.eloc_control_panel.activities.showModalOptionAlert
-import de.eloc.eloc_control_panel.activities.open
-import de.eloc.eloc_control_panel.activities.showSnack
-import de.eloc.eloc_control_panel.activities.openUrl
-import de.eloc.eloc_control_panel.activities.themable.media.ProfileActivity
 
 // todo: use cached profile picture
 
@@ -157,7 +156,7 @@ class HomeActivity : ThemableActivity() {
 
     private fun openDrawer() {
         if (!drawerOpen()) {
-            val direction = if (PreferencesHelper.instance.isMainMenuOnLeft())
+            val direction = if (Preferences.isMainMenuOnLeft)
                 GravityCompat.START
             else
                 GravityCompat.END
@@ -168,7 +167,7 @@ class HomeActivity : ThemableActivity() {
 
     private fun setAppBar() {
         binding.toolbar.menu.clear()
-        if (PreferencesHelper.instance.isMainMenuOnLeft()) {
+        if (Preferences.isMainMenuOnLeft) {
             binding.toolbar.setNavigationIcon(R.drawable.menu)
             binding.toolbar.setNavigationIconTint(Color.WHITE)
         } else {
@@ -233,7 +232,7 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun setProfileInfo() {
-        if (!AppState.hasValidProfile) {
+        if (!Preferences.hasValidProfile) {
             showModalAlert(
                 getString(R.string.ranger_profile_missing),
                 getString(R.string.ranger_profile_missing_details)
@@ -242,18 +241,20 @@ class HomeActivity : ThemableActivity() {
         }
 
         leftHeaderBinding.profilePictureImageView.setImageUrl(
-            AppState.profilePictureUrl,
+            Preferences.profilePictureUrl,
             HttpHelper.instance.imageLoader
         )
         rightHeaderBinding.profilePictureImageView.setImageUrl(
-            AppState.profilePictureUrl,
+            Preferences.profilePictureUrl,
             HttpHelper.instance.imageLoader
         )
-        leftHeaderBinding.userIdTextView.text = AppState.rangerName
-        rightHeaderBinding.userIdTextView.text = AppState.rangerName
-        leftHeaderBinding.emailAddressTextView.text = AppState.emailAddress
-        rightHeaderBinding.emailAddressTextView.text = AppState.emailAddress
-        binding.toolbar.subtitle = getString(R.string.eloc_user, AppState.rangerName)
+        val rangerName = Preferences.rangerName
+        val emailAddress = AuthHelper.instance.emailAddress
+        leftHeaderBinding.userIdTextView.text = rangerName
+        rightHeaderBinding.userIdTextView.text = rangerName
+        leftHeaderBinding.emailAddressTextView.text = emailAddress
+        rightHeaderBinding.emailAddressTextView.text = emailAddress
+        binding.toolbar.subtitle = getString(R.string.eloc_user, rangerName)
 
         if (isFirstRun) {
             initialize()

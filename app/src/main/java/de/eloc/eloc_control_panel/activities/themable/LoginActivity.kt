@@ -6,7 +6,7 @@ import androidx.lifecycle.lifecycleScope
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.ActivityLoginBinding
-import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
+import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
@@ -53,9 +53,8 @@ class LoginActivity : ThemableActivity() {
         super.onResume()
         App.instance.onNetworkChanged()
         if (App.instance.isOnline() != null) {
-            val autoGoogleSignIn = PreferencesHelper.instance.getAutoGoogleSignIn()
             val googleSignInCanceled = authHelper.googleSignInCanceled
-            if (autoGoogleSignIn && (!googleSignInCanceled)) {
+            if (Preferences.autoGoogleSignIn && (!googleSignInCanceled)) {
                 signInWithGoogle(true)
             } else {
                 checkAuthState()

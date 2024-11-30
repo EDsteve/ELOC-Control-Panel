@@ -9,7 +9,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import de.eloc.eloc_control_panel.App
-import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.data.Channel
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
@@ -24,6 +23,7 @@ import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.JsonHelper
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
+import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
@@ -720,7 +720,7 @@ object DeviceDriver : Runnable {
                         val gpsAccuracy = general.locationAccuracy
                         val latitude = location.latitude
                         val longitude = location.longitude
-                        val rangerName = AppState.rangerName
+                        val rangerName = Preferences.rangerName
                         val recTime = general.recHoursSinceBoot
                         val timestamp = System.currentTimeMillis()
                         var locationData = """{

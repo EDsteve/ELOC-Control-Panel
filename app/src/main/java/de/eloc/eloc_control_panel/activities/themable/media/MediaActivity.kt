@@ -13,7 +13,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
-import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
+import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.activities.showModalOptionAlert
 import de.eloc.eloc_control_panel.activities.openSystemAppSettings
 
@@ -21,7 +21,6 @@ private const val CAMERA_PERMISSION = Manifest.permission.CAMERA
 
 abstract class MediaActivity : ThemableActivity() {
     private lateinit var cameraPermissionLauncher: ActivityResultLauncher<String>
-    private val preferencesHelper = PreferencesHelper.instance
 
     val hasCameraPermission: Boolean
         get() {
@@ -62,10 +61,10 @@ abstract class MediaActivity : ThemableActivity() {
                         negativeButtonText,
                         {
                             askCameraPermission()
-                            preferencesHelper.setCameraRequested()
+                            Preferences.setCameraRequested()
                         },
                         {
-                            preferencesHelper.setCameraRequested()
+                            Preferences.setCameraRequested()
                         },
                     )
                 } else {
@@ -78,7 +77,7 @@ abstract class MediaActivity : ThemableActivity() {
     }
 
     private fun askCameraPermission() {
-        if (preferencesHelper.getCameraRequested()) {
+        if (Preferences.cameraRequested) {
             val title = getString(R.string.permission_required)
             val message = getString(R.string.manual_camera)
             val positiveButtonText = getString(R.string.open_settings)

@@ -14,7 +14,7 @@ import de.eloc.eloc_control_panel.activities.openLocationSettings
 import de.eloc.eloc_control_panel.activities.openSystemAppSettings
 import de.eloc.eloc_control_panel.activities.showModalOptionAlert
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
-import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
+import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.databinding.ActivityPermissionsSetupBinding
 import de.eloc.eloc_control_panel.receivers.BluetoothWatcher
 import java.lang.Thread.sleep
@@ -33,7 +33,6 @@ class PermissionsSetupActivity : ThemableActivity() {
         }
     private lateinit var binding: ActivityPermissionsSetupBinding
     private val bluetoothWatcher = BluetoothWatcher(this::runChecks)
-    private val preferencesHelper = PreferencesHelper.instance
     private var stopChecks = false
     private var checksThread: Thread? = null
 
@@ -146,21 +145,21 @@ class PermissionsSetupActivity : ThemableActivity() {
 
     private fun doRequestLocationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            preferencesHelper.setLocationRequested()
+            Preferences.setLocationRequested()
             requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 0)
         }
     }
 
     private fun doRequestBluetoothPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            preferencesHelper.setBluetoothRequested()
+            Preferences.setBluetoothRequested()
             requestPermissions(BluetoothHelper.bluetoothPermissions, 0)
         }
     }
 
     private fun doRequestNotificationsPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            preferencesHelper.setNotificationsRequested()
+            Preferences.setNotificationsRequested()
             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
         }
     }
@@ -183,8 +182,7 @@ class PermissionsSetupActivity : ThemableActivity() {
                     negativeCallback = negativeCallback
                 )
             } else {
-                val alreadyRequested = preferencesHelper.getLocationRequested()
-                if (alreadyRequested) {
+                if (Preferences.locationRequested) {
                     paused = true
                     val positiveCallback = {
                         openSystemAppSettings()
@@ -226,8 +224,7 @@ class PermissionsSetupActivity : ThemableActivity() {
                     negativeCallback = negativeCallback
                 )
             } else {
-                val alreadyRequested = preferencesHelper.getBluetoothRequested()
-                if (alreadyRequested) {
+                if (Preferences.bluetoothRequested) {
                     paused = true
                     val positiveCallback = { openSystemAppSettings() }
                     val negativeCallback = { showActions() }
@@ -263,8 +260,7 @@ class PermissionsSetupActivity : ThemableActivity() {
                     negativeCallback = negativeCallback
                 )
             } else {
-                val alreadyRequested = preferencesHelper.getNotificationsRequested()
-                if (alreadyRequested) {
+                if (Preferences.notificationsRequested) {
                     paused = true
                     val positiveCallback = {
                         openSystemAppSettings()
@@ -292,22 +288,23 @@ class PermissionsSetupActivity : ThemableActivity() {
     }
 
     private fun runChecks() {
-        if (paused) {
-            return
-        }
-        hideActions()
-        if (needsLocationPermission1) {
-            askLocationPermission()
-        } else if (mustTurnOnLocationService) {
-            showActions()
-        } else if (BluetoothHelper.needsBluetoothPermissions) {
-            askBluetoothPermissions()
-        } else if (mustTurnOnBluetooth) {
-            showActions()
-        } else if (needsNotificationsPermission) {
-            askNotificationsPermission()
-        } else {
-            checkAccountEmailVerification()
+        runOnUiThread {
+            if (!paused) {
+                hideActions()
+                if (needsLocationPermission1) {
+                    askLocationPermission()
+                } else if (mustTurnOnLocationService) {
+                    showActions()
+                } else if (BluetoothHelper.needsBluetoothPermissions) {
+                    askBluetoothPermissions()
+                } else if (mustTurnOnBluetooth) {
+                    showActions()
+                } else if (needsNotificationsPermission) {
+                    askNotificationsPermission()
+                } else {
+                    checkAccountEmailVerification()
+                }
+            }
         }
     }
 }

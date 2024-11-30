@@ -7,19 +7,17 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.Source
-import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.data.ElocDeviceInfo
 import de.eloc.eloc_control_panel.data.UploadResult
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
+import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.driver.KEY_TIMESTAMP
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.interfaces.ElocDeviceInfoCallback
 import de.eloc.eloc_control_panel.interfaces.ProfileCheckCallback
-import de.eloc.eloc_control_panel.interfaces.UploadCallback
 import de.eloc.eloc_control_panel.interfaces.VoidCallback
-import de.eloc.eloc_control_panel.services.StatusUploadService
 
 class FirestoreHelper {
 
@@ -83,7 +81,7 @@ class FirestoreHelper {
             .addOnCompleteListener {
                 if (it.isSuccessful) {
                     if (data.containsKey(FIELD_USER_ID)) {
-                        AppState.rangerName = data[FIELD_USER_ID].toString()
+                        Preferences.rangerName = data[FIELD_USER_ID].toString()
                     }
                     callback?.handler(true)
                 } else {
@@ -159,8 +157,8 @@ class FirestoreHelper {
                     val profilePictureUrl =
                         snapshot.get(FIELD_PROFILE_PICTURE, String::class.java)
                     val rangerName = snapshot.get(FIELD_USER_ID, String::class.java)
-                    AppState.rangerName = rangerName ?: ""
-                    AppState.profilePictureUrl = profilePictureUrl ?: ""
+                    Preferences.rangerName = rangerName ?: ""
+                    Preferences.profilePictureUrl = profilePictureUrl ?: ""
                     FileSystemHelper.saveProfile()
                 }
                 uiCallback?.handler()
@@ -306,7 +304,7 @@ class FirestoreHelper {
     fun getElocDevicesAsync(callback: ElocDeviceInfoCallback?) {
         FirebaseFirestore.getInstance()
             .collection(COL_CONFIG)
-            .whereEqualTo("app_metadata.ranger", AppState.rangerName)
+            .whereEqualTo("app_metadata.ranger", Preferences.rangerName)
             .get()
             .addOnCompleteListener {
                 if (it.isSuccessful) {

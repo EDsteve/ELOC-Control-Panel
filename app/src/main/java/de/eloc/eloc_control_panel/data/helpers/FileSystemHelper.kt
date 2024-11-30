@@ -2,9 +2,9 @@ package de.eloc.eloc_control_panel.data.helpers
 
 import android.util.Base64
 import de.eloc.eloc_control_panel.App
-import de.eloc.eloc_control_panel.data.AppState
 import de.eloc.eloc_control_panel.data.UploadType
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
+import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import org.json.JSONObject
 import java.io.File
@@ -80,7 +80,7 @@ object FileSystemHelper {
             } else {
                 generateDataFileName(
                     prefix,
-                    AppState.rangerName,
+                    Preferences.rangerName,
                     DeviceDriver.name,
                     captureTimestamp
                 )
@@ -206,9 +206,9 @@ object FileSystemHelper {
             profileFile.delete()
         }
         val content = buildString {
-            appendLine(AppState.rangerName)
-            appendLine(AppState.emailAddress)
-            appendLine(AppState.profilePictureUrl)
+            appendLine(Preferences.rangerName)
+            appendLine(AuthHelper.instance.emailAddress)
+            appendLine(Preferences.profilePictureUrl)
         }
         val bytes = Base64.encode(content.toByteArray(), Base64.DEFAULT)
         profileFile.writeBytes(bytes)

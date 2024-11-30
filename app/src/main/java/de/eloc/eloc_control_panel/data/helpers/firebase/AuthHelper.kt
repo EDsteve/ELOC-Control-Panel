@@ -16,14 +16,13 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
-import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.BuildConfig
+import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.activities.open
 import de.eloc.eloc_control_panel.activities.themable.LoginActivity
 import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
-import de.eloc.eloc_control_panel.activities.open
-import de.eloc.eloc_control_panel.data.AppState
-import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
+import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.interfaces.GoogleSignInCallback
 import de.eloc.eloc_control_panel.interfaces.StringCallback
@@ -143,7 +142,7 @@ class AuthHelper {
                             }
                             googleSignInRunning = false
                             googleSignInCanceled = true
-                            PreferencesHelper.instance.setAutoGoogleSignIn(success)
+                            Preferences.autoGoogleSignIn = success
                             callback?.handler(success, filter, error)
                         }
                 } else {
@@ -207,7 +206,7 @@ class AuthHelper {
     }
 
     private suspend fun clearCredential() {
-        PreferencesHelper.instance.setAutoGoogleSignIn(false)
+        Preferences.autoGoogleSignIn = false
         credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
 
@@ -215,7 +214,7 @@ class AuthHelper {
         activity.lifecycleScope.launch(Dispatchers.IO) {
             clearCredential()
             withContext(Dispatchers.Main) {
-                AppState.clear()
+                Preferences.clearProfileData()
                 FirebaseAuth.getInstance().signOut()
                 activity.open(LoginActivity::class.java, true)
             }

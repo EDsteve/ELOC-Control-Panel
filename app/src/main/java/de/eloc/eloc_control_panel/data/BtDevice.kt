@@ -3,7 +3,7 @@ package de.eloc.eloc_control_panel.data
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
-import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
+import de.eloc.eloc_control_panel.data.util.Preferences
 
 private const val DEFAULT_NAME = "<unknown device>"
 
@@ -22,7 +22,7 @@ class BtDevice(private val bluetoothDevice: BluetoothDevice, val associationId :
     val address: String = bluetoothDevice.address
 
     fun isEloc(): Boolean {
-        return if (PreferencesHelper.instance.showingAllBluetoothDevices()) {
+        return if (Preferences.showAllBluetoothDevices) {
             true
         } else {
             @SuppressLint("MissingPermission")

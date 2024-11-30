@@ -10,23 +10,23 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.openlocationcode.OpenLocationCode
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.data.AppState
+import de.eloc.eloc_control_panel.activities.formatNumber
+import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.showInstructions
+import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.activities.showModalOptionAlert
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
 import de.eloc.eloc_control_panel.data.RecordState
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
+import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.databinding.ActivityDeviceBinding
 import de.eloc.eloc_control_panel.databinding.LayoutModeChooserBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
-import de.eloc.eloc_control_panel.activities.showModalAlert
-import de.eloc.eloc_control_panel.activities.goBack
-import de.eloc.eloc_control_panel.activities.formatNumber
-import de.eloc.eloc_control_panel.activities.showInstructions
-import de.eloc.eloc_control_panel.activities.showModalOptionAlert
 
 // todo: add refresh menu item for old API levels
 
@@ -156,7 +156,7 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
                 ::goBack
             )
         } else {
-            if (!AppState.hasValidProfile) {
+            if (!Preferences.hasValidProfile) {
                 showModalAlert(
                     getString(R.string.required),
                     getString(R.string.aranger_name_required),
@@ -164,7 +164,7 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
                 )
             } else {
                 binding.toolbar.title = getString(R.string.getting_node_name)
-                binding.toolbar.subtitle = getString(R.string.eloc_user, AppState.rangerName)
+                binding.toolbar.subtitle = getString(R.string.eloc_user, Preferences.rangerName)
                 binding.appVersionItem.valueText = App.versionName
                 updateGpsViews()
                 setListeners()

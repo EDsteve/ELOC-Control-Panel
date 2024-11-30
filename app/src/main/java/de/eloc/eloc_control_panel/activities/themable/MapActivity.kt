@@ -18,18 +18,18 @@ import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.clustering.ClusterManager
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.data.AppState
+import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.data.ElocDeviceInfo
 import de.eloc.eloc_control_panel.data.ElocMarker
 import de.eloc.eloc_control_panel.data.adapters.MapInfoAdapter
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
+import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.databinding.ActivityMapBinding
 import de.eloc.eloc_control_panel.databinding.WindowLayoutBinding
 import de.eloc.eloc_control_panel.dialogs.ListViewDialog
 import java.util.Locale
-import de.eloc.eloc_control_panel.activities.goBack
-import de.eloc.eloc_control_panel.activities.showModalAlert
 
 class MapActivity : ThemableActivity() {
 
@@ -69,7 +69,7 @@ class MapActivity : ThemableActivity() {
         menuInflater.inflate(R.menu.find_elocs_menu, binding.toolbar.menu)
         setListeners()
 
-        if (AppState.hasValidProfile) {
+        if (Preferences.hasValidProfile) {
             val mapFragment =
                 supportFragmentManager.findFragmentById(binding.mapView.id) as SupportMapFragment?
             mapFragment?.getMapAsync { googleMap: GoogleMap ->

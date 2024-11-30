@@ -3,13 +3,12 @@ package de.eloc.eloc_control_panel.activities.themable
 import android.os.Bundle
 import android.view.View
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.data.AppState
+import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.activities.themable.media.ProfileSetupActivity
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.databinding.ActivityVerifyEmailBinding
-import de.eloc.eloc_control_panel.activities.showModalAlert
-import de.eloc.eloc_control_panel.activities.open
-import de.eloc.eloc_control_panel.activities.themable.media.ProfileSetupActivity
 
 private enum class UiState {
     Offline, InProgress, Idle
@@ -79,8 +78,8 @@ class VerifyEmailActivity : ThemableActivity() {
 
     private fun checkAuthState() {
         updateUI(UiState.InProgress)
-        if (AppState.isSignedIn) {
-            if (AppState.isEmailAddressVerified) {
+        if (AuthHelper.instance.isSignedIn) {
+            if (AuthHelper.instance.isEmailAddressVerified) {
                 FirestoreHelper.instance.hasProfile(authHelper.userId)
                 { hasProfile, firebaseUnavailable ->
                     if (firebaseUnavailable) {
@@ -98,7 +97,8 @@ class VerifyEmailActivity : ThemableActivity() {
                     }
                 }
             } else {
-                val message = getString(R.string.verification_message, AppState.emailAddress)
+                val message =
+                    getString(R.string.verification_message, AuthHelper.instance.emailAddress)
                 binding.messageTextView.text = message
                 updateUI(UiState.Idle)
             }

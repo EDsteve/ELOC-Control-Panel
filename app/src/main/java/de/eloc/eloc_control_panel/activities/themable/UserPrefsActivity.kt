@@ -7,7 +7,7 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.setChipColors
 import de.eloc.eloc_control_panel.databinding.ActivityUserPrefsBinding
-import de.eloc.eloc_control_panel.data.helpers.PreferencesHelper
+import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.data.PreferredFontSize
 import de.eloc.eloc_control_panel.data.StatusUploadInterval
 
@@ -22,7 +22,6 @@ class UserPrefsActivity : ThemableActivity() {
     private lateinit var binding: ActivityUserPrefsBinding
     private var preferredFontSize = PreferredFontSize.Small
     private var oldPreferredFontSize = PreferredFontSize.Small
-    private val helper = PreferencesHelper.instance
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,7 +91,7 @@ class UserPrefsActivity : ThemableActivity() {
         binding.toolbar.setNavigationOnClickListener { onBackButtonPressed() }
 
         binding.btDevicesSwitch.setOnCheckedChangeListener { _, checked ->
-            helper.setShowAllBluetoothDevices(checked)
+            Preferences.showAllBluetoothDevices = checked
         }
 
         binding.rightChipLayout.chip.setOnCheckedChangeListener(this::menuPositionChanged)
@@ -147,20 +146,20 @@ class UserPrefsActivity : ThemableActivity() {
             !checked
         }
         if (checked) {
-            helper.setMainMenuPosition(menuOnLeftSide)
+            Preferences.isMainMenuOnLeft = menuOnLeftSide
         }
         setChipColors(binding.rightChipLayout)
         setChipColors(binding.leftChipLayout)
     }
 
     private fun loadPrefs() {
-        binding.btDevicesSwitch.isChecked = helper.showingAllBluetoothDevices()
-        if (helper.isMainMenuOnLeft()) {
+        binding.btDevicesSwitch.isChecked = Preferences.showAllBluetoothDevices
+        if (Preferences.isMainMenuOnLeft) {
             binding.leftChipLayout.chip.isChecked = true
         } else {
             binding.rightChipLayout.chip.isChecked = true
         }
-        val fontSize = helper.getPreferredFontSize()
+        val fontSize = Preferences.preferredFontSize
         oldPreferredFontSize = fontSize
         preferredFontSize = fontSize
         when (preferredFontSize) {
@@ -169,7 +168,7 @@ class UserPrefsActivity : ThemableActivity() {
             PreferredFontSize.Large -> binding.largeFontChipLayout.chip.isChecked = true
         }
 
-        when (helper.getStatusUploadInterval()) {
+        when (Preferences.statusUploadInterval) {
             StatusUploadInterval.Mins15 -> binding.uploadInterval15minsChipLayout.chip.isChecked =
                 true
 
@@ -186,14 +185,14 @@ class UserPrefsActivity : ThemableActivity() {
 
     private fun setPreferredFont(newFontSize: PreferredFontSize) {
         preferredFontSize = newFontSize
-        helper.setPreferredFontSize(preferredFontSize)
+        Preferences.preferredFontSize = newFontSize
         setChipColors(binding.smallFontChipLayout)
         setChipColors(binding.mediumFontChipLayout)
         setChipColors(binding.largeFontChipLayout)
     }
 
     private fun setPreferredUploadInterval(newInterval: StatusUploadInterval) {
-        helper.setStatusUploadInterval(newInterval)
+        Preferences.statusUploadInterval = newInterval
         setChipColors(binding.uploadInterval15minsChipLayout)
         setChipColors(binding.uploadInterval30minsChipLayout)
         setChipColors(binding.uploadInterval60minsChipLayout)
