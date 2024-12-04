@@ -220,4 +220,10 @@
     <string name="windows_ms">Windows MS</string>
     <string name="yes">Yes</string>
     <string name="your_account_has_been_deleted">Your account has been deleted</string>
+    <string name="signal_indicator_label">Signal indicator label</string>
+    <string name="rssi_label_description_only">Description only</string>
+    <string name="rssi_label_power_only">Signal power only</string>
+    <string name="rssi_label_description_and_power">Description and signal power</string>
+    <string name="rssi_label_none">None</string>
+
 </resources>

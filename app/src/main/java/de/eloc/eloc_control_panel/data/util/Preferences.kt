@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.data.PreferredFontSize
+import de.eloc.eloc_control_panel.data.RssiLabel
 import de.eloc.eloc_control_panel.data.StatusUploadInterval
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 
@@ -21,10 +22,19 @@ object Preferences {
 
     private const val PREF_ACCOUNT_RANGER_NAME = "account_ranger_name"
     private const val PREF_ACCOUNT_PROFILE_PIC_URL = "account_pfp_url"
+    private const val PREF_RSS_LABEL_TYPE = "rssi_label_type"
     private const val RANGER_NOT_SET = "<ranger not set>"
 
     private val preferences: SharedPreferences =
         PreferenceManager.getDefaultSharedPreferences(App.instance)
+
+    var rssiLabel: RssiLabel
+        get() {
+            val code = preferences.getInt(PREF_RSS_LABEL_TYPE, RssiLabel.PowerOnly.type)
+            return RssiLabel.valueOf(code)
+        }
+        set(value) = preferences.edit().putInt(PREF_RSS_LABEL_TYPE, value.type).apply()
+
 
     var rangerName: String
         get() {

@@ -22,6 +22,7 @@
             <enum name="normal" value="0" />
             <enum name="button" value="1" />
             <enum name="toggle" value="2" />
+            <enum name="selectable" value="3" />
         </attr>
         <attr name="indent" format="dimension" />
     </declare-styleable>

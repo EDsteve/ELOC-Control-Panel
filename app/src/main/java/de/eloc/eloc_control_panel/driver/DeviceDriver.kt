@@ -27,7 +27,6 @@ import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
-import de.eloc.eloc_control_panel.interfaces.StringCallback
 import de.eloc.eloc_control_panel.services.StatusUploadService
 import org.json.JSONObject
 import java.io.IOException
@@ -155,7 +154,7 @@ object DeviceDriver : Runnable {
     private var configSaved = false
     private var statusSaved = false
     private var combinedStatusAndConfigTime: Date? = null
-    private var commandLineListener: StringCallback? = null
+    private var commandLineListener: ((String) -> Unit)? = null
     private var connecting = false
     private var disconnecting = false
     private const val NEWLINE = "\n"
@@ -277,7 +276,7 @@ object DeviceDriver : Runnable {
         write(command)
     }
 
-    fun setCommandLineListener(listener: StringCallback) {
+    fun setCommandLineListener(listener: (String) -> Unit) {
         commandLineListener = listener
     }
 
@@ -788,9 +787,7 @@ object DeviceDriver : Runnable {
                         bytesCache = bytesCache.slice(startIndex..endIndex)
                         val jsonByteArray = jsonBytes.toByteArray()
                         val json = sanitize(String(jsonByteArray))
-                        if (commandLineListener != null) {
-                            commandLineListener?.handler(json)
-                        }
+                        commandLineListener?.invoke(json)
                         val intercepted = interceptCompletedSetCommand(json)
                         if (!intercepted) {
                             interceptCompletedGetCommand(json)

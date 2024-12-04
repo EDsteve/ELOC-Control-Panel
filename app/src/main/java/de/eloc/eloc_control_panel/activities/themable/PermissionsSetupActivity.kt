@@ -16,7 +16,7 @@ import de.eloc.eloc_control_panel.activities.showModalOptionAlert
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.databinding.ActivityPermissionsSetupBinding
-import de.eloc.eloc_control_panel.receivers.BluetoothWatcher
+import de.eloc.eloc_control_panel.receivers.ElocReceiver
 import java.lang.Thread.sleep
 
 // TODO: wait for internet status to be non-null
@@ -32,7 +32,7 @@ class PermissionsSetupActivity : ThemableActivity() {
             }
         }
     private lateinit var binding: ActivityPermissionsSetupBinding
-    private val bluetoothWatcher = BluetoothWatcher(this::runChecks)
+    private val elocReceiver = ElocReceiver(this::runChecks, null)
     private var stopChecks = false
     private var checksThread: Thread? = null
 
@@ -72,12 +72,7 @@ class PermissionsSetupActivity : ThemableActivity() {
         binding = ActivityPermissionsSetupBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setListeners()
-        ContextCompat.registerReceiver(
-            this,
-            bluetoothWatcher,
-            BluetoothHelper.broadcastFilter,
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
+        elocReceiver.register(this)
     }
 
     override fun onPause() {
@@ -103,8 +98,8 @@ class PermissionsSetupActivity : ThemableActivity() {
     }
 
     override fun onDestroy() {
+        elocReceiver.unregister(this)
         super.onDestroy()
-        unregisterReceiver(bluetoothWatcher)
     }
 
     private fun setListeners() {

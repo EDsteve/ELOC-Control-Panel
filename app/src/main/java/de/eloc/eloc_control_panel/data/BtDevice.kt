@@ -5,10 +5,13 @@ import android.bluetooth.BluetoothDevice
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.util.Preferences
 
-private const val DEFAULT_NAME = "<unknown device>"
+class BtDevice(private val bluetoothDevice: BluetoothDevice, val associationId: Int? = null) {
+    companion object {
+        const val DEFAULT_NAME = "<unknown device>"
+    }
 
-class BtDevice(private val bluetoothDevice: BluetoothDevice, val associationId : Int? = null) {
     var selected = false
+    var rssi: Rssi? = null
 
     val name: String
         @SuppressLint("MissingPermission")

@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import com.google.firebase.storage.FirebaseStorage
 import de.eloc.eloc_control_panel.old.DataHelper
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
-import de.eloc.eloc_control_panel.interfaces.StringCallback
 import java.io.FileOutputStream
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -17,7 +16,7 @@ class StorageHelper {
     private val profilePicturesFolder =
         FirebaseStorage.getInstance().getReference(REF_PROFILE_PICTURES)
 
-    fun uploadProfilePicture(id: String, bitmap: Bitmap, callback: StringCallback?) {
+    fun uploadProfilePicture(id: String, bitmap: Bitmap, callback: ((String) -> Unit)? = null) {
         val temp = DataHelper.getTempFile()
 
         var saved = false
@@ -41,14 +40,20 @@ class StorageHelper {
                                 downloadUrl = uri.toString()
                             }
                         }
-                        callback?.handler(downloadUrl)
+                        if (callback != null) {
+                            callback(downloadUrl)
+                        }
                     }
                 } else {
-                    callback?.handler("")
+                    if (callback != null) {
+                        callback("")
+                    }
                 }
             }
         } else {
-            callback?.handler("")
+            if (callback != null) {
+                callback("")
+            }
         }
     }
 

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.UserPrefsActivity">
+    tools:context=".activities.themable.UserPrefsActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -31,19 +31,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingVertical="32dp">
-
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/bt_devices_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
-                    android:text="@string/show_all_bt_scanning"
-                    app:thumbTint="@color/white" />
-
-                <Space
-                    android:layout_width="match_parent"
-                    android:layout_height="16dp" />
+                android:paddingVertical="16dp">
 
                 <TextView
                     android:layout_width="wrap_content"

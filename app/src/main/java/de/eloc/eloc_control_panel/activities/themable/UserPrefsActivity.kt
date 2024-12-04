@@ -90,10 +90,6 @@ class UserPrefsActivity : ThemableActivity() {
     private fun setListeners() {
         binding.toolbar.setNavigationOnClickListener { onBackButtonPressed() }
 
-        binding.btDevicesSwitch.setOnCheckedChangeListener { _, checked ->
-            Preferences.showAllBluetoothDevices = checked
-        }
-
         binding.rightChipLayout.chip.setOnCheckedChangeListener(this::menuPositionChanged)
         binding.leftChipLayout.chip.setOnCheckedChangeListener(this::menuPositionChanged)
 
@@ -153,7 +149,6 @@ class UserPrefsActivity : ThemableActivity() {
     }
 
     private fun loadPrefs() {
-        binding.btDevicesSwitch.isChecked = Preferences.showAllBluetoothDevices
         if (Preferences.isMainMenuOnLeft) {
             binding.leftChipLayout.chip.isChecked = true
         } else {

@@ -16,6 +16,27 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <ImageView
+        android:id="@+id/rssi_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginVertical="8dp"
+        android:importantForAccessibility="no"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/white"
+        tools:src="@drawable/rssi_2" />
+
+    <TextView
+        android:id="@+id/rssi_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="11sp"
+        app:layout_constraintEnd_toEndOf="@id/rssi_icon"
+        app:layout_constraintTop_toBottomOf="@id/rssi_icon"
+        tools:text="Strong (-78dB)" />
+
     <CheckBox
         android:id="@+id/checkbox"
         android:layout_width="wrap_content"
@@ -30,7 +51,7 @@
         android:layout_height="wrap_content"
         android:layout_marginVertical="4dp"
         android:textSize="18sp"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/rssi_icon"
         app:layout_constraintStart_toEndOf="@id/checkbox"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="ELOC 56" />
@@ -40,7 +61,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textColor="#686464"
-        app:layout_constraintEnd_toEndOf="@id/name_text_view"
+        app:layout_constraintEnd_toStartOf="@id/rssi_label"
         app:layout_constraintStart_toStartOf="@id/name_text_view"
         app:layout_constraintTop_toBottomOf="@id/name_text_view"
         tools:text="aa:bb:cc:dd:ee:ff" />

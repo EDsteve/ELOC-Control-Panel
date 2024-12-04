@@ -11,6 +11,7 @@ import de.eloc.eloc_control_panel.databinding.LayoutListItemBinding
 private const val TYPE_NORMAL = 0
 private const val TYPE_BUTTON = 1
 private const val TYPE_TOGGLE = 2
+private const val TYPE_SELECTABLE = 3
 
 class ListItem : LinearLayout {
     private lateinit var binding: LayoutListItemBinding
@@ -84,6 +85,21 @@ class ListItem : LinearLayout {
                     binding.root.isFocusable = false
                     binding.root.isClickable = false
                     binding.root.background = null
+                }
+
+                TYPE_SELECTABLE -> {
+                    binding.valueTextView.visibility = View.GONE
+                    binding.toggle.visibility = View.GONE
+                    binding.icon.visibility = View.GONE
+                    val typedValue = TypedValue()
+                    context.theme.resolveAttribute(
+                        android.R.attr.selectableItemBackground,
+                        typedValue,
+                        true
+                    )
+                    binding.root.isFocusable = true
+                    binding.root.isClickable = true
+                    binding.root.setBackgroundResource(typedValue.resourceId)
                 }
 
                 else -> {

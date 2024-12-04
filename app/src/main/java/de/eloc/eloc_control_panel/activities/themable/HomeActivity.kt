@@ -1,11 +1,8 @@
 package de.eloc.eloc_control_panel.activities.themable
 
 import android.app.Activity
-import android.bluetooth.BluetoothDevice
 import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
@@ -25,6 +22,7 @@ import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.activities.showModalOptionAlert
 import de.eloc.eloc_control_panel.activities.showSnack
 import de.eloc.eloc_control_panel.activities.themable.media.ProfileActivity
+import de.eloc.eloc_control_panel.data.BtDevice
 import de.eloc.eloc_control_panel.data.adapters.ElocInfoAdapter
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper
@@ -33,7 +31,7 @@ import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
 import de.eloc.eloc_control_panel.databinding.LayoutNavHeaderBinding
-import de.eloc.eloc_control_panel.receivers.BluetoothDeviceReceiver
+import de.eloc.eloc_control_panel.receivers.ElocReceiver
 import de.eloc.eloc_control_panel.services.StatusUploadService
 
 // todo: use cached profile picture
@@ -45,7 +43,7 @@ class HomeActivity : ThemableActivity() {
     private lateinit var rightHeaderBinding: LayoutNavHeaderBinding
     private var isFirstRun = true
     private val elocAdapter = ElocInfoAdapter(false, this::onListUpdated, this::showDevice)
-    private val elocReceiver = BluetoothDeviceReceiver(elocAdapter::add)
+    private val elocReceiver = ElocReceiver(null, elocAdapter::add)
     private lateinit var preferencesLauncher: ActivityResultLauncher<Intent>
     private lateinit var associationLauncher: ActivityResultLauncher<IntentSenderRequest>
     private val backPressedHandler = object : OnBackPressedCallback(true) {
@@ -115,8 +113,8 @@ class HomeActivity : ThemableActivity() {
     }
 
     override fun onDestroy() {
+        elocReceiver.unregister(this)
         super.onDestroy()
-        unregisterReceiver(elocReceiver)
     }
 
     private fun openUserPrefs() {
@@ -128,7 +126,7 @@ class HomeActivity : ThemableActivity() {
         binding.drawer.visibility = View.VISIBLE
         binding.progressIndicator.visibility = View.GONE
         closeDrawer()
-        registerReceiver(elocReceiver, IntentFilter(BluetoothDevice.ACTION_FOUND))
+        elocReceiver.register(this)
         setupListView()
         runFirstScan()
     }
@@ -331,12 +329,12 @@ class HomeActivity : ThemableActivity() {
         }
     }
 
-    private fun showDevice(address: String) {
+    private fun showDevice(device: BtDevice) {
         BluetoothHelper.stopScan(this::scanUpdate)
-        BluetoothHelper.associateDevice(this, address, associationLauncher) {
+        BluetoothHelper.associateDevice(this, device, associationLauncher) {
             val intent = Intent(this, DeviceActivity::class.java)
                 .apply {
-                    putExtra(DeviceActivity.EXTRA_DEVICE_ADDRESS, address)
+                    putExtra(DeviceActivity.EXTRA_DEVICE_ADDRESS, device.address)
                 }
             startActivity(intent)
         }
@@ -424,12 +422,7 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun showBluetoothSettings() {
-        // CompanionDeviceManager is only available after Oreo
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            open(BluetoothSettingsActivity::class.java)
-        } else {
-            BluetoothHelper.openSettings(this)
-        }
+        open(BluetoothSettingsActivity::class.java)
     }
 
     private fun showAboutApp() {

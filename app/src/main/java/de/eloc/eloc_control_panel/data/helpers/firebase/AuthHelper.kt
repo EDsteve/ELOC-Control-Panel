@@ -25,7 +25,6 @@ import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.interfaces.GoogleSignInCallback
-import de.eloc.eloc_control_panel.interfaces.StringCallback
 import de.eloc.eloc_control_panel.interfaces.VoidCallback
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -66,20 +65,20 @@ class AuthHelper {
         googleSignInCanceled = false
     }
 
-    fun register(email: String, password: String, callback: StringCallback) {
+    fun register(email: String, password: String, callback: (String) -> Unit) {
         val auth = FirebaseAuth.getInstance()
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                user?.sendEmailVerification()?.addOnCompleteListener { callback.handler("") }
+                user?.sendEmailVerification()?.addOnCompleteListener { callback("") }
             } else {
                 val message =
                     task.exception?.message ?: App.instance.getString(R.string.something_went_wrong)
-                callback.handler(message)
+                callback(message)
             }
         }
     }
 
-    fun signIn(email: String, password: String, callback: StringCallback) {
+    fun signIn(email: String, password: String, callback: (String) -> Unit) {
         val auth = FirebaseAuth.getInstance()
         auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
             val error = if (!task.isSuccessful) {
@@ -93,7 +92,7 @@ class AuthHelper {
             } else {
                 ""
             }
-            callback.handler(error)
+            callback(error)
         }
     }
 
@@ -243,9 +242,9 @@ class AuthHelper {
         }
     }
 
-    fun reauthenticate(password: String, callback: StringCallback) {
+    fun reauthenticate(password: String, callback: (String) -> Unit) {
         if (user == null) {
-            callback.handler(defaultErrorMessage)
+            callback(defaultErrorMessage)
         } else {
             val credential = EmailAuthProvider.getCredential(emailAddress, password)
             user!!.reauthenticate(credential).addOnCompleteListener {
@@ -254,7 +253,7 @@ class AuthHelper {
                 } else {
                     ""
                 }
-                callback.handler(error)
+                callback(error)
             }
         }
     }
@@ -262,21 +261,21 @@ class AuthHelper {
     fun changeEmailAddress(
         newEmailAddress: String,
         password: String,
-        callback: StringCallback
+        callback: (String) -> Unit
     ) {
         reauthenticate(password) { error ->
             val err = error.trim()
             if (err.isEmpty()) {
                 changeEmailAfterReauth(newEmailAddress, callback)
             } else {
-                callback.handler(error)
+                callback(error)
             }
         }
     }
 
-    private fun changeEmailAfterReauth(newEmailAddress: String, callback: StringCallback) {
+    private fun changeEmailAfterReauth(newEmailAddress: String, callback: (String) -> Unit) {
         if (user == null) {
-            callback.handler(defaultErrorMessage)
+            callback(defaultErrorMessage)
         } else {
             user!!.verifyBeforeUpdateEmail(newEmailAddress).addOnCompleteListener { task ->
                 val error = if (task.isSuccessful) {
@@ -289,25 +288,25 @@ class AuthHelper {
                     }
                     error
                 }
-                callback.handler(error)
+                callback(error)
             }
         }
     }
 
-    fun changePassword(newPassword: String, oldPassword: String, callback: StringCallback) {
+    fun changePassword(newPassword: String, oldPassword: String, callback: (String) -> Unit) {
         reauthenticate(oldPassword) { error ->
             val err = error.trim()
             if (err.isEmpty()) {
                 changePasswordAfterReauth(newPassword, callback)
             } else {
-                callback.handler(error)
+                callback(error)
             }
         }
     }
 
-    private fun changePasswordAfterReauth(newPassword: String, callback: StringCallback) {
+    private fun changePasswordAfterReauth(newPassword: String, callback: (String) -> Unit) {
         if (user == null) {
-            callback.handler(defaultErrorMessage)
+            callback(defaultErrorMessage)
         } else {
             user?.updatePassword(newPassword)?.addOnCompleteListener { task ->
                 val error = if (!task.isSuccessful) {
@@ -315,7 +314,7 @@ class AuthHelper {
                 } else {
                     ""
                 }
-                callback.handler(error)
+                callback(error)
             }
         }
     }

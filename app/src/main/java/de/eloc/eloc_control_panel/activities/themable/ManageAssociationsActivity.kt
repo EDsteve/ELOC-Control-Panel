@@ -4,13 +4,13 @@ import android.os.Bundle
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.data.AssociatedDeviceInfo
 import de.eloc.eloc_control_panel.data.BtDevice
 import de.eloc.eloc_control_panel.data.adapters.ElocInfoAdapter
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.databinding.ActivityManageAssociationsBinding
-import de.eloc.eloc_control_panel.activities.goBack
-import de.eloc.eloc_control_panel.activities.showModalAlert
 
 class ManageAssociationsActivity : ThemableActivity() {
     private lateinit var binding: ActivityManageAssociationsBinding
@@ -25,9 +25,7 @@ class ManageAssociationsActivity : ThemableActivity() {
         setListeners()
     }
 
-    private fun setListeners() {
-        binding.unpairButton.setOnClickListener { disassociate() }
-    }
+    private fun setListeners() = binding.unpairButton.setOnClickListener { disassociate() }
 
     private fun checkAssociatedDevices() {
         binding.noPairsTextView.visibility = View.VISIBLE
@@ -41,12 +39,10 @@ class ManageAssociationsActivity : ThemableActivity() {
 
             adapter.clear()
             for (info in associatedDevices) {
-                if (info.address != null) {
-                    val device = BluetoothHelper.getDevice(info.address!!)
-                    if (device != null) {
-                        val btDevice = BtDevice(device, associationId = info.id)
-                        adapter.add(btDevice, skipElocCheck = true)
-                    }
+                val device = BluetoothHelper.getDevice(info.mac)
+                if (device != null) {
+                    val btDevice = BtDevice(device, associationId = info.associationId)
+                    adapter.add(btDevice, skipElocCheck = true)
                 }
             }
             binding.pairedDevicesRecyclerView.adapter = adapter
@@ -70,7 +66,11 @@ class ManageAssociationsActivity : ThemableActivity() {
             )
         } else {
             for (device in selected) {
-                val info = AssociatedDeviceInfo(id = device.associationId, address = device.address)
+                val info = AssociatedDeviceInfo(
+                    associationId = device.associationId,
+                    name = device.name,
+                    mac = device.address
+                )
                 BluetoothHelper.disassociateDevice(this, info)
             }
             checkAssociatedDevices()

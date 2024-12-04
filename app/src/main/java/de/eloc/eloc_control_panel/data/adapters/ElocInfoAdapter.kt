@@ -8,14 +8,11 @@ import de.eloc.eloc_control_panel.data.BtDevice
 import de.eloc.eloc_control_panel.data.viewholders.BtDeviceViewHolder
 import de.eloc.eloc_control_panel.databinding.LayoutElocInfoBinding
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
-import de.eloc.eloc_control_panel.interfaces.StringCallback
-
-import java.util.ArrayList
 
 class ElocInfoAdapter(
     private val checkable: Boolean,
     val callback: BooleanCallback? = null,
-    private val itemCallback: StringCallback? = null
+    private val itemCallback: ((BtDevice) -> Unit)? = null
 ) :
     RecyclerView.Adapter<BtDeviceViewHolder>() {
     private val deviceList = mutableListOf<BtDevice>()

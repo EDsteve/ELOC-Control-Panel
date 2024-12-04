@@ -1,13 +1,8 @@
 package de.eloc.eloc_control_panel.data.helpers
 
 import android.content.Context
-import android.os.SystemClock
-import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.driver.DeviceDriver
-import de.eloc.eloc_control_panel.interfaces.StringCallback
-import de.eloc.eloc_control_panel.old.SNTPClient
-import java.util.Calendar
 import java.util.TimeZone
 
 object TimeHelper {

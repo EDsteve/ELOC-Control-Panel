@@ -1,6 +1,3 @@
 package de.eloc.eloc_control_panel.data
 
-class AssociatedDeviceInfo(
-    var address: String? = null,
-    var id: Int? = null
-)
+data class AssociatedDeviceInfo(val mac: String, val name: String, val associationId: Int?)

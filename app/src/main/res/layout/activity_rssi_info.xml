@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.themable.BluetoothSettingsActivity">
+    tools:context=".activities.themable.RssiInfoActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -15,79 +15,79 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?actionBarSize"
-            app:title="@string/bluetooth_settings" />
+            app:title="@string/signal_indicator_label" />
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="vertical"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
         <Space
-            android:id="@+id/top_space"
             android:layout_width="match_parent"
             android:layout_height="8dp"
             app:layout_constraintTop_toTopOf="parent" />
 
         <de.eloc.eloc_control_panel.widgets.ListItem
-            android:id="@+id/signal_info_item"
+            android:id="@+id/none_item"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            app:itemType="button"
-            app:keyText="@string/signal_indicator_label"
-            app:layout_constraintTop_toBottomOf="@id/top_space"
-            app:valueText="@string/manage" />
+            app:itemType="selectable"
+            app:keyText="@string/rssi_label_none"
+            app:layout_constraintTop_toBottomOf="@id/top_space" />
 
         <com.google.android.material.divider.MaterialDivider
-            android:id="@+id/divider1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginVertical="4dp"
-            app:layout_constraintTop_toBottomOf="@id/signal_info_item" />
+            android:layout_marginVertical="8dp"
+            app:layout_constraintTop_toBottomOf="@id/none_item" />
 
         <de.eloc.eloc_control_panel.widgets.ListItem
-            android:id="@+id/show_all_devices_item"
+            android:id="@+id/description_item"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            app:itemType="toggle"
-            app:keyText="@string/show_all_bt_scanning"
+            app:itemType="selectable"
+            app:keyText="@string/rssi_label_description_only"
             app:layout_constraintTop_toBottomOf="@id/divider1" />
 
         <com.google.android.material.divider.MaterialDivider
-            android:id="@+id/divider2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginVertical="4dp"
-            app:layout_constraintTop_toBottomOf="@id/show_all_devices_item" />
+            android:layout_marginVertical="8dp"
+            app:layout_constraintTop_toBottomOf="@id/description_item" />
 
         <de.eloc.eloc_control_panel.widgets.ListItem
-            android:id="@+id/associated_devices_item"
+            android:id="@+id/power_item"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            app:itemType="button"
-            app:keyText="@string/paired_devices"
-            app:layout_constraintTop_toBottomOf="@id/divider2"
-            app:valueText="@string/manage" />
+            app:itemType="selectable"
+            app:keyText="@string/rssi_label_power_only"
+            app:layout_constraintTop_toBottomOf="@id/divider2" />
 
         <com.google.android.material.divider.MaterialDivider
-            android:id="@+id/divider3"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginVertical="4dp"
-            app:layout_constraintTop_toBottomOf="@id/associated_devices_item" />
+            android:layout_marginVertical="8dp"
+            app:layout_constraintTop_toBottomOf="@id/power_item" />
 
         <de.eloc.eloc_control_panel.widgets.ListItem
-            android:id="@+id/system_settings_item"
+            android:id="@+id/description_and_power_item"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            app:itemType="button"
-            app:keyText="@string/system_settings"
-            app:layout_constraintTop_toBottomOf="@id/divider3"
-            app:valueText="@string/manage" />
+            app:itemType="selectable"
+            app:keyText="@string/rssi_label_description_and_power"
+            app:layout_constraintTop_toBottomOf="@id/divider3" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <com.google.android.material.divider.MaterialDivider
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="8dp"
+            app:layout_constraintTop_toBottomOf="@id/power_item" />
+
+    </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

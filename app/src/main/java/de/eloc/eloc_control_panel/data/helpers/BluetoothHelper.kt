@@ -28,12 +28,14 @@ import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.interfaces.IntCallback
 import de.eloc.eloc_control_panel.interfaces.VoidCallback
 import de.eloc.eloc_control_panel.data.AssociatedDeviceInfo
+import de.eloc.eloc_control_panel.data.BtDevice
 import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
 private const val SCAN_DURATION = 30 // Seconds
+
 
 object BluetoothHelper {
     val broadcastFilter: IntentFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
@@ -197,7 +199,7 @@ object BluetoothHelper {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val existingAssociations = associatedDevices(context)
             for (info in existingAssociations) {
-                if (info.address?.uppercase() == devAddress.uppercase()) {
+                if (info.mac.uppercase() == devAddress.uppercase()) {
                     return true
                 }
             }
@@ -250,8 +252,9 @@ object BluetoothHelper {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     for (info in deviceManager.myAssociations) {
                         val assocInfo = AssociatedDeviceInfo(
-                            id = info.id,
-                            address = info.deviceMacAddress.toString().uppercase()
+                            associationId = info.id,
+                            name = info.displayName.toString(),
+                            mac = info.deviceMacAddress.toString().uppercase()
                         )
                         existingAssociations.add(assocInfo)
                     }
@@ -259,7 +262,9 @@ object BluetoothHelper {
                     @Suppress("DEPRECATION")
                     for (assoc in deviceManager.associations) {
                         val assocInfo = AssociatedDeviceInfo(
-                            address = assoc.uppercase()
+                            mac = assoc.uppercase(),
+                            name = "<unknown device>",
+                            associationId = null
                         )
                         existingAssociations.add(assocInfo)
                     }
@@ -275,32 +280,31 @@ object BluetoothHelper {
                 context.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager?
             if (deviceManager != null) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    if (info.id != null) {
-                        deviceManager.disassociate(info.id!!)
+                    if (info.associationId != null) {
+                        deviceManager.disassociate(info.associationId)
                     }
                 } else {
-                    if (info.address != null) {
-                        @Suppress("DEPRECATION")
-                        deviceManager.disassociate(info.address!!)
-                    }
+                    @Suppress("DEPRECATION")
+                    deviceManager.disassociate(info.mac)
+                    DataManager.removeAssociation(info.mac)
                 }
             }
         }
     }
 
     fun associateDevice(
-        context: Context, address: String,
+        context: Context, device: BtDevice,
         associationLauncher: ActivityResultLauncher<IntentSenderRequest>,
         associationCompletedCallback: VoidCallback,
     ) {
-        if (isDeviceAssociated(context, address)) {
+        if (isDeviceAssociated(context, device.address)) {
             associationCompletedCallback.handler()
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val deviceManager =
                 context.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager?
             if (deviceManager != null) {
                 val filter = BluetoothDeviceFilter.Builder()
-                    .setAddress(address)
+                    .setAddress(device.address)
                     .build()
 
                 val associationRequest = AssociationRequest.Builder()
@@ -312,6 +316,7 @@ object BluetoothHelper {
                     override fun onAssociationCreated(associationInfo: AssociationInfo) {
                         super.onAssociationCreated(associationInfo)
                         Logger.d("Association created")
+                        DataManager.addAssociation(device.name, device.address)
                         associationCompletedCallback.handler()
                     }
 
