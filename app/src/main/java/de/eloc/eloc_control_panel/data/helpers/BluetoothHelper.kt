@@ -38,6 +38,7 @@ private const val SCAN_DURATION = 30 // Seconds
 
 
 object BluetoothHelper {
+    // TODO: Remove this if not used for tracking RSSI
     val broadcastFilter: IntentFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
     val enablingIntent: Intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
     private var scannerElapsed = 0
@@ -196,7 +197,9 @@ object BluetoothHelper {
     }
 
     private fun isDeviceAssociated(context: Context, devAddress: String): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        // NOTE: Even though associations may exist for API Level lower than S,
+        // we will only check for S and up. See comments in associateDevice() for details.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val existingAssociations = associatedDevices(context)
             for (info in existingAssociations) {
                 if (info.mac.uppercase() == devAddress.uppercase()) {
@@ -297,9 +300,15 @@ object BluetoothHelper {
         associationLauncher: ActivityResultLauncher<IntentSenderRequest>,
         associationCompletedCallback: VoidCallback,
     ) {
+        // Association requirements are only required on Android 12+
+        // (API level greater than R)
+        // Implementation of the CompanionDeviceManager seems to be unpredictable
+        // among the various OEM/vendors. So to lessen issues that can lead to
+        // AbstractMethodError crashes (which cannot be caught), only use CDM for
+        // Android 12+ (S and up)
         if (isDeviceAssociated(context, device.address)) {
             associationCompletedCallback.handler()
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val deviceManager =
                 context.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager?
             if (deviceManager != null) {
