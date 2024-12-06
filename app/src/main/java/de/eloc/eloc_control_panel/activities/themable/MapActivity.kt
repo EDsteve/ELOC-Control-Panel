@@ -41,6 +41,7 @@ class MapActivity : ThemableActivity() {
     private var deviceCache = mutableListOf<ElocDeviceInfo>()
     private var mapBounds: LatLngBounds? = null
     private var clusterManager: ClusterManager<ElocMarker>? = null
+    private var allDeviceInfosCached = false
 
     private val infoWindowAdapter: InfoWindowAdapter = object : InfoWindowAdapter {
         override fun getInfoContents(marker: Marker): View? {
@@ -77,12 +78,15 @@ class MapActivity : ThemableActivity() {
                 initializeMap()
             }
 
-            FirestoreHelper.instance.getElocDevicesAsync { info ->
+            FirestoreHelper.instance.getElocDevicesAsync(
+                ::cacheDeviceInfo
+            ) {
                 runOnUiThread {
-                    deviceCache.add(info)
+                    allDeviceInfosCached = true
                     if (map != null) {
                         showMarkers()
                     }
+
                 }
             }
         } else {
@@ -163,8 +167,16 @@ class MapActivity : ThemableActivity() {
         }
     }
 
+    private fun cacheDeviceInfo(info: ElocDeviceInfo) {
+        runOnUiThread {
+            deviceCache.add(info)
+        }
+    }
 
     private fun showMarkers() {
+        if (!allDeviceInfosCached) {
+            return
+        }
         var infoAdded = false
         while (deviceCache.isNotEmpty()) {
             val newInfo = deviceCache.removeAt(0)

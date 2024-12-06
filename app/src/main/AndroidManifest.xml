@@ -34,7 +34,7 @@
 
     <uses-feature android:name="android.software.companion_device_setup" />
 
-    <application
+    <application android:largeHeap="true"
         android:name=".App"
         android:allowBackup="true"
         android:enableOnBackInvokedCallback="true"

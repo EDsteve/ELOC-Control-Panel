@@ -7,15 +7,14 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.Source
+import com.google.android.gms.maps.model.LatLng
 import de.eloc.eloc_control_panel.data.ElocDeviceInfo
 import de.eloc.eloc_control_panel.data.UploadResult
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
-import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.driver.KEY_TIMESTAMP
 import de.eloc.eloc_control_panel.interfaces.BooleanCallback
-import de.eloc.eloc_control_panel.interfaces.ElocDeviceInfoCallback
 import de.eloc.eloc_control_panel.interfaces.ProfileCheckCallback
 import de.eloc.eloc_control_panel.interfaces.VoidCallback
 
@@ -301,27 +300,31 @@ class FirestoreHelper {
         return timestamp
     }
 
-    fun getElocDevicesAsync(callback: ElocDeviceInfoCallback?) {
+    fun getElocDevicesAsync(addDeviceCallback: (ElocDeviceInfo) -> Unit, onCompletedCallback: () ->  Unit) {
         FirebaseFirestore.getInstance()
-            .collection(COL_CONFIG)
-            .whereEqualTo("app_metadata.ranger", Preferences.rangerName)
+            .collection(COL_MAP)
+            .whereEqualTo("rangerName", Preferences.rangerName)
             .get()
             .addOnCompleteListener {
                 if (it.isSuccessful) {
                     val snapshot = it.result
                     if (snapshot != null) {
                         for (doc in snapshot.documents) {
-                            val plusCode = doc.get("device.locationCode", String::class.java) ?: ""
-                            val location = LocationHelper.decodePlusCode(plusCode)
+                            val latitude = doc.get("latitude", Double::class.java) ?: continue
+                            val longitude = doc.get("longitude", Double::class.java) ?: continue
+                            val location = LatLng(latitude, longitude)
                             val locationAccuracy =
-                                doc.get("device.locationAccuracy", Double::class.java)
-                            val deviceName = doc.get("device.nodeName", String::class.java)
-                            val dirtyCapturedTime =
-                                doc.get("app_metadata.capture_timestamp", String::class.java)
-                            val capturedTime = TimeHelper.prettify(dirtyCapturedTime)
-                            val batteryVolts = -100.0
-                            val recordingTimeSinceBoot = -100.0
-                            if ((deviceName != null) && (locationAccuracy != null)) {
+                                doc.get("gpsAccuracyMeters", Double::class.java) ?: continue
+                            val deviceName = doc.id
+                                .replace("map_", "")
+                                .replace(".json", "")
+                                .trim()
+                            val timestamp =
+                                doc.get("timestamp", Long::class.java) ?: continue
+                            val capturedTime = TimeHelper.prettyDate(timestamp)
+                            val batteryVolts = doc.get("batteryVolts", Double::class.java) ?: -1.0
+                            val recordingTimeSinceBoot = doc.get("recTimeHours", Double::class.java) ?: -1.0
+
                                 val info = ElocDeviceInfo(
                                     location,
                                     deviceName,
@@ -330,11 +333,12 @@ class FirestoreHelper {
                                     recordingTimeSinceBoot,
                                     locationAccuracy
                                 )
-                                callback?.handler(info)
-                            }
+                                addDeviceCallback(info)
+
                         }
                     }
                 }
+                onCompletedCallback()
             }
     }
 }

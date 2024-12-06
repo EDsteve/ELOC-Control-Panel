@@ -3,6 +3,7 @@ package de.eloc.eloc_control_panel.data.helpers
 import android.content.Context
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.driver.DeviceDriver
+import java.util.Calendar
 import java.util.TimeZone
 
 object TimeHelper {
@@ -25,6 +26,21 @@ object TimeHelper {
         seconds: Int,
         useSeconds: Boolean = false
     ) = formatSeconds(context, seconds.toDouble(), useSeconds)
+
+    fun prettyDate(epoch: Long) : String{
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = epoch
+        val year = calendar.get(Calendar.YEAR)
+        val month  = calendar.get(Calendar.MONTH) + 1
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val min = calendar.get(Calendar.MINUTE)
+        val sec = calendar.get(Calendar.SECOND)
+        var sHr = if (hour < 10)  { "0$hour" }  else { "$hour" }
+        var sMin = if (min < 10)  { "0$min" }  else { "$min" }
+        var sSecs = if (sec < 10)  { "0$sec" }  else { "$sec" }
+        return "$year/$month/$day $sHr:$sMin:$sSecs"
+    }
 
     private fun formatSeconds(
         context: Context,
