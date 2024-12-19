@@ -10,7 +10,6 @@ import android.companion.BluetoothDeviceFilter
 import android.companion.CompanionDeviceManager
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.os.Build
@@ -23,12 +22,12 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.activities.showModalAlert
-import de.eloc.eloc_control_panel.interfaces.IntCallback
-import de.eloc.eloc_control_panel.interfaces.VoidCallback
+import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.data.AssociatedDeviceInfo
 import de.eloc.eloc_control_panel.data.BtDevice
+import de.eloc.eloc_control_panel.interfaces.IntCallback
+import de.eloc.eloc_control_panel.interfaces.VoidCallback
 import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
@@ -36,10 +35,7 @@ import java.util.concurrent.TimeUnit
 
 private const val SCAN_DURATION = 30 // Seconds
 
-
 object BluetoothHelper {
-    // TODO: Remove this if not used for tracking RSSI
-    val broadcastFilter: IntentFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
     val enablingIntent: Intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
     private var scannerElapsed = 0
     private var executorHandle: ScheduledFuture<*>? = null
@@ -215,7 +211,6 @@ object BluetoothHelper {
     fun changeName(device: BluetoothDevice?, name: String) {
         try {
             if (device == null) {
-                Logger.d("BluetoothDevice is null.")
                 return
             }
 
@@ -225,24 +220,18 @@ object BluetoothHelper {
                         Manifest.permission.BLUETOOTH_CONNECT
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
-                    Logger.d("BLUETOOTH_CONNECT permission not granted.")
                     return
                 }
-
-                Logger.d("Attempting to set alias to $name for device ${device.name}")
                 device.setAlias(name)  // Critical line that could crash
-                Logger.d("Alias successfully set to $name for device ${device.name}")
-            } else {
-                Logger.d("setAlias is not supported on devices below Android 13.")
             }
-        } catch (securityException: SecurityException) {
-            Logger.d("Permission issue: ${securityException.localizedMessage}")
-        } catch (illegalArgumentException: IllegalArgumentException) {
-            Logger.d("Invalid argument: ${illegalArgumentException.localizedMessage}")
-        } catch (unsupportedOperationException: UnsupportedOperationException) {
-            Logger.d("Operation not supported: ${unsupportedOperationException.localizedMessage}")
-        } catch (e: Exception) {
-            Logger.d("Unexpected error: ${e.localizedMessage}")
+        } catch (_: SecurityException) {
+
+        } catch (_: IllegalArgumentException) {
+
+        } catch (_: UnsupportedOperationException) {
+
+        } catch (_: Exception) {
+
         }
     }
 
@@ -324,20 +313,17 @@ object BluetoothHelper {
                 val associationCallback = object : CompanionDeviceManager.Callback() {
                     override fun onAssociationCreated(associationInfo: AssociationInfo) {
                         super.onAssociationCreated(associationInfo)
-                        Logger.d("Association created")
                         DataManager.addAssociation(device.name, device.address)
                         associationCompletedCallback.handler()
                     }
 
                     override fun onAssociationPending(intentSender: IntentSender) {
                         super.onAssociationPending(intentSender)
-                        Logger.d("Association pending")
                         val senderRequest = IntentSenderRequest.Builder(intentSender).build()
                         associationLauncher.launch(senderRequest)
                     }
 
                     override fun onFailure(p0: CharSequence?) {
-                        Logger.d("Association failed")
                     }
                 }
 

@@ -1,6 +1,5 @@
 package de.eloc.eloc_control_panel.activities.themable
 
-import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -26,7 +25,6 @@ import de.eloc.eloc_control_panel.data.BtDevice
 import de.eloc.eloc_control_panel.data.adapters.ElocInfoAdapter
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper
-import de.eloc.eloc_control_panel.data.helpers.Logger
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.databinding.ActivityHomeBinding
@@ -176,14 +174,7 @@ class HomeActivity : ThemableActivity() {
 
     private fun setLaunchers() {
         associationLauncher =
-            registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-                if (result.resultCode == Activity.RESULT_OK) {
-                    Logger.d("Associated")
-                    Logger.d(result.data.toString())
-                } else {
-                    Logger.d("Association denined")
-                }
-            }
+            registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { _ -> }
 
         preferencesLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
