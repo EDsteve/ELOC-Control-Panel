@@ -577,6 +577,7 @@ object DeviceDriver : Runnable {
                     ConnectionStatus.Pending
                 }
             connecting = false
+            BluetoothHelper.scanningSpecificEloc = false
         }
     }
 

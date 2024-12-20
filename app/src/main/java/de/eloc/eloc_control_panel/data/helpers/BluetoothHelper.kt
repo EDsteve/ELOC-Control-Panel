@@ -26,19 +26,15 @@ import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.data.AssociatedDeviceInfo
 import de.eloc.eloc_control_panel.data.BtDevice
-import de.eloc.eloc_control_panel.interfaces.IntCallback
-import de.eloc.eloc_control_panel.interfaces.VoidCallback
 import java.util.Locale
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
 
 private const val SCAN_DURATION = 30 // Seconds
 
 object BluetoothHelper {
     val enablingIntent: Intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+    var scanningSpecificEloc = false
     private var scannerElapsed = 0
-    private var executorHandle: ScheduledFuture<*>? = null
+    private var scannerHandle: Any? = null
     private val bluetoothManager: BluetoothManager? =
         App.instance.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?
 
@@ -95,7 +91,7 @@ object BluetoothHelper {
 
     val isScanning: Boolean
         get() {
-            return isScanningBluetooth || (executorHandle != null)
+            return isScanningBluetooth || (scannerHandle != null)
         }
 
     private val isScanningBluetooth: Boolean
@@ -127,14 +123,14 @@ object BluetoothHelper {
         }
     }
 
-    fun startScan(callback: IntCallback): String? {
+    fun startScan(callback: ((Int) -> Unit)?): String? {
         return if (isScanning)
             stopScan(callback)
         else
             startBluetoothScan(callback)
     }
 
-    private fun startBluetoothScan(callback: IntCallback): String? {
+    private fun startBluetoothScan(callback: ((Int) -> Unit)?): String? {
         val adapter = bluetoothManager?.adapter
         if (adapter != null) {
             if (ContextCompat.checkSelfPermission(
@@ -147,19 +143,22 @@ object BluetoothHelper {
                 }
             }
             scannerElapsed = 0
-            executorHandle =
-                Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
-                    {
-                        if (scannerElapsed >= SCAN_DURATION) {
-                            stopScan(callback)
-                        }
+            Thread {
+                scannerHandle = Object()
+                while (scannerHandle != null) {
+                    if (scannerElapsed >= SCAN_DURATION) {
+                        stopScan(callback)
+                        scannerHandle = null
+                    } else {
                         scannerElapsed++
-                        callback.handler(SCAN_DURATION - scannerElapsed)
-                    },
-                    0,
-                    1,
-                    TimeUnit.SECONDS
-                )
+                        callback?.invoke(SCAN_DURATION - scannerElapsed)
+                    }
+                    try {
+                        Thread.sleep(1000)
+                    } catch (_: Exception) {
+                    }
+                }
+            }.start()
             adapter.cancelDiscovery()
             adapter.startDiscovery()
         }
@@ -169,7 +168,10 @@ object BluetoothHelper {
     fun getDevice(address: String): BluetoothDevice? =
         bluetoothManager?.adapter?.getRemoteDevice(address.uppercase(Locale.ENGLISH))
 
-    fun stopScan(callback: IntCallback): String? {
+    fun stopScan(callback: ((Int) -> Unit)?): String? {
+        if (scanningSpecificEloc) {
+            return null
+        }
         if (ContextCompat.checkSelfPermission(
                 App.instance,
                 Manifest.permission.BLUETOOTH_SCAN
@@ -181,15 +183,14 @@ object BluetoothHelper {
         }
         bluetoothManager?.adapter?.cancelDiscovery()
         stopExecutor()
-        callback.handler(-1)
+        callback?.invoke(-1)
         return null
     }
 
     private fun stopExecutor() {
-        if (executorHandle != null) {
-            executorHandle?.cancel(true)
+        if (scannerHandle != null) {
+            scannerHandle = null
         }
-        executorHandle = null
     }
 
     private fun isDeviceAssociated(context: Context, devAddress: String): Boolean {
@@ -287,7 +288,7 @@ object BluetoothHelper {
     fun associateDevice(
         context: Context, device: BtDevice,
         associationLauncher: ActivityResultLauncher<IntentSenderRequest>,
-        associationCompletedCallback: VoidCallback,
+        associationCompletedCallback: () -> Unit,
     ) {
         // Association requirements are only required on Android 12+
         // (API level greater than R)
@@ -296,7 +297,7 @@ object BluetoothHelper {
         // AbstractMethodError crashes (which cannot be caught), only use CDM for
         // Android 12+ (S and up)
         if (isDeviceAssociated(context, device.address)) {
-            associationCompletedCallback.handler()
+            associationCompletedCallback()
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val deviceManager =
                 context.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager?
@@ -314,7 +315,7 @@ object BluetoothHelper {
                     override fun onAssociationCreated(associationInfo: AssociationInfo) {
                         super.onAssociationCreated(associationInfo)
                         DataManager.addAssociation(device.name, device.address)
-                        associationCompletedCallback.handler()
+                        associationCompletedCallback()
                     }
 
                     override fun onAssociationPending(intentSender: IntentSender) {
@@ -334,7 +335,7 @@ object BluetoothHelper {
                 )
             }
         } else {
-            associationCompletedCallback.handler()
+            associationCompletedCallback()
         }
     }
 }

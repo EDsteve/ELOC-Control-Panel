@@ -8,13 +8,12 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Build
 import com.google.firebase.FirebaseApp
-import de.eloc.eloc_control_panel.interfaces.VoidCallback
 
 class App : Application() {
     private lateinit var appVersionName: String
     private lateinit var appPackageName: String
     private var hasInternetAccess: Boolean? = true
-    private var networkChangedHandlers: HashMap<String, VoidCallback> = hashMapOf()
+    private var networkChangedHandlers: HashMap<String, () -> Unit> = hashMapOf()
     private var connectivityManager: ConnectivityManager? = null
     private var activeNetworkIds: HashSet<String> = hashSetOf()
 
@@ -56,11 +55,11 @@ class App : Application() {
 
     fun onNetworkChanged() {
         for (entry in networkChangedHandlers) {
-            entry.value.handler()
+            entry.value.invoke()
         }
     }
 
-    fun addNetworkChangedHandler(id: String, handler: VoidCallback) {
+    fun addNetworkChangedHandler(id: String, handler: () -> Unit) {
         // ID must be the name of the activity.
         // Use the ID as key to avoid duplicate handlers.
         // Multiple 'adds' by the same activity will result in existing handler

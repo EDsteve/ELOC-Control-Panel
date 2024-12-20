@@ -225,5 +225,15 @@
     <string name="rssi_label_power_only">Signal power only</string>
     <string name="rssi_label_description_and_power">Description and signal power</string>
     <string name="rssi_label_none">None</string>
-
+    <string name="scanning_single_eloc_device">Scanning for selected ELOC…</string>
+    <string name="eloc_not_found">ELOC not found</string>
+    <string name="uptime">Uptime</string>
+    <string name="submit">Submit</string>
+    <string name="stop_template">Stop (%d)</string>
+    <string name="no_paired_devices_selected">Select a device to unpair!</string>
+    <string name="upload_profile_picture_error">Failed to upload profile picture!</string>
+    <string name="upload_eloc_status">Upload ELOC status</string>
+    <string name="top_left">Top Left</string>
+    <string name="top_right">Top Right</string>
+    <string name="eloc_not_found_rationale">The ELOC you are trying to connect to might be out of range or turned off.</string>
 </resources>

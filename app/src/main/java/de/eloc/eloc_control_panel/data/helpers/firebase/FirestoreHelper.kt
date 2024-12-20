@@ -14,9 +14,7 @@ import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.driver.KEY_TIMESTAMP
-import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.interfaces.ProfileCheckCallback
-import de.eloc.eloc_control_panel.interfaces.VoidCallback
 
 class FirestoreHelper {
 
@@ -46,15 +44,15 @@ class FirestoreHelper {
         accountsNode = firestore.collection("accounts")
     }
 
-    fun updateProfilePicture(url: String, id: String, callback: VoidCallback?) {
+    fun updateProfilePicture(url: String, id: String, callback: (() -> Unit)?) {
 
         val documentId = id.trim().ifEmpty {
-            callback?.handler()
+            callback?.invoke()
             return
         }
 
         val fieldValue = url.trim().ifEmpty {
-            callback?.handler()
+            callback?.invoke()
             return
         }
 
@@ -63,13 +61,13 @@ class FirestoreHelper {
         accountsNode
             .document(documentId)
             .update(data)
-            .addOnCompleteListener { callback?.handler() }
+            .addOnCompleteListener { callback?.invoke() }
     }
 
-    fun updateProfile(id: String, data: HashMap<String, Any>, callback: BooleanCallback?) {
+    fun updateProfile(id: String, data: HashMap<String, Any>, callback: ((Boolean) -> Unit)?) {
         val documentId = id.trim()
         if (documentId.isEmpty() || data.isEmpty()) {
-            callback?.handler(false)
+            callback?.invoke(false)
             return
         }
 
@@ -82,9 +80,9 @@ class FirestoreHelper {
                     if (data.containsKey(FIELD_USER_ID)) {
                         Preferences.rangerName = data[FIELD_USER_ID].toString()
                     }
-                    callback?.handler(true)
+                    callback?.invoke(true)
                 } else {
-                    callback?.handler(false)
+                    callback?.invoke(false)
                 }
             }
     }
@@ -124,9 +122,9 @@ class FirestoreHelper {
             }
     }
 
-    fun userIdExists(userId: String, callback: BooleanCallback?) {
+    fun userIdExists(userId: String, callback: ((Boolean) -> Unit)?) {
         val uid = userId.trim().ifEmpty {
-            callback?.handler(false)
+            callback?.invoke(false)
             return
         }
         accountsNode
@@ -138,13 +136,13 @@ class FirestoreHelper {
                     val count = it.result.size()
                     exists = (count > 0)
                 }
-                callback?.handler(exists)
+                callback?.invoke(exists)
             }
     }
 
-    fun getProfile(id: String, uiCallback: VoidCallback?) {
+    fun getProfile(id: String, uiCallback: (() -> Unit)?) {
         val documentId = id.trim().ifEmpty {
-            uiCallback?.handler()
+            uiCallback?.invoke()
             return
         }
         accountsNode
@@ -160,19 +158,19 @@ class FirestoreHelper {
                     Preferences.profilePictureUrl = profilePictureUrl ?: ""
                     FileSystemHelper.saveProfile()
                 }
-                uiCallback?.handler()
+                uiCallback?.invoke()
             }
     }
 
-    fun deleteProfile(id: String, callback: BooleanCallback?) {
+    fun deleteProfile(id: String, callback: ((Boolean) -> Unit)?) {
         val documentId = id.trim().ifEmpty {
-            callback?.handler(false)
+            callback?.invoke(false)
             return
         }
         accountsNode
             .document(documentId)
             .delete()
-            .addOnCompleteListener { callback?.handler(it.isSuccessful) }
+            .addOnCompleteListener { callback?.invoke(it.isSuccessful) }
     }
 
     fun uploadDataFiles(): UploadResult {
@@ -300,7 +298,10 @@ class FirestoreHelper {
         return timestamp
     }
 
-    fun getElocDevicesAsync(addDeviceCallback: (ElocDeviceInfo) -> Unit, onCompletedCallback: () ->  Unit) {
+    fun getElocDevicesAsync(
+        addDeviceCallback: (ElocDeviceInfo) -> Unit,
+        onCompletedCallback: () -> Unit
+    ) {
         FirebaseFirestore.getInstance()
             .collection(COL_MAP)
             .whereEqualTo("rangerName", Preferences.rangerName)
@@ -323,17 +324,18 @@ class FirestoreHelper {
                                 doc.get("timestamp", Long::class.java) ?: continue
                             val capturedTime = TimeHelper.prettyDate(timestamp)
                             val batteryVolts = doc.get("batteryVolts", Double::class.java) ?: -1.0
-                            val recordingTimeSinceBoot = doc.get("recTimeHours", Double::class.java) ?: -1.0
+                            val recordingTimeSinceBoot =
+                                doc.get("recTimeHours", Double::class.java) ?: -1.0
 
-                                val info = ElocDeviceInfo(
-                                    location,
-                                    deviceName,
-                                    batteryVolts,
-                                    capturedTime,
-                                    recordingTimeSinceBoot,
-                                    locationAccuracy
-                                )
-                                addDeviceCallback(info)
+                            val info = ElocDeviceInfo(
+                                location,
+                                deviceName,
+                                batteryVolts,
+                                capturedTime,
+                                recordingTimeSinceBoot,
+                                locationAccuracy
+                            )
+                            addDeviceCallback(info)
 
                         }
                     }

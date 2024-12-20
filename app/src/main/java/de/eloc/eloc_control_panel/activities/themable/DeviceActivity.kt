@@ -15,9 +15,11 @@ import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.activities.showModalOptionAlert
+import de.eloc.eloc_control_panel.data.BtDevice
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
 import de.eloc.eloc_control_panel.data.RecordState
+import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.data.util.Preferences
@@ -27,6 +29,7 @@ import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
+import de.eloc.eloc_control_panel.receivers.ElocReceiver
 
 // todo: add refresh menu item for old API levels
 
@@ -36,6 +39,7 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
     }
 
     private enum class ViewMode {
+        ScanningView,
         ConnectingView,
         SyncingTimeView,
         ContentView,
@@ -55,6 +59,7 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
         View.OnScrollChangeListener { _, _, y, _, _ ->
             binding.swipeRefreshLayout.isEnabled = (y <= 5)
         }
+    private lateinit var elocReceiver: ElocReceiver
 
     private val getCommandCompletedListener = GetCommandCompletedCallback {
         runOnUiThread {
@@ -146,6 +151,7 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
     }
 
     private fun initialize() {
+        elocReceiver = ElocReceiver(null) { elocFound(it) }
         onStatusChanged(ConnectionStatus.Inactive)
         val extras = intent.extras
         deviceAddress = extras?.getString(EXTRA_DEVICE_ADDRESS, "")?.trim() ?: ""
@@ -168,13 +174,12 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
                 binding.appVersionItem.valueText = App.versionName
                 updateGpsViews()
                 setListeners()
-                connect()
+                scanForDevice()
             }
         }
     }
 
     private fun skipTimeSync() {
-
         showModalAlert(
             getString(R.string.time_sync),
             getString(R.string.time_sync_rationale),
@@ -252,15 +257,33 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
         binding.fileHeaderItem.valueText = DeviceDriver.general.fileHeader
     }
 
-    private fun connect() {
-        binding.toolbar.visibility = View.GONE
-        binding.contentLayout.visibility = View.GONE
-        binding.initLayout.visibility = View.VISIBLE
-        binding.skipButton.visibility = View.GONE
-        binding.progressIndicator.text = getString(R.string.connecting)
-        binding.progressIndicator.visibility = View.VISIBLE
-        binding.progressIndicator.text = getString(R.string.connecting)
-        connectToDevice()
+    private fun elocFound(device: BtDevice) {
+        if (device.address == deviceAddress) {
+            elocReceiver.unregister(this)
+            BluetoothHelper.scanningSpecificEloc = false
+            setViewMode(ViewMode.ConnectingView)
+            connectToDevice()
+        }
+    }
+
+    private fun scanForDevice() {
+        // Register for device found events
+        elocReceiver.register(this)
+
+        // Do a scan to find the required device and only connect when device is found.
+        setViewMode(ViewMode.ScanningView)
+        BluetoothHelper.scanningSpecificEloc = true
+        BluetoothHelper.startScan { remaining ->
+            runOnUiThread {
+                if (remaining <= 0) {
+                    BluetoothHelper.scanningSpecificEloc = false
+                    showModalAlert(
+                        getString(R.string.eloc_not_found),
+                        getString(R.string.eloc_not_found_rationale)
+                    ) { goBack() }
+                }
+            }
+        }
     }
 
     private fun setListeners() {
@@ -282,7 +305,7 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
         binding.swipeRefreshLayout.setOnRefreshListener {
             if (!refreshing) {
                 refreshing = true
-                connectToDevice()
+                scanForDevice()
             }
         }
 
@@ -321,6 +344,15 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
 
     private fun setViewMode(mode: ViewMode) {
         when (mode) {
+            ViewMode.ScanningView -> {
+                binding.toolbar.visibility = View.GONE
+                binding.contentLayout.visibility = View.GONE
+                binding.initLayout.visibility = View.VISIBLE
+                binding.skipButton.visibility = View.GONE
+                binding.progressIndicator.infoMode = false
+                binding.progressIndicator.text = getString(R.string.scanning_single_eloc_device)
+            }
+
             ViewMode.ConnectingView -> {
                 binding.toolbar.visibility = View.GONE
                 binding.contentLayout.visibility = View.GONE

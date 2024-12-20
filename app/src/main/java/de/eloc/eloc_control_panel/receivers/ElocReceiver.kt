@@ -9,17 +9,15 @@ import android.content.IntentFilter
 import android.os.Build
 import de.eloc.eloc_control_panel.data.BtDevice
 import de.eloc.eloc_control_panel.data.Rssi
-import de.eloc.eloc_control_panel.interfaces.BtDeviceCallback
-import de.eloc.eloc_control_panel.interfaces.VoidCallback
 
 class ElocReceiver() : BroadcastReceiver() {
 
-    private var stateChangedCallback: VoidCallback? = null
-    private var deviceFoundCallback: BtDeviceCallback? = null
+    private var stateChangedCallback: (() -> Unit)? = null
+    private var deviceFoundCallback: ((BtDevice) -> Unit)? = null
 
     constructor(
-        stateChanged: VoidCallback?,
-        deviceFound: BtDeviceCallback?
+        stateChanged: (() -> Unit)? = null,
+        deviceFound: ((BtDevice) -> Unit)? = null
     ) : this() {
         stateChangedCallback = stateChanged
         deviceFoundCallback = deviceFound
@@ -28,7 +26,7 @@ class ElocReceiver() : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         val action = intent?.action
         if (action == BluetoothAdapter.ACTION_STATE_CHANGED) {
-            stateChangedCallback?.handler()
+            stateChangedCallback?.invoke()
         } else if (action == BluetoothDevice.ACTION_FOUND) {
             @Suppress("DEPRECATION") val device =
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
@@ -43,7 +41,7 @@ class ElocReceiver() : BroadcastReceiver() {
             if (device != null) {
                 val eloc = BtDevice(device)
                 eloc.rssi = Rssi(dBm)
-                deviceFoundCallback?.handler(eloc)
+                deviceFoundCallback?.invoke(eloc)
             }
         }
     }

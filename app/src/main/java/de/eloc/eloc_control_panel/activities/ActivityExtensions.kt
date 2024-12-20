@@ -20,7 +20,6 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOkBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOptionBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAppChipBinding
-import de.eloc.eloc_control_panel.interfaces.VoidCallback
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -118,12 +117,12 @@ fun AppCompatActivity.hideKeyboard() {
     }
 }
 
-fun AppCompatActivity.overrideGoBack(callback: VoidCallback?) {
+fun AppCompatActivity.overrideGoBack(callback: (() -> Unit)?) {
     onBackPressedDispatcher.addCallback(
         this,
         object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                callback?.handler()
+                callback?.invoke()
             }
         },
     )
@@ -139,13 +138,13 @@ fun AppCompatActivity.showModalAlert(title: String, message: String) =
 fun AppCompatActivity.showModalAlert(
     title: String,
     message: String,
-    callback: VoidCallback? = null
+    callback: (() -> Unit)? = null
 ) = showAlert(title, message, callback)
 
 private fun AppCompatActivity.showAlert(
     title: String,
     message: String = "",
-    callback: VoidCallback? = null
+    callback: (() -> Unit)? = null
 ) {
     val dialogMessage = message.trim().ifEmpty {
         return
@@ -157,7 +156,7 @@ private fun AppCompatActivity.showAlert(
     binding.messageTextView.text = dialogMessage
     binding.okButton.setOnClickListener {
         dialog.dismiss()
-        callback?.handler()
+        callback?.invoke()
     }
     dialog.setCancelable(false)
     dialog.show()
@@ -168,8 +167,8 @@ fun AppCompatActivity.showModalOptionAlert(
     message: String = "",
     positiveButtonLabel: String = "",
     negativeButtonLabel: String = "",
-    positiveCallback: VoidCallback? = null,
-    negativeCallback: VoidCallback? = null,
+    positiveCallback: (() -> Unit)? = null,
+    negativeCallback: (() -> Unit)? = null,
 ) {
     val dialogMessage = message.trim()
     if (dialogMessage.isEmpty()) {
@@ -190,11 +189,11 @@ fun AppCompatActivity.showModalOptionAlert(
     binding.negativeButton.text = negativeLabel
     binding.negativeButton.setOnClickListener {
         dialog.dismiss()
-        negativeCallback?.handler()
+        negativeCallback?.invoke()
     }
     binding.positiveButton.setOnClickListener {
         dialog.dismiss()
-        positiveCallback?.handler()
+        positiveCallback?.invoke()
     }
     dialog.setCancelable(false)
     dialog.show()

@@ -23,9 +23,7 @@ import de.eloc.eloc_control_panel.activities.open
 import de.eloc.eloc_control_panel.activities.themable.LoginActivity
 import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.data.util.Preferences
-import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import de.eloc.eloc_control_panel.interfaces.GoogleSignInCallback
-import de.eloc.eloc_control_panel.interfaces.VoidCallback
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -36,12 +34,12 @@ class AuthHelper {
     private var credentialManager = CredentialManager.create(App.instance.applicationContext)
     var googleSignInCanceled = false
         private set
-    private var googleSignInListeners = mutableSetOf<VoidCallback>()
+    private var googleSignInListeners = mutableSetOf<() -> Unit>()
     var googleSignInRunning = false
         private set(value) {
             field = value
             for (listener in googleSignInListeners) {
-                listener.handler()
+                listener()
             }
         }
 
@@ -96,7 +94,7 @@ class AuthHelper {
         }
     }
 
-    fun registerGoogleSignInListener(listener: VoidCallback) {
+    fun registerGoogleSignInListener(listener: () -> Unit) {
         googleSignInListeners.add(listener)
     }
 
@@ -220,25 +218,25 @@ class AuthHelper {
         }
     }
 
-    fun sendResetLink(emailAddress: String, callback: BooleanCallback) {
+    fun sendResetLink(emailAddress: String, callback: (Boolean) -> Unit) {
         val address = emailAddress.trim()
         if (address.isEmpty()) {
-            callback.handler(false)
+            callback(false)
         } else {
             FirebaseAuth.getInstance().sendPasswordResetEmail(address)
                 .addOnCompleteListener {
-                    callback.handler(it.isSuccessful)
+                    callback(it.isSuccessful)
                 }
         }
     }
 
-    fun sendVerificationLink(callback: BooleanCallback) {
+    fun sendVerificationLink(callback: (Boolean) -> Unit) {
         if (user != null) {
             user?.sendEmailVerification()?.addOnCompleteListener {
-                callback.handler(it.isSuccessful)
+                callback(it.isSuccessful)
             }
         } else {
-            callback.handler(false)
+            callback(false)
         }
     }
 
@@ -319,12 +317,12 @@ class AuthHelper {
         }
     }
 
-    fun deleteAccount(callback: BooleanCallback) {
+    fun deleteAccount(callback: (Boolean) -> Unit) {
         if (user == null) {
-            callback.handler(false)
+            callback(false)
         } else {
             user?.delete()?.addOnCompleteListener {
-                callback.handler(it.isSuccessful)
+                callback(it.isSuccessful)
             }
         }
     }

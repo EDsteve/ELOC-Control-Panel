@@ -3,7 +3,6 @@ package de.eloc.eloc_control_panel.data.helpers.firebase
 import android.graphics.Bitmap
 import com.google.firebase.storage.FirebaseStorage
 import de.eloc.eloc_control_panel.old.DataHelper
-import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 import java.io.FileOutputStream
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -57,7 +56,7 @@ class StorageHelper {
         }
     }
 
-    fun deleteAccount(id: String, callback: BooleanCallback?) {
+    fun deleteAccount(id: String, callback: ((Boolean) -> Unit)?) {
         val pendingItems = AtomicInteger(0)
 
         // At present (May 2023), firebase storage does not allow deleting a folder
@@ -71,20 +70,20 @@ class StorageHelper {
                     val items = result.items
                     pendingItems.set(items.size)
                     if (pendingItems.get() <= 0) {
-                        callback?.handler(true)
+                        callback?.invoke(true)
                     } else {
                         for (file in items) {
                             file.delete().addOnCompleteListener {
                                 val remaining = pendingItems.decrementAndGet()
                                 if (remaining <= 0) {
-                                    callback?.handler(true)
+                                    callback?.invoke(true)
                                 }
                             }
                         }
                     }
                 }
             } else {
-                callback?.handler(false)
+                callback?.invoke(false)
             }
         }
     }

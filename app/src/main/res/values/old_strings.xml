@@ -169,6 +169,7 @@
     <string name="saving">Saving…</string>
     <string name="scan_error">Something went wrong.\n\nFailed to scan for bluetooth devices!</string>
     <string name="scanning_eloc_devices"><![CDATA[<scanning for eloc devices>]]></string>
+
     <string name="sd_card_error_button">SD card error button</string>
     <string name="sd_card_space">SD Card Space Available</string>
     <string name="send">Send</string>
@@ -191,24 +192,19 @@
     <string name="snippet_template">Last Update: %s\n\nGPS Accuracy: %s\n\nBattery volts: %s\n\nRec Time: %s</string>
     <string name="something_went_wrong">Something went wrong!</string>
 
-    <string name="stop_label">Stop</string>
-    <string name="stop_template">Stop (%d)</string>
-    <string name="stopping">Stopping</string>
-    <string name="submit">Submit</string>
-    <string name="sync_template_with_difference">Time synced successfully. Phone differs by %d ms"</string>
-    <string name="sync_template_withno_difference">Time synced successfully."</string>
-    <string name="synchronize_clock">Synchronize clock</string>
-    <string name="top_left">Top Left</string>
-    <string name="top_right">Top Right</string>
-    <string name="turn_on">Turn on</string>
-    <string name="unsupported_device">Unsupported device</string>
-    <string name="unsupported_device_message">This device does not support Bluetooth LE.\nTry running the app on a newer device</string>
-    <string name="update_firmware">Update Firmware</string>
-    <string name="update_rationale">Are you sure you want to update the firmware for %s?</string>
-    <string name="update_settings">Update Settings</string>
-    <string name="upload_eloc_status">Upload ELOC status</string>
-    <string name="upload_profile_picture_error">Failed to upload profile picture!</string>
-    <string name="uptime">Uptime</string>
-<string name="no_paired_devices_selected">Select a device to unpair!</string>
+<!--    <string name="stop_label">Stop</string>-->
+<!--    <string name="stopping">Stopping</string>-->
+
+<!--    <string name="sync_template_with_difference">Time synced successfully. Phone differs by %d ms"</string>-->
+<!--    <string name="sync_template_withno_difference">Time synced successfully."</string>-->
+<!--    <string name="synchronize_clock">Synchronize clock</string>-->
+
+<!--    <string name="turn_on">Turn on</string>-->
+<!--    <string name="unsupported_device">Unsupported device</string>-->
+<!--    <string name="unsupported_device_message">This device does not support Bluetooth LE.\nTry running the app on a newer device</string>-->
+<!--    <string name="update_firmware">Update Firmware</string>-->
+<!--    <string name="update_rationale">Are you sure you want to update the firmware for %s?</string>-->
+<!--    <string name="update_settings">Update Settings</string>-->
+
 
 </resources>

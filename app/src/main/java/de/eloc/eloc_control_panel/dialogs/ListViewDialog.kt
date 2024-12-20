@@ -13,14 +13,13 @@ import androidx.appcompat.app.AppCompatDialog
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import de.eloc.eloc_control_panel.databinding.LayoutListViewDialogBinding
-import de.eloc.eloc_control_panel.interfaces.VoidCallback
 
 class ListViewDialog(
     private val title: String,
     private val height: Int,
     private val adapter: ListAdapter,
-    private val showListener: VoidCallback,
-    private val dismissListener: VoidCallback
+    private val showListener: () -> Unit,
+    private val dismissListener: () -> Unit
 ) :
     DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
@@ -39,7 +38,7 @@ class ListViewDialog(
     }
 
     private fun close() {
-        dismissListener.handler()
+        dismissListener()
         dismiss()
     }
 
@@ -51,8 +50,8 @@ class ListViewDialog(
             }
         }
 
-        dialog?.setOnDismissListener { dismissListener.handler() }
-        dialog?.setOnShowListener { showListener.handler() }
+        dialog?.setOnDismissListener { dismissListener() }
+        dialog?.setOnShowListener { showListener() }
         (dialog as ComponentDialog).onBackPressedDispatcher.addCallback(
             viewLifecycleOwner,
             callback

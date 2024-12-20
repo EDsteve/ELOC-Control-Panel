@@ -7,11 +7,10 @@ import androidx.recyclerview.widget.RecyclerView
 import de.eloc.eloc_control_panel.data.BtDevice
 import de.eloc.eloc_control_panel.data.viewholders.BtDeviceViewHolder
 import de.eloc.eloc_control_panel.databinding.LayoutElocInfoBinding
-import de.eloc.eloc_control_panel.interfaces.BooleanCallback
 
 class ElocInfoAdapter(
     private val checkable: Boolean,
-    val callback: BooleanCallback? = null,
+    val callback: ((Boolean) -> Unit)? = null,
     private val itemCallback: ((BtDevice) -> Unit)? = null
 ) :
     RecyclerView.Adapter<BtDeviceViewHolder>() {
@@ -52,7 +51,7 @@ class ElocInfoAdapter(
             if (!deviceList.contains(device)) {
                 deviceList.add(device)
                 notifyItemInserted(deviceList.size - 1)
-                callback?.handler(false)
+                callback?.invoke(false)
             }
         }
     }
