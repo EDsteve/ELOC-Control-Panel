@@ -5,7 +5,7 @@
     android:id="@+id/coordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.editors.TextEditorActivity">
+    tools:context=".activities.themable.editors.RangeEditorActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -39,9 +39,9 @@
         <de.eloc.eloc_control_panel.widgets.ProgressIndicator
             android:id="@+id/progress_indicator"
             android:layout_width="wrap_content"
-            app:text="@string/applying_changes"
             android:layout_height="wrap_content"
-            android:layout_gravity="center" />
+            android:layout_gravity="center"
+            app:text="@string/applying_changes" />
 
         <ScrollView
             android:id="@+id/content_layout"
@@ -89,27 +89,36 @@
 
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/new_value_text_input_layout"
-                    style="@style/Widget.Material3.TextInputLayout.FilledBox.Dense"
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="16dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="@string/new_value" />
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/slider"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/new_value"
-                    app:errorEnabled="true"
-                    app:prefixTextColor="#B6B6B6">
+                    android:stepSize="1"
+                    android:value="13"
+                    android:valueFrom="10"
+                    android:valueTo="20"
+                    app:thumbColor="@color/actionbar"
+                    app:tickColor="@color/actionbar"
+                    app:tickVisible="true"
+                    app:trackColorInactive="#c1c1c1" />
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/new_value_edit_text"
-                        style="@style/Widget.Material3.TextInputEditText.FilledBox.Dense"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:backgroundTint="@android:color/transparent"
-                        android:imeOptions="actionDone"
-                        android:inputType="text"
-                        android:maxLines="1"
-                        android:textColor="@color/white" />
-
-                </com.google.android.material.textfield.TextInputLayout>
+                <TextView
+                    android:id="@+id/new_value_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:textAlignment="center"
+                    tools:text="90%" />
 
                 <Button
                     android:id="@+id/save_button"

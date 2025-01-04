@@ -5,7 +5,7 @@
     android:id="@+id/coordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.editors.OptionEditorActivity">
+    tools:context=".activities.themable.editors.TextEditorActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -39,8 +39,8 @@
         <de.eloc.eloc_control_panel.widgets.ProgressIndicator
             android:id="@+id/progress_indicator"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             app:text="@string/applying_changes"
+            android:layout_height="wrap_content"
             android:layout_gravity="center" />
 
         <ScrollView
@@ -89,19 +89,27 @@
 
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <Space
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/new_value_text_input_layout"
+                    style="@style/Widget.Material3.TextInputLayout.FilledBox.Dense"
                     android:layout_width="match_parent"
-                    android:layout_height="16dp" />
+                    android:layout_height="wrap_content"
+                    android:hint="@string/new_value"
+                    app:errorEnabled="true"
+                    app:prefixTextColor="#B6B6B6">
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:text="@string/new_value" />
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/new_value_edit_text"
+                        style="@style/Widget.Material3.TextInputEditText.FilledBox.Dense"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="@android:color/transparent"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:textColor="@color/white" />
 
-                <RadioGroup
-                    android:id="@+id/options_radio_group"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <Button
                     android:id="@+id/save_button"

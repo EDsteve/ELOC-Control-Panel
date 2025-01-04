@@ -15,8 +15,12 @@ import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.widgets.ProgressIndicator
 
 internal const val NOT_SET = "not_set"
+
 abstract class BaseEditorActivity : ThemableActivity() {
     companion object {
+        const val EXTRA_RANGE_CURRENT = "range_current"
+        const val EXTRA_RANGE_MINIMUM = "range_minimum"
+        const val EXTRA_RANGE_MAXIMUM = "range_maximum"
         const val EXTRA_SETTING_NAME = "setting_name"
         const val EXTRA_CURRENT_VALUE = "current_value"
         const val EXTRA_PROPERTY = "property"
@@ -33,6 +37,9 @@ abstract class BaseEditorActivity : ThemableActivity() {
     private var saved = false
     protected var isNumeric = false
     protected var minimumValue: Double? = null
+    protected var rangeCurrentValue: Float? = null
+    protected var rangeMinimumValue: Float? = null
+    protected var rangeMaximumValue: Float? = null
     protected var options = mutableMapOf<String, String>()
     private var configUpdated = false
     private var statusUpdated = false
@@ -83,6 +90,17 @@ abstract class BaseEditorActivity : ThemableActivity() {
 
         if (extras?.containsKey(EXTRA_MINIMUM) == true) {
             minimumValue = extras.getDouble(EXTRA_MINIMUM)
+        }
+
+        if (extras?.containsKey(EXTRA_RANGE_CURRENT) == true) {
+            rangeCurrentValue = extras.getFloat(EXTRA_RANGE_CURRENT)
+        }
+
+        if (extras?.containsKey(EXTRA_RANGE_MINIMUM) == true) {
+            rangeMinimumValue = extras.getFloat(EXTRA_RANGE_MINIMUM)
+        }
+        if (extras?.containsKey(EXTRA_RANGE_MAXIMUM) == true) {
+            rangeMaximumValue = extras.getFloat(EXTRA_RANGE_MAXIMUM)
         }
 
         prefix = extras?.getString(EXTRA_PREFIX, "")?.trim() ?: ""

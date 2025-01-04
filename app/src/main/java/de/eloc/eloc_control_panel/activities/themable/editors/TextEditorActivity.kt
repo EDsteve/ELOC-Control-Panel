@@ -7,18 +7,18 @@ import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.hideKeyboard
 import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.showModalAlert
-import de.eloc.eloc_control_panel.databinding.ActivityTextEditorBinding
+import de.eloc.eloc_control_panel.databinding.ActivityEditorTextBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.driver.General
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
 
 class TextEditorActivity : BaseEditorActivity() {
 
-    private lateinit var binding: ActivityTextEditorBinding
+    private lateinit var binding: ActivityEditorTextBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityTextEditorBinding.inflate(layoutInflater)
+        binding = ActivityEditorTextBinding.inflate(layoutInflater)
         setContentView(binding.root)
         applyData()
     }

@@ -11,7 +11,7 @@ import de.eloc.eloc_control_panel.activities.themable.editors.OptionEditorActivi
 import de.eloc.eloc_control_panel.activities.themable.editors.TextEditorActivity
 import de.eloc.eloc_control_panel.data.Channel
 import de.eloc.eloc_control_panel.data.CommandType
-import de.eloc.eloc_control_panel.data.GainType
+import de.eloc.eloc_control_panel.data.MicrophoneVolumePower
 import de.eloc.eloc_control_panel.data.SampleRate
 import de.eloc.eloc_control_panel.data.TimePerFile
 import de.eloc.eloc_control_panel.databinding.ActivityDeviceSettingsBinding
@@ -29,6 +29,7 @@ import de.eloc.eloc_control_panel.activities.formatNumber
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.themable.editors.RangeEditorActivity
 
 
 class DeviceSettingsActivity : ThemableActivity() {
@@ -118,11 +119,10 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding.generalTimePerFileItem.valueText = DeviceDriver.general.timePerFile.toString()
 
         binding.microphoneTypeItem.valueText = DeviceDriver.microphone.type
-        binding.microphoneGainItem.valueText = DeviceDriver.microphone.gain.toString()
+        binding.microphoneVolumePowerItem.valueText = DeviceDriver.microphone.volumePower.percentage
         binding.microphoneChannelItem.valueText = DeviceDriver.microphone.channel.value
         binding.microphoneSampleRateItem.valueText = DeviceDriver.microphone.sampleRate.toString()
         binding.microphoneUseApllItem.setSwitch(DeviceDriver.microphone.useAPLL)
-        binding.microphoneUseTimingFixItem.setSwitch(DeviceDriver.microphone.useTimingFix)
 
         binding.intruderEnableItem.setSwitch(DeviceDriver.intruder.enabled)
         binding.intruderThresholdItem.valueText = DeviceDriver.intruder.threshold.toString()
@@ -417,15 +417,14 @@ class DeviceSettingsActivity : ThemableActivity() {
                 DeviceDriver.microphone.type,
             )
         }
-        binding.microphoneGainItem.setOnClickListener {
-            val options = listOf(GainType.Low, GainType.High).map {
-                "${it.value}|$it"
-            }
-            openOptionEditor(
-                Microphone.GAIN,
+        binding.microphoneVolumePowerItem.setOnClickListener {
+            openRangeEditor(
+                Microphone.VOLUME_POWER,
                 getString(R.string.microphone_gain),
-                DeviceDriver.microphone.gain.toString(),
-                options
+                DeviceDriver.microphone.volumePower.percentage,
+                DeviceDriver.microphone.volumePower.rawValue,
+                MicrophoneVolumePower.MINIMUM,
+                MicrophoneVolumePower.MAXIMUM
             )
         }
 
@@ -467,15 +466,6 @@ class DeviceSettingsActivity : ThemableActivity() {
                 showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
             }
         }
-
-        binding.microphoneUseTimingFixItem.setSwitchClickedListener {
-            val checked = binding.microphoneUseApllItem.isChecked
-            if (DeviceDriver.setProperty(Microphone.USE_TIMING_FIX, checked.toString())) {
-                showProgress()
-            } else {
-                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-            }
-        }
     }
 
     private fun openTextEditor(
@@ -509,6 +499,24 @@ class DeviceSettingsActivity : ThemableActivity() {
         intent.putExtra(BaseEditorActivity.EXTRA_CURRENT_VALUE, currentValue)
         intent.putExtra(BaseEditorActivity.EXTRA_PROPERTY, property)
         intent.putExtra(BaseEditorActivity.EXTRA_OPTIONS, options.toTypedArray())
+        startActivity(intent)
+    }
+
+    private fun openRangeEditor(
+        property: String,
+        settingName: String,
+        currentString: String,
+        currentFloat: Float,
+        minimum: Float,
+        maximum: Float
+    ) {
+        val intent = Intent(this, RangeEditorActivity::class.java)
+        intent.putExtra(BaseEditorActivity.EXTRA_SETTING_NAME, settingName)
+        intent.putExtra(BaseEditorActivity.EXTRA_CURRENT_VALUE, currentString)
+        intent.putExtra(BaseEditorActivity.EXTRA_RANGE_CURRENT, currentFloat)
+        intent.putExtra(BaseEditorActivity.EXTRA_RANGE_MINIMUM, minimum)
+        intent.putExtra(BaseEditorActivity.EXTRA_RANGE_MAXIMUM, maximum)
+        intent.putExtra(BaseEditorActivity.EXTRA_PROPERTY, property)
         startActivity(intent)
     }
 

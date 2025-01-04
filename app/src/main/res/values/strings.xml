@@ -204,7 +204,6 @@
     <string name="upload_was_not_successful">Upload was not successful</string>
     <string name="uploading_status">Uploading ELOC status…</string>
     <string name="use_apll">Use APLL</string>
-    <string name="use_timing_fix">Use Timing Fix</string>
     <string name="user_action_required">User action required</string>
     <string name="user_id">User ID:</string>
     <string name="user_id_has_invalid_characters">User ID has invalid characters</string>

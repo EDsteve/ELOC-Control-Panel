@@ -12,7 +12,7 @@ import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.data.Channel
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
-import de.eloc.eloc_control_panel.data.GainType
+import de.eloc.eloc_control_panel.data.MicrophoneVolumePower
 import de.eloc.eloc_control_panel.data.InfoType
 import de.eloc.eloc_control_panel.data.RecordState
 import de.eloc.eloc_control_panel.data.SampleRate
@@ -54,8 +54,7 @@ internal const val KEY_MICROPHONE_SAMPLE_RATE = "MicSampleRate"
 internal const val KEY_MICROPHONE_TYPE = "MicType"
 internal const val KEY_MICROPHONE_CHANNEL = "MicChannel"
 internal const val KEY_MICROPHONE_APPLL = "MicUseAPLL"
-internal const val KEY_MICROPHONE_TIMING_FIX = "MicUseTimingFix"
-internal const val KEY_MICROPHONE_GAIN = "MicBitShift"
+internal const val KEY_MICROPHONE_VOLUME_POWER = "MicVolume2_pwr"
 
 private const val KEY_CONFIG = "config"
 private const val KEY_LOCATION_CODE = "locationCode"
@@ -314,12 +313,12 @@ object DeviceDriver : Runnable {
             }
 
             KEY_MICROPHONE_TYPE -> """setConfig#cfg={"mic":{"MicType":"$propertyValue"}}"""
-            KEY_MICROPHONE_GAIN -> {
-                val newGain = GainType.fromValue(propertyValue)
-                if (newGain == GainType.Unknown) {
+            KEY_MICROPHONE_VOLUME_POWER -> {
+                val newPower = MicrophoneVolumePower.parse(propertyValue)
+                if (newPower == null) {
                     ""
                 } else {
-                    """setConfig#cfg={"mic":{"MicBitShift":${newGain.value}}}"""
+                    """setConfig#cfg={"mic":{"MicVolume2_pwr":${newPower.rawValue.toInt()}}}"""
                 }
             }
 
@@ -348,15 +347,6 @@ object DeviceDriver : Runnable {
                     ""
                 } else {
                     """setConfig#cfg={"mic":{"MicUseAPLL":$enabled}}"""
-                }
-            }
-
-            KEY_MICROPHONE_TIMING_FIX -> {
-                val enabled = propertyValue.lowercase().toBooleanStrictOrNull()
-                if (enabled == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"mic":{"MicUseTimingFix":$enabled}}"""
                 }
             }
 
@@ -907,14 +897,11 @@ object DeviceDriver : Runnable {
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_MICROPHONE$PATH_SEPARATOR$KEY_MICROPHONE_APPLL"
         microphone.useAPLL = JsonHelper.getJSONBooleanAttribute(apllPath, jsonObject)
 
-        val timingFixPath =
-            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_MICROPHONE$PATH_SEPARATOR$KEY_MICROPHONE_TIMING_FIX"
-        microphone.useTimingFix = JsonHelper.getJSONBooleanAttribute(timingFixPath, jsonObject)
-
         val gainPath =
-            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_MICROPHONE$PATH_SEPARATOR$KEY_MICROPHONE_GAIN"
-        val micBitShift = JsonHelper.getJSONStringAttribute(gainPath, jsonObject)
-        microphone.gain = GainType.fromValue(micBitShift)
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_MICROPHONE$PATH_SEPARATOR$KEY_MICROPHONE_VOLUME_POWER"
+        val volumePowerString = JsonHelper.getJSONStringAttribute(gainPath, jsonObject)
+        microphone.volumePower =
+            MicrophoneVolumePower.parse(volumePowerString) ?: MicrophoneVolumePower()
 
         val lastLocationPath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_LOCATION_CODE"

@@ -1,40 +1,44 @@
 package de.eloc.eloc_control_panel.activities.themable.editors
 
 import android.os.Bundle
-import androidx.core.view.children
-import com.google.android.material.radiobutton.MaterialRadioButton
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.showModalAlert
-import de.eloc.eloc_control_panel.databinding.ActivityEditorOptionsBinding
+import de.eloc.eloc_control_panel.data.MicrophoneVolumePower
+import de.eloc.eloc_control_panel.databinding.ActivityEditorRangeBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 
-class OptionEditorActivity : BaseEditorActivity() {
-    private lateinit var binding: ActivityEditorOptionsBinding
+class RangeEditorActivity : BaseEditorActivity() {
+    private lateinit var binding: ActivityEditorRangeBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityEditorOptionsBinding.inflate(layoutInflater)
+        binding = ActivityEditorRangeBinding.inflate(layoutInflater)
         setContentView(binding.root)
         applyData()
     }
 
     override fun applyData() {
         binding.instructionsButton.setOnClickListener { showInstructions() }
+        binding.slider.addOnChangeListener { _, newValue, _ ->
+            binding.newValueTextView.text = MicrophoneVolumePower(newValue).percentage
+        }
         binding.settingNameTextView.text = getString(R.string.text_editor_setting_name, settingName)
         binding.currentValueEditText.setText(currentValue)
+        binding.newValueTextView.text = currentValue
         binding.saveButton.setOnClickListener { save() }
         binding.toolbar.setNavigationOnClickListener { goBack() }
-
-        var id = 1
-        options.forEach {
-            val child = MaterialRadioButton(this)
-            child.tag = it.key
-            child.text = it.value
-            child.id = ++id
-            child.isChecked = (currentValue == it.value)
-            binding.optionsRadioGroup.addView(child)
+        if ((rangeCurrentValue != null) && (rangeMinimumValue != null) && (rangeMaximumValue != null)) {
+            binding.slider.stepSize = 1.0f
+            binding.slider.setLabelFormatter { value ->
+                 MicrophoneVolumePower(value).percentage
+            }
+            binding.slider.valueFrom = rangeMinimumValue!!
+            binding.slider.valueTo = rangeMaximumValue!!
+            binding.slider.value = rangeCurrentValue!!
+        } else {
+            goBack()
         }
     }
 
@@ -44,16 +48,7 @@ class OptionEditorActivity : BaseEditorActivity() {
     }
 
     override fun save() {
-        val selection = binding.optionsRadioGroup.checkedRadioButtonId
-        val choice = binding.optionsRadioGroup.children.firstOrNull {
-            it.id == selection
-        }
-        val newValue = choice?.tag?.toString()
-        if (newValue == null) {
-            showModalAlert(getString(R.string.required), getString(R.string.selection_required))
-            return
-        }
-        if (DeviceDriver.setProperty(property, newValue)) {
+        if (DeviceDriver.setProperty(property, binding.slider.value.toString())) {
             showProgress()
         } else {
             showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))

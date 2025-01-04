@@ -248,7 +248,7 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
         binding.toolbar.title = DeviceDriver.general.nodeName
         binding.sampleRateItem.valueText = DeviceDriver.microphone.sampleRate.toString()
         binding.microphoneTypeItem.valueText = DeviceDriver.microphone.type
-        binding.gainItem.valueText = DeviceDriver.microphone.gain.toString()
+        binding.gainItem.valueText = DeviceDriver.microphone.volumePower.percentage
         binding.timePerFileItem.valueText = DeviceDriver.general.timePerFile.toString()
         binding.lastLocationItem.valueText = DeviceDriver.general.lastLocation
         val enabledLabel =

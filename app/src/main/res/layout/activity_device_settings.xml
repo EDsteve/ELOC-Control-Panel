@@ -5,7 +5,7 @@
     android:id="@+id/coordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.DeviceSettingsActivity">
+    tools:context=".activities.themable.DeviceSettingsActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -49,7 +49,7 @@
             android:layout_height="match_parent"
             android:layout_marginBottom="@dimen/bottom_bar_size"
             android:padding="16dp"
-            tools:visibility="invisible">
+            tools:visibility="visible">
 
             <LinearLayout
                 android:id="@+id/card_container"
@@ -150,7 +150,7 @@
                         android:layout_marginStart="16dp" />
 
                     <de.eloc.eloc_control_panel.widgets.ListItem
-                        android:id="@+id/microphone_gain_item"
+                        android:id="@+id/microphone_volume_power_item"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:indent="16dp"
@@ -201,20 +201,6 @@
                         app:indent="16dp"
                         app:itemType="toggle"
                         app:keyText="@string/use_apll" />
-
-                    <com.google.android.material.divider.MaterialDivider
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginVertical="4dp"
-                        android:layout_marginStart="16dp" />
-
-                    <de.eloc.eloc_control_panel.widgets.ListItem
-                        android:id="@+id/microphone_use_timing_fix_item"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:indent="16dp"
-                        app:itemType="toggle"
-                        app:keyText="@string/use_timing_fix" />
                 </LinearLayout>
 
                 <LinearLayout
