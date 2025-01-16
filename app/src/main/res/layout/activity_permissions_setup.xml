@@ -5,8 +5,7 @@
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
-    android:padding="16dp"
-    tools:context=".activities.PermissionsSetupActivity">
+    tools:context=".activities.themable.PermissionsSetupActivity">
 
     <TextView
         android:id="@+id/title"
@@ -14,42 +13,47 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
         android:gravity="center"
-        android:text="@string/a_few_things_must_be_done_to_proceed"
+        android:text="@string/a_few_things_to_do"
         android:textAlignment="center" />
 
     <Button
         android:id="@+id/location_button"
-        android:layout_width="@dimen/setup_button_width"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
+        android:minWidth="@dimen/setup_button_width"
         android:text="@string/set_location_permission" />
 
     <Button
         android:id="@+id/location_state_button"
-        android:layout_width="@dimen/setup_button_width"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
+        android:minWidth="@dimen/setup_button_width"
         android:text="@string/enable_location" />
 
     <Button
         android:id="@+id/bluetooth_button"
-        android:layout_width="@dimen/setup_button_width"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
+        android:minWidth="@dimen/setup_button_width"
         android:text="@string/set_bluetooth_permission" />
 
     <Button
         android:id="@+id/bluetooth_state_button"
-        android:layout_width="@dimen/setup_button_width"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
+        android:minWidth="@dimen/setup_button_width"
         android:text="@string/enable_bluetooth" />
 
     <Button
         android:id="@+id/notifications_button"
-        android:layout_width="@dimen/setup_button_width"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
+        android:minWidth="@dimen/setup_button_width"
         android:text="@string/set_notifications_permission" />
 
 </LinearLayout>

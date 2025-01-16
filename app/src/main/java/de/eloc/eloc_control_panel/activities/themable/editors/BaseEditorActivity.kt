@@ -7,6 +7,7 @@ import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.data.CommandType
+import de.eloc.eloc_control_panel.data.ConnectionStatus
 import de.eloc.eloc_control_panel.data.SampleRate
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.driver.General
@@ -34,6 +35,7 @@ abstract class BaseEditorActivity : ThemableActivity() {
     protected var settingName = ""
     protected var currentValue = ""
     protected var prefix = ""
+    private val listenerId = "editorActivity"
     private var saved = false
     protected var isNumeric = false
     protected var minimumValue: Double? = null
@@ -75,6 +77,7 @@ abstract class BaseEditorActivity : ThemableActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        DeviceDriver.removeConnectionChangedListener(listenerId)
         DeviceDriver.removeOnGetCommandCompletedListener(onGetDeviceInfoCompleted)
         DeviceDriver.removeOnSetCommandCompletedListener(::onSaveCompleted)
     }
@@ -82,6 +85,12 @@ abstract class BaseEditorActivity : ThemableActivity() {
     protected abstract fun setViews()
 
     protected abstract fun applyData()
+
+    private fun onConnectionChanged(status: ConnectionStatus) {
+        if (status == ConnectionStatus.Inactive) {
+            goBack()
+        }
+    }
 
     private fun setData() {
         val extras = intent.extras
@@ -143,6 +152,7 @@ abstract class BaseEditorActivity : ThemableActivity() {
 
         DeviceDriver.addOnSetCommandCompletedListener(::onSaveCompleted)
         DeviceDriver.addOnGetCommandCompletedListener(onGetDeviceInfoCompleted)
+        DeviceDriver.addConnectionChangedListener(listenerId, ::onConnectionChanged)
     }
 
     protected fun showProgress() {

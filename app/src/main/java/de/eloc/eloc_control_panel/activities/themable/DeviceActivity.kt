@@ -12,6 +12,7 @@ import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.formatNumber
 import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.onWriteCommandError
 import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.activities.showModalOptionAlert
@@ -26,14 +27,13 @@ import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.databinding.ActivityDeviceBinding
 import de.eloc.eloc_control_panel.databinding.LayoutModeChooserBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
-import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 import de.eloc.eloc_control_panel.receivers.ElocReceiver
 
 // todo: add refresh menu item for old API levels
 
-class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
+class DeviceActivity : ThemableActivity() {
     companion object {
         const val EXTRA_DEVICE_ADDRESS = "device_address"
     }
@@ -46,6 +46,7 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
         Disconnected,
     }
 
+    private val listenerId = "deviceActivity"
     private var hasSDCardError = false
     private var locationAccuracy = 100.0 // Start with very inaccurate value of 100 meters.
     private var locationCode = LocationHelper.UNKNOWN
@@ -95,9 +96,6 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
         super.onCreate(savedInstanceState)
         binding = ActivityDeviceBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        DeviceDriver.addOnSetCommandCompletedListener(setCommandCompletedCallback)
-        DeviceDriver.addOnGetCommandCompletedListener(getCommandCompletedListener)
-        setRecordingState()
         initialize()
     }
 
@@ -121,13 +119,14 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        DeviceDriver.clearConnectionStatusListener()
+        DeviceDriver.removeConnectionChangedListener(listenerId)
+        DeviceDriver.removeWriteCommandLister(listenerId)
         DeviceDriver.removeOnSetCommandCompletedListener(setCommandCompletedCallback)
         DeviceDriver.removeOnGetCommandCompletedListener(getCommandCompletedListener)
         DeviceDriver.disconnect()
     }
 
-    override fun onStatusChanged(status: ConnectionStatus) {
+    private fun onConnectionStatusChanged(status: ConnectionStatus) {
         runOnUiThread {
             refreshing = false
             binding.swipeRefreshLayout.isRefreshing = false
@@ -151,8 +150,10 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
     }
 
     private fun initialize() {
+        setRecordingState()
+        registerListeners()
         elocReceiver = ElocReceiver(null) { elocFound(it) }
-        onStatusChanged(ConnectionStatus.Inactive)
+        onConnectionStatusChanged(ConnectionStatus.Inactive)
         val extras = intent.extras
         deviceAddress = extras?.getString(EXTRA_DEVICE_ADDRESS, "")?.trim() ?: ""
         if (deviceAddress.isEmpty()) {
@@ -178,6 +179,13 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
             }
         }
     }
+
+    private fun registerListeners() {
+        DeviceDriver.addWriteCommandErrorListener(listenerId, ::onWriteCommandError)
+        DeviceDriver.addOnSetCommandCompletedListener(setCommandCompletedCallback)
+        DeviceDriver.addOnGetCommandCompletedListener(getCommandCompletedListener)
+    }
+
 
     private fun skipTimeSync() {
         showModalAlert(
@@ -287,7 +295,7 @@ class DeviceActivity : ThemableActivity(), ConnectionStatusListener {
     }
 
     private fun setListeners() {
-        DeviceDriver.registerConnectionStatusListener(this)
+        DeviceDriver.addConnectionChangedListener(listenerId, ::onConnectionStatusChanged)
         binding.skipButton.setOnClickListener { skipTimeSync() }
         binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.modeButton.addClickListener { modeButtonClicked() }

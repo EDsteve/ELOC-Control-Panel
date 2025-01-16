@@ -84,6 +84,7 @@
     <string name="intruder_threshold">Intruder Threshold</string>
     <string name="intruder_windows_ms">Intruder Windows MS</string>
     <string name="invalid_credential_type">Invalid credential type!</string>
+    <string name="invalid_command">Invalid command</string>
     <string name="invalid_setting">Invalid setting!</string>
     <string name="invalid_token_credential">Invalid token credential!</string>
     <string name="last_location">Last Location</string>
@@ -151,6 +152,7 @@
     <string name="retrying_in_time">Retrying in %s</string>
     <string name="sample_rate">Sample Rate</string>
     <string name="scanner">Scanner</string>
+    <string name="a_few_things_to_do">A few things to do…</string>
     <string name="sd_card">SD Card</string>
     <string name="sd_card_error_message">Check the SD card and make sure it is inserted correctly.</string>
     <string name="seconds_per_file">Seconds Per File</string>

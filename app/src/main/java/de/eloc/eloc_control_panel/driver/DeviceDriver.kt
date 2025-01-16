@@ -24,7 +24,6 @@ import de.eloc.eloc_control_panel.data.helpers.JsonHelper
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.data.util.Preferences
-import de.eloc.eloc_control_panel.interfaces.ConnectionStatusListener
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 import de.eloc.eloc_control_panel.services.StatusUploadService
@@ -33,6 +32,8 @@ import java.io.IOException
 import java.util.Date
 import java.util.UUID
 import java.util.concurrent.Executors
+
+private const val COMMAND_MAX_LENGTH = 512
 
 private const val KEY_PAYLOAD = "payload"
 private const val KEY_RECORDING_STATE = "recordingState"
@@ -163,14 +164,31 @@ object DeviceDriver : Runnable {
     private val BLUETOOTH_SPP = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     private var device: BluetoothDevice? = null
     private var bytesCache = emptyList<Byte>()
-    private var statusListener: ConnectionStatusListener? = null
     private val onSetCommandCompletedListeners = mutableListOf<SetCommandCompletedCallback?>()
     private val onGetCommandCompletedListeners = mutableListOf<GetCommandCompletedCallback?>()
+    private val writeCommandErrorListeners = mutableMapOf<String, (String) -> Unit>()
+    private val connectionChangedListeners = mutableMapOf<String, (ConnectionStatus) -> Unit>()
     private val disconnectBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             // disconnect now, else would be queued until UI re-attached
             disconnect()
         }
+    }
+
+    fun addWriteCommandErrorListener(id: String, listener: (String) -> Unit) {
+        writeCommandErrorListeners[id] = listener
+    }
+
+    fun removeWriteCommandLister(id: String) {
+        writeCommandErrorListeners.remove(id)
+    }
+
+    fun addConnectionChangedListener(id: String, listener: (ConnectionStatus) -> Unit) {
+        connectionChangedListeners[id] = listener
+    }
+
+    fun removeConnectionChangedListener(id: String) {
+        connectionChangedListeners.remove(id)
     }
 
     private val connectionMonitor = Runnable {
@@ -218,12 +236,15 @@ object DeviceDriver : Runnable {
         set(value) {
             if (field != value) {
                 field = value
-                statusListener?.onStatusChanged(field)
+                for (listener in connectionChangedListeners.values) {
+                    listener(field)
+                }
             }
         }
 
     fun disconnect() {
         disconnecting = true
+
         try {
             bluetoothSocket?.close()
         } catch (_: Exception) {
@@ -262,6 +283,18 @@ object DeviceDriver : Runnable {
             if (bluetoothSocket?.isConnected == true) {
                 val sanitizedCommand = command.trim() + NEWLINE
                 val data = sanitizedCommand.encodeToByteArray()
+
+                // Keep the data under 512 bytes. If data must be greater than 512 bytes,
+                // implement some kind of protocol for chunking the data and also keeping up with
+                // the 1 sec delay expected by the firmware.
+                // For details: https://github.com/LIFsCode/ELOC-3.0/wiki/ELOC-3.0-App-Interface#limitations
+                if (data.size > COMMAND_MAX_LENGTH) {
+                    for (errorListener in writeCommandErrorListeners.values) {
+                        errorListener("Firmware command is too long!")
+                    }
+                    return
+                }
+
                 bluetoothSocket?.outputStream?.write(data)
             } else {
                 throw IOException("ELOC device not connected!")
@@ -515,14 +548,6 @@ object DeviceDriver : Runnable {
 
     private fun onConnect() {
         cancelConnectionMonitor = true
-    }
-
-    fun registerConnectionStatusListener(listener: ConnectionStatusListener) {
-        statusListener = listener
-    }
-
-    fun clearConnectionStatusListener() {
-        statusListener = null
     }
 
     @SuppressLint("MissingPermission")

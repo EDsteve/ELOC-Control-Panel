@@ -40,9 +40,4 @@ object LocationHelper {
         } else {
             "${location.latitude}:${location.latitude}"
         }
-
-    fun isValidLocationCode(code: String): Boolean {
-        val locationCode = code.trim()
-        return (locationCode.isNotEmpty() && (locationCode.uppercase() != UNKNOWN))
-    }
 }

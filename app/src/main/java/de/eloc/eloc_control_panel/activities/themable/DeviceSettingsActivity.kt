@@ -30,6 +30,7 @@ import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.themable.editors.RangeEditorActivity
+import de.eloc.eloc_control_panel.data.ConnectionStatus
 
 
 class DeviceSettingsActivity : ThemableActivity() {
@@ -38,6 +39,7 @@ class DeviceSettingsActivity : ThemableActivity() {
     }
 
     private lateinit var binding: ActivityDeviceSettingsBinding
+    private val listenerId = "deviceSettingsActivity"
 
     private var paused = true
     private var statusUpdated = false
@@ -109,6 +111,7 @@ class DeviceSettingsActivity : ThemableActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        DeviceDriver.removeConnectionChangedListener(listenerId)
         DeviceDriver.removeOnSetCommandCompletedListener(onSetCommandCompletedCallback)
         DeviceDriver.removeOnGetCommandCompletedListener(onGetCommandCompletedCallback)
     }
@@ -156,6 +159,7 @@ class DeviceSettingsActivity : ThemableActivity() {
     }
 
     private fun setListeners() {
+        DeviceDriver.addConnectionChangedListener(listenerId, ::onConnectionChanged)
         DeviceDriver.addOnSetCommandCompletedListener(onSetCommandCompletedCallback)
         DeviceDriver.addOnGetCommandCompletedListener(onGetCommandCompletedCallback)
         binding.instructionsButton.setOnClickListener { showInstructions() }
@@ -169,6 +173,12 @@ class DeviceSettingsActivity : ThemableActivity() {
         setBtListeners()
         setMicrophoneListeners()
         setAdvancedListeners()
+    }
+
+    private fun onConnectionChanged(status: ConnectionStatus) {
+        if (status == ConnectionStatus.Inactive) {
+            goBack()
+        }
     }
 
     private fun setAdvancedListeners() {

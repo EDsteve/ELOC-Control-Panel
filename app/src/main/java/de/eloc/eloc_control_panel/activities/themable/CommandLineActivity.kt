@@ -10,10 +10,13 @@ import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.showModalOptionAlert
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.activities.hideKeyboard
+import de.eloc.eloc_control_panel.activities.onWriteCommandError
 import de.eloc.eloc_control_panel.activities.showInstructions
+import de.eloc.eloc_control_panel.data.ConnectionStatus
 
 class CommandLineActivity : ThemableActivity() {
     private lateinit var binding: ActivityCommandLineBinding
+    private val listenerId = "commandLineActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,6 +28,8 @@ class CommandLineActivity : ThemableActivity() {
         binding.sendButton.setOnClickListener { sendCommand() }
         binding.deleteButton.setOnClickListener { clearLog() }
         DeviceDriver.setCommandLineListener(::logResponse)
+        DeviceDriver.addConnectionChangedListener(listenerId, ::onConnectionChanged)
+        DeviceDriver.addWriteCommandErrorListener(listenerId, ::onWriteCommandError)
         try {
             val monospaceFont =
                 Typeface.createFromAsset(assets, "Courier_Prime/CourierPrime-Regular.ttf")
@@ -36,7 +41,15 @@ class CommandLineActivity : ThemableActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        DeviceDriver.removeConnectionChangedListener(listenerId)
         DeviceDriver.clearCommandLineListener()
+        DeviceDriver.removeWriteCommandLister(listenerId)
+    }
+
+    private fun onConnectionChanged(status: ConnectionStatus) {
+        if (status == ConnectionStatus.Inactive) {
+            goBack()
+        }
     }
 
     private fun clearLog() {

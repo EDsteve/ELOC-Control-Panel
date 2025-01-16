@@ -17,9 +17,11 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOkBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOptionBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAppChipBinding
+import de.eloc.eloc_control_panel.driver.DeviceDriver
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -160,6 +162,18 @@ private fun AppCompatActivity.showAlert(
     }
     dialog.setCancelable(false)
     dialog.show()
+}
+
+fun ThemableActivity.onWriteCommandError(errorMessage: String) {
+    runOnUiThread {
+        if (isActive) {
+            showModalAlert(
+                getString(R.string.invalid_command),
+                errorMessage,
+                DeviceDriver::disconnect
+            )
+        }
+    }
 }
 
 fun AppCompatActivity.showModalOptionAlert(
