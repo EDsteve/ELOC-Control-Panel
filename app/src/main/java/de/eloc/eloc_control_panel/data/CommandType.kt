@@ -15,11 +15,4 @@ enum class CommandType {
                 SetConfig, SetStatus -> true
                 else -> false
             }
-
-    val isGetCommand
-        get() =
-            when (this) {
-                GetConfig, GetStatus -> true
-                else -> false
-            }
 }

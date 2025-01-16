@@ -10,6 +10,7 @@ import android.content.IntentFilter
 import android.os.Build
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.data.Channel
+import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
 import de.eloc.eloc_control_panel.data.MicrophoneVolumePower
@@ -22,6 +23,7 @@ import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.JsonHelper
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
+import de.eloc.eloc_control_panel.data.helpers.Logger
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
@@ -147,6 +149,9 @@ object DeviceDriver : Runnable {
     val general = General()
     val session = Session()
 
+    private var lastUsedCommandId = -1L
+    private var pendingCommandId = -1L
+    private var greeted = false
     private var cachedStatus = ""
     private var cachedConfig = ""
     private var infoType: InfoType? = null
@@ -157,7 +162,6 @@ object DeviceDriver : Runnable {
     private var commandLineListener: ((String) -> Unit)? = null
     private var connecting = false
     private var disconnecting = false
-    private const val NEWLINE = "\n"
     private const val EOT: Byte = 4
     private var bluetoothSocket: BluetoothSocket? = null
     private val INTENT_ACTION_DISCONNECT = App.applicationId + ".Disconnect"
@@ -173,6 +177,10 @@ object DeviceDriver : Runnable {
             // disconnect now, else would be queued until UI re-attached
             disconnect()
         }
+    }
+
+    private fun resetCommandIdTracker() {
+        lastUsedCommandId = -1
     }
 
     fun addWriteCommandErrorListener(id: String, listener: (String) -> Unit) {
@@ -244,6 +252,7 @@ object DeviceDriver : Runnable {
 
     fun disconnect() {
         disconnecting = true
+        greeted = false
 
         try {
             bluetoothSocket?.close()
@@ -278,11 +287,29 @@ object DeviceDriver : Runnable {
         onGetCommandCompletedListeners.remove(listener)
     }
 
-    private fun write(command: String) {
+    private fun write(command: String): Long {
+        val cmd = Command.from(command)
+        return write(cmd, command + "\n")
+    }
+
+    private fun write(cmd: Command, rawCommand: String): Long {
+        // Wait for a pending command, if any
+        while (pendingCommandId >= 0) {
+            try {
+                Thread.sleep(2500)
+                Logger.d("waiting for $pendingCommandId - greeted: $greeted")
+            } catch (_: Exception) {
+            }
+        }
+
         try {
             if (bluetoothSocket?.isConnected == true) {
-                val sanitizedCommand = command.trim() + NEWLINE
-                val data = sanitizedCommand.encodeToByteArray()
+                val command = cmd.toString()
+                if (rawCommand != command) {
+                    print("fix command!")
+                    return cmd.id
+                }
+                val data = command.encodeToByteArray()
 
                 // Keep the data under 512 bytes. If data must be greater than 512 bytes,
                 // implement some kind of protocol for chunking the data and also keeping up with
@@ -292,16 +319,19 @@ object DeviceDriver : Runnable {
                     for (errorListener in writeCommandErrorListeners.values) {
                         errorListener("Firmware command is too long!")
                     }
-                    return
+                    return cmd.id
                 }
 
+                pendingCommandId = cmd.id
                 bluetoothSocket?.outputStream?.write(data)
+
             } else {
                 throw IOException("ELOC device not connected!")
             }
         } catch (e: IOException) {
             disconnect()
         }
+        return cmd.id
     }
 
     fun sendCustomCommand(command: String) {
@@ -317,9 +347,12 @@ object DeviceDriver : Runnable {
     }
 
     fun syncTime(timestampInSeconds: Long, timezone: Int) {
-        val command =
-            """setTime#time={"seconds":$timestampInSeconds, "ms":0 ,"timezone" : $timezone}"""
-        write(command)
+        // todo: delete
+        val id = lastUsedCommandId + 1
+        val command1 =
+            """setTime#id=$id#time={"seconds":$timestampInSeconds,"ms":0,"timezone":$timezone}"""
+
+        write(Command.createSetTimeCommand(timestampInSeconds, timezone), command1 + "\n")
     }
 
     private fun setLocation(code: String, accuracy: Int) {
@@ -547,8 +580,11 @@ object DeviceDriver : Runnable {
     }
 
     private fun onConnect() {
+        resetCommandIdTracker()
         cancelConnectionMonitor = true
     }
+
+    fun getNextCommandId(): Long = ++lastUsedCommandId
 
     @SuppressLint("MissingPermission")
     fun connect(deviceAddress: String) {
@@ -604,7 +640,6 @@ object DeviceDriver : Runnable {
             disconnect()
             return
         }
-
         connectionStatus =
             if (bluetoothSocket?.isConnected == true) {
                 ConnectionStatus.Active
@@ -616,6 +651,33 @@ object DeviceDriver : Runnable {
             Executors.newSingleThreadExecutor().submit(this)
         } else {
             return
+        }
+    }
+
+    private fun checkPendingCommandId(json: String) {
+        try {
+            val root = JSONObject(json)
+            val id = root.getLong("id")
+            if (id == pendingCommandId) {
+                pendingCommandId = -1
+            }
+        } catch (_: Exception) {
+
+        }
+    }
+
+    private fun checkGreeting(json: String) {
+        try {
+            val root = JSONObject(json)
+            val device = root.getString("device").lowercase()
+            if (device.contains("eloc")) {
+                val cmdVersion = root.getDouble("cmdVersion")
+                if (cmdVersion > 0) {
+                    greeted = true
+                }
+            }
+        } catch (_: Exception) {
+
         }
     }
 
@@ -803,10 +865,15 @@ object DeviceDriver : Runnable {
                         bytesCache = bytesCache.slice(startIndex..endIndex)
                         val jsonByteArray = jsonBytes.toByteArray()
                         val json = sanitize(String(jsonByteArray))
-                        commandLineListener?.invoke(json)
-                        val intercepted = interceptCompletedSetCommand(json)
-                        if (!intercepted) {
-                            interceptCompletedGetCommand(json)
+                        if (!greeted) {
+                            checkGreeting(json)
+                        } else {
+                            checkPendingCommandId(json)
+                            commandLineListener?.invoke(json)
+                            val intercepted = interceptCompletedSetCommand(json)
+                            if (!intercepted) {
+                                interceptCompletedGetCommand(json)
+                            }
                         }
                     }
                 } catch (e: Exception) {
@@ -840,7 +907,7 @@ object DeviceDriver : Runnable {
     private fun sendGetConfigCommand() {
         write("getConfig")
     }
-
+ use a command queue
     fun getStatusAndConfig(saveNextInfoResponse: Boolean = false) {
         if (saveNextInfoResponse) {
             configSaved = false
