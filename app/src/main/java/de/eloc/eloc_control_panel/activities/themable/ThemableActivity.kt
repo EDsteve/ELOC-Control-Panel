@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import de.eloc.eloc_control_panel.data.util.Preferences
 
 abstract class ThemableActivity : AppCompatActivity() {
+
     private var active = false
 
     val isActive get(): Boolean = active

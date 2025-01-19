@@ -9,7 +9,6 @@ import com.google.openlocationcode.OpenLocationCode
 import de.eloc.eloc_control_panel.App
 
 object LocationHelper {
-    const val UNKNOWN = "UNKNOWN"
     private var listener: LocationListener? = null
     private val manager = App.instance.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 

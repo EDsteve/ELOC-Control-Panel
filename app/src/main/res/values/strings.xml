@@ -69,6 +69,7 @@
     <string name="gauge_gps_distance">%dm</string>
     <string name="gauge_gps_long_distance">&gt;100m</string>
     <string name="general">General</string>
+    <string name="getting_eloc_info">Getting ELOC information…</string>
     <string name="getting_mode">Getting mode…</string>
     <string name="getting_node_name">Getting node name…</string>
     <string name="getting_ranger_profile">Getting ranger profile…</string>

@@ -1,6 +1,7 @@
 package de.eloc.eloc_control_panel.activities.themable
 
 import android.content.Intent
+import android.location.Location
 import android.os.Bundle
 import android.view.View
 import androidx.core.content.ContextCompat
@@ -30,6 +31,7 @@ import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.themable.editors.RangeEditorActivity
+import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.data.ConnectionStatus
 
 
@@ -44,6 +46,7 @@ class DeviceSettingsActivity : ThemableActivity() {
     private var paused = true
     private var statusUpdated = false
     private var configUpdated = false
+    private lateinit var location: Location
 
     private val onGetCommandCompletedCallback = GetCommandCompletedCallback {
         if (!statusUpdated && (it == CommandType.GetStatus)) {
@@ -64,7 +67,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             if (success) {
                 if (type.isSetCommand) {
                     binding.progressIndicator.text = getString(R.string.updating_values)
-                    DeviceDriver.getStatusAndConfig()
+                    DeviceDriver.getElocInformation(location)
                 }
             } else {
                 showContent()
@@ -83,6 +86,12 @@ class DeviceSettingsActivity : ThemableActivity() {
 
         val extras = intent.extras
         val showMicrophoneSection = extras?.getBoolean(EXTRA_SHOW_RECORDER, false) ?: false
+        if (DeviceActivity.gpsLocation == null) {
+            goBack()
+            return
+        } else {
+            location = DeviceActivity.gpsLocation!!
+        }
 
         setMicrophoneSectionState(showMicrophoneSection)
         setIntruderSectionState(false)
@@ -234,11 +243,18 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
         binding.logsLogToSdCardItem.setSwitchClickedListener {
             val checked = binding.logsLogToSdCardItem.isChecked
-            if (DeviceDriver.setProperty(Logs.LOG_TO_SD_CARD, checked.toString())) {
-                showProgress()
-            } else {
-                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-            }
+
+            Command.createSetConfigPropertyCommand(
+                Logs.LOG_TO_SD_CARD,
+                checked.toString(),
+                { command ->
+                    showProgress()
+                    DeviceDriver.processCommandQueue(command)
+                },
+                {
+                    showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+                }
+            )
         }
         binding.logsFilenameItem.setOnClickListener {
             var filename = DeviceDriver.logs.filename
@@ -280,11 +296,16 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
         binding.batteryNoBatModeItem.setSwitchClickedListener {
             val checked = binding.batteryNoBatModeItem.isChecked
-            if (DeviceDriver.setProperty(Battery.NO_BATTERY_MODE, checked.toString())) {
-                showProgress()
-            } else {
-                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-            }
+            Command.createSetConfigPropertyCommand(
+                Battery.NO_BATTERY_MODE,
+                checked.toString(),
+                { command ->
+                    showProgress()
+                    DeviceDriver.processCommandQueue(command)
+                },
+                {
+                    showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+                })
         }
         binding.batteryAverageSamplesItem.setOnClickListener {
             openTextEditor(
@@ -321,11 +342,16 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
         binding.cpuEnableLightSleepItem.setSwitchClickedListener {
             val checked = binding.cpuEnableLightSleepItem.isChecked
-            if (DeviceDriver.setProperty(Cpu.ENABLE_LIGHT_SLEEP, checked.toString())) {
-                showProgress()
-            } else {
-                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-            }
+            Command.createSetConfigPropertyCommand(
+                Cpu.ENABLE_LIGHT_SLEEP,
+                checked.toString(),
+                { command ->
+                    showProgress()
+                    DeviceDriver.processCommandQueue(command)
+                },
+                {
+                    showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+                })
         }
         binding.cpuMinFrequencyItem.setOnClickListener {
             openTextEditor(
@@ -353,11 +379,13 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
         binding.intruderEnableItem.setSwitchClickedListener {
             val checked = binding.intruderEnableItem.isChecked
-            if (DeviceDriver.setProperty(Intruder.ENABLED, checked.toString())) {
-                showProgress()
-            } else {
-                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-            }
+            Command.createSetConfigPropertyCommand(Intruder.ENABLED, checked.toString(),
+                { command ->
+                    showProgress()
+                    DeviceDriver.processCommandQueue(command)
+                }, {
+                    showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+                })
         }
         binding.intruderThresholdItem.setOnClickListener {
             openTextEditor(
@@ -383,27 +411,36 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
         binding.btEnableAtStartItem.setSwitchClickedListener {
             val checked = binding.btEnableAtStartItem.isChecked
-            if (DeviceDriver.setProperty(BtConfig.ENABLE_AT_START, checked.toString())) {
-                showProgress()
-            } else {
-                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-            }
+            Command.createSetConfigPropertyCommand(BtConfig.ENABLE_AT_START, checked.toString(),
+                { command ->
+                    showProgress()
+                    DeviceDriver.processCommandQueue(command)
+                }, {
+                    showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+                })
         }
         binding.btEnableOnTappingItem.setSwitchClickedListener {
             val checked = binding.btEnableOnTappingItem.isChecked
-            if (DeviceDriver.setProperty(BtConfig.ENABLE_ON_TAPPING, checked.toString())) {
-                showProgress()
-            } else {
-                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-            }
+            Command.createSetConfigPropertyCommand(
+                BtConfig.ENABLE_ON_TAPPING,
+                checked.toString(),
+                { command ->
+                    showProgress()
+                    DeviceDriver.processCommandQueue(command)
+                }, {
+                    showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+                })
         }
         binding.btEnableDuringRecordingItem.setSwitchClickedListener {
             val checked = binding.btEnableDuringRecordingItem.isChecked
-            if (DeviceDriver.setProperty(BtConfig.ENABLE_DURING_RECORD, checked.toString())) {
-                showProgress()
-            } else {
-                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-            }
+            Command.createSetConfigPropertyCommand(
+                BtConfig.ENABLE_DURING_RECORD,
+                checked.toString(), { command ->
+                    showProgress()
+                    DeviceDriver.processCommandQueue(command)
+                }, {
+                    showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+                })
         }
         binding.btOffTimeoutSecondsItem.setOnClickListener {
             openTextEditor(
@@ -470,11 +507,13 @@ class DeviceSettingsActivity : ThemableActivity() {
 
         binding.microphoneUseApllItem.setSwitchClickedListener {
             val checked = binding.microphoneUseApllItem.isChecked
-            if (DeviceDriver.setProperty(Microphone.USE_APLL, checked.toString())) {
-                showProgress()
-            } else {
-                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-            }
+            Command.createSetConfigPropertyCommand(Microphone.USE_APLL, checked.toString(),
+                { command ->
+                    showProgress()
+                    DeviceDriver.processCommandQueue(command)
+                }, {
+                    showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+                })
         }
     }
 

@@ -36,9 +36,9 @@ object TimeHelper {
         val hour = calendar.get(Calendar.HOUR_OF_DAY)
         val min = calendar.get(Calendar.MINUTE)
         val sec = calendar.get(Calendar.SECOND)
-        var sHr = if (hour < 10)  { "0$hour" }  else { "$hour" }
-        var sMin = if (min < 10)  { "0$min" }  else { "$min" }
-        var sSecs = if (sec < 10)  { "0$sec" }  else { "$sec" }
+        val sHr = if (hour < 10)  { "0$hour" }  else { "$hour" }
+        val sMin = if (min < 10)  { "0$min" }  else { "$min" }
+        val sSecs = if (sec < 10)  { "0$sec" }  else { "$sec" }
         return "$year/$month/$day $sHr:$sMin:$sSecs"
     }
 
@@ -76,19 +76,5 @@ object TimeHelper {
          val unixTimeMillis = System.currentTimeMillis()
         val seconds = unixTimeMillis / 1000
         DeviceDriver.syncTime(seconds, timeZoneOffsetHours())
-    }
-
-    fun prettify(s: String?): String {
-        val dirty = s ?: ""
-        val parts = dirty.split("-")
-        if (parts.size >= 7) {
-            val date = "${parts[0]}/${parts[1]}/${parts[2]}"
-            val time = "${parts[3]}:${parts[4]}:${parts[5]}"
-            val timeZone = parts[6]
-                .replace("+0", " +")
-                .replace(":00", "")
-            return "$date $time $timeZone"
-        }
-        return ""
     }
 }

@@ -1,6 +1,34 @@
 package de.eloc.eloc_control_panel.data
 
+import android.location.Location
+import com.google.openlocationcode.OpenLocationCode
 import de.eloc.eloc_control_panel.driver.DeviceDriver
+import de.eloc.eloc_control_panel.driver.KEY_BATTERY_AVG_INTERVAL_MS
+import de.eloc.eloc_control_panel.driver.KEY_BATTERY_AVG_SAMPLES
+import de.eloc.eloc_control_panel.driver.KEY_BATTERY_NO_BAT_MODE
+import de.eloc.eloc_control_panel.driver.KEY_BATTERY_UPDATE_INTERVAL_MS
+import de.eloc.eloc_control_panel.driver.KEY_BT_ENABLE_AT_START
+import de.eloc.eloc_control_panel.driver.KEY_BT_ENABLE_DURING_RECORD
+import de.eloc.eloc_control_panel.driver.KEY_BT_ENABLE_ON_TAPPING
+import de.eloc.eloc_control_panel.driver.KEY_BT_OFF_TIMEOUT_SECONDS
+import de.eloc.eloc_control_panel.driver.KEY_CPU_ENABLE_LIGHT_SLEEP
+import de.eloc.eloc_control_panel.driver.KEY_CPU_MAX_FREQUENCY_MHZ
+import de.eloc.eloc_control_panel.driver.KEY_CPU_MIN_FREQUENCY_MHZ
+import de.eloc.eloc_control_panel.driver.KEY_GENERAL_FILE_HEADER
+import de.eloc.eloc_control_panel.driver.KEY_GENERAL_NODE_NAME
+import de.eloc.eloc_control_panel.driver.KEY_GENERAL_SECONDS_PER_FILE
+import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_ENABLED
+import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_THRESHOLD
+import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_WINDOWS_MS
+import de.eloc.eloc_control_panel.driver.KEY_LOGS_FILENAME
+import de.eloc.eloc_control_panel.driver.KEY_LOGS_LOG_TO_SD_CARD
+import de.eloc.eloc_control_panel.driver.KEY_LOGS_MAX_FILES
+import de.eloc.eloc_control_panel.driver.KEY_LOGS_MAX_FILE_SIZE
+import de.eloc.eloc_control_panel.driver.KEY_MICROPHONE_APPLL
+import de.eloc.eloc_control_panel.driver.KEY_MICROPHONE_CHANNEL
+import de.eloc.eloc_control_panel.driver.KEY_MICROPHONE_SAMPLE_RATE
+import de.eloc.eloc_control_panel.driver.KEY_MICROPHONE_TYPE
+import de.eloc.eloc_control_panel.driver.KEY_MICROPHONE_VOLUME_POWER
 
 enum class CommandParameterType {
     String,
@@ -101,12 +129,275 @@ class Command(
     companion object {
         private const val SEPARATOR = "#"
         private const val ID_PREFIX = "id"
+        private const val COMMAND_SET_TIME = "setTime"
+        private const val COMMAND_SET_CONFIG = "setConfig"
+        private const val COMMAND_GET_STATUS = "getStatus"
+        private const val COMMAND_GET_CONFIG = "getConfig"
+
+        fun createSetConfigPropertyCommand(
+            property: String,
+            value: String,
+            commandCreatedCallback: (Command) -> Unit,
+            errorCallback: () -> Unit
+        ) {
+            val propertyValue = value.trim().ifEmpty {
+                errorCallback()
+                return
+            }
+
+            val rawCommand = when (property) {
+                KEY_GENERAL_NODE_NAME -> """setConfig#cfg={"device":{"nodeName":"$propertyValue"}}"""
+                KEY_GENERAL_FILE_HEADER -> """setConfig#cfg={"device":{"fileHeader":"$propertyValue"}}"""
+                KEY_GENERAL_SECONDS_PER_FILE -> {
+                    val secs = propertyValue.toDoubleOrNull()?.toInt()
+                    if (secs == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"secondsPerFile":$secs}}"""
+                    }
+                }
+
+                KEY_MICROPHONE_TYPE -> """setConfig#cfg={"mic":{"MicType":"$propertyValue"}}"""
+                KEY_MICROPHONE_VOLUME_POWER -> {
+                    val newPower = MicrophoneVolumePower.parse(propertyValue)
+                    if (newPower == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"mic":{"MicVolume2_pwr":${newPower.rawValue.toInt()}}}"""
+                    }
+                }
+
+                KEY_MICROPHONE_CHANNEL -> {
+                    val newChannel = Channel.parse(propertyValue)
+                    if (newChannel == Channel.Unknown) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"mic":{"MicChannel":"${newChannel.value}"}}"""
+                    }
+                }
+
+                KEY_MICROPHONE_SAMPLE_RATE -> {
+                    val rawRate = propertyValue.toDoubleOrNull() ?: 0.0
+                    val newRate = SampleRate.parse(rawRate)
+                    if (newRate == SampleRate.Unknown) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"mic":{"MicSampleRate":${newRate.code}}}"""
+                    }
+                }
+
+                KEY_MICROPHONE_APPLL -> {
+                    val enabled = propertyValue.lowercase().toBooleanStrictOrNull()
+                    if (enabled == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"mic":{"MicUseAPLL":$enabled}}"""
+                    }
+                }
+
+                KEY_INTRUDER_ENABLED -> {
+                    val enabled = propertyValue.lowercase().toBooleanStrictOrNull()
+                    if (enabled == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"intruderCfg":{"enable":$enabled}}}"""
+                    }
+                }
+
+                KEY_INTRUDER_THRESHOLD -> {
+                    val threshold = propertyValue.toDoubleOrNull()?.toInt()
+                    if (threshold == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"intruderCfg":{"threshold":$threshold}}}"""
+                    }
+                }
+
+                KEY_INTRUDER_WINDOWS_MS -> {
+                    val windowsMs = propertyValue.toDoubleOrNull()?.toInt()
+                    if (windowsMs == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"intruderCfg":{"windowsMs":$windowsMs}}}"""
+                    }
+                }
+
+                KEY_LOGS_LOG_TO_SD_CARD -> {
+                    val enabled = propertyValue.lowercase().toBooleanStrictOrNull()
+                    if (enabled == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"logConfig":{"logToSdCard":$enabled}}}"""
+                    }
+                }
+
+                KEY_LOGS_FILENAME -> """setConfig#cfg={"config":{"logConfig":{"filename":"$propertyValue"}}}"""
+
+                KEY_LOGS_MAX_FILES -> {
+                    val maxFiles = propertyValue.toDoubleOrNull()?.toInt()
+                    if (maxFiles == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"logConfig":{"maxFiles":$maxFiles}}}"""
+                    }
+                }
+
+                KEY_LOGS_MAX_FILE_SIZE -> {
+                    val maxFileSize = propertyValue.toDoubleOrNull()?.toInt()
+                    if (maxFileSize == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"logConfig":{"maxFileSize":$maxFileSize}}}"""
+                    }
+                }
+
+                KEY_BT_OFF_TIMEOUT_SECONDS -> {
+                    val timeout = propertyValue.toDoubleOrNull()?.toInt()
+                    if (timeout == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"bluetoothOffTimeoutSeconds":$timeout}}"""
+                    }
+                }
+
+                KEY_BT_ENABLE_AT_START -> {
+                    val enable = propertyValue.lowercase().toBooleanStrictOrNull()
+                    if (enable == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"bluetoothEnableAtStart":$enable}}"""
+                    }
+                }
+
+                KEY_BT_ENABLE_ON_TAPPING -> {
+                    val enable = propertyValue.lowercase().toBooleanStrictOrNull()
+                    if (enable == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"bluetoothEnableOnTapping":$enable}}"""
+                    }
+                }
+
+                KEY_BT_ENABLE_DURING_RECORD -> {
+                    val enable = propertyValue.lowercase().toBooleanStrictOrNull()
+                    if (enable == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"bluetoothEnableDuringRecord":$enable}}"""
+                    }
+                }
+
+                KEY_CPU_MIN_FREQUENCY_MHZ -> {
+                    val min = propertyValue.toDoubleOrNull()?.toInt()
+                    if (min == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"cpuMinFrequencyMHZ":$min}}"""
+                    }
+                }
+
+                KEY_CPU_MAX_FREQUENCY_MHZ -> {
+                    val max = propertyValue.toDoubleOrNull()?.toInt()
+                    if (max == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"cpuMaxFrequencyMHZ":$max}}"""
+                    }
+                }
+
+                KEY_CPU_ENABLE_LIGHT_SLEEP -> {
+                    val enable = propertyValue.lowercase().toBooleanStrictOrNull()
+                    if (enable == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"cpuEnableLightSleep":$enable}}"""
+                    }
+                }
+
+                KEY_BATTERY_AVG_INTERVAL_MS -> {
+                    val secs = propertyValue.toDoubleOrNull()
+                    if (secs == null) {
+                        ""
+                    } else {
+                        val intervalMillis = (secs * 1000).toInt()
+                        """setConfig#cfg={"config":{"battery":{"avgIntervalMs":$intervalMillis}}}"""
+                    }
+                }
+
+                KEY_BATTERY_AVG_SAMPLES -> {
+                    val samples = propertyValue.toDoubleOrNull()?.toInt()
+                    if (samples == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"battery":{"avgSamples":$samples}}}"""
+                    }
+                }
+
+                KEY_BATTERY_UPDATE_INTERVAL_MS -> {
+                    val secs = propertyValue.toDoubleOrNull()
+                    if (secs == null) {
+                        ""
+                    } else {
+                        val intervalMillis = (secs * 1000).toInt()
+                        """setConfig#cfg={"config":{"battery":{"updateIntervalMs":$intervalMillis}}}"""
+                    }
+                }
+
+                KEY_BATTERY_NO_BAT_MODE -> {
+                    val noBatteryMode = propertyValue.lowercase().toBooleanStrictOrNull()
+                    if (noBatteryMode == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"battery":{"noBatteryMode":$noBatteryMode}}}"""
+                    }
+                }
+
+                else -> ""
+            }.ifEmpty {
+                errorCallback()
+                return
+            }
+            val command = from(rawCommand)
+            commandCreatedCallback(command)
+        }
+
+        fun createSetRecordModeCommand(state: RecordState): Command? {
+            val mode = when (state) {
+                RecordState.RecordOffDetectOff -> "recordOff_detectOff"
+                RecordState.RecordOnDetectOff -> "recordOn_detectOff"
+                RecordState.RecordOffDetectOn -> "recordOff_detectOn"
+                RecordState.RecordOnDetectOn -> "recordOn_detectOn"
+                RecordState.RecordOnEvent -> "recordOnEvent"
+                RecordState.Invalid -> ""
+            }
+            if (mode.isNotEmpty()) {
+                return from("setRecordMode#mode=$mode")
+            }
+            return null
+        }
+
+        fun createSetLocationCommand(location: Location): Command {
+            val code = OpenLocationCode(location.latitude, location.longitude).code
+            val accuracy = location.accuracy.toLong()
+            val rawParameter =
+                """{"device":{"locationCode":"$code","locationAccuracy":$accuracy}}"""
+            val cfgParameter = CommandParameter(rawParameter)
+            val parameters = mapOf("cfg" to cfgParameter)
+            return Command(DeviceDriver.nextCommandId, COMMAND_SET_CONFIG, parameters)
+        }
 
         fun createSetTimeCommand(timestampInSeconds: Long, timezone: Int): Command {
-            val parameters = mapOf(
-                "time" to CommandParameter("""{"seconds":$timestampInSeconds,"ms":0,"timezone":$timezone}""")
-            )
-            return Command(DeviceDriver.getNextCommandId(), "setTime", parameters)
+            val timeParameter = """{"seconds":$timestampInSeconds,"ms":0,"timezone":$timezone}"""
+            val parameters = mapOf("time" to CommandParameter(timeParameter))
+            return Command(DeviceDriver.nextCommandId, COMMAND_SET_TIME, parameters)
+        }
+
+        fun createGetConfigCommand(): Command {
+            return Command(DeviceDriver.nextCommandId, COMMAND_GET_CONFIG, mapOf())
+        }
+
+        fun createGetStatusCommand(): Command {
+            return Command(DeviceDriver.nextCommandId, COMMAND_GET_STATUS, mapOf())
         }
 
         fun from(raw: String): Command {
@@ -139,12 +430,14 @@ class Command(
                     }
                 }
             }
+            if (id < 0) {
+                id = DeviceDriver.nextCommandId
+            }
             return Command(id, commandName, parameters)
         }
     }
 
     override fun toString(): String {
-
         val buffer = StringBuilder()
         buffer.append(name.trim())
         buffer.append(SEPARATOR)
@@ -156,5 +449,4 @@ class Command(
         buffer.append("\n")
         return buffer.toString()
     }
-
 }

@@ -1,10 +1,12 @@
 package de.eloc.eloc_control_panel.activities.themable.editors
 
+import android.location.Location
 import android.os.Bundle
 import android.view.View
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.activities.themable.DeviceActivity
 import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
@@ -31,6 +33,7 @@ abstract class BaseEditorActivity : ThemableActivity() {
         const val EXTRA_MINIMUM = "minimum"
     }
 
+    private lateinit var location: Location
     protected var property = ""
     protected var settingName = ""
     protected var currentValue = ""
@@ -93,6 +96,14 @@ abstract class BaseEditorActivity : ThemableActivity() {
     }
 
     private fun setData() {
+
+        if (DeviceActivity.gpsLocation == null) {
+            goBack()
+            return
+        } else {
+            location = DeviceActivity.gpsLocation!!
+        }
+
         val extras = intent.extras
 
         isNumeric = extras?.getBoolean(EXTRA_IS_NUMERIC, false) ?: false
@@ -172,7 +183,7 @@ abstract class BaseEditorActivity : ThemableActivity() {
                 if (type.isSetCommand) {
                     saved = true
                     progressIndicator.text = getString(R.string.updating_values)
-                    DeviceDriver.getStatusAndConfig()
+                    DeviceDriver.getElocInformation(location)
                 }
             } else {
                 showContent()

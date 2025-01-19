@@ -7,7 +7,6 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.openlocationcode.OpenLocationCode
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.formatNumber
@@ -36,20 +35,21 @@ import de.eloc.eloc_control_panel.receivers.ElocReceiver
 class DeviceActivity : ThemableActivity() {
     companion object {
         const val EXTRA_DEVICE_ADDRESS = "device_address"
+        var gpsLocation: Location? = null
     }
 
     private enum class ViewMode {
         ScanningView,
         ConnectingView,
+        LocationPendingView,
         SyncingTimeView,
         ContentView,
         Disconnected,
+        FetchingDataView
     }
 
     private val listenerId = "deviceActivity"
     private var hasSDCardError = false
-    private var locationAccuracy = 100.0 // Start with very inaccurate value of 100 meters.
-    private var locationCode = LocationHelper.UNKNOWN
     private lateinit var binding: ActivityDeviceBinding
     private var deviceAddress = ""
     private var firstResume = true
@@ -119,6 +119,7 @@ class DeviceActivity : ThemableActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        gpsLocation = null
         DeviceDriver.removeConnectionChangedListener(listenerId)
         DeviceDriver.removeWriteCommandLister(listenerId)
         DeviceDriver.removeOnSetCommandCompletedListener(setCommandCompletedCallback)
@@ -198,14 +199,30 @@ class DeviceActivity : ThemableActivity() {
 
     private fun timeSyncCompleted() {
         timeSyncHandled = true
-        binding.swipeRefreshLayout.isEnabled = true
-        setViewMode(ViewMode.ContentView)
+        onFirstLocationReceived()
+    }
+
+    private fun onFirstLocationReceived() {
+        if (!timeSyncHandled) {
+            return
+        }
+        if (gpsLocation == null) {
+            setViewMode(ViewMode.LocationPendingView)
+        } else {
+            setViewMode(ViewMode.FetchingDataView)
+            DeviceDriver.getElocInformation(gpsLocation!!, true)
+        }
+    }
+
+    private fun onDataReceived() {
         binding.toolbar.menu.clear()
         menuInflater.inflate(R.menu.app_bar_settings, binding.toolbar.menu)
-        DeviceDriver.getStatusAndConfig(true)
+        binding.swipeRefreshLayout.isEnabled = true
+        setViewMode(ViewMode.ContentView)
     }
 
     private fun setStatusData() {
+        onDataReceived()
         binding.sessionIdItem.valueText = DeviceDriver.session.ID
         val detectionDuration = if (DeviceDriver.session.detecting) {
             DeviceDriver.session.detectingDurationSeconds.toInt()
@@ -253,6 +270,7 @@ class DeviceActivity : ThemableActivity() {
     }
 
     private fun setConfigData() {
+        onDataReceived()
         binding.toolbar.title = DeviceDriver.general.nodeName
         binding.sampleRateItem.valueText = DeviceDriver.microphone.sampleRate.toString()
         binding.microphoneTypeItem.valueText = DeviceDriver.microphone.type
@@ -370,6 +388,24 @@ class DeviceActivity : ThemableActivity() {
                 binding.progressIndicator.text = getString(R.string.connecting)
             }
 
+            ViewMode.LocationPendingView -> {
+                binding.toolbar.visibility = View.GONE
+                binding.contentLayout.visibility = View.GONE
+                binding.initLayout.visibility = View.VISIBLE
+                binding.skipButton.visibility = View.GONE
+                binding.progressIndicator.infoMode = false
+                binding.progressIndicator.text = getString(R.string.wait_for_location)
+            }
+
+            ViewMode.FetchingDataView -> {
+                binding.toolbar.visibility = View.GONE
+                binding.contentLayout.visibility = View.GONE
+                binding.initLayout.visibility = View.VISIBLE
+                binding.skipButton.visibility = View.GONE
+                binding.progressIndicator.infoMode = false
+                binding.progressIndicator.text = getString(R.string.getting_eloc_info)
+            }
+
             ViewMode.SyncingTimeView -> {
                 binding.toolbar.visibility = View.GONE
                 binding.contentLayout.visibility = View.GONE
@@ -406,10 +442,12 @@ class DeviceActivity : ThemableActivity() {
             }
 
             override fun onLocationChanged(location: Location) {
-                locationAccuracy = location.accuracy.toDouble()
-                val code = OpenLocationCode(location.latitude, location.longitude)
-                locationCode = code.code
+                val isFirstLocationUpdate = (gpsLocation == null)
+                gpsLocation = location
                 updateGpsViews()
+                if (isFirstLocationUpdate) {
+                    onFirstLocationReceived()
+                }
             }
         }
 
@@ -417,8 +455,10 @@ class DeviceActivity : ThemableActivity() {
     }
 
     private fun updateGpsViews() {
-        binding.gpsGauge.updateValue(locationAccuracy)
-        binding.gpsStatus.text = formatNumber(locationAccuracy, "m", 0)
+        if (gpsLocation != null) {
+            binding.gpsGauge.updateValue(gpsLocation!!.accuracy.toDouble())
+            binding.gpsStatus.text = formatNumber(gpsLocation!!.accuracy.toDouble(), "m", 0)
+        }
     }
 
     private fun showSDCardError() {
@@ -499,7 +539,7 @@ class DeviceActivity : ThemableActivity() {
         }
         */
 
-        if (ignoreLocationAccuracy || (locationAccuracy <= 8.1)) {
+        if (ignoreLocationAccuracy || (gpsLocation!!.accuracy <= 8.1)) {
             var proceed = true
 
             val task = {
@@ -509,13 +549,13 @@ class DeviceActivity : ThemableActivity() {
                     binding.modeButton.isBusy = true
 
                     when (newMode) {
-                        RecordState.RecordOffDetectOff -> DeviceDriver.setRecordState(newMode)
+                        RecordState.RecordOffDetectOff -> DeviceDriver.setRecordState(
+                            newMode,
+                            gpsLocation!!
+                        )
+
                         else -> {
-                            DeviceDriver.setRecordState(
-                                newMode,
-                                locationCode,
-                                locationAccuracy
-                            )
+                            DeviceDriver.setRecordState(newMode, gpsLocation!!)
                         }
                     }
                 }

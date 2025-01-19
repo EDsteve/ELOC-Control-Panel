@@ -5,6 +5,7 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.data.MicrophoneVolumePower
 import de.eloc.eloc_control_panel.databinding.ActivityEditorRangeBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
@@ -32,7 +33,7 @@ class RangeEditorActivity : BaseEditorActivity() {
         if ((rangeCurrentValue != null) && (rangeMinimumValue != null) && (rangeMaximumValue != null)) {
             binding.slider.stepSize = 1.0f
             binding.slider.setLabelFormatter { value ->
-                 MicrophoneVolumePower(value).percentage
+                MicrophoneVolumePower(value).percentage
             }
             binding.slider.valueFrom = rangeMinimumValue!!
             binding.slider.valueTo = rangeMaximumValue!!
@@ -48,10 +49,15 @@ class RangeEditorActivity : BaseEditorActivity() {
     }
 
     override fun save() {
-        if (DeviceDriver.setProperty(property, binding.slider.value.toString())) {
-            showProgress()
-        } else {
-            showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-        }
+        Command.createSetConfigPropertyCommand(
+            property,
+            binding.slider.value.toString(),
+            { command ->
+                showProgress()
+                DeviceDriver.processCommandQueue(command)
+            },
+            {
+                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+            })
     }
 }

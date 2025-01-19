@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.location.Location
 import android.os.Build
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.data.Channel
@@ -172,6 +173,7 @@ object DeviceDriver : Runnable {
     private val onGetCommandCompletedListeners = mutableListOf<GetCommandCompletedCallback?>()
     private val writeCommandErrorListeners = mutableMapOf<String, (String) -> Unit>()
     private val connectionChangedListeners = mutableMapOf<String, (ConnectionStatus) -> Unit>()
+    private val commandQueue: ArrayDeque<Command> = ArrayDeque()
     private val disconnectBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             // disconnect now, else would be queued until UI re-attached
@@ -253,6 +255,7 @@ object DeviceDriver : Runnable {
     fun disconnect() {
         disconnecting = true
         greeted = false
+        clearCommandQueue()
 
         try {
             bluetoothSocket?.close()
@@ -287,55 +290,56 @@ object DeviceDriver : Runnable {
         onGetCommandCompletedListeners.remove(listener)
     }
 
-    private fun write(command: String): Long {
-        val cmd = Command.from(command)
-        return write(cmd, command + "\n")
-    }
+    fun processCommandQueue(newCommand: Command? = null) {
+        if (newCommand != null) {
+            commandQueue.addLast(newCommand)
+        }
+        while (commandQueue.isNotEmpty()) {
+            // Wait for a pending command, if any
+            while (pendingCommandId >= 0) {
+                try {
+                    Thread.sleep(2500)
+                    Logger.d("waiting for $pendingCommandId - greeted: $greeted")
+                } catch (_: Exception) {
+                }
+            }
 
-    private fun write(cmd: Command, rawCommand: String): Long {
-        // Wait for a pending command, if any
-        while (pendingCommandId >= 0) {
+            val cmd = commandQueue.removeFirst()
             try {
-                Thread.sleep(2500)
-                Logger.d("waiting for $pendingCommandId - greeted: $greeted")
-            } catch (_: Exception) {
-            }
-        }
+                if (bluetoothSocket?.isConnected == true) {
+                    val commandString = cmd.toString()
 
-        try {
-            if (bluetoothSocket?.isConnected == true) {
-                val command = cmd.toString()
-                if (rawCommand != command) {
-                    print("fix command!")
-                    return cmd.id
-                }
-                val data = command.encodeToByteArray()
+                    val data = commandString.encodeToByteArray()
 
-                // Keep the data under 512 bytes. If data must be greater than 512 bytes,
-                // implement some kind of protocol for chunking the data and also keeping up with
-                // the 1 sec delay expected by the firmware.
-                // For details: https://github.com/LIFsCode/ELOC-3.0/wiki/ELOC-3.0-App-Interface#limitations
-                if (data.size > COMMAND_MAX_LENGTH) {
-                    for (errorListener in writeCommandErrorListeners.values) {
-                        errorListener("Firmware command is too long!")
+                    // Keep the data under 512 bytes. If data must be greater than 512 bytes,
+                    // implement some kind of protocol for chunking the data and also keeping up with
+                    // the 1 sec delay expected by the firmware.
+                    // For details: https://github.com/LIFsCode/ELOC-3.0/wiki/ELOC-3.0-App-Interface#limitations
+                    if (data.size > COMMAND_MAX_LENGTH) {
+                        for (errorListener in writeCommandErrorListeners.values) {
+                            errorListener("Firmware command is too long!")
+                        }
+                        clearCommandQueue()
                     }
-                    return cmd.id
+
+                    pendingCommandId = cmd.id
+                    bluetoothSocket?.outputStream?.write(data)
+
+                } else {
+                    throw IOException("ELOC device not connected!")
                 }
-
-                pendingCommandId = cmd.id
-                bluetoothSocket?.outputStream?.write(data)
-
-            } else {
-                throw IOException("ELOC device not connected!")
+            } catch (e: IOException) {
+                disconnect()
             }
-        } catch (e: IOException) {
-            disconnect()
         }
-        return cmd.id
     }
 
-    fun sendCustomCommand(command: String) {
-        write(command)
+    private fun clearCommandQueue() {
+        commandQueue.clear()
+    }
+
+    fun sendCustomCommand(rawCommand: String) {
+        processCommandQueue(Command.from(rawCommand))
     }
 
     fun setCommandLineListener(listener: (String) -> Unit) {
@@ -347,244 +351,19 @@ object DeviceDriver : Runnable {
     }
 
     fun syncTime(timestampInSeconds: Long, timezone: Int) {
-        // todo: delete
-        val id = lastUsedCommandId + 1
-        val command1 =
-            """setTime#id=$id#time={"seconds":$timestampInSeconds,"ms":0,"timezone":$timezone}"""
-
-        write(Command.createSetTimeCommand(timestampInSeconds, timezone), command1 + "\n")
-    }
-
-    private fun setLocation(code: String, accuracy: Int) {
-        val command =
-            """setConfig#cfg={"device":{"locationCode":"$code","locationAccuracy":$accuracy}}"""
-        write(command)
-    }
-
-    fun setProperty(property: String, value: String): Boolean {
-        val propertyValue = value.trim().ifEmpty {
-            return false
-        }
-
-        val command = when (property) {
-            KEY_GENERAL_NODE_NAME -> """setConfig#cfg={"device":{"nodeName":"$propertyValue"}}"""
-            KEY_GENERAL_FILE_HEADER -> """setConfig#cfg={"device":{"fileHeader":"$propertyValue"}}"""
-            KEY_GENERAL_SECONDS_PER_FILE -> {
-                val secs = propertyValue.toDoubleOrNull()?.toInt()
-                if (secs == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"secondsPerFile":$secs}}"""
-                }
-            }
-
-            KEY_MICROPHONE_TYPE -> """setConfig#cfg={"mic":{"MicType":"$propertyValue"}}"""
-            KEY_MICROPHONE_VOLUME_POWER -> {
-                val newPower = MicrophoneVolumePower.parse(propertyValue)
-                if (newPower == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"mic":{"MicVolume2_pwr":${newPower.rawValue.toInt()}}}"""
-                }
-            }
-
-            KEY_MICROPHONE_CHANNEL -> {
-                val newChannel = Channel.parse(propertyValue)
-                if (newChannel == Channel.Unknown) {
-                    ""
-                } else {
-                    """setConfig#cfg={"mic":{"MicChannel":"${newChannel.value}"}}"""
-                }
-            }
-
-            KEY_MICROPHONE_SAMPLE_RATE -> {
-                val rawRate = propertyValue.toDoubleOrNull() ?: 0.0
-                val newRate = SampleRate.parse(rawRate)
-                if (newRate == SampleRate.Unknown) {
-                    ""
-                } else {
-                    """setConfig#cfg={"mic":{"MicSampleRate":${newRate.code}}}"""
-                }
-            }
-
-            KEY_MICROPHONE_APPLL -> {
-                val enabled = propertyValue.lowercase().toBooleanStrictOrNull()
-                if (enabled == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"mic":{"MicUseAPLL":$enabled}}"""
-                }
-            }
-
-            KEY_INTRUDER_ENABLED -> {
-                val enabled = propertyValue.lowercase().toBooleanStrictOrNull()
-                if (enabled == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"intruderCfg":{"enable":$enabled}}}"""
-                }
-            }
-
-            KEY_INTRUDER_THRESHOLD -> {
-                val threshold = propertyValue.toDoubleOrNull()?.toInt()
-                if (threshold == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"intruderCfg":{"threshold":$threshold}}}"""
-                }
-            }
-
-            KEY_INTRUDER_WINDOWS_MS -> {
-                val windowsMs = propertyValue.toDoubleOrNull()?.toInt()
-                if (windowsMs == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"intruderCfg":{"windowsMs":$windowsMs}}}"""
-                }
-            }
-
-            KEY_LOGS_LOG_TO_SD_CARD -> {
-                val enabled = propertyValue.lowercase().toBooleanStrictOrNull()
-                if (enabled == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"logConfig":{"logToSdCard":$enabled}}}"""
-                }
-            }
-
-            KEY_LOGS_FILENAME -> """setConfig#cfg={"config":{"logConfig":{"filename":"$propertyValue"}}}"""
-
-            KEY_LOGS_MAX_FILES -> {
-                val maxFiles = propertyValue.toDoubleOrNull()?.toInt()
-                if (maxFiles == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"logConfig":{"maxFiles":$maxFiles}}}"""
-                }
-            }
-
-            KEY_LOGS_MAX_FILE_SIZE -> {
-                val maxFileSize = propertyValue.toDoubleOrNull()?.toInt()
-                if (maxFileSize == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"logConfig":{"maxFileSize":$maxFileSize}}}"""
-                }
-            }
-
-            KEY_BT_OFF_TIMEOUT_SECONDS -> {
-                val timeout = propertyValue.toDoubleOrNull()?.toInt()
-                if (timeout == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"bluetoothOffTimeoutSeconds":$timeout}}"""
-                }
-            }
-
-            KEY_BT_ENABLE_AT_START -> {
-                val enable = propertyValue.lowercase().toBooleanStrictOrNull()
-                if (enable == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"bluetoothEnableAtStart":$enable}}"""
-                }
-            }
-
-            KEY_BT_ENABLE_ON_TAPPING -> {
-                val enable = propertyValue.lowercase().toBooleanStrictOrNull()
-                if (enable == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"bluetoothEnableOnTapping":$enable}}"""
-                }
-            }
-
-            KEY_BT_ENABLE_DURING_RECORD -> {
-                val enable = propertyValue.lowercase().toBooleanStrictOrNull()
-                if (enable == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"bluetoothEnableDuringRecord":$enable}}"""
-                }
-            }
-
-            KEY_CPU_MIN_FREQUENCY_MHZ -> {
-                val min = propertyValue.toDoubleOrNull()?.toInt()
-                if (min == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"cpuMinFrequencyMHZ":$min}}"""
-                }
-            }
-
-            KEY_CPU_MAX_FREQUENCY_MHZ -> {
-                val max = propertyValue.toDoubleOrNull()?.toInt()
-                if (max == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"cpuMaxFrequencyMHZ":$max}}"""
-                }
-            }
-
-            KEY_CPU_ENABLE_LIGHT_SLEEP -> {
-                val enable = propertyValue.lowercase().toBooleanStrictOrNull()
-                if (enable == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"cpuEnableLightSleep":$enable}}"""
-                }
-            }
-
-            KEY_BATTERY_AVG_INTERVAL_MS -> {
-                val secs = propertyValue.toDoubleOrNull()
-                if (secs == null) {
-                    ""
-                } else {
-                    val intervalMillis = (secs * 1000).toInt()
-                    """setConfig#cfg={"config":{"battery":{"avgIntervalMs":$intervalMillis}}}"""
-                }
-            }
-
-            KEY_BATTERY_AVG_SAMPLES -> {
-                val samples = propertyValue.toDoubleOrNull()?.toInt()
-                if (samples == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"battery":{"avgSamples":$samples}}}"""
-                }
-            }
-
-            KEY_BATTERY_UPDATE_INTERVAL_MS -> {
-                val secs = propertyValue.toDoubleOrNull()
-                if (secs == null) {
-                    ""
-                } else {
-                    val intervalMillis = (secs * 1000).toInt()
-                    """setConfig#cfg={"config":{"battery":{"updateIntervalMs":$intervalMillis}}}"""
-                }
-            }
-
-            KEY_BATTERY_NO_BAT_MODE -> {
-                val noBatteryMode = propertyValue.lowercase().toBooleanStrictOrNull()
-                if (noBatteryMode == null) {
-                    ""
-                } else {
-                    """setConfig#cfg={"config":{"battery":{"noBatteryMode":$noBatteryMode}}}"""
-                }
-            }
-
-            else -> ""
-        }.ifEmpty { return false }
-        write(command)
-        return true
+        val command = Command.createSetTimeCommand(timestampInSeconds, timezone)
+        processCommandQueue(command)
     }
 
     private fun onConnect() {
-        resetCommandIdTracker()
         cancelConnectionMonitor = true
     }
 
-    fun getNextCommandId(): Long = ++lastUsedCommandId
+    val nextCommandId: Long
+        get() {
+            lastUsedCommandId++
+            return lastUsedCommandId
+        }
 
     @SuppressLint("MissingPermission")
     fun connect(deviceAddress: String) {
@@ -640,6 +419,8 @@ object DeviceDriver : Runnable {
             disconnect()
             return
         }
+
+        resetCommandIdTracker()
         connectionStatus =
             if (bluetoothSocket?.isConnected == true) {
                 ConnectionStatus.Active
@@ -868,13 +649,13 @@ object DeviceDriver : Runnable {
                         if (!greeted) {
                             checkGreeting(json)
                         } else {
-                            checkPendingCommandId(json)
                             commandLineListener?.invoke(json)
                             val intercepted = interceptCompletedSetCommand(json)
                             if (!intercepted) {
                                 interceptCompletedGetCommand(json)
                             }
                         }
+                        checkPendingCommandId(json)
                     }
                 } catch (e: Exception) {
                     if (connecting || disconnecting) {
@@ -897,18 +678,19 @@ object DeviceDriver : Runnable {
 
     fun getStatus() {
         infoType = InfoType.Status
-        sendGetStatusCommand()
+        getElocStatus()
     }
 
-    private fun sendGetStatusCommand() {
-        write("getStatus")
+    private fun getElocStatus() {
+        processCommandQueue(Command.createGetStatusCommand())
     }
 
-    private fun sendGetConfigCommand() {
-        write("getConfig")
+    private fun getElocConfig(location: Location) {
+        processCommandQueue(Command.createSetLocationCommand(location))
+        processCommandQueue(Command.createGetConfigCommand())
     }
- use a command queue
-    fun getStatusAndConfig(saveNextInfoResponse: Boolean = false) {
+
+    fun getElocInformation(location: Location, saveNextInfoResponse: Boolean = false) {
         if (saveNextInfoResponse) {
             configSaved = false
             statusSaved = false
@@ -917,32 +699,17 @@ object DeviceDriver : Runnable {
             statusSaved = true
         }
         infoType = InfoType.StatusWithConfig
-
-        // Get config first - so that eloc name will be loaded as soon as possible
-        sendGetConfigCommand()
-        sendGetStatusCommand()
+        getElocConfig(location)
+        getElocStatus()
     }
 
-    fun setRecordState(
-        state: RecordState,
-        locationCode: String? = null,
-        locationAccuracy: Double? = null
-    ) {
-        if ((locationCode != null) && (locationAccuracy != null)) {
-            setLocation(locationCode, locationAccuracy.toInt())
+    fun setRecordState(state: RecordState, location: Location) {
+        processCommandQueue(Command.createSetLocationCommand(location))
+        val modeCommand = Command.createSetRecordModeCommand(state)
+        if (modeCommand != null) {
+            processCommandQueue(modeCommand)
         }
-        val mode = when (state) {
-            RecordState.RecordOffDetectOff -> "recordOff_detectOff"
-            RecordState.RecordOnDetectOff -> "recordOn_detectOff"
-            RecordState.RecordOffDetectOn -> "recordOff_detectOn"
-            RecordState.RecordOnDetectOn -> "recordOn_detectOn"
-            RecordState.RecordOnEvent -> "recordOnEvent"
-            RecordState.Invalid -> ""
-        }
-        if (mode.isNotEmpty()) {
-            write("setRecordMode#mode=$mode")
-        }
-        getStatusAndConfig(true)
+        getElocInformation(location, true)
     }
 
     private fun parseConfig(jsonObject: JSONObject) {

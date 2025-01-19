@@ -7,6 +7,7 @@ import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.hideKeyboard
 import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.databinding.ActivityEditorTextBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.driver.General
@@ -66,18 +67,19 @@ class TextEditorActivity : BaseEditorActivity() {
             }
         }
 
-        val accepted = DeviceDriver.setProperty(
+        Command.createSetConfigPropertyCommand(
             property,
             if (isNumeric) {
                 numericValue.toString()
             } else {
                 newValue
             },
-        )
-        if (accepted) {
-            showProgress()
-        } else {
-            showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-        }
+            { command ->
+                showProgress()
+                DeviceDriver.processCommandQueue(command)
+            },
+            {
+                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+            })
     }
 }

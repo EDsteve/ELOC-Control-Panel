@@ -7,6 +7,7 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.databinding.ActivityEditorOptionsBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 
@@ -53,10 +54,15 @@ class OptionEditorActivity : BaseEditorActivity() {
             showModalAlert(getString(R.string.required), getString(R.string.selection_required))
             return
         }
-        if (DeviceDriver.setProperty(property, newValue)) {
-            showProgress()
-        } else {
-            showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-        }
+        Command.createSetConfigPropertyCommand(
+            property,
+            newValue,
+            { command ->
+                showProgress()
+                DeviceDriver.processCommandQueue(command)
+            },
+            {
+                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+            })
     }
 }
