@@ -5,7 +5,7 @@
     android:id="@+id/coordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.DeviceActivity">
+    tools:context=".activities.themable.DeviceActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -87,7 +87,7 @@
                     android:id="@+id/content_layout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    tools:visibility="invisible">
+                    tools:visibility="visible">
 
                     <de.eloc.eloc_control_panel.widgets.ModeButton
                         android:id="@+id/mode_button"
@@ -166,7 +166,7 @@
                                     app:showDiscreteColors="true" />
 
                                 <TextView
-                                    android:id="@+id/gps_status"
+                                    android:id="@+id/gps_accuracy_text_view"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:gravity="center"
@@ -178,6 +178,19 @@
                                     app:layout_constraintStart_toStartOf="@id/gps_gauge"
                                     app:layout_constraintTop_toTopOf="@id/gps_gauge"
                                     tools:text="8m" />
+
+                                <ImageView
+                                    android:id="@+id/gps_no_accuracy_image_view"
+                                    android:layout_width="32dp"
+                                    android:layout_height="32dp"
+                                    android:gravity="center"
+                                    android:importantForAccessibility="no"
+                                    android:src="@drawable/not_listed_location"
+                                    app:layout_constraintBottom_toBottomOf="@id/gps_gauge"
+                                    app:layout_constraintEnd_toEndOf="@id/gps_gauge"
+                                    app:layout_constraintStart_toStartOf="@id/gps_gauge"
+                                    app:layout_constraintTop_toTopOf="@id/gps_gauge"
+                                    app:tint="@color/white" />
 
                                 <TextView
                                     android:id="@+id/battery_status"
@@ -238,6 +251,7 @@
                                     app:layout_constraintEnd_toEndOf="@id/gps_gauge"
                                     app:layout_constraintStart_toStartOf="@id/gps_gauge"
                                     app:layout_constraintTop_toTopOf="@id/battery_gauge_label" />
+
                             </androidx.constraintlayout.widget.ConstraintLayout>
 
                             <com.google.android.material.divider.MaterialDivider

@@ -8,7 +8,8 @@
     <string name="advanced">Advanced</string>
     <string name="already_verified">Already verified</string>
     <string name="app_logo">App logo</string>
-    <string name="app_restart_message">A different font size was set.\nYou must restart the app to apply the requested font size.</string>
+    <string name="app_auto_restart_message">A different font size was set.\nThe app will be restarted to apply the requested font size.</string>
+    <string name="app_manual_restart_message">A different font size was set.\nYou must restart the app to apply the requested font size.</string>
     <string name="app_restart_required">App restart required</string>
     <string name="battery_level">Battery Level</string>
     <string name="battery_voltage">Battery Voltage</string>
@@ -82,7 +83,7 @@
 
 
     <string name="gps">gps</string>
-    <string name="gps_location">GPS Accuracy</string>
+
     <string name="grant_permission">Grant Permission</string>
     <string name="grant_permissions">Grant permissions</string>
     <string name="hide_filter">Hide filter</string>
@@ -189,7 +190,7 @@
     <string name="sign_in_with_google">Sign in with Google</string>
     <string name="sign_out">Sign out</string>
     <string name="small">Small</string>
-    <string name="snippet_template">Last Update: %s\n\nGPS Accuracy: %s\n\nBattery volts: %s\n\nRec Time: %s</string>
+    <string name="snippet_template">Last Update: %1$s\n\nGPS Accuracy: %2$s\n\nBattery volts: %3$s\n\nRec Time: %4$s</string>
     <string name="something_went_wrong">Something went wrong!</string>
 
 <!--    <string name="stop_label">Stop</string>-->

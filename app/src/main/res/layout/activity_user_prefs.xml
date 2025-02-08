@@ -33,37 +33,15 @@
                 android:orientation="vertical"
                 android:paddingVertical="16dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
-                    android:text="@string/status_upload_intervals" />
-
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/upload_interval_chip_group"
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/upload_interval_item"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
-                    app:selectionRequired="true"
-                    app:singleSelection="true">
-
-                    <include
-                        android:id="@+id/upload_interval_15mins_chip_layout"
-                        layout="@layout/layout_app_chip" />
-
-                    <include
-                        android:id="@+id/upload_interval_30mins_chip_layout"
-                        layout="@layout/layout_app_chip" />
-
-                    <include
-                        android:id="@+id/upload_interval_60mins_chip_layout"
-                        layout="@layout/layout_app_chip" />
-
-                    <include
-                        android:id="@+id/upload_interval_120mins_chip_layout"
-                        layout="@layout/layout_app_chip" />
-
-                </com.google.android.material.chip.ChipGroup>
+                    android:layout_marginVertical="8dp"
+                    app:itemType="button"
+                    app:keyText="@string/retry_upload_interval"
+                    app:valueText="10 mins" />
 
                 <com.google.android.material.divider.MaterialDivider
                     android:layout_width="match_parent"
@@ -80,61 +58,70 @@
                     android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
                     android:textStyle="bold" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
-                    android:text="@string/main_menu_position" />
-
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/menu_position_chip_group"
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/main_menu_position_item"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
-                    app:selectionRequired="true"
-                    app:singleSelection="true">
+                    android:layout_marginVertical="8dp"
+                    app:itemType="button"
+                    app:keyText="@string/main_menu_position"
+                    app:valueText="Top Right" />
 
-                    <include
-                        android:id="@+id/left_chip_layout"
-                        layout="@layout/layout_app_chip" />
-
-                    <include
-                        android:id="@+id/right_chip_layout"
-                        layout="@layout/layout_app_chip" />
-
-                </com.google.android.material.chip.ChipGroup>
-
-                <Space
+                <com.google.android.material.divider.MaterialDivider
                     android:layout_width="match_parent"
-                    android:layout_height="16dp"  />
+                    android:layout_height="wrap_content" />
+
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/font_size_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginVertical="8dp"
+                    app:itemType="button"
+                    app:keyText="@string/font_size"
+                    app:valueText="Small" />
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/gps_timeout_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginVertical="8dp"
+                    app:itemType="button"
+                    app:keyText="@string/gps_location_timeout"
+                    app:valueText="15 sec" />
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="match_parent"
+                    android:layout_height="3dp"
+                    android:layout_marginVertical="16dp"
+                    app:dividerColor="@color/black" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
-                    android:text="@string/font_size" />
+                    android:layout_margin="16dp"
+                    android:text="@string/diagnostics"
+                    android:textAllCaps="true"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:textStyle="bold" />
 
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/font_size_chip_group"
-                    android:layout_width="match_parent" android:layout_marginHorizontal="16dp"
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/log_bt_traffic_item"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:selectionRequired="true"
-                    app:singleSelection="true">
-
-                    <include
-                        android:id="@+id/small_font_chip_layout"
-                        layout="@layout/layout_app_chip" />
-
-                    <include
-                        android:id="@+id/medium_font_chip_layout"
-                        layout="@layout/layout_app_chip" />
-
-                    <include
-                        android:id="@+id/large_font_chip_layout"
-                        layout="@layout/layout_app_chip" />
-
-                </com.google.android.material.chip.ChipGroup>
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginVertical="8dp"
+                    app:itemType="toggle"
+                    app:keyText="@string/log_bt_traffic_in_logcat" />
             </LinearLayout>
+
+
         </ScrollView>
 
         <View
