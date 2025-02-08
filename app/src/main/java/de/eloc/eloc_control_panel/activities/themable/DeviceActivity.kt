@@ -1,8 +1,6 @@
 package de.eloc.eloc_control_panel.activities.themable
 
 import android.content.Intent
-import android.location.Location
-import android.location.LocationListener
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -18,6 +16,8 @@ import de.eloc.eloc_control_panel.activities.showModalOptionAlert
 import de.eloc.eloc_control_panel.data.BtDevice
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
+import de.eloc.eloc_control_panel.data.GpsData
+import de.eloc.eloc_control_panel.data.GpsDataSource
 import de.eloc.eloc_control_panel.data.RecordState
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
@@ -29,13 +29,14 @@ import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 import de.eloc.eloc_control_panel.receivers.ElocReceiver
+import java.util.concurrent.Executors
 
 // todo: add refresh menu item for old API levels
 
 class DeviceActivity : ThemableActivity() {
     companion object {
         const val EXTRA_DEVICE_ADDRESS = "device_address"
-        var gpsLocation: Location? = null
+        var gpsLocationUpdate: GpsData? = null
     }
 
     private enum class ViewMode {
@@ -45,17 +46,22 @@ class DeviceActivity : ThemableActivity() {
         SyncingTimeView,
         ContentView,
         Disconnected,
-        FetchingDataView
+        FetchingDataView,
+        SettingRecordMode,
+        StoppingRecordMode,
     }
 
+    private var checkingGpsTimeoutStarted = false
+    private var checkingGpsTimeoutCompleted = false
     private val listenerId = "deviceActivity"
     private var hasSDCardError = false
     private lateinit var binding: ActivityDeviceBinding
     private var deviceAddress = ""
-    private var firstResume = true
     private var timeSyncHandled = false
     private var refreshing = false
     private var paused = false
+    private var statusReceived = false
+    private var configReceived = false
     private val scrollChangeListener =
         View.OnScrollChangeListener { _, _, y, _, _ ->
             binding.swipeRefreshLayout.isEnabled = (y <= 5)
@@ -66,12 +72,7 @@ class DeviceActivity : ThemableActivity() {
         runOnUiThread {
             // Hide the progress indicator when data is received i.e., there is a connection
             binding.swipeRefreshLayout.isRefreshing = false
-
-            when (it) {
-                CommandType.GetStatus -> setStatusData()
-                CommandType.GetConfig -> setConfigData()
-                else -> {}
-            }
+            checkReceivedInfoType(it)
         }
     }
 
@@ -79,13 +80,11 @@ class DeviceActivity : ThemableActivity() {
         runOnUiThread {
             when (type) {
                 CommandType.SetRecordMode -> {
-                    setRecordingState()
+                    displayRecordingState()
                     if (success) {
-                        DeviceDriver.getStatus()
+                        DeviceDriver.getStatus { }
                     }
                 }
-
-                CommandType.SetTime -> timeSyncCompleted()
 
                 else -> {}
             }
@@ -102,13 +101,14 @@ class DeviceActivity : ThemableActivity() {
     override fun onResume() {
         super.onResume()
         paused = false
-        if (firstResume) {
-            firstResume = false
-        } else {
-            setConfigData()
-            setStatusData()
+        gpsLocationUpdate = null
+        LocationHelper.startUpdates {
+            runOnUiThread {
+                gpsLocationUpdate = it
+                updateGpsViews()
+                checkGpsLocationTimeout()
+            }
         }
-        startLocationUpdates()
     }
 
     override fun onPause() {
@@ -119,12 +119,31 @@ class DeviceActivity : ThemableActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        gpsLocation = null
+        gpsLocationUpdate = null
         DeviceDriver.removeConnectionChangedListener(listenerId)
         DeviceDriver.removeWriteCommandLister(listenerId)
         DeviceDriver.removeOnSetCommandCompletedListener(setCommandCompletedCallback)
         DeviceDriver.removeOnGetCommandCompletedListener(getCommandCompletedListener)
         DeviceDriver.disconnect()
+    }
+
+    private fun checkGpsLocationTimeout() {
+        if (!checkingGpsTimeoutStarted) {
+            checkingGpsTimeoutStarted = true
+            checkingGpsTimeoutCompleted = false
+            Executors.newSingleThreadExecutor().execute {
+                var waitTime = Preferences.gpsLocationTimeoutSeconds
+                while ((waitTime > 0) && (!paused) && (gpsLocationUpdate == null)) {
+                    try {
+                        Thread.sleep(1000)
+                    } catch (_: Exception) {
+                    }
+                    waitTime--
+                }
+                checkingGpsTimeoutCompleted = true
+                showDeviceInfo()
+            }
+        }
     }
 
     private fun onConnectionStatusChanged(status: ConnectionStatus) {
@@ -151,7 +170,7 @@ class DeviceActivity : ThemableActivity() {
     }
 
     private fun initialize() {
-        setRecordingState()
+        displayRecordingState()
         registerListeners()
         elocReceiver = ElocReceiver(null) { elocFound(it) }
         onConnectionStatusChanged(ConnectionStatus.Inactive)
@@ -187,43 +206,106 @@ class DeviceActivity : ThemableActivity() {
         DeviceDriver.addOnGetCommandCompletedListener(getCommandCompletedListener)
     }
 
-
     private fun skipTimeSync() {
         showModalAlert(
             getString(R.string.time_sync),
             getString(R.string.time_sync_rationale),
         ) {
-            timeSyncCompleted()
+            onTimeSyncCompleted()
         }
     }
 
-    private fun timeSyncCompleted() {
+    private fun onTimeSyncCompleted() {
         timeSyncHandled = true
-        onFirstLocationReceived()
+        showDeviceInfo()
+    }
+
+    private fun showDeviceInfo() {
+        runOnUiThread {
+            if (timeSyncHandled) {
+                if (gpsLocationUpdate == null && (!checkingGpsTimeoutCompleted)) {
+                    setViewMode(ViewMode.LocationPendingView)
+                } else {
+                    DeviceDriver.getStatus {
+                        runOnUiThread {
+                            setViewMode(ViewMode.FetchingDataView)
+                            val isRecording = DeviceDriver.session.recordingState.isActive
+                            if (isRecording && (gpsLocationUpdate == null)) {
+                                val savedUpdate = Preferences.lastKnownGpsLocation
+                                gpsLocationUpdate =
+                                    savedUpdate ?: GpsData(source = GpsDataSource.Unknown)
+                            } else if (gpsLocationUpdate == null) {
+                                gpsLocationUpdate = GpsData(source = GpsDataSource.Unknown)
+                            }
+                            val timeout = Preferences.gpsLocationTimeoutSeconds
+                            val message: String? = when (gpsLocationUpdate!!.source) {
+                                GpsDataSource.Unknown -> getString(
+                                    R.string.gps_unknown_coordinates,
+                                    timeout
+                                )
+
+                                GpsDataSource.Cache -> getString(
+                                    R.string.gps_cached_coordinates,
+                                    timeout
+                                )
+
+                                GpsDataSource.Radio -> null
+                            }
+
+                            if (message != null) {
+                                showModalAlert(
+                                    getString(R.string.gps_coordinates),
+                                    message
+                                ) { onFirstLocationReceived() }
+                            } else {
+                                onFirstLocationReceived()
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun onFirstLocationReceived() {
-        if (!timeSyncHandled) {
-            return
-        }
-        if (gpsLocation == null) {
-            setViewMode(ViewMode.LocationPendingView)
-        } else {
-            setViewMode(ViewMode.FetchingDataView)
-            DeviceDriver.getElocInformation(gpsLocation!!, true)
+        setViewMode(ViewMode.FetchingDataView)
+        DeviceDriver.getElocInformation(gpsLocationUpdate!!, true) {
+            val type = DeviceDriver.getCommandType(it)
+            checkReceivedInfoType(type)
         }
     }
 
-    private fun onDataReceived() {
-        binding.toolbar.menu.clear()
-        menuInflater.inflate(R.menu.app_bar_settings, binding.toolbar.menu)
-        binding.swipeRefreshLayout.isEnabled = true
-        setViewMode(ViewMode.ContentView)
+    private fun checkReceivedInfoType(commandType: CommandType) {
+        runOnUiThread {
+            if ((!configReceived) && (commandType == CommandType.GetConfig)) {
+                configReceived = true
+            }
+            if ((!statusReceived) && (commandType == CommandType.GetStatus)) {
+                statusReceived = true
+            }
+
+            if (configReceived && statusReceived) {
+                onElocInfoReceived()
+            }
+        }
     }
 
-    private fun setStatusData() {
-        onDataReceived()
-        binding.sessionIdItem.valueText = DeviceDriver.session.ID
+    private fun onElocInfoReceived() {
+        if (statusReceived && configReceived) {
+            // Hide the progress indicator when data is received i.e., there is a connection
+            binding.swipeRefreshLayout.isRefreshing = false
+            binding.swipeRefreshLayout.isEnabled = true
+            binding.toolbar.menu.clear()
+            menuInflater.inflate(R.menu.app_bar_settings, binding.toolbar.menu)
+
+            setConfigInfo()
+            setStatusInfo()
+            setViewMode(ViewMode.ContentView)
+        }
+    }
+
+    private fun setStatusInfo() {
+        binding.sessionIdItem.valueText = DeviceDriver.session.id
         val detectionDuration = if (DeviceDriver.session.detecting) {
             DeviceDriver.session.detectingDurationSeconds.toInt()
         } else {
@@ -266,11 +348,10 @@ class DeviceActivity : ThemableActivity() {
         } else {
             binding.storageTextView.text = formatNumber(gb, "GB")
         }
-        setRecordingState()
+        displayRecordingState()
     }
 
-    private fun setConfigData() {
-        onDataReceived()
+    private fun setConfigInfo() {
         binding.toolbar.title = DeviceDriver.general.nodeName
         binding.sampleRateItem.valueText = DeviceDriver.microphone.sampleRate.toString()
         binding.microphoneTypeItem.valueText = DeviceDriver.microphone.type
@@ -295,11 +376,12 @@ class DeviceActivity : ThemableActivity() {
     private fun scanForDevice() {
         // Register for device found events
         elocReceiver.register(this)
+        gpsLocationUpdate = null
 
         // Do a scan to find the required device and only connect when device is found.
         setViewMode(ViewMode.ScanningView)
         BluetoothHelper.scanningSpecificEloc = true
-        BluetoothHelper.startScan { remaining ->
+        BluetoothHelper.startScan({ remaining ->
             runOnUiThread {
                 if (remaining <= 0) {
                     BluetoothHelper.scanningSpecificEloc = false
@@ -309,7 +391,14 @@ class DeviceActivity : ThemableActivity() {
                     ) { goBack() }
                 }
             }
+        }) {
+            runOnUiThread {
+                if (it != null) {
+                    showModalAlert(getString(R.string.bluetooth), it)
+                }
+            }
         }
+
     }
 
     private fun setListeners() {
@@ -355,109 +444,122 @@ class DeviceActivity : ThemableActivity() {
 
     private fun connectToDevice() {
         timeSyncHandled = false
-        DeviceDriver.connect(deviceAddress)
+        DeviceDriver.connect(deviceAddress) {
+            runOnUiThread {
+                if (it?.isNotEmpty() == true) {
+                    showModalAlert(getString(R.string.bluetooth), it)
+                }
+            }
+        }
         binding.swipeRefreshLayout.isRefreshing = true
     }
 
     private fun synchronizeTime() {
         if (timeSyncHandled) {
-            timeSyncCompleted()
+            onTimeSyncCompleted()
         } else {
             setViewMode(ViewMode.SyncingTimeView)
-            TimeHelper.syncBoardClock()
+            DeviceDriver.syncTime { onTimeSyncCompleted() }
         }
     }
 
     private fun setViewMode(mode: ViewMode) {
-        when (mode) {
-            ViewMode.ScanningView -> {
-                binding.toolbar.visibility = View.GONE
-                binding.contentLayout.visibility = View.GONE
-                binding.initLayout.visibility = View.VISIBLE
-                binding.skipButton.visibility = View.GONE
-                binding.progressIndicator.infoMode = false
-                binding.progressIndicator.text = getString(R.string.scanning_single_eloc_device)
-            }
+        runOnUiThread {
+            when (mode) {
+                ViewMode.ScanningView -> {
+                    binding.toolbar.visibility = View.GONE
+                    binding.contentLayout.visibility = View.GONE
+                    binding.initLayout.visibility = View.VISIBLE
+                    binding.skipButton.visibility = View.GONE
+                    binding.progressIndicator.infoMode = false
+                    binding.progressIndicator.text = getString(R.string.scanning_single_eloc_device)
+                }
 
-            ViewMode.ConnectingView -> {
-                binding.toolbar.visibility = View.GONE
-                binding.contentLayout.visibility = View.GONE
-                binding.initLayout.visibility = View.VISIBLE
-                binding.skipButton.visibility = View.GONE
-                binding.progressIndicator.infoMode = false
-                binding.progressIndicator.text = getString(R.string.connecting)
-            }
+                ViewMode.ConnectingView -> {
+                    binding.toolbar.visibility = View.GONE
+                    binding.contentLayout.visibility = View.GONE
+                    binding.initLayout.visibility = View.VISIBLE
+                    binding.skipButton.visibility = View.GONE
+                    binding.progressIndicator.infoMode = false
+                    binding.progressIndicator.text = getString(R.string.connecting)
+                }
 
-            ViewMode.LocationPendingView -> {
-                binding.toolbar.visibility = View.GONE
-                binding.contentLayout.visibility = View.GONE
-                binding.initLayout.visibility = View.VISIBLE
-                binding.skipButton.visibility = View.GONE
-                binding.progressIndicator.infoMode = false
-                binding.progressIndicator.text = getString(R.string.wait_for_location)
-            }
+                ViewMode.LocationPendingView -> {
+                    binding.toolbar.visibility = View.GONE
+                    binding.contentLayout.visibility = View.GONE
+                    binding.initLayout.visibility = View.VISIBLE
+                    binding.skipButton.visibility = View.GONE
+                    binding.progressIndicator.infoMode = false
+                    binding.progressIndicator.text = getString(R.string.wait_for_location)
+                }
 
-            ViewMode.FetchingDataView -> {
-                binding.toolbar.visibility = View.GONE
-                binding.contentLayout.visibility = View.GONE
-                binding.initLayout.visibility = View.VISIBLE
-                binding.skipButton.visibility = View.GONE
-                binding.progressIndicator.infoMode = false
-                binding.progressIndicator.text = getString(R.string.getting_eloc_info)
-            }
+                ViewMode.FetchingDataView -> {
+                    binding.toolbar.visibility = View.GONE
+                    binding.contentLayout.visibility = View.GONE
+                    binding.initLayout.visibility = View.VISIBLE
+                    binding.skipButton.visibility = View.GONE
+                    binding.progressIndicator.infoMode = false
+                    binding.progressIndicator.text = getString(R.string.getting_eloc_info)
+                }
 
-            ViewMode.SyncingTimeView -> {
-                binding.toolbar.visibility = View.GONE
-                binding.contentLayout.visibility = View.GONE
-                binding.initLayout.visibility = View.VISIBLE
-                binding.skipButton.visibility = View.VISIBLE
-                binding.progressIndicator.infoMode = false
-                binding.progressIndicator.text = getString(R.string.syncing_time)
-            }
+                ViewMode.SyncingTimeView -> {
+                    binding.toolbar.visibility = View.GONE
+                    binding.contentLayout.visibility = View.GONE
+                    binding.initLayout.visibility = View.VISIBLE
+                    binding.skipButton.visibility = View.VISIBLE
+                    binding.progressIndicator.infoMode = false
+                    binding.progressIndicator.text = getString(R.string.syncing_time)
+                }
 
-            ViewMode.ContentView -> {
-                binding.toolbar.visibility = View.VISIBLE
-                binding.contentLayout.visibility = View.VISIBLE
-                binding.initLayout.visibility = View.GONE
-            }
+                ViewMode.ContentView -> {
+                    binding.toolbar.visibility = View.VISIBLE
+                    binding.contentLayout.visibility = View.VISIBLE
+                    binding.initLayout.visibility = View.GONE
+                }
 
-            ViewMode.Disconnected -> {
-                binding.toolbar.visibility = View.GONE
-                binding.contentLayout.visibility = View.GONE
-                binding.initLayout.visibility = View.VISIBLE
-                binding.skipButton.visibility = View.GONE
-                binding.progressIndicator.infoMode = true
-                binding.progressIndicator.text =
-                    getString(R.string.disconnected_swipe_to_reconnect)
-            }
-        }
-    }
+                ViewMode.SettingRecordMode -> {
+                    binding.toolbar.visibility = View.GONE
+                    binding.contentLayout.visibility = View.GONE
+                    binding.initLayout.visibility = View.VISIBLE
+                    binding.skipButton.visibility = View.GONE
+                    binding.progressIndicator.infoMode = false
+                    binding.progressIndicator.text = getString(R.string.setting_mode)
+                }
 
-    private fun startLocationUpdates() {
-        val listener = object : LocationListener {
-            @Deprecated("Deprecated in Java")
-            @Suppress("deprecated")
-            override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
+                ViewMode.StoppingRecordMode -> {
+                    binding.toolbar.visibility = View.GONE
+                    binding.contentLayout.visibility = View.GONE
+                    binding.initLayout.visibility = View.VISIBLE
+                    binding.skipButton.visibility = View.GONE
+                    binding.progressIndicator.infoMode = false
+                    binding.progressIndicator.text = getString(R.string.stopping)
+                }
 
-            }
-
-            override fun onLocationChanged(location: Location) {
-                val isFirstLocationUpdate = (gpsLocation == null)
-                gpsLocation = location
-                updateGpsViews()
-                if (isFirstLocationUpdate) {
-                    onFirstLocationReceived()
+                ViewMode.Disconnected -> {
+                    binding.toolbar.visibility = View.GONE
+                    binding.contentLayout.visibility = View.GONE
+                    binding.initLayout.visibility = View.VISIBLE
+                    binding.skipButton.visibility = View.GONE
+                    binding.progressIndicator.infoMode = true
+                    binding.progressIndicator.text =
+                        getString(R.string.disconnected_swipe_to_reconnect)
                 }
             }
         }
-
-        LocationHelper.startUpdates(listener)
     }
 
     private fun updateGpsViews() {
-        if (gpsLocation != null) {
-            binding.gpsGauge.updateValue(gpsLocation!!.accuracy.toDouble())
-            binding.gpsStatus.text = formatNumber(gpsLocation!!.accuracy.toDouble(), "m", 0)
+        if (gpsLocationUpdate != null) {
+            binding.gpsGauge.updateValue(gpsLocationUpdate!!.accuracy.toDouble())
+            val accuracy = gpsLocationUpdate?.accuracy ?: -1
+            binding.gpsAccuracyTextView.text = formatNumber(accuracy, "m", 0)
+            if ((accuracy >= 0) && (accuracy <= 100)) {
+                binding.gpsAccuracyTextView.visibility = View.VISIBLE
+                binding.gpsNoAccuracyImageView.visibility = View.GONE
+            } else {
+                binding.gpsAccuracyTextView.visibility = View.GONE
+                binding.gpsNoAccuracyImageView.visibility = View.VISIBLE
+            }
         }
     }
 
@@ -476,7 +578,7 @@ class DeviceActivity : ThemableActivity() {
             getString(R.string.please_wait_for_gps_accuracy),
             getString(R.string.record_anyway),
             getString(R.string.wait55),
-            { requestState(state, true) },
+            { setRecordingState(state, true) },
         )
     }
 
@@ -494,30 +596,30 @@ class DeviceActivity : ThemableActivity() {
         }
         modeSheetBinding.recordButton.setOnClickListener {
             modeSheet.dismiss()
-            requestState(RecordState.RecordOnDetectOff)
+            setRecordingState(RecordState.RecordOnDetectOff)
         }
         modeSheetBinding.recordWithAiButton.setOnClickListener {
             modeSheet.dismiss()
-            requestState(RecordState.RecordOnDetectOn)
+            setRecordingState(RecordState.RecordOnDetectOn)
         }
         modeSheetBinding.aiDetectionButton.setOnClickListener {
             modeSheet.dismiss()
-            requestState(RecordState.RecordOffDetectOn)
+            setRecordingState(RecordState.RecordOffDetectOn)
         }
         modeSheetBinding.recordOnEventButton.setOnClickListener {
             modeSheet.dismiss()
-            requestState(RecordState.RecordOnEvent)
+            setRecordingState(RecordState.RecordOnEvent)
         }
         modeSheetBinding.stopButton.setOnClickListener {
             modeSheet.dismiss()
-            requestState(RecordState.RecordOffDetectOff, true)
+            setRecordingState(RecordState.RecordOffDetectOff, true)
         }
         modeSheet.setContentView(modeSheetBinding.root)
         modeSheet.setCancelable(true)
         modeSheet.show()
     }
 
-    private fun requestState(newMode: RecordState, ignoreLocationAccuracy: Boolean = false) {
+    private fun setRecordingState(newMode: RecordState, ignoreLocationAccuracy: Boolean = false) {
         if (newMode == DeviceDriver.session.recordingState) {
             return
         }
@@ -539,7 +641,7 @@ class DeviceActivity : ThemableActivity() {
         }
         */
 
-        if (ignoreLocationAccuracy || (gpsLocation!!.accuracy <= 8.1)) {
+        if (ignoreLocationAccuracy || (gpsLocationUpdate!!.accuracy <= 8.1)) {
             var proceed = true
 
             val task = {
@@ -548,16 +650,15 @@ class DeviceActivity : ThemableActivity() {
                     binding.modeButton.setButtonColor(R.color.detecting_off_button)
                     binding.modeButton.isBusy = true
 
-                    when (newMode) {
-                        RecordState.RecordOffDetectOff -> DeviceDriver.setRecordState(
-                            newMode,
-                            gpsLocation!!
-                        )
-
-                        else -> {
-                            DeviceDriver.setRecordState(newMode, gpsLocation!!)
-                        }
+                    val viewMode = when (newMode) {
+                        RecordState.RecordOffDetectOff -> ViewMode.StoppingRecordMode
+                        else -> ViewMode.SettingRecordMode
                     }
+                    setViewMode(viewMode)
+                    DeviceDriver.setRecordState(
+                        newMode,
+                        gpsLocationUpdate!!
+                    ) { }
                 }
             }
             if (DeviceDriver.bluetooth.enableDuringRecord) {
@@ -581,7 +682,7 @@ class DeviceActivity : ThemableActivity() {
         }
     }
 
-    private fun setRecordingState(errorMessage: String = "") {
+    private fun displayRecordingState(errorMessage: String = "") {
         val err = errorMessage.trim()
         val state = DeviceDriver.session.recordingState
         binding.modeButton.text = state.getVerb()

@@ -27,6 +27,7 @@ import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.data.AssociatedDeviceInfo
 import de.eloc.eloc_control_panel.data.BtDevice
 import java.util.Locale
+import java.util.concurrent.Executors
 
 private const val SCAN_DURATION = 30 // Seconds
 
@@ -123,54 +124,63 @@ object BluetoothHelper {
         }
     }
 
-    fun startScan(callback: ((Int) -> Unit)?): String? {
+    fun startScan(updateCallback: ((Int) -> Unit)?, completedCallback: (String?) -> Unit) {
         return if (isScanning)
-            stopScan(callback)
+            stopScan(updateCallback, completedCallback)
         else
-            startBluetoothScan(callback)
+            startBluetoothScan(updateCallback, completedCallback)
     }
 
-    private fun startBluetoothScan(callback: ((Int) -> Unit)?): String? {
-        val adapter = bluetoothManager?.adapter
-        if (adapter != null) {
-            if (ContextCompat.checkSelfPermission(
-                    App.instance,
-                    Manifest.permission.BLUETOOTH_SCAN
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    return "Set bluetooth permissions in app settings!"
+    private fun startBluetoothScan(
+        updateCallback: ((Int) -> Unit)?,
+        completedCallback: (String?) -> Unit
+    ) {
+        // This method blocks UI. Run on executor/thread
+        Executors.newSingleThreadExecutor().execute {
+            val adapter = bluetoothManager?.adapter
+            if (adapter != null) {
+                if (ContextCompat.checkSelfPermission(
+                        App.instance,
+                        Manifest.permission.BLUETOOTH_SCAN
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        completedCallback("Set bluetooth permissions in app settings!")
+                        return@execute
+                    }
                 }
+                scannerElapsed = 0
+                Thread {
+                    scannerHandle = Object()
+                    while (scannerHandle != null) {
+                        if (scannerElapsed >= SCAN_DURATION) {
+                            stopScan(updateCallback, completedCallback)
+                            scannerHandle = null
+                        } else {
+                            scannerElapsed++
+                            updateCallback?.invoke(SCAN_DURATION - scannerElapsed)
+                        }
+                        try {
+                            Thread.sleep(1000)
+                        } catch (_: Exception) {
+                        }
+                    }
+                }.start()
+                adapter.cancelDiscovery()
+                adapter.startDiscovery()
             }
-            scannerElapsed = 0
-            Thread {
-                scannerHandle = Object()
-                while (scannerHandle != null) {
-                    if (scannerElapsed >= SCAN_DURATION) {
-                        stopScan(callback)
-                        scannerHandle = null
-                    } else {
-                        scannerElapsed++
-                        callback?.invoke(SCAN_DURATION - scannerElapsed)
-                    }
-                    try {
-                        Thread.sleep(1000)
-                    } catch (_: Exception) {
-                    }
-                }
-            }.start()
-            adapter.cancelDiscovery()
-            adapter.startDiscovery()
+            completedCallback(null)
+            return@execute
         }
-        return null
     }
 
     fun getDevice(address: String): BluetoothDevice? =
         bluetoothManager?.adapter?.getRemoteDevice(address.uppercase(Locale.ENGLISH))
 
-    fun stopScan(callback: ((Int) -> Unit)?): String? {
+    fun stopScan(updateCallback: ((Int) -> Unit)?, completedCallback: (String?) -> Unit) {
         if (scanningSpecificEloc) {
-            return null
+            completedCallback(null)
+            return
         }
         if (ContextCompat.checkSelfPermission(
                 App.instance,
@@ -178,13 +188,15 @@ object BluetoothHelper {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                return "Set bluetooth permissions in app settings!"
+                completedCallback("Set bluetooth permissions in app settings!")
+                return
             }
         }
         bluetoothManager?.adapter?.cancelDiscovery()
         stopExecutor()
-        callback?.invoke(-1)
-        return null
+        updateCallback?.invoke(-1)
+        completedCallback(null)
+        return
     }
 
     private fun stopExecutor() {

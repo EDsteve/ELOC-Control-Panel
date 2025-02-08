@@ -19,7 +19,7 @@ import de.eloc.eloc_control_panel.databinding.ActivityPermissionsSetupBinding
 import de.eloc.eloc_control_panel.receivers.ElocReceiver
 import java.lang.Thread.sleep
 
-// TODO: wait for internet status to be non-null
+// todo: wait for internet status to be non-null
 
 class PermissionsSetupActivity : ThemableActivity() {
     private var paused = false

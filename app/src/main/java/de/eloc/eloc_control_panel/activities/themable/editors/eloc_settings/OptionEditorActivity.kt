@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities.themable.editors
+package de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings
 
 import android.content.Context
 import android.content.Intent
@@ -74,14 +74,29 @@ class OptionEditorActivity : BaseEditorActivity() {
             return
         }
         Command.createSetConfigPropertyCommand(
-            property,
-            newValue,
-            { command ->
+            property = property,
+            value = newValue,
+            commandCreatedCallback = { command ->
+                commandId = command.id
                 showProgress()
                 DeviceDriver.processCommandQueue(command)
             },
-            {
+            errorCallback = {
                 showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-            })
+            },
+        ) {
+            runOnUiThread {
+                val succeeded = DeviceDriver.commandSucceeded(it)
+                if (succeeded) {
+                    onSaveCompleted()
+                } else {
+                    showContent()
+                    showModalAlert(
+                        getString(R.string.error),
+                        getString(R.string.failed_to_save)
+                    )
+                }
+            }
+        }
     }
 }

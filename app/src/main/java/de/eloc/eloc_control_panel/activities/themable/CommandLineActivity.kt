@@ -27,7 +27,6 @@ class CommandLineActivity : ThemableActivity() {
         binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.sendButton.setOnClickListener { sendCommand() }
         binding.deleteButton.setOnClickListener { clearLog() }
-        DeviceDriver.setCommandLineListener(::logResponse)
         DeviceDriver.addConnectionChangedListener(listenerId, ::onConnectionChanged)
         DeviceDriver.addWriteCommandErrorListener(listenerId, ::onWriteCommandError)
         try {
@@ -42,7 +41,6 @@ class CommandLineActivity : ThemableActivity() {
     override fun onDestroy() {
         super.onDestroy()
         DeviceDriver.removeConnectionChangedListener(listenerId)
-        DeviceDriver.clearCommandLineListener()
         DeviceDriver.removeWriteCommandLister(listenerId)
     }
 
@@ -75,7 +73,7 @@ class CommandLineActivity : ThemableActivity() {
         showProgress()
         appendLog("Command: $command\n\n")
         binding.commandEditText.setText("")
-        DeviceDriver.sendCustomCommand(command)
+        DeviceDriver.sendCustomCommand(command, ::logResponse)
     }
 
     private fun logResponse(json: String) {

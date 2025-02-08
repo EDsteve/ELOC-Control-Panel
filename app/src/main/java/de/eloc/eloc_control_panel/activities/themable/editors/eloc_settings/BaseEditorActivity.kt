@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities.themable.editors
+package de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings
 
 import android.os.Bundle
 import android.view.View
@@ -14,7 +14,6 @@ import de.eloc.eloc_control_panel.data.SampleRate
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.driver.General
 import de.eloc.eloc_control_panel.driver.Microphone
-import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.widgets.ProgressIndicator
 
 internal const val NOT_SET = "not_set"
@@ -39,7 +38,6 @@ abstract class BaseEditorActivity : ThemableActivity() {
     protected var currentValue = ""
     protected var prefix = ""
     private val listenerId = "editorActivity"
-    private var saved = false
     protected var isNumeric = false
     protected var minimumValue: Double? = null
     protected var rangeCurrentValue: Float? = null
@@ -50,22 +48,7 @@ abstract class BaseEditorActivity : ThemableActivity() {
     private var statusUpdated = false
     protected lateinit var contentLayout: View
     protected lateinit var progressIndicator: ProgressIndicator
-    private val onGetDeviceInfoCompleted = GetCommandCompletedCallback {
-        if (saved) {
-            if (!configUpdated && (it == CommandType.GetConfig)) {
-                configUpdated = true
-            }
-            if (!statusUpdated && (it == CommandType.GetStatus)) {
-                statusUpdated = true
-            }
-
-            if (statusUpdated && configUpdated) {
-                runOnUiThread {
-                    goBack()
-                }
-            }
-        }
-    }
+    protected var commandId: Long? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,9 +63,8 @@ abstract class BaseEditorActivity : ThemableActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        DeviceDriver.cancelCommand(commandId)
         DeviceDriver.removeConnectionChangedListener(listenerId)
-        DeviceDriver.removeOnGetCommandCompletedListener(onGetDeviceInfoCompleted)
-        DeviceDriver.removeOnSetCommandCompletedListener(::onSaveCompleted)
     }
 
     protected abstract fun setViews()
@@ -97,11 +79,11 @@ abstract class BaseEditorActivity : ThemableActivity() {
 
     private fun setData() {
 
-        if (DeviceActivity.gpsLocation == null) {
+        if (DeviceActivity.gpsLocationUpdate == null) {
             goBack()
             return
         } else {
-            location = DeviceActivity.gpsLocation!!
+            location = DeviceActivity.gpsLocationUpdate!!
         }
 
         val extras = intent.extras
@@ -161,8 +143,6 @@ abstract class BaseEditorActivity : ThemableActivity() {
             }
         }
 
-        DeviceDriver.addOnSetCommandCompletedListener(::onSaveCompleted)
-        DeviceDriver.addOnGetCommandCompletedListener(onGetDeviceInfoCompleted)
         DeviceDriver.addConnectionChangedListener(listenerId, ::onConnectionChanged)
     }
 
@@ -172,25 +152,26 @@ abstract class BaseEditorActivity : ThemableActivity() {
         contentLayout.visibility = View.INVISIBLE
     }
 
-    private fun showContent() {
+    fun showContent() {
         progressIndicator.visibility = View.INVISIBLE
         contentLayout.visibility = View.VISIBLE
     }
 
-    private fun onSaveCompleted(success: Boolean, type: CommandType) {
-        runOnUiThread {
-            if (success) {
-                if (type.isSetCommand) {
-                    saved = true
-                    progressIndicator.text = getString(R.string.updating_values)
-                    DeviceDriver.getElocInformation(location)
+    fun onSaveCompleted() {
+        progressIndicator.text = getString(R.string.updating_values)
+        DeviceDriver.getElocInformation(location) {
+            runOnUiThread {
+                val commandType = DeviceDriver.getCommandType(it)
+                if (!configUpdated && (commandType == CommandType.GetConfig)) {
+                    configUpdated = true
                 }
-            } else {
-                showContent()
-                showModalAlert(
-                    getString(R.string.error),
-                    getString(R.string.failed_to_save)
-                )
+                if (!statusUpdated && (commandType == CommandType.GetStatus)) {
+                    statusUpdated = true
+                }
+
+                if (statusUpdated && configUpdated) {
+                    goBack()
+                }
             }
         }
     }

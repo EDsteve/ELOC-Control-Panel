@@ -20,10 +20,10 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOkBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOptionBinding
-import de.eloc.eloc_control_panel.databinding.LayoutAppChipBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import java.text.NumberFormat
 import java.util.Locale
+import kotlin.system.exitProcess
 
 fun formatNumber(
     number: Int,
@@ -81,19 +81,6 @@ fun AppCompatActivity.openLocationSettings() {
     startActivity(settingsIntent)
 }
 
-fun AppCompatActivity.setChipColors(chipBinding: LayoutAppChipBinding) {
-    val colorTextOnPrimary = ContextCompat.getColor(this, R.color.colorTextOnPrimary)
-    val colorTextOnPrimaryTranslucent =
-        ContextCompat.getColor(this, R.color.colorTextOnPrimaryTranslucent)
-    if (chipBinding.chip.isChecked) {
-        chipBinding.chip.setTextColor(colorTextOnPrimary)
-        chipBinding.chip.setChipBackgroundColorResource(R.color.colorPrimary)
-    } else {
-        chipBinding.chip.setTextColor(colorTextOnPrimaryTranslucent)
-        chipBinding.chip.setChipBackgroundColorResource(R.color.colorPrimaryTranslucent)
-    }
-}
-
 fun AppCompatActivity.open(target: Class<*>, finishTask: Boolean = false, bundle: Bundle? = null) {
     val intent = Intent(this, target)
     if (bundle != null) {
@@ -136,6 +123,30 @@ fun ComponentActivity.goBack() {
 
 fun AppCompatActivity.showModalAlert(title: String, message: String) =
     showAlert(title, message)
+
+fun AppCompatActivity.restartApp() {
+    val intent = packageManager.getLaunchIntentForPackage(packageName)
+    if (intent != null) {
+        showModalAlert(
+            getString(R.string.app_restart_required),
+            getString(R.string.app_auto_restart_message)
+        ) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            startActivity(intent)
+            Runtime.getRuntime().exit(0)
+        }
+    } else {
+        // Just close the app and let user restart manually
+        // Not that the message displayed is different!
+        showModalAlert(
+            getString(R.string.app_restart_required),
+            getString(R.string.app_manual_restart_message)
+        ) {
+            finishAffinity()
+            exitProcess(0)
+        }
+    }
+}
 
 fun AppCompatActivity.showModalAlert(
     title: String,

@@ -10,6 +10,12 @@ enum class PreferredFontSize(val code: Int) {
     // Positive value --> large
     Large(1);
 
+    override fun toString(): String = when (this) {
+        Small -> "Small"
+        Medium -> "Medium"
+        Large -> "Large"
+    }
+
     companion object {
         fun parse(code: Int) = when (code) {
             Small.code -> Small

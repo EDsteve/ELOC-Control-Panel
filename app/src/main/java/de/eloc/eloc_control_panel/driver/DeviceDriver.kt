@@ -7,13 +7,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.location.Location
 import android.os.Build
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.data.Channel
 import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
+import de.eloc.eloc_control_panel.data.GpsData
 import de.eloc.eloc_control_panel.data.MicrophoneVolumePower
 import de.eloc.eloc_control_panel.data.InfoType
 import de.eloc.eloc_control_panel.data.RecordState
@@ -26,6 +26,7 @@ import de.eloc.eloc_control_panel.data.helpers.JsonHelper
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.Logger
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
+import de.eloc.eloc_control_panel.data.helpers.TrafficDirection
 import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
@@ -151,7 +152,7 @@ object DeviceDriver : Runnable {
     val session = Session()
 
     private var lastUsedCommandId = -1L
-    private var pendingCommandId = -1L
+    private var currentCommand: Command? = null
     private var greeted = false
     private var cachedStatus = ""
     private var cachedConfig = ""
@@ -160,7 +161,6 @@ object DeviceDriver : Runnable {
     private var configSaved = false
     private var statusSaved = false
     private var combinedStatusAndConfigTime: Date? = null
-    private var commandLineListener: ((String) -> Unit)? = null
     private var connecting = false
     private var disconnecting = false
     private const val EOT: Byte = 4
@@ -173,7 +173,8 @@ object DeviceDriver : Runnable {
     private val onGetCommandCompletedListeners = mutableListOf<GetCommandCompletedCallback?>()
     private val writeCommandErrorListeners = mutableMapOf<String, (String) -> Unit>()
     private val connectionChangedListeners = mutableMapOf<String, (ConnectionStatus) -> Unit>()
-    private val commandQueue: ArrayDeque<Command> = ArrayDeque()
+    private val commandList = mutableListOf<Command?>()
+    private var processingCommandList = false
     private val disconnectBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             // disconnect now, else would be queued until UI re-attached
@@ -292,66 +293,89 @@ object DeviceDriver : Runnable {
 
     fun processCommandQueue(newCommand: Command? = null) {
         if (newCommand != null) {
-            commandQueue.addLast(newCommand)
+            commandList.add(newCommand)
         }
-        while (commandQueue.isNotEmpty()) {
-            // Wait for a pending command, if any
-            while (pendingCommandId >= 0) {
+
+        if (!processingCommandList) {
+            processingCommandList = true
+            // This method is blocks the UI thread! Run it on on executor/thread
+            Executors.newSingleThreadExecutor().execute {
                 try {
-                    Thread.sleep(2500)
-                    Logger.d("waiting for $pendingCommandId - greeted: $greeted")
+
+                    while (commandList.isNotEmpty()) {
+                        // Wait for a pending command, if any
+                        while (currentCommand != null) {
+                            try {
+                                Thread.sleep(500)
+                            } catch (_: Exception) {
+                            }
+                            if (currentCommand?.completed == true) {
+                                currentCommand = null
+                            }
+                        }
+
+                        if (commandList.isEmpty()) {
+                            break
+                        }
+
+                        currentCommand = commandList.removeFirstOrNull()
+                        if (currentCommand == null) {
+                            break
+                        }
+
+                        try {
+                            if (bluetoothSocket?.isConnected == true) {
+                                val commandString = currentCommand.toString()
+                                val data = commandString.encodeToByteArray()
+
+                                // Keep the data under 512 bytes. If data must be greater than 512 bytes,
+                                // implement some kind of protocol for chunking the data and also keeping up with
+                                // the 1 sec delay expected by the firmware.
+                                // For details: https://github.com/LIFsCode/ELOC-3.0/wiki/ELOC-3.0-App-Interface#limitations
+                                if (data.size > COMMAND_MAX_LENGTH) {
+                                    for (errorListener in writeCommandErrorListeners.values) {
+                                        errorListener("Firmware command is too long!")
+                                    }
+                                    clearCommandQueue()
+                                }
+                                Logger.t(commandString, TrafficDirection.ToEloc)
+                                bluetoothSocket?.outputStream?.write(data)
+                            } else {
+                                throw IOException("ELOC device not connected!")
+                            }
+                        } catch (e: IOException) {
+                            disconnect()
+                        }
+                    }
                 } catch (_: Exception) {
                 }
+                processingCommandList = false
             }
+        }
+    }
 
-            val cmd = commandQueue.removeFirst()
-            try {
-                if (bluetoothSocket?.isConnected == true) {
-                    val commandString = cmd.toString()
-
-                    val data = commandString.encodeToByteArray()
-
-                    // Keep the data under 512 bytes. If data must be greater than 512 bytes,
-                    // implement some kind of protocol for chunking the data and also keeping up with
-                    // the 1 sec delay expected by the firmware.
-                    // For details: https://github.com/LIFsCode/ELOC-3.0/wiki/ELOC-3.0-App-Interface#limitations
-                    if (data.size > COMMAND_MAX_LENGTH) {
-                        for (errorListener in writeCommandErrorListeners.values) {
-                            errorListener("Firmware command is too long!")
-                        }
-                        clearCommandQueue()
-                    }
-
-                    pendingCommandId = cmd.id
-                    bluetoothSocket?.outputStream?.write(data)
-
-                } else {
-                    throw IOException("ELOC device not connected!")
-                }
-            } catch (e: IOException) {
-                disconnect()
-            }
+    fun cancelCommand(commandId: Long?) {
+        if ((commandId != null) && (currentCommand?.id == commandId)) {
+            currentCommand = null
         }
     }
 
     private fun clearCommandQueue() {
-        commandQueue.clear()
+        currentCommand = null
+        if (commandList.isNotEmpty()) {
+            commandList.clear()
+        }
     }
 
-    fun sendCustomCommand(rawCommand: String) {
-        processCommandQueue(Command.from(rawCommand))
+    fun sendCustomCommand(rawCommand: String, commandCompletedTask: (String) -> Unit) {
+        processCommandQueue(Command.from(rawCommand, commandCompletedTask))
     }
 
-    fun setCommandLineListener(listener: (String) -> Unit) {
-        commandLineListener = listener
-    }
-
-    fun clearCommandLineListener() {
-        commandLineListener = null
-    }
-
-    fun syncTime(timestampInSeconds: Long, timezone: Int) {
-        val command = Command.createSetTimeCommand(timestampInSeconds, timezone)
+    fun syncTime(callback: (String) -> Unit) {
+        val unixTimeMillis = System.currentTimeMillis()
+        val seconds = unixTimeMillis / 1000
+        val timezone = TimeHelper.timeZoneOffsetHours
+        val command = Command.createSetTimeCommand(seconds, timezone, callback)
         processCommandQueue(command)
     }
 
@@ -366,7 +390,7 @@ object DeviceDriver : Runnable {
         }
 
     @SuppressLint("MissingPermission")
-    fun connect(deviceAddress: String) {
+    fun connect(deviceAddress: String, callback: (String?) -> Unit) {
         connecting = true
         var hadError = false
         try {
@@ -390,9 +414,7 @@ object DeviceDriver : Runnable {
                     )
                 }
                 bluetoothSocket = device?.createRfcommSocketToServiceRecord(BLUETOOTH_SPP)
-                BluetoothHelper.stopScan {
-                    doConnect()
-                }
+                BluetoothHelper.stopScan({ doConnect() }, callback)
             } catch (_: Exception) {
             }
         } catch (_: Exception) {
@@ -435,12 +457,14 @@ object DeviceDriver : Runnable {
         }
     }
 
-    private fun checkPendingCommandId(json: String) {
+    private fun checkPendingCommand(json: String) {
         try {
             val root = JSONObject(json)
             val id = root.getLong("id")
-            if (id == pendingCommandId) {
-                pendingCommandId = -1
+            if (id == currentCommand?.id) {
+                currentCommand?.onCommandCompleted?.invoke(json)
+                currentCommand?.completed = true
+                currentCommand = null
             }
         } catch (_: Exception) {
 
@@ -462,26 +486,48 @@ object DeviceDriver : Runnable {
         }
     }
 
-    private fun interceptCompletedSetCommand(json: String): Boolean {
-        var intercepted = false
+    fun getCommandType(json: String): CommandType {
+        var commandType = CommandType.Unknown
         try {
             val root = JSONObject(json)
-            val errorCode = JsonHelper.getJSONNumberAttribute(KEY_ECODE, root, -1.0).toInt()
-            val commandType = when (JsonHelper.getJSONStringAttribute(KEY_CMD, root).lowercase()) {
+            commandType = when (JsonHelper.getJSONStringAttribute(KEY_CMD, root).lowercase()) {
                 CMD_SET_STATUS.lowercase() -> CommandType.SetStatus
                 CMD_SET_CONFIG.lowercase() -> CommandType.SetConfig
                 CMD_SET_RECORD_MODE.lowercase() -> CommandType.SetRecordMode
                 CMD_SET_TIME.lowercase() -> CommandType.SetTime
+                CMD_GET_STATUS.lowercase() -> CommandType.GetStatus
+                CMD_GET_CONFIG.lowercase() -> CommandType.GetConfig
                 else -> CommandType.Unknown
             }
-            intercepted = (commandType != CommandType.Unknown)
+        } catch (_: Exception) {
+        }
+        return commandType
+    }
+
+    fun commandSucceeded(json: String): Boolean {
+        var succeeded = false
+        try {
+            val root = JSONObject(json)
+            val errorCode = JsonHelper.getJSONNumberAttribute(KEY_ECODE, root, -1.0).toInt()
+            succeeded = (errorCode == 0)
+        } catch (_: Exception) {
+
+        }
+        return succeeded
+    }
+
+    private fun interceptCompletedSetCommand(json: String): Boolean {
+        var intercepted = false
+        try {
+            val root = JSONObject(json)
+            val commandType = getCommandType(json)
+            intercepted = CommandType.isSetCommand(commandType)
             if (intercepted) {
                 if (commandType == CommandType.SetRecordMode) {
                     parseDeviceState(root)
                 }
-                val success = (errorCode == 0)
                 onSetCommandCompletedListeners.forEach {
-                    it?.handler(success, commandType)
+                    it?.handler(commandSucceeded(json), commandType)
                 }
             }
         } catch (_: Exception) {
@@ -494,12 +540,8 @@ object DeviceDriver : Runnable {
         var intercepted = false
         try {
             val root = JSONObject(json)
-            val commandType = when (JsonHelper.getJSONStringAttribute(KEY_CMD, root).lowercase()) {
-                CMD_GET_STATUS.lowercase() -> CommandType.GetStatus
-                CMD_GET_CONFIG.lowercase() -> CommandType.GetConfig
-                else -> CommandType.Unknown
-            }
-            intercepted = (commandType != CommandType.Unknown)
+            val commandType = getCommandType(json)
+            intercepted = CommandType.isGetCommand(commandType)
             if (intercepted) {
                 when (commandType) {
                     CommandType.GetConfig -> {
@@ -646,16 +688,16 @@ object DeviceDriver : Runnable {
                         bytesCache = bytesCache.slice(startIndex..endIndex)
                         val jsonByteArray = jsonBytes.toByteArray()
                         val json = sanitize(String(jsonByteArray))
+                        Logger.t(json, TrafficDirection.FromEloc)
                         if (!greeted) {
                             checkGreeting(json)
                         } else {
-                            commandLineListener?.invoke(json)
                             val intercepted = interceptCompletedSetCommand(json)
                             if (!intercepted) {
                                 interceptCompletedGetCommand(json)
                             }
                         }
-                        checkPendingCommandId(json)
+                        checkPendingCommand(json)
                     }
                 } catch (e: Exception) {
                     if (connecting || disconnecting) {
@@ -676,21 +718,25 @@ object DeviceDriver : Runnable {
         }
     }
 
-    fun getStatus() {
+    fun getStatus(callback: (String) -> Unit) {
         infoType = InfoType.Status
-        getElocStatus()
+        getElocStatus(callback)
     }
 
-    private fun getElocStatus() {
-        processCommandQueue(Command.createGetStatusCommand())
+    private fun getElocStatus(callback: (String) -> Unit) {
+        processCommandQueue(Command.createGetStatusCommand(callback))
     }
 
-    private fun getElocConfig(location: Location) {
-        processCommandQueue(Command.createSetLocationCommand(location))
-        processCommandQueue(Command.createGetConfigCommand())
+    private fun getElocConfig(location: GpsData, callback: (String) -> Unit) {
+        processCommandQueue(Command.createSetLocationCommand(location, callback))
+        processCommandQueue(Command.createGetConfigCommand(callback))
     }
 
-    fun getElocInformation(location: Location, saveNextInfoResponse: Boolean = false) {
+    fun getElocInformation(
+        location: GpsData,
+        saveNextInfoResponse: Boolean = false,
+        callback: (String) -> Unit
+    ) {
         if (saveNextInfoResponse) {
             configSaved = false
             statusSaved = false
@@ -699,17 +745,17 @@ object DeviceDriver : Runnable {
             statusSaved = true
         }
         infoType = InfoType.StatusWithConfig
-        getElocConfig(location)
-        getElocStatus()
+        getElocStatus(callback)
+        getElocConfig(location, callback)
     }
 
-    fun setRecordState(state: RecordState, location: Location) {
-        processCommandQueue(Command.createSetLocationCommand(location))
-        val modeCommand = Command.createSetRecordModeCommand(state)
+    fun setRecordState(state: RecordState, location: GpsData, callback: (String) -> Unit) {
+        processCommandQueue(Command.createSetLocationCommand(location, callback))
+        val modeCommand = Command.createSetRecordModeCommand(state, callback)
         if (modeCommand != null) {
             processCommandQueue(modeCommand)
         }
-        getElocInformation(location, true)
+        getElocInformation(location, true, callback)
     }
 
     private fun parseConfig(jsonObject: JSONObject) {
@@ -853,7 +899,7 @@ object DeviceDriver : Runnable {
 
     private fun parseStatus(jsonObject: JSONObject) {
         val sessionIdPath = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_IDENTIFIER"
-        session.ID = JsonHelper.getJSONStringAttribute(sessionIdPath, jsonObject)
+        session.id = JsonHelper.getJSONStringAttribute(sessionIdPath, jsonObject)
 
         val hoursPath = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_RECORDING_TIME"
         val recordingHours = JsonHelper.getJSONNumberAttribute(hoursPath, jsonObject)

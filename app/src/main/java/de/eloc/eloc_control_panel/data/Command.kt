@@ -1,7 +1,5 @@
 package de.eloc.eloc_control_panel.data
 
-import android.location.Location
-import com.google.openlocationcode.OpenLocationCode
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.driver.KEY_BATTERY_AVG_INTERVAL_MS
 import de.eloc.eloc_control_panel.driver.KEY_BATTERY_AVG_SAMPLES
@@ -123,8 +121,10 @@ class CommandParameter {
 class Command(
     val id: Long,
     val name: String,
-    private val parameters: Map<String, CommandParameter>
+    private val parameters: Map<String, CommandParameter>,
+    val onCommandCompleted: (String) -> Unit
 ) {
+    var completed = false
 
     companion object {
         private const val SEPARATOR = "#"
@@ -138,7 +138,8 @@ class Command(
             property: String,
             value: String,
             commandCreatedCallback: (Command) -> Unit,
-            errorCallback: () -> Unit
+            errorCallback: () -> Unit,
+            completionTask: (String) -> Unit
         ) {
             val propertyValue = value.trim().ifEmpty {
                 errorCallback()
@@ -357,11 +358,11 @@ class Command(
                 errorCallback()
                 return
             }
-            val command = from(rawCommand)
+            val command = from(rawCommand, completionTask)
             commandCreatedCallback(command)
         }
 
-        fun createSetRecordModeCommand(state: RecordState): Command? {
+        fun createSetRecordModeCommand(state: RecordState, completionTask: (String) -> Unit): Command? {
             val mode = when (state) {
                 RecordState.RecordOffDetectOff -> "recordOff_detectOff"
                 RecordState.RecordOnDetectOff -> "recordOn_detectOff"
@@ -371,49 +372,58 @@ class Command(
                 RecordState.Invalid -> ""
             }
             if (mode.isNotEmpty()) {
-                return from("setRecordMode#mode=$mode")
+                return from("setRecordMode#mode=$mode", completionTask)
             }
             return null
         }
 
-        fun createSetLocationCommand(location: Location): Command {
-            val code = OpenLocationCode(location.latitude, location.longitude).code
+        fun createSetLocationCommand(location: GpsData, completionTask: (String) -> Unit): Command {
+            val code = location.plusCode
             val accuracy = location.accuracy.toLong()
             val rawParameter =
                 """{"device":{"locationCode":"$code","locationAccuracy":$accuracy}}"""
             val cfgParameter = CommandParameter(rawParameter)
             val parameters = mapOf("cfg" to cfgParameter)
-            return Command(DeviceDriver.nextCommandId, COMMAND_SET_CONFIG, parameters)
+            return Command(
+                DeviceDriver.nextCommandId,
+                COMMAND_SET_CONFIG,
+                parameters,
+                completionTask
+            )
         }
 
-        fun createSetTimeCommand(timestampInSeconds: Long, timezone: Int): Command {
+        fun createSetTimeCommand(
+            timestampInSeconds: Long,
+            timezone: Int,
+            completionTask: (String) -> Unit
+        ): Command {
             val timeParameter = """{"seconds":$timestampInSeconds,"ms":0,"timezone":$timezone}"""
             val parameters = mapOf("time" to CommandParameter(timeParameter))
-            return Command(DeviceDriver.nextCommandId, COMMAND_SET_TIME, parameters)
+            return Command(DeviceDriver.nextCommandId, COMMAND_SET_TIME, parameters, completionTask)
         }
 
-        fun createGetConfigCommand(): Command {
-            return Command(DeviceDriver.nextCommandId, COMMAND_GET_CONFIG, mapOf())
+        fun createGetConfigCommand(completionTask: (String) -> Unit): Command {
+            return Command(DeviceDriver.nextCommandId, COMMAND_GET_CONFIG, mapOf(), completionTask)
         }
 
-        fun createGetStatusCommand(): Command {
-            return Command(DeviceDriver.nextCommandId, COMMAND_GET_STATUS, mapOf())
+        fun createGetStatusCommand(completionTask: (String) -> Unit): Command {
+            return Command(DeviceDriver.nextCommandId, COMMAND_GET_STATUS, mapOf(), completionTask)
         }
 
-        fun from(raw: String): Command {
+        fun from(raw: String, completionTask: (String) -> Unit): Command {
             val parts = raw.split(SEPARATOR).toMutableList()
 
             // Get the name
             var commandName = ""
             if (parts.isNotEmpty()) {
-                commandName = parts.removeFirst().trim()
+                commandName = parts.removeAt(0).trim()
             }
 
             // Set the parameters
             val parameters = mutableMapOf<String, CommandParameter>()
             var id = -1L
             while (parts.isNotEmpty()) {
-                val p = parts.removeFirst()
+                val p = parts.removeAt(0)
                 val rawPair = p.split("=")
                 if (rawPair.size == 2) {
                     val key = rawPair[0]
@@ -433,7 +443,7 @@ class Command(
             if (id < 0) {
                 id = DeviceDriver.nextCommandId
             }
-            return Command(id, commandName, parameters)
+            return Command(id, commandName, parameters, completionTask)
         }
     }
 

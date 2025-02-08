@@ -10,6 +10,14 @@ enum class StatusUploadInterval(val seconds: Int) {
 
     val millis get(): Long = seconds * 1000L
 
+    override fun toString(): String =
+        when (this) {
+            Mins15 -> "15 mins"
+            Mins30 -> "30 mins"
+            Mins60 -> "1 hr"
+            Mins120 -> "2 hrs"
+        }
+
     companion object {
         fun parse(value: Int): StatusUploadInterval = when (value) {
             Mins30.seconds -> Mins30

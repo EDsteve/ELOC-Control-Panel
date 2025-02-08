@@ -9,10 +9,24 @@ enum class CommandType {
     SetTime,
     Unknown;
 
-    val isSetCommand
-        get() =
-            when (this) {
-                SetConfig, SetStatus -> true
-                else -> false
-            }
+    val isGetCommand get() = isGetCommand(this)
+    val isSetCommand get() = isSetCommand(this)
+
+    companion object {
+        fun isGetCommand(c: CommandType): Boolean = when (c) {
+            GetConfig,
+            GetStatus -> true
+
+            else -> false
+        }
+
+        fun isSetCommand(c: CommandType): Boolean = when (c) {
+            SetConfig,
+            SetStatus,
+            SetRecordMode,
+            SetTime -> true
+
+            else -> false
+        }
+    }
 }

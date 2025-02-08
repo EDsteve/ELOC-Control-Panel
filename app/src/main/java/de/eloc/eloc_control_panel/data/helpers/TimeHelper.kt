@@ -2,7 +2,6 @@ package de.eloc.eloc_control_panel.data.helpers
 
 import android.content.Context
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.driver.DeviceDriver
 import java.util.Calendar
 import java.util.TimeZone
 
@@ -12,7 +11,7 @@ object TimeHelper {
     private const val ONE_HOUR_SECONDS = ONE_MINUTE_SECONDS * 60
     private const val ONE_DAY_SECONDS = ONE_HOUR_SECONDS * 24
 
-    private fun timeZoneOffsetHours() =
+    val timeZoneOffsetHours: Int =
         (TimeZone.getDefault().rawOffset.toDouble() / (ONE_HOUR_SECONDS * 1000)).toInt()
 
     fun formatHours(context: Context, hours: Double) =
@@ -27,18 +26,30 @@ object TimeHelper {
         useSeconds: Boolean = false
     ) = formatSeconds(context, seconds.toDouble(), useSeconds)
 
-    fun prettyDate(epoch: Long) : String{
+    fun prettyDate(epoch: Long): String {
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = epoch
         val year = calendar.get(Calendar.YEAR)
-        val month  = calendar.get(Calendar.MONTH) + 1
+        val month = calendar.get(Calendar.MONTH) + 1
         val day = calendar.get(Calendar.DAY_OF_MONTH)
         val hour = calendar.get(Calendar.HOUR_OF_DAY)
         val min = calendar.get(Calendar.MINUTE)
         val sec = calendar.get(Calendar.SECOND)
-        val sHr = if (hour < 10)  { "0$hour" }  else { "$hour" }
-        val sMin = if (min < 10)  { "0$min" }  else { "$min" }
-        val sSecs = if (sec < 10)  { "0$sec" }  else { "$sec" }
+        val sHr = if (hour < 10) {
+            "0$hour"
+        } else {
+            "$hour"
+        }
+        val sMin = if (min < 10) {
+            "0$min"
+        } else {
+            "$min"
+        }
+        val sSecs = if (sec < 10) {
+            "0$sec"
+        } else {
+            "$sec"
+        }
         return "$year/$month/$day $sHr:$sMin:$sSecs"
     }
 
@@ -71,10 +82,4 @@ object TimeHelper {
     }
 
     fun toSeconds(hours: Number) = hours.toDouble() * ONE_HOUR_SECONDS
-
-    fun syncBoardClock() {
-         val unixTimeMillis = System.currentTimeMillis()
-        val seconds = unixTimeMillis / 1000
-        DeviceDriver.syncTime(seconds, timeZoneOffsetHours())
-    }
 }

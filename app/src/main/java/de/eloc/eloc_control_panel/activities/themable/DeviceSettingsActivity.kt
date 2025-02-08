@@ -1,15 +1,14 @@
 package de.eloc.eloc_control_panel.activities.themable
 
 import android.content.Intent
-import android.location.Location
 import android.os.Bundle
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.activities.themable.editors.BaseEditorActivity
-import de.eloc.eloc_control_panel.activities.themable.editors.OptionEditorActivity
-import de.eloc.eloc_control_panel.activities.themable.editors.TextEditorActivity
+import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.BaseEditorActivity
+import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.OptionEditorActivity
+import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.TextEditorActivity
 import de.eloc.eloc_control_panel.data.Channel
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.MicrophoneVolumePower
@@ -24,15 +23,14 @@ import de.eloc.eloc_control_panel.driver.General
 import de.eloc.eloc_control_panel.driver.Intruder
 import de.eloc.eloc_control_panel.driver.Logs
 import de.eloc.eloc_control_panel.driver.Microphone
-import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
-import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 import de.eloc.eloc_control_panel.activities.formatNumber
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.goBack
-import de.eloc.eloc_control_panel.activities.themable.editors.RangeEditorActivity
+import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.RangeEditorActivity
 import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.data.ConnectionStatus
+import de.eloc.eloc_control_panel.data.GpsData
 
 
 class DeviceSettingsActivity : ThemableActivity() {
@@ -46,38 +44,8 @@ class DeviceSettingsActivity : ThemableActivity() {
     private var paused = true
     private var statusUpdated = false
     private var configUpdated = false
-    private lateinit var location: Location
-
-    private val onGetCommandCompletedCallback = GetCommandCompletedCallback {
-        if (!statusUpdated && (it == CommandType.GetStatus)) {
-            statusUpdated = true
-        }
-        if (!configUpdated && (it == CommandType.GetConfig)) {
-            configUpdated = true
-        }
-        if (statusUpdated && configUpdated) {
-            runOnUiThread {
-                setData()
-            }
-        }
-    }
-
-    private val onSetCommandCompletedCallback = SetCommandCompletedCallback { success, type ->
-        runOnUiThread {
-            if (success) {
-                if (type.isSetCommand) {
-                    binding.progressIndicator.text = getString(R.string.updating_values)
-                    DeviceDriver.getElocInformation(location)
-                }
-            } else {
-                showContent()
-                showModalAlert(
-                    getString(R.string.error),
-                    getString(R.string.failed_to_save)
-                )
-            }
-        }
-    }
+    private lateinit var location: GpsData
+    private var commandId: Long? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,11 +54,11 @@ class DeviceSettingsActivity : ThemableActivity() {
 
         val extras = intent.extras
         val showMicrophoneSection = extras?.getBoolean(EXTRA_SHOW_RECORDER, false) ?: false
-        if (DeviceActivity.gpsLocation == null) {
+        if (DeviceActivity.gpsLocationUpdate == null) {
             goBack()
             return
         } else {
-            location = DeviceActivity.gpsLocation!!
+            location = DeviceActivity.gpsLocationUpdate!!
         }
 
         setMicrophoneSectionState(showMicrophoneSection)
@@ -120,9 +88,8 @@ class DeviceSettingsActivity : ThemableActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        DeviceDriver.cancelCommand(commandId)
         DeviceDriver.removeConnectionChangedListener(listenerId)
-        DeviceDriver.removeOnSetCommandCompletedListener(onSetCommandCompletedCallback)
-        DeviceDriver.removeOnGetCommandCompletedListener(onGetCommandCompletedCallback)
     }
 
     private fun setData() {
@@ -169,8 +136,6 @@ class DeviceSettingsActivity : ThemableActivity() {
 
     private fun setListeners() {
         DeviceDriver.addConnectionChangedListener(listenerId, ::onConnectionChanged)
-        DeviceDriver.addOnSetCommandCompletedListener(onSetCommandCompletedCallback)
-        DeviceDriver.addOnGetCommandCompletedListener(onGetCommandCompletedCallback)
         binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.toolbar.setNavigationOnClickListener { goBack() }
 
@@ -228,7 +193,8 @@ class DeviceSettingsActivity : ThemableActivity() {
             ).map {
                 "${it.seconds}|$it"
             }
-            openOptionEditor(
+            OptionEditorActivity.open(
+                this,
                 General.SECONDS_PER_FILE,
                 getString(R.string.time_per_file),
                 DeviceDriver.general.timePerFile.toString(),
@@ -243,18 +209,14 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
         binding.logsLogToSdCardItem.setSwitchClickedListener {
             val checked = binding.logsLogToSdCardItem.isChecked
-
             Command.createSetConfigPropertyCommand(
                 Logs.LOG_TO_SD_CARD,
                 checked.toString(),
-                { command ->
-                    showProgress()
-                    DeviceDriver.processCommandQueue(command)
-                },
+                ::runCommand,
                 {
                     showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
                 }
-            )
+            ) { refresh() }
         }
         binding.logsFilenameItem.setOnClickListener {
             var filename = DeviceDriver.logs.filename
@@ -299,13 +261,10 @@ class DeviceSettingsActivity : ThemableActivity() {
             Command.createSetConfigPropertyCommand(
                 Battery.NO_BATTERY_MODE,
                 checked.toString(),
-                { command ->
-                    showProgress()
-                    DeviceDriver.processCommandQueue(command)
-                },
+                ::runCommand,
                 {
                     showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-                })
+                }) { refresh() }
         }
         binding.batteryAverageSamplesItem.setOnClickListener {
             openTextEditor(
@@ -345,13 +304,10 @@ class DeviceSettingsActivity : ThemableActivity() {
             Command.createSetConfigPropertyCommand(
                 Cpu.ENABLE_LIGHT_SLEEP,
                 checked.toString(),
-                { command ->
-                    showProgress()
-                    DeviceDriver.processCommandQueue(command)
-                },
+                ::runCommand,
                 {
                     showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-                })
+                }) { refresh() }
         }
         binding.cpuMinFrequencyItem.setOnClickListener {
             openTextEditor(
@@ -379,13 +335,14 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
         binding.intruderEnableItem.setSwitchClickedListener {
             val checked = binding.intruderEnableItem.isChecked
-            Command.createSetConfigPropertyCommand(Intruder.ENABLED, checked.toString(),
-                { command ->
-                    showProgress()
-                    DeviceDriver.processCommandQueue(command)
-                }, {
+            Command.createSetConfigPropertyCommand(
+                Intruder.ENABLED,
+                checked.toString(),
+                ::runCommand,
+                {
                     showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-                })
+                },
+            ) { refresh() }
         }
         binding.intruderThresholdItem.setOnClickListener {
             openTextEditor(
@@ -411,36 +368,36 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
         binding.btEnableAtStartItem.setSwitchClickedListener {
             val checked = binding.btEnableAtStartItem.isChecked
-            Command.createSetConfigPropertyCommand(BtConfig.ENABLE_AT_START, checked.toString(),
-                { command ->
-                    showProgress()
-                    DeviceDriver.processCommandQueue(command)
-                }, {
+            Command.createSetConfigPropertyCommand(
+                BtConfig.ENABLE_AT_START,
+                checked.toString(),
+                ::runCommand,
+                {
                     showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-                })
+                },
+            ) { refresh() }
         }
         binding.btEnableOnTappingItem.setSwitchClickedListener {
             val checked = binding.btEnableOnTappingItem.isChecked
             Command.createSetConfigPropertyCommand(
                 BtConfig.ENABLE_ON_TAPPING,
                 checked.toString(),
-                { command ->
-                    showProgress()
-                    DeviceDriver.processCommandQueue(command)
-                }, {
+                ::runCommand,
+                {
                     showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-                })
+                },
+            ) { refresh() }
         }
         binding.btEnableDuringRecordingItem.setSwitchClickedListener {
             val checked = binding.btEnableDuringRecordingItem.isChecked
             Command.createSetConfigPropertyCommand(
                 BtConfig.ENABLE_DURING_RECORD,
-                checked.toString(), { command ->
-                    showProgress()
-                    DeviceDriver.processCommandQueue(command)
-                }, {
+                checked.toString(),
+                ::runCommand,
+                {
                     showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-                })
+                },
+            ) { refresh() }
         }
         binding.btOffTimeoutSecondsItem.setOnClickListener {
             openTextEditor(
@@ -465,7 +422,8 @@ class DeviceSettingsActivity : ThemableActivity() {
             )
         }
         binding.microphoneVolumePowerItem.setOnClickListener {
-            openRangeEditor(
+            RangeEditorActivity.openRangeEditor(
+                this,
                 Microphone.VOLUME_POWER,
                 getString(R.string.microphone_gain),
                 DeviceDriver.microphone.volumePower.percentage,
@@ -479,7 +437,8 @@ class DeviceSettingsActivity : ThemableActivity() {
             val options = listOf(Channel.Left, Channel.Right, Channel.Stereo).map {
                 "${it.value}|$it"
             }
-            openOptionEditor(
+            OptionEditorActivity.open(
+                this,
                 Microphone.CHANNEL,
                 getString(R.string.recorder_channel),
                 DeviceDriver.microphone.channel.value,
@@ -497,7 +456,8 @@ class DeviceSettingsActivity : ThemableActivity() {
             ).map {
                 "${it.code}|$it"
             }
-            openOptionEditor(
+            OptionEditorActivity.open(
+                this,
                 Microphone.SAMPLE_RATE,
                 getString(R.string.recorder_sample_rate),
                 DeviceDriver.microphone.sampleRate.code.toString(),
@@ -507,14 +467,21 @@ class DeviceSettingsActivity : ThemableActivity() {
 
         binding.microphoneUseApllItem.setSwitchClickedListener {
             val checked = binding.microphoneUseApllItem.isChecked
-            Command.createSetConfigPropertyCommand(Microphone.USE_APLL, checked.toString(),
-                { command ->
-                    showProgress()
-                    DeviceDriver.processCommandQueue(command)
-                }, {
+            Command.createSetConfigPropertyCommand(
+                property = Microphone.USE_APLL,
+                value = checked.toString(),
+                commandCreatedCallback = ::runCommand,
+                errorCallback = {
                     showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-                })
+                },
+            ) { refresh() }
         }
+    }
+
+    private fun runCommand(command: Command) {
+        commandId = command.id
+        showProgress()
+        DeviceDriver.processCommandQueue(command)
     }
 
     private fun openTextEditor(
@@ -534,38 +501,6 @@ class DeviceSettingsActivity : ThemableActivity() {
         if (minimum != null) {
             intent.putExtra(BaseEditorActivity.EXTRA_MINIMUM, minimum)
         }
-        startActivity(intent)
-    }
-
-    private fun openOptionEditor(
-        property: String,
-        settingName: String,
-        currentValue: String,
-        options: List<String>
-    ) {
-        val intent = Intent(this, OptionEditorActivity::class.java)
-        intent.putExtra(BaseEditorActivity.EXTRA_SETTING_NAME, settingName)
-        intent.putExtra(BaseEditorActivity.EXTRA_CURRENT_VALUE, currentValue)
-        intent.putExtra(BaseEditorActivity.EXTRA_PROPERTY, property)
-        intent.putExtra(BaseEditorActivity.EXTRA_OPTIONS, options.toTypedArray())
-        startActivity(intent)
-    }
-
-    private fun openRangeEditor(
-        property: String,
-        settingName: String,
-        currentString: String,
-        currentFloat: Float,
-        minimum: Float,
-        maximum: Float
-    ) {
-        val intent = Intent(this, RangeEditorActivity::class.java)
-        intent.putExtra(BaseEditorActivity.EXTRA_SETTING_NAME, settingName)
-        intent.putExtra(BaseEditorActivity.EXTRA_CURRENT_VALUE, currentString)
-        intent.putExtra(BaseEditorActivity.EXTRA_RANGE_CURRENT, currentFloat)
-        intent.putExtra(BaseEditorActivity.EXTRA_RANGE_MINIMUM, minimum)
-        intent.putExtra(BaseEditorActivity.EXTRA_RANGE_MAXIMUM, maximum)
-        intent.putExtra(BaseEditorActivity.EXTRA_PROPERTY, property)
         startActivity(intent)
     }
 
@@ -754,5 +689,27 @@ class DeviceSettingsActivity : ThemableActivity() {
     private fun showContent() {
         binding.progressIndicator.visibility = View.GONE
         binding.contentLayout.visibility = View.VISIBLE
+    }
+
+    private fun refresh() {
+        runOnUiThread {
+            statusUpdated = false
+            configUpdated = false
+            binding.progressIndicator.text = getString(R.string.updating_values)
+            DeviceDriver.getElocInformation(location) {
+                runOnUiThread {
+                    val commandType = DeviceDriver.getCommandType(it)
+                    if (!statusUpdated && (commandType == CommandType.GetStatus)) {
+                        statusUpdated = true
+                    }
+                    if (!configUpdated && (commandType == CommandType.GetConfig)) {
+                        configUpdated = true
+                    }
+                    if (statusUpdated && configUpdated) {
+                        setData()
+                    }
+                }
+            }
+        }
     }
 }

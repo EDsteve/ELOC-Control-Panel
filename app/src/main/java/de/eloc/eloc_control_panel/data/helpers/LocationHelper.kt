@@ -7,21 +7,33 @@ import android.location.LocationManager
 import com.google.android.gms.maps.model.LatLng
 import com.google.openlocationcode.OpenLocationCode
 import de.eloc.eloc_control_panel.App
+import de.eloc.eloc_control_panel.data.GpsData
+import de.eloc.eloc_control_panel.data.GpsDataSource
+import de.eloc.eloc_control_panel.data.util.Preferences
 
 object LocationHelper {
-    private var listener: LocationListener? = null
     private val manager = App.instance.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    val unknownLocation: String get() = "UNKNOWN"
+    private var onLocationChangedCallback: ((GpsData) -> Unit)? = null
+    private var listener: LocationListener = LocationListener { location ->
+        val gpsData = GpsData(
+            accuracy = location.accuracy.toInt(),
+            source = GpsDataSource.Radio,
+            location.latitude,
+            location.latitude,
+        )
+        Preferences.lastKnownGpsLocation = gpsData
+        onLocationChangedCallback?.invoke(gpsData)
+    }
 
     @SuppressLint("MissingPermission")
-    fun startUpdates(locationListener: LocationListener) {
-        listener = locationListener
-        manager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0.0F, listener!!)
+    fun startUpdates(onLocationChangedCallback: (GpsData) -> Unit) {
+        this.onLocationChangedCallback = onLocationChangedCallback
+        manager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0.0F, listener)
     }
 
     fun stopUpdates() {
-        if (listener != null) {
-            manager.removeUpdates(listener!!)
-        }
+        manager.removeUpdates(listener)
     }
 
     fun decodePlusCode(code: String): LatLng? {

@@ -11,7 +11,6 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.GravityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.open
@@ -22,6 +21,7 @@ import de.eloc.eloc_control_panel.activities.showModalOptionAlert
 import de.eloc.eloc_control_panel.activities.showSnack
 import de.eloc.eloc_control_panel.activities.themable.media.ProfileActivity
 import de.eloc.eloc_control_panel.data.BtDevice
+import de.eloc.eloc_control_panel.data.MainMenuPosition
 import de.eloc.eloc_control_panel.data.adapters.ElocInfoAdapter
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper
@@ -42,7 +42,6 @@ class HomeActivity : ThemableActivity() {
     private var isFirstRun = true
     private val elocAdapter = ElocInfoAdapter(false, this::onListUpdated, this::showDevice)
     private val elocReceiver = ElocReceiver(null, elocAdapter::add)
-    private lateinit var preferencesLauncher: ActivityResultLauncher<Intent>
     private lateinit var associationLauncher: ActivityResultLauncher<IntentSenderRequest>
     private val backPressedHandler = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
@@ -107,7 +106,13 @@ class HomeActivity : ThemableActivity() {
 
     override fun onStop() {
         super.onStop()
-        BluetoothHelper.stopScan(this::scanUpdate)
+        BluetoothHelper.stopScan(this::scanUpdate) {
+            runOnUiThread {
+                if (it != null) {
+                    showModalAlert(getString(R.string.bluetooth), it)
+                }
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -117,7 +122,7 @@ class HomeActivity : ThemableActivity() {
 
     private fun openUserPrefs() {
         val intent = Intent(this, UserPrefsActivity::class.java)
-        preferencesLauncher.launch(intent)
+        startActivity(intent)
     }
 
     private fun initialize() {
@@ -152,7 +157,7 @@ class HomeActivity : ThemableActivity() {
 
     private fun openDrawer() {
         if (!drawerOpen()) {
-            val direction = if (Preferences.isMainMenuOnLeft)
+            val direction = if (Preferences.mainMenuPosition == MainMenuPosition.TopLeft)
                 GravityCompat.START
             else
                 GravityCompat.END
@@ -163,7 +168,7 @@ class HomeActivity : ThemableActivity() {
 
     private fun setAppBar() {
         binding.toolbar.menu.clear()
-        if (Preferences.isMainMenuOnLeft) {
+        if (Preferences.mainMenuPosition == MainMenuPosition.TopLeft) {
             binding.toolbar.setNavigationIcon(R.drawable.menu)
             binding.toolbar.setNavigationIconTint(Color.WHITE)
         } else {
@@ -175,28 +180,6 @@ class HomeActivity : ThemableActivity() {
     private fun setLaunchers() {
         associationLauncher =
             registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { _ -> }
-
-        preferencesLauncher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == RESULT_OK) {
-                    val fontSizeChanged = result.data?.getBooleanExtra(
-                        UserPrefsActivity.EXTRA_FONT_SIZE_CHANGED,
-                        false
-                    )
-                        ?: false
-                    if (fontSizeChanged) {
-                        MaterialAlertDialogBuilder(this)
-                            .setCancelable(false)
-                            .setTitle(R.string.app_restart_required)
-                            .setMessage(R.string.app_restart_message)
-                            .setPositiveButton(android.R.string.ok) { dialog, _ ->
-                                dialog.dismiss()
-                                finish()
-                            }
-                            .show()
-                    }
-                }
-            }
     }
 
     private fun setListeners() {
@@ -281,9 +264,12 @@ class HomeActivity : ThemableActivity() {
         }
 
         onListUpdated(false)
-        val error = BluetoothHelper.startScan(this::scanUpdate)
-        if (error?.isNotEmpty() == true) {
-            binding.coordinator.showSnack(error)
+        BluetoothHelper.startScan(this::scanUpdate) { error ->
+            runOnUiThread {
+                if (error?.isNotEmpty() == true) {
+                    showModalAlert(getString(R.string.bluetooth), error)
+                }
+            }
         }
     }
 
@@ -321,13 +307,20 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun showDevice(device: BtDevice) {
-        BluetoothHelper.stopScan(this::scanUpdate)
-        BluetoothHelper.associateDevice(this, device, associationLauncher) {
-            val intent = Intent(this, DeviceActivity::class.java)
-                .apply {
-                    putExtra(DeviceActivity.EXTRA_DEVICE_ADDRESS, device.address)
+        BluetoothHelper.stopScan(this::scanUpdate) {
+            runOnUiThread {
+                if (it?.isNotEmpty() == true) {
+                    showModalAlert(getString(R.string.bluetooth), it)
+                } else {
+                    BluetoothHelper.associateDevice(this, device, associationLauncher) {
+                        val intent = Intent(this, DeviceActivity::class.java)
+                            .apply {
+                                putExtra(DeviceActivity.EXTRA_DEVICE_ADDRESS, device.address)
+                            }
+                        startActivity(intent)
+                    }
                 }
-            startActivity(intent)
+            }
         }
     }
 

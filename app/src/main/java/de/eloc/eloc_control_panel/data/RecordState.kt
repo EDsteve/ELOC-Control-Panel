@@ -12,8 +12,9 @@ enum class RecordState(val code: Int) {
     RecordOnEvent(5);
 
     val isInactive get(): Boolean = ((this == Invalid) || (this == RecordOffDetectOff))
+    val isActive get() : Boolean = !isInactive
 
-     fun getVerb(): String {
+    fun getVerb(): String {
         val resId = when (this) {
             Invalid -> R.string.state_invalid
             RecordOffDetectOff -> R.string.state_verb_record_off_detect_off
@@ -27,7 +28,7 @@ enum class RecordState(val code: Int) {
 
     companion object {
         fun parse(code: Int): RecordState {
-            for (state in RecordState.values()) {
+            for (state in RecordState.entries) {
                 if (state.code == code) {
                     return state
                 }

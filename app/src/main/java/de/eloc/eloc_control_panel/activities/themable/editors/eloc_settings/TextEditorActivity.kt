@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities.themable.editors
+package de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings
 
 import android.os.Bundle
 import android.text.InputType
@@ -68,18 +68,33 @@ class TextEditorActivity : BaseEditorActivity() {
         }
 
         Command.createSetConfigPropertyCommand(
-            property,
-            if (isNumeric) {
+            property = property,
+            value = if (isNumeric) {
                 numericValue.toString()
             } else {
                 newValue
             },
-            { command ->
+            commandCreatedCallback = { command ->
+                commandId = command.id
                 showProgress()
                 DeviceDriver.processCommandQueue(command)
             },
-            {
+            errorCallback = {
                 showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-            })
+            },
+        ) {
+            runOnUiThread {
+                val succeeded = DeviceDriver.commandSucceeded(it)
+                if (succeeded) {
+                    onSaveCompleted()
+                } else {
+                    showContent()
+                    showModalAlert(
+                        getString(R.string.error),
+                        getString(R.string.failed_to_save)
+                    )
+                }
+            }
+        }
     }
 }

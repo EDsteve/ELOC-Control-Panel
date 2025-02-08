@@ -1,4 +1,4 @@
-package de.eloc.eloc_control_panel.activities.themable.editors.user_settings
+package de.eloc.eloc_control_panel.activities.themable.editors.preferences
 
 import android.content.Context
 import android.content.Intent
@@ -7,11 +7,14 @@ import androidx.core.view.children
 import com.google.android.material.radiobutton.MaterialRadioButton
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.restartApp
 import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.showModalAlert
-import de.eloc.eloc_control_panel.data.Command
+import de.eloc.eloc_control_panel.data.MainMenuPosition
+import de.eloc.eloc_control_panel.data.PreferredFontSize
+import de.eloc.eloc_control_panel.data.StatusUploadInterval
+import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.databinding.ActivityEditorOptionsBinding
-import de.eloc.eloc_control_panel.driver.DeviceDriver
 
 class OptionEditorActivity : BaseEditorActivity() {
     companion object {
@@ -73,15 +76,29 @@ class OptionEditorActivity : BaseEditorActivity() {
             showModalAlert(getString(R.string.required), getString(R.string.selection_required))
             return
         }
-        Command.createSetConfigPropertyCommand(
-            property,
-            newValue,
-            { command ->
-                showProgress()
-                DeviceDriver.processCommandQueue(command)
-            },
-            {
-                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-            })
+        val code = newValue.toIntOrNull()
+        if (code != null) {
+            when (property) {
+                Preferences.PREF_USER_FONT_SIZE -> {
+                    val fontSize = PreferredFontSize.parse(code)
+                    Preferences.preferredFontSize = fontSize
+                    if (currentValue != fontSize.toString()) {
+                        restartApp()
+                        return
+                    }
+                }
+
+                Preferences.PREF_MAIN_MENU_POSITION -> {
+                    val menuPosition = MainMenuPosition.parse(code)
+                    Preferences.mainMenuPosition = menuPosition
+                }
+
+                Preferences.PREF_STATUS_UPLOAD_INTERVAL -> {
+                    val interval = StatusUploadInterval.parse(code)
+                    Preferences.statusUploadInterval = interval
+                }
+            }
+        }
+        goBack()
     }
 }

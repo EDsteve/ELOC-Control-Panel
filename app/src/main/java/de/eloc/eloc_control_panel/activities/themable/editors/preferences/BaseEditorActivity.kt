@@ -1,15 +1,10 @@
-package de.eloc.eloc_control_panel.activities.themable.editors.user_settings
+package de.eloc.eloc_control_panel.activities.themable.editors.preferences
 
 import android.os.Bundle
 import android.view.View
-import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
-import de.eloc.eloc_control_panel.activities.showModalAlert
-import de.eloc.eloc_control_panel.activities.themable.DeviceActivity
-import de.eloc.eloc_control_panel.activities.themable.ThemableActivity  
+import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.widgets.ProgressIndicator
-
-internal const val NOT_SET = "not_set"
 
 abstract class BaseEditorActivity : ThemableActivity() {
     companion object {
@@ -25,39 +20,18 @@ abstract class BaseEditorActivity : ThemableActivity() {
         const val EXTRA_MINIMUM = "minimum"
     }
 
-    private lateinit var location: GpsData
     protected var property = ""
     protected var settingName = ""
     protected var currentValue = ""
     protected var prefix = ""
-    private val listenerId = "editorActivity"
-    private var saved = false
     protected var isNumeric = false
     protected var minimumValue: Double? = null
     protected var rangeCurrentValue: Float? = null
     protected var rangeMinimumValue: Float? = null
     protected var rangeMaximumValue: Float? = null
     protected var options = mutableMapOf<String, String>()
-    private var configUpdated = false
-    private var statusUpdated = false
     protected lateinit var contentLayout: View
     protected lateinit var progressIndicator: ProgressIndicator
-    private val onGetDeviceInfoCompleted = GetCommandCompletedCallback {
-        if (saved) {
-            if (!configUpdated && (it == CommandType.GetConfig)) {
-                configUpdated = true
-            }
-            if (!statusUpdated && (it == CommandType.GetStatus)) {
-                statusUpdated = true
-            }
-
-            if (statusUpdated && configUpdated) {
-                runOnUiThread {
-                    goBack()
-                }
-            }
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,32 +44,13 @@ abstract class BaseEditorActivity : ThemableActivity() {
         showContent()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        DeviceDriver.removeConnectionChangedListener(listenerId)
-        DeviceDriver.removeOnGetCommandCompletedListener(onGetDeviceInfoCompleted)
-        DeviceDriver.removeOnSetCommandCompletedListener(::onSaveCompleted)
-    }
-
     protected abstract fun setViews()
 
     protected abstract fun applyData()
 
-    private fun onConnectionChanged(status: ConnectionStatus) {
-        if (status == ConnectionStatus.Inactive) {
-            goBack()
-        }
-    }
+
 
     private fun setData() {
-
-        if (DeviceActivity.gpsLocation == null) {
-            goBack()
-            return
-        } else {
-            location = DeviceActivity.gpsLocation!!
-        }
-
         val extras = intent.extras
 
         isNumeric = extras?.getBoolean(EXTRA_IS_NUMERIC, false) ?: false
@@ -135,14 +90,6 @@ abstract class BaseEditorActivity : ThemableActivity() {
             return
         }
         currentValue = prefix + currentValue
-        if ((currentValue.lowercase() == NOT_SET) && (property == General.FILE_HEADER)) {
-            currentValue = ""
-        }
-
-        if (property == Microphone.SAMPLE_RATE) {
-            val code = currentValue.toDoubleOrNull() ?: 0.0
-            currentValue = SampleRate.parse(code).toString()
-        }
 
         val rawOptions = extras?.getStringArray(EXTRA_OPTIONS)
         val splitter = "|"
@@ -153,38 +100,11 @@ abstract class BaseEditorActivity : ThemableActivity() {
             }
         }
 
-        DeviceDriver.addOnSetCommandCompletedListener(::onSaveCompleted)
-        DeviceDriver.addOnGetCommandCompletedListener(onGetDeviceInfoCompleted)
-        DeviceDriver.addConnectionChangedListener(listenerId, ::onConnectionChanged)
-    }
-
-    protected fun showProgress() {
-        progressIndicator.text = getString(R.string.applying_changes)
-        progressIndicator.visibility = View.VISIBLE
-        contentLayout.visibility = View.INVISIBLE
     }
 
     private fun showContent() {
         progressIndicator.visibility = View.INVISIBLE
         contentLayout.visibility = View.VISIBLE
-    }
-
-    private fun onSaveCompleted(success: Boolean, type: CommandType) {
-        runOnUiThread {
-            if (success) {
-                if (type.isSetCommand) {
-                    saved = true
-                    progressIndicator.text = getString(R.string.updating_values)
-                    DeviceDriver.getElocInformation(location)
-                }
-            } else {
-                showContent()
-                showModalAlert(
-                    getString(R.string.error),
-                    getString(R.string.failed_to_save)
-                )
-            }
-        }
     }
 
     protected abstract fun save()
