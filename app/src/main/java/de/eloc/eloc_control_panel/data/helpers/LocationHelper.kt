@@ -19,8 +19,8 @@ object LocationHelper {
         val gpsData = GpsData(
             accuracy = location.accuracy.toInt(),
             source = GpsDataSource.Radio,
-            location.latitude,
-            location.latitude,
+            latitude = location.latitude,
+            longitude = location.longitude,
         )
         Preferences.lastKnownGpsLocation = gpsData
         onLocationChangedCallback?.invoke(gpsData)
