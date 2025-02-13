@@ -1,9 +1,14 @@
 package de.eloc.eloc_control_panel.activities.themable
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Rect
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import androidx.core.graphics.drawable.DrawableCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
@@ -297,6 +302,21 @@ class DeviceActivity : ThemableActivity() {
             binding.swipeRefreshLayout.isEnabled = true
             binding.toolbar.menu.clear()
             menuInflater.inflate(R.menu.app_bar_settings, binding.toolbar.menu)
+
+            try {
+                // Make settings icon larger (at least 128x128)
+                val settingsItem = binding.toolbar.menu.findItem(R.id.mnu_settings)
+                val oldIcon = settingsItem.icon
+                if (oldIcon != null) {
+                    val newSize = 128
+                    val bitmap = Bitmap.createBitmap(newSize, newSize, Bitmap.Config.ARGB_8888)
+                    val canvas = Canvas(bitmap)
+                    oldIcon.bounds = Rect(0, 0, newSize, newSize)
+                    oldIcon.draw(canvas)
+                    settingsItem.icon = BitmapDrawable(resources, bitmap)
+                }
+            } catch (_: Exception) {
+            }
 
             setConfigInfo()
             setStatusInfo()

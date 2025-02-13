@@ -4,7 +4,7 @@
     <item
         android:id="@+id/mnu_settings"
         android:icon="@drawable/settings_outline"
-        app:iconTint="#74000000"
+        app:iconTint="@color/white"
         android:title="@string/settings"
         app:showAsAction="always|withText" />
 </menu>

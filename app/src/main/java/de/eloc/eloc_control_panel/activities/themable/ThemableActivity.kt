@@ -18,8 +18,6 @@ abstract class ThemableActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setTheme(Preferences.preferredFontThemeID)
-
-
     }
 
     override fun onResume() {
