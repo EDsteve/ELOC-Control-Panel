@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.View
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
 import de.eloc.eloc_control_panel.databinding.ActivityBluetoothSettingsBinding
-import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.activities.openActivity
 import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.data.util.Preferences
 
@@ -30,10 +30,10 @@ class BluetoothSettingsActivity : ThemableActivity() {
         }
 
         binding.associatedDevicesItem.setOnClickListener {
-            open(ManageAssociationsActivity::class.java)
+            openActivity(ManageAssociationsActivity::class.java)
         }
         binding.signalInfoItem.setOnClickListener {
-            open(RssiInfoActivity::class.java)
+            openActivity(RssiInfoActivity::class.java)
         }
         binding.showAllDevicesItem.setSwitchClickedListener {
             Preferences.showAllBluetoothDevices = binding.showAllDevicesItem.isChecked

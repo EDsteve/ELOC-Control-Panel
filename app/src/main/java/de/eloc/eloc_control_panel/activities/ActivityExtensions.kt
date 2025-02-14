@@ -81,7 +81,11 @@ fun AppCompatActivity.openLocationSettings() {
     startActivity(settingsIntent)
 }
 
-fun AppCompatActivity.open(target: Class<*>, finishTask: Boolean = false, bundle: Bundle? = null) {
+fun AppCompatActivity.openActivity(
+    target: Class<*>,
+    finishTask: Boolean = false,
+    bundle: Bundle? = null
+) {
     val intent = Intent(this, target)
     if (bundle != null) {
         intent.putExtras(bundle)

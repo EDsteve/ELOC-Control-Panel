@@ -22,7 +22,7 @@ import de.eloc.eloc_control_panel.old.DataHelper
 import de.eloc.eloc_control_panel.activities.getPickImageRequest
 import de.eloc.eloc_control_panel.activities.hideKeyboard
 import de.eloc.eloc_control_panel.activities.showModalAlert
-import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.activities.openActivity
 import de.eloc.eloc_control_panel.activities.themable.LoadProfileActivity
 
 class ProfileSetupActivity : MediaActivity() {
@@ -195,7 +195,7 @@ class ProfileSetupActivity : MediaActivity() {
     private fun onProfileUploadCompleted(success: Boolean) {
         updateUI(false)
         if (success) {
-            open(LoadProfileActivity::class.java, true)
+            openActivity(LoadProfileActivity::class.java, true)
         } else {
             showModalAlert(
                 getString(R.string.oops),

@@ -3,7 +3,7 @@ package de.eloc.eloc_control_panel.activities.themable
 import android.os.Bundle
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
-import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.activities.openActivity
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.databinding.ActivityAccountBinding
 
@@ -41,10 +41,10 @@ class AccountActivity : ThemableActivity() {
         binding.deleteAccountItem.button.setOnClickListener { openAccountDeleter() }
     }
 
-    private fun openEmailAddressEditor() = open(ChangeEmailAddressActivity::class.java, false)
+    private fun openEmailAddressEditor() = openActivity(ChangeEmailAddressActivity::class.java)
 
-    private fun openPasswordEditor() = open(ChangePasswordActivity::class.java, false)
+    private fun openPasswordEditor() = openActivity(ChangePasswordActivity::class.java)
 
-    private fun openAccountDeleter() = open(DeleteAccountActivity::class.java, false)
+    private fun openAccountDeleter() = openActivity(DeleteAccountActivity::class.java)
 
 }

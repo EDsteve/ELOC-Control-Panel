@@ -23,7 +23,6 @@ object Preferences {
     private const val PREF_NOTIFICATIONS_REQUESTED = "notifications_requested"
     const val PREF_USER_FONT_SIZE = "user_font_size"
     const val PREF_GPS_LOCATION_TIMEOUT = "gps_location_timeout"
-    private const val PREF_AUTO_GOOGLE_SIGN_IN = "auto_google_sign_in"
     private const val PREF_LAST_KNOWN_LOCATION = "last_known_location"
 
     private const val PREF_ACCOUNT_RANGER_NAME = "account_ranger_name"
@@ -101,10 +100,6 @@ object Preferences {
             return MainMenuPosition.parse(code)
         }
         set(value) = preferences.edit().putInt(PREF_MAIN_MENU_POSITION, value.code).apply()
-
-    var autoGoogleSignIn: Boolean
-        get() = preferences.getBoolean(PREF_AUTO_GOOGLE_SIGN_IN, false)
-        set(value) = preferences.edit().putBoolean(PREF_AUTO_GOOGLE_SIGN_IN, value).apply()
 
     var preferredFontSize: PreferredFontSize
         get() {

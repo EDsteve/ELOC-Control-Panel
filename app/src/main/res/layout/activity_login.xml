@@ -6,13 +6,14 @@
     android:layout_height="match_parent"
     android:layout_gravity="center"
     android:gravity="center"
-    tools:context=".activities.LoginActivity">
+    tools:context=".activities.themable.LoginActivity">
 
     <de.eloc.eloc_control_panel.widgets.OfflineLayout
         android:id="@+id/offline_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center" />
+        android:layout_gravity="center"
+        tools:visibility="invisible" />
 
     <de.eloc.eloc_control_panel.widgets.ProgressIndicator
         android:id="@+id/check_internet_access_progress_indicator"
@@ -25,80 +26,39 @@
     <LinearLayout
         android:id="@+id/sign_in_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_gravity="center"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center"
         android:orientation="vertical"
-        tools:visibility="invisible">
+        tools:visibility="visible">
 
-        <ImageView
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:contentDescription="@string/app_logo"
-            android:src="@drawable/logo_dark" />
+        <ImageButton
+            android:id="@+id/back_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="start"
+            android:layout_margin="16dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/go_back"
+            android:padding="8dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/arrow_back"
+            app:tint="#fff" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginVertical="8dp"
-            android:text="@string/app_name"
-            android:textSize="18sp" />
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:visibility="visible">
-
-            <com.google.android.gms.common.SignInButton
-                android:id="@+id/google_sign_in_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:buttonSize="wide"
-                app:colorScheme="dark" />
-
-            <de.eloc.eloc_control_panel.widgets.ProgressIndicator
-                android:id="@+id/google_sign_in_progress_indicator"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:compact="true" />
-
-            <LinearLayout
-                android:layout_width="@dimen/auth_input_width"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="16dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <com.google.android.material.divider.MaterialDivider
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
-                    android:text="@string/or"
-                    android:textAllCaps="true" />
-
-                <com.google.android.material.divider.MaterialDivider
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-            </LinearLayout>
-        </LinearLayout>
+        <include layout="@layout/layout_app_header" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/email_address_layout"
             style="@style/Widget.Material3.TextInputLayout.FilledBox"
             android:layout_width="@dimen/auth_input_width"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             app:boxBackgroundColor="@android:color/transparent"
             app:counterEnabled="true"
             app:counterMaxLength="@integer/auth_input_max_length"
@@ -180,6 +140,11 @@
             android:layout_marginTop="32dp"
             android:text="@string/create_new_account"
             android:textAllCaps="true" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
     </LinearLayout>
 </FrameLayout>

@@ -5,7 +5,7 @@ import android.view.View
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.hideKeyboard
-import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.activities.openActivity
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.databinding.ActivityChangeEmailAddressBinding
@@ -74,7 +74,7 @@ class ChangeEmailAddressActivity : ThemableActivity() {
             showModalAlert(
                 getString(R.string.account),
                 getString(R.string.email_address_updated)
-            ) { open(VerifyEmailActivity::class.java, true) }
+            ) { openActivity(VerifyEmailActivity::class.java, true) }
         } else {
             showModalAlert(getString(R.string.oops), err)
             updateUI(false)

@@ -3,7 +3,7 @@ package de.eloc.eloc_control_panel.activities.themable
 import android.os.Bundle
 import android.util.Base64
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.activities.openActivity
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
@@ -47,7 +47,7 @@ class LoadProfileActivity : ThemableActivity() {
 
     private fun checkProfile() {
         if (Preferences.hasValidProfile) {
-            open(HomeActivity::class.java, true)
+            openActivity(HomeActivity::class.java, true)
         } else {
             showModalAlert(
                 getString(R.string.ranger_profile_missing),

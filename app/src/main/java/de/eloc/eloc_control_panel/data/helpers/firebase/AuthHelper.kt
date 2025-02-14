@@ -1,47 +1,22 @@
 package de.eloc.eloc_control_panel.data.helpers.firebase
 
-import androidx.credentials.ClearCredentialStateRequest
-import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.GetCredentialResponse
-import androidx.credentials.exceptions.GetCredentialCancellationException
-import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.lifecycleScope
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.GoogleAuthProvider
 import de.eloc.eloc_control_panel.App
-import de.eloc.eloc_control_panel.BuildConfig
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.activities.open
-import de.eloc.eloc_control_panel.activities.themable.LoginActivity
+import de.eloc.eloc_control_panel.activities.openActivity
 import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
+import de.eloc.eloc_control_panel.activities.themable.WelcomeActivity
 import de.eloc.eloc_control_panel.data.util.Preferences
-import de.eloc.eloc_control_panel.interfaces.GoogleSignInCallback
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.UUID
 
 class AuthHelper {
-
-    private var credentialManager = CredentialManager.create(App.instance.applicationContext)
-    var googleSignInCanceled = false
-        private set
-    private var googleSignInListeners = mutableSetOf<() -> Unit>()
-    var googleSignInRunning = false
-        private set(value) {
-            field = value
-            for (listener in googleSignInListeners) {
-                listener()
-            }
-        }
 
     companion object {
         val instance: AuthHelper = AuthHelper()
@@ -58,10 +33,6 @@ class AuthHelper {
     val userId get() = user?.uid ?: ""
 
     private val defaultErrorMessage get() = App.instance.getString(R.string.something_went_wrong)
-
-    fun clearGoogleSignInCanceled() {
-        googleSignInCanceled = false
-    }
 
     fun register(email: String, password: String, callback: (String) -> Unit) {
         val auth = FirebaseAuth.getInstance()
@@ -94,126 +65,12 @@ class AuthHelper {
         }
     }
 
-    fun registerGoogleSignInListener(listener: () -> Unit) {
-        googleSignInListeners.add(listener)
-    }
-
-    suspend fun signInWithGoogle(
-        activity: LoginActivity,
-        filter: Boolean,
-        callback: GoogleSignInCallback?
-    ) {
-        if (googleSignInCanceled) {
-            googleSignInRunning = false
-            return
-        }
-        googleSignInCanceled = false
-
-        if (isSignedIn) {
-            googleSignInRunning = false
-            callback?.handler(true, filter, "")
-            return
-        }
-
-        if (googleSignInRunning) {
-            return
-        }
-        googleSignInRunning = true
-
-        try {
-            val response = getCredential(activity, filter)
-            val credential = response.credential
-            if (credential is CustomCredential) {
-                if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                    val tokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                    val gAuthCredential =
-                        GoogleAuthProvider.getCredential(tokenCredential.idToken, null)
-                    FirebaseAuth.getInstance().signInWithCredential(gAuthCredential)
-                        .addOnCompleteListener {
-                            val success = it.isSuccessful && isSignedIn
-                            val error = if (!success) {
-                                val exception = it.exception
-                                exception?.localizedMessage ?: defaultErrorMessage
-                            } else {
-                                ""
-                            }
-                            googleSignInRunning = false
-                            googleSignInCanceled = true
-                            Preferences.autoGoogleSignIn = success
-                            callback?.handler(success, filter, error)
-                        }
-                } else {
-                    googleSignInRunning = false
-                    googleSignInCanceled = true
-                    callback?.handler(
-                        false,
-                        filter,
-                        App.instance.getString(R.string.invalid_token_credential)
-                    )
-                }
-            } else {
-                googleSignInCanceled = true
-                googleSignInRunning = false
-                callback?.handler(
-                    false,
-                    filter,
-                    App.instance.getString(R.string.invalid_credential_type)
-                )
-            }
-        } catch (_: GetCredentialCancellationException) {
-            googleSignInCanceled = true
-            googleSignInRunning = false
-        } catch (e: NoCredentialException) {
-            val error =
-                if (e.type == android.credentials.GetCredentialException.TYPE_NO_CREDENTIAL) {
-                    App.instance.getString(R.string.no_google_accounts_found)
-                } else {
-                    e.localizedMessage ?: defaultErrorMessage
-                }
-            callback?.handler(false, filter, error)
-            googleSignInCanceled = true
-            googleSignInRunning = false
-        } catch (e: Exception) {
-            val error = e.localizedMessage ?: defaultErrorMessage
-            callback?.handler(false, filter, error)
-            googleSignInCanceled = true
-            googleSignInRunning = false
-        }
-    }
-
-    private suspend fun getCredential(
-        activity: LoginActivity,
-        filter: Boolean
-    ): GetCredentialResponse {
-        val nonce = buildString {
-            append(UUID.randomUUID().toString())
-            append(System.currentTimeMillis().toString())
-        }
-        val options = GetGoogleIdOption.Builder()
-            .setNonce(nonce)
-            .setServerClientId(BuildConfig.GCLOUD_CLIENT_ID)
-            .setFilterByAuthorizedAccounts(filter)
-            .setAutoSelectEnabled(true)
-            .build()
-
-        val request = GetCredentialRequest.Builder()
-            .addCredentialOption(options)
-            .build()
-        return credentialManager.getCredential(activity, request)
-    }
-
-    private suspend fun clearCredential() {
-        Preferences.autoGoogleSignIn = false
-        credentialManager.clearCredentialState(ClearCredentialStateRequest())
-    }
-
     fun signOut(activity: ThemableActivity) {
         activity.lifecycleScope.launch(Dispatchers.IO) {
-            clearCredential()
             withContext(Dispatchers.Main) {
                 Preferences.clearProfileData()
                 FirebaseAuth.getInstance().signOut()
-                activity.open(LoginActivity::class.java, true)
+                activity.openActivity(WelcomeActivity::class.java, true)
             }
         }
     }

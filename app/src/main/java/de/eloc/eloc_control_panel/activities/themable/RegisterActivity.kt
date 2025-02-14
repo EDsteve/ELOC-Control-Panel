@@ -4,13 +4,13 @@ import android.os.Bundle
 import android.view.View
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.databinding.ActivityRegisterBinding
-import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
-import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
 import de.eloc.eloc_control_panel.activities.hideKeyboard
-import de.eloc.eloc_control_panel.activities.showModalAlert
-import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.activities.openActivity
 import de.eloc.eloc_control_panel.activities.overrideGoBack
+import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
+import de.eloc.eloc_control_panel.databinding.ActivityRegisterBinding
+import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
 
 class RegisterActivity : ThemableActivity() {
     private lateinit var binding: ActivityRegisterBinding
@@ -22,14 +22,14 @@ class RegisterActivity : ThemableActivity() {
 
         App.instance.addNetworkChangedHandler(localClassName) {
             runOnUiThread {
-            binding.registrationLayout.visibility = View.GONE
-            binding.checkInternetAccessProgressIndicator.visibility = View.GONE
-            binding.offlineLayout.visibility = View.GONE
-            when (App.instance.isOnline()) {
-                true -> binding.registrationLayout.visibility = View.VISIBLE
-                false -> binding.offlineLayout.visibility = View.VISIBLE
-                null -> binding.checkInternetAccessProgressIndicator.visibility = View.VISIBLE
-            }
+                binding.registrationLayout.visibility = View.GONE
+                binding.checkInternetAccessProgressIndicator.visibility = View.GONE
+                binding.offlineLayout.visibility = View.GONE
+                when (App.instance.isOnline()) {
+                    true -> binding.registrationLayout.visibility = View.VISIBLE
+                    false -> binding.offlineLayout.visibility = View.VISIBLE
+                    null -> binding.checkInternetAccessProgressIndicator.visibility = View.VISIBLE
+                }
             }
         }
 
@@ -50,14 +50,14 @@ class RegisterActivity : ThemableActivity() {
     }
 
     private fun setListeners() {
-        binding.backButton.setOnClickListener { openLogin() }
-        binding.loginButton.setOnClickListener { openLogin() }
+        binding.backButton.setOnClickListener { goToWelcome() }
+        binding.loginButton.setOnClickListener {
+            openActivity(LoginActivity::class.java, true)
+        }
         binding.registerButton.setOnClickListener { register() }
         binding.root.setOnClickListener { hideKeyboard() }
-        overrideGoBack { openLogin() }
+        overrideGoBack { goToWelcome() }
     }
-
-    private fun openLogin() = open(LoginActivity::class.java, true)
 
     private fun register() {
         hideKeyboard()
@@ -98,7 +98,7 @@ class RegisterActivity : ThemableActivity() {
         updateUI(false)
         val err = error.trim()
         if (err.isEmpty()) {
-            open(VerifyEmailActivity::class.java, true)
+            openActivity(VerifyEmailActivity::class.java, true)
         } else {
             showModalAlert(getString(R.string.oops), err)
         }

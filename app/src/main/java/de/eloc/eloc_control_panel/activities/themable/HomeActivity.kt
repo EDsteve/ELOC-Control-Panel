@@ -13,7 +13,7 @@ import androidx.core.view.GravityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.activities.openActivity
 import de.eloc.eloc_control_panel.activities.openUrl
 import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.showModalAlert
@@ -236,7 +236,7 @@ class HomeActivity : ThemableActivity() {
 
     private fun editProfile() {
         closeDrawer()
-        open(ProfileActivity::class.java, false)
+        openActivity(ProfileActivity::class.java, false)
     }
 
     private fun setupListView() {
@@ -402,11 +402,11 @@ class HomeActivity : ThemableActivity() {
     }
 
     private fun manageAccount() {
-        open(AccountActivity::class.java, false)
+        openActivity(AccountActivity::class.java, false)
     }
 
     private fun showBluetoothSettings() {
-        open(BluetoothSettingsActivity::class.java)
+        openActivity(BluetoothSettingsActivity::class.java)
     }
 
     private fun showAboutApp() {

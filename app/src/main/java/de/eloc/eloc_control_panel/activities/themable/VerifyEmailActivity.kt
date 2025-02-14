@@ -3,7 +3,7 @@ package de.eloc.eloc_control_panel.activities.themable
 import android.os.Bundle
 import android.view.View
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.activities.open
+import de.eloc.eloc_control_panel.activities.openActivity
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.activities.themable.media.ProfileSetupActivity
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
@@ -86,14 +86,14 @@ class VerifyEmailActivity : ThemableActivity() {
                         if (hasProfile) {
                             val bundle = Bundle()
                             bundle.putBoolean(LoadProfileActivity.EXTRA_IS_OFFLINE_MODE, true)
-                            open(LoadProfileActivity::class.java, true, bundle)
+                            openActivity(LoadProfileActivity::class.java, true, bundle)
                         } else {
                             updateUI(UiState.Offline)
                         }
                     } else {
                         val target =
                             if (hasProfile) LoadProfileActivity::class.java else ProfileSetupActivity::class.java
-                        open(target, true)
+                        openActivity(target, true)
                     }
                 }
             } else {
@@ -103,7 +103,7 @@ class VerifyEmailActivity : ThemableActivity() {
                 updateUI(UiState.Idle)
             }
         } else {
-            open(LoginActivity::class.java, true)
+            openActivity(WelcomeActivity::class.java, true)
         }
     }
 }

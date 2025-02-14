@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import de.eloc.eloc_control_panel.activities.openActivity
 import de.eloc.eloc_control_panel.data.util.Preferences
 
 abstract class ThemableActivity : AppCompatActivity() {
@@ -43,5 +44,9 @@ abstract class ThemableActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         active = false
+    }
+
+    protected fun goToWelcome() {
+        openActivity(WelcomeActivity::class.java, finishTask = true)
     }
 }
