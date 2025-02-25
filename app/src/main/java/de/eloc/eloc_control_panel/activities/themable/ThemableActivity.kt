@@ -25,9 +25,11 @@ abstract class ThemableActivity : AppCompatActivity() {
         super.onResume()
         active = true
 
+        // Only adjust insets  on Android 15 (API 35) and up
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         if (!appliedInsets) {
             WindowCompat.setDecorFitsSystemWindows(window, false)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+
                 // Apply top padding
                 val rootView = findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
                 rootView.setOnApplyWindowInsetsListener { v, insets ->
