@@ -45,27 +45,37 @@ class CommandParameter {
     companion object {
         fun from(raw: String): CommandParameter? {
             val data = raw.trim()
+            var result : CommandParameter? = null
+            // First try to get bools
             if (data.lowercase() == "true") {
-                return CommandParameter(true)
+                result = CommandParameter(true)
             } else if (data.lowercase() == "false") {
-                return CommandParameter(false)
-            } else if (data.contains("\"")) {
-                return CommandParameter(data.trim())
-            } else if (data.contains(".")) {
-                val doubleValue = data.toDoubleOrNull()
-                return if (doubleValue == null) {
-                    null
-                } else {
-                    CommandParameter(doubleValue)
-                }
+                result = CommandParameter(false)
             } else {
-                val integer = data.toLongOrNull()
-                return if (integer == null) {
-                    null
+                //  Check for strings next
+                val quote = "\""
+                if (data.contains(quote)) {
+                    result = CommandParameter(data.replace(quote, ""))
                 } else {
-                    CommandParameter(integer)
+
+                    // If not a bool or string, try to get a float
+                    // Note: if some float "strings" dont hav a decimal point, we might not get the float
+                    // -- possible logic error, but let's keep the check for "."  in place for now.
+                    val floatValue = data.toDoubleOrNull()
+                    if (data.contains(".") && (floatValue != null)) {
+                        result = CommandParameter(floatValue)
+                    }
+
+                    // Finally, try to get an integer value (note that we use type Long
+                    // to use maximum range of integers kotlin will natively support
+                    val intValue = data.toLongOrNull()
+                    if(intValue != null) {
+                        result = CommandParameter(intValue)
+                    }
                 }
             }
+
+            return result
         }
     }
 
@@ -372,7 +382,7 @@ class Command(
                 RecordState.Invalid -> ""
             }
             if (mode.isNotEmpty()) {
-                return from("setRecordMode#mode=$mode", completionTask)
+                return from("setRecordMode#mode=\"$mode\"", completionTask)
             }
             return null
         }
@@ -453,7 +463,12 @@ class Command(
         buffer.append(SEPARATOR)
         buffer.append("$ID_PREFIX=$id")
         for ((key, value) in parameters) {
-            val token = "$SEPARATOR${key.trim()}=${value.toString().trim()}"
+          val quote  =  if (value.commandParameterType == CommandParameterType.String) {
+                "\""
+            } else {
+                ""
+          }
+            val token = "$SEPARATOR${key.trim()}=$quote${value.toString().trim()}$quote"
             buffer.append(token)
         }
         buffer.append("\n")
