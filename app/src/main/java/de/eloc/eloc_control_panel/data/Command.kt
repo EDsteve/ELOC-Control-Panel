@@ -52,29 +52,28 @@ class CommandParameter {
             } else if (data.lowercase() == "false") {
                 result = CommandParameter(false)
             } else {
-                //  Check for strings next
-                val quote = "\""
-                if (data.contains(quote)) {
-                    result = CommandParameter(data.replace(quote, ""))
+                // After bools, try to get floats
+                // Note: if some float "strings" dont hav a decimal point, we might not get the float
+                // -- possible logic error, but let's keep the check for "."  in place for now.
+                val floatValue = data.toDoubleOrNull()
+                if (data.contains(".") && (floatValue != null)) {
+                    result = CommandParameter(floatValue)
                 } else {
-
-                    // If not a bool or string, try to get a float
-                    // Note: if some float "strings" dont hav a decimal point, we might not get the float
-                    // -- possible logic error, but let's keep the check for "."  in place for now.
-                    val floatValue = data.toDoubleOrNull()
-                    if (data.contains(".") && (floatValue != null)) {
-                        result = CommandParameter(floatValue)
-                    }
-
-                    // Finally, try to get an integer value (note that we use type Long
-                    // to use maximum range of integers kotlin will natively support
+                    // .. then integers
                     val intValue = data.toLongOrNull()
                     if(intValue != null) {
                         result = CommandParameter(intValue)
+                    } else {
+                        // .. finally strings
+                        // '#' and '=' characters are not allowed. Only strings could
+                        // potentially have them. Check for those characters!
+                        val hasForbiddenChars = (data.contains("#") || (data.contains("=")))
+                        if (!hasForbiddenChars) {
+                            result =  CommandParameter(data)
+                        }
                     }
                 }
             }
-
             return result
         }
     }
@@ -463,12 +462,9 @@ class Command(
         buffer.append(SEPARATOR)
         buffer.append("$ID_PREFIX=$id")
         for ((key, value) in parameters) {
-          val quote  =  if (value.commandParameterType == CommandParameterType.String) {
-                "\""
-            } else {
-                ""
-          }
-            val token = "$SEPARATOR${key.trim()}=$quote${value.toString().trim()}$quote"
+            val strValue = value.toString().trim()
+            val strKey = key.trim()
+            val token = "$SEPARATOR$strKey=$strValue"
             buffer.append(token)
         }
         buffer.append("\n")

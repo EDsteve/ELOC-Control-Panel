@@ -325,11 +325,7 @@ object DeviceDriver : Runnable {
 
                         try {
                             if (bluetoothSocket?.isConnected == true) {
-                                var commandString = currentCommand.toString()
-                                if (commandString.lowercase().contains("mode=")) {
-                                    commandString = commandString.replace("\"", "")
-                                }
-
+                                val commandString = currentCommand.toString()
                                 val data = commandString.encodeToByteArray()
 
                                 // Keep the data under 512 bytes. If data must be greater than 512 bytes,
