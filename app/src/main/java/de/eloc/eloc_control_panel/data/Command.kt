@@ -381,7 +381,7 @@ class Command(
                 RecordState.Invalid -> ""
             }
             if (mode.isNotEmpty()) {
-                return from("setRecordMode#mode=\"$mode\"", completionTask)
+                return from("setRecordMode#mode=$mode", completionTask)
             }
             return null
         }
