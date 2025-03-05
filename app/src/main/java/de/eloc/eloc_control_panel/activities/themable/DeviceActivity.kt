@@ -8,7 +8,6 @@ import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import androidx.core.graphics.drawable.DrawableCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
@@ -41,7 +40,6 @@ import java.util.concurrent.Executors
 class DeviceActivity : ThemableActivity() {
     companion object {
         const val EXTRA_DEVICE_ADDRESS = "device_address"
-        var gpsLocationUpdate: GpsData? = null
     }
 
     private enum class ViewMode {
@@ -67,6 +65,7 @@ class DeviceActivity : ThemableActivity() {
     private var paused = false
     private var statusReceived = false
     private var configReceived = false
+    private var gpsLocationUpdate: GpsData? = null
     private val scrollChangeListener =
         View.OnScrollChangeListener { _, _, y, _, _ ->
             binding.swipeRefreshLayout.isEnabled = (y <= 5)

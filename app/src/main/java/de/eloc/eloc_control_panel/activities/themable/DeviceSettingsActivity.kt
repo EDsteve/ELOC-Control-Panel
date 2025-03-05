@@ -30,8 +30,6 @@ import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.RangeEditorActivity
 import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.data.ConnectionStatus
-import de.eloc.eloc_control_panel.data.GpsData
-
 
 class DeviceSettingsActivity : ThemableActivity() {
     companion object {
@@ -44,7 +42,6 @@ class DeviceSettingsActivity : ThemableActivity() {
     private var paused = true
     private var statusUpdated = false
     private var configUpdated = false
-    private lateinit var location: GpsData
     private var commandId: Long? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,12 +51,6 @@ class DeviceSettingsActivity : ThemableActivity() {
 
         val extras = intent.extras
         val showMicrophoneSection = extras?.getBoolean(EXTRA_SHOW_RECORDER, false) ?: false
-        if (DeviceActivity.gpsLocationUpdate == null) {
-            goBack()
-            return
-        } else {
-            location = DeviceActivity.gpsLocationUpdate!!
-        }
 
         setMicrophoneSectionState(showMicrophoneSection)
         setIntruderSectionState(false)
@@ -696,7 +687,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             statusUpdated = false
             configUpdated = false
             binding.progressIndicator.text = getString(R.string.updating_values)
-            DeviceDriver.getElocInformation(location) {
+            DeviceDriver.getElocInformation {
                 runOnUiThread {
                     val commandType = DeviceDriver.getCommandType(it)
                     if (!statusUpdated && (commandType == CommandType.GetStatus)) {

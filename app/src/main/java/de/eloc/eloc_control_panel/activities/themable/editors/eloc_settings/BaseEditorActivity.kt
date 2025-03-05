@@ -4,12 +4,9 @@ import android.os.Bundle
 import android.view.View
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
-import de.eloc.eloc_control_panel.activities.showModalAlert
-import de.eloc.eloc_control_panel.activities.themable.DeviceActivity
 import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
-import de.eloc.eloc_control_panel.data.GpsData
 import de.eloc.eloc_control_panel.data.SampleRate
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.driver.General
@@ -32,7 +29,6 @@ abstract class BaseEditorActivity : ThemableActivity() {
         const val EXTRA_MINIMUM = "minimum"
     }
 
-    private lateinit var location: GpsData
     protected var property = ""
     protected var settingName = ""
     protected var currentValue = ""
@@ -78,16 +74,7 @@ abstract class BaseEditorActivity : ThemableActivity() {
     }
 
     private fun setData() {
-
-        if (DeviceActivity.gpsLocationUpdate == null) {
-            goBack()
-            return
-        } else {
-            location = DeviceActivity.gpsLocationUpdate!!
-        }
-
         val extras = intent.extras
-
         isNumeric = extras?.getBoolean(EXTRA_IS_NUMERIC, false) ?: false
 
         if (extras?.containsKey(EXTRA_MINIMUM) == true) {
@@ -159,7 +146,7 @@ abstract class BaseEditorActivity : ThemableActivity() {
 
     fun onSaveCompleted() {
         progressIndicator.text = getString(R.string.updating_values)
-        DeviceDriver.getElocInformation(location) {
+        DeviceDriver.getElocInformation {
             runOnUiThread {
                 val commandType = DeviceDriver.getCommandType(it)
                 if (!configUpdated && (commandType == CommandType.GetConfig)) {

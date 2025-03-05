@@ -727,13 +727,15 @@ object DeviceDriver : Runnable {
         processCommandQueue(Command.createGetStatusCommand(callback))
     }
 
-    private fun getElocConfig(location: GpsData, callback: (String) -> Unit) {
-        processCommandQueue(Command.createSetLocationCommand(location, callback))
+    private fun getElocConfig(location: GpsData? = null, callback: (String) -> Unit) {
+        if (location != null) {
+            processCommandQueue(Command.createSetLocationCommand(location, callback))
+        }
         processCommandQueue(Command.createGetConfigCommand(callback))
     }
 
     fun getElocInformation(
-        location: GpsData,
+        location: GpsData? = null,
         saveNextInfoResponse: Boolean = false,
         callback: (String) -> Unit
     ) {
