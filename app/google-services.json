@@ -38,6 +38,14 @@
           }
         },
         {
+          "client_id": "773327231765-fb555v9lfn4ms2vbmdtsohrhhrj36fge.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "de.eloc.eloc_control_panel_2",
+            "certificate_hash": "7e148ac0ed800572f2532fed5d1bf4a4283ee8d9"
+          }
+        },
+        {
           "client_id": "773327231765-vvfup5kj1ov380adk4n1d3ltd1fpsevn.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

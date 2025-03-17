@@ -32,10 +32,12 @@ import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 import de.eloc.eloc_control_panel.services.StatusUploadService
 import org.json.JSONObject
-import java.io.IOException
 import java.util.Date
 import java.util.UUID
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
+import kotlin.jvm.Throws
 
 private const val COMMAND_MAX_LENGTH = 512
 
@@ -139,7 +141,7 @@ private const val KEY_RANGER_NAME = "rangerName"
 private const val KEY_REC_TIME_HOURS = "recTimeHours"
 const val KEY_TIMESTAMP = "timestamp"
 
-object DeviceDriver : Runnable {
+object DeviceDriver {
 
     val microphone = Microphone()
     val intruder = Intruder()
@@ -151,6 +153,20 @@ object DeviceDriver : Runnable {
     val general = General()
     val session = Session()
 
+    /*
+
+   using global executor.
+   must be singlethreadexecutor because it can recreate threads on rerror
+   if a thread stop due to an error, there is no way to know, so have a
+   check point of sorts to figure out that a thread succeeded before moving on to new task.
+   if task is somehow marked an incomplete, restart the task.
+   after 3 restarts, notify user that task is failing and then disconnect.
+   also, change wait time to a minim of 5 seconds from the current value of 15.
+    */
+    private var executor: ScheduledExecutorService? = null
+    private var bluetoothListener: ScheduledExecutorService? = null
+
+    private var isListening = false
     private var lastUsedCommandId = -1L
     private var currentCommand: Command? = null
     private var greeted = false
@@ -168,12 +184,11 @@ object DeviceDriver : Runnable {
     private val INTENT_ACTION_DISCONNECT = App.applicationId + ".Disconnect"
     private val BLUETOOTH_SPP = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     private var device: BluetoothDevice? = null
-    private var bytesCache = emptyList<Byte>()
     private val onSetCommandCompletedListeners = mutableListOf<SetCommandCompletedCallback?>()
     private val onGetCommandCompletedListeners = mutableListOf<GetCommandCompletedCallback?>()
     private val writeCommandErrorListeners = mutableMapOf<String, (String) -> Unit>()
     private val connectionChangedListeners = mutableMapOf<String, (ConnectionStatus) -> Unit>()
-    private val commandList = mutableListOf<Command?>()
+    private val pendingCommands = mutableListOf<Command?>()
     private var processingCommandList = false
     private val disconnectBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -200,27 +215,6 @@ object DeviceDriver : Runnable {
 
     fun removeConnectionChangedListener(id: String) {
         connectionChangedListeners.remove(id)
-    }
-
-    private val connectionMonitor = Runnable {
-        var elapsed = 0
-        val timeout = 30
-        cancelConnectionMonitor = false
-        while (elapsed <= timeout) {
-            if (cancelConnectionMonitor) {
-                break
-            }
-            try {
-                Thread.sleep(1000)
-            } catch (_: Exception) {
-            }
-            elapsed++
-        }
-        if (!cancelConnectionMonitor) {
-            // If cancelConnectionMonitor is still false and the while loop above exited
-            // it means a connection was never made - Force a disconnection.
-            disconnect()
-        }
     }
 
     val name
@@ -256,12 +250,25 @@ object DeviceDriver : Runnable {
     fun disconnect() {
         disconnecting = true
         greeted = false
-        clearCommandQueue()
 
+        // Cancels pending tasks in queue
+        processingCommandList = false
+        executor?.shutdownNow()
         try {
-            bluetoothSocket?.close()
+            executor?.awaitTermination(1, TimeUnit.SECONDS)
         } catch (_: Exception) {
         }
+        executor = null
+
+        bluetoothListener?.shutdownNow()
+        try {
+            bluetoothListener?.awaitTermination(1, TimeUnit.SECONDS)
+        } catch (_: Exception) {
+        }
+        bluetoothListener = null
+
+        clearCommandQueue()
+        closeSocket()
         bluetoothSocket = null
         try {
             App.instance.unregisterReceiver(disconnectBroadcastReceiver)
@@ -269,6 +276,15 @@ object DeviceDriver : Runnable {
         }
         connectionStatus = ConnectionStatus.Inactive
         disconnecting = false
+    }
+
+    private fun closeSocket() {
+        try {
+            bluetoothSocket?.close()
+        } catch (_: Exception) {
+
+        }
+        bluetoothSocket = null
     }
 
     fun addOnSetCommandCompletedListener(listener: SetCommandCompletedCallback?) {
@@ -293,64 +309,73 @@ object DeviceDriver : Runnable {
 
     fun processCommandQueue(newCommand: Command? = null) {
         if (newCommand != null) {
-            commandList.add(newCommand)
+            pendingCommands.add(newCommand)
         }
 
         if (!processingCommandList) {
             processingCommandList = true
             // This method is blocks the UI thread! Run it on on executor/thread
-            Executors.newSingleThreadExecutor().execute {
-                try {
-
-                    while (commandList.isNotEmpty()) {
-                        // Wait for a pending command, if any
-                        while (currentCommand != null) {
-                            try {
-                                Thread.sleep(500)
-                            } catch (_: Exception) {
-                            }
-                            if (currentCommand?.completed == true) {
-                                currentCommand = null
-                            }
-                        }
-
-                        if (commandList.isEmpty()) {
-                            break
-                        }
-
-                        currentCommand = commandList.removeFirstOrNull()
-                        if (currentCommand == null) {
-                            break
-                        }
-
-                        try {
-                            if (bluetoothSocket?.isConnected == true) {
-                                val commandString = currentCommand.toString()
-                                val data = commandString.encodeToByteArray()
-
-                                // Keep the data under 512 bytes. If data must be greater than 512 bytes,
-                                // implement some kind of protocol for chunking the data and also keeping up with
-                                // the 1 sec delay expected by the firmware.
-                                // For details: https://github.com/LIFsCode/ELOC-3.0/wiki/ELOC-3.0-App-Interface#limitations
-                                if (data.size > COMMAND_MAX_LENGTH) {
-                                    for (errorListener in writeCommandErrorListeners.values) {
-                                        errorListener("Firmware command is too long!")
-                                    }
-                                    clearCommandQueue()
-                                }
-                                Logger.t(commandString, TrafficDirection.ToEloc)
-                                bluetoothSocket?.outputStream?.write(data)
-                            } else {
-                                throw IOException("ELOC device not connected!")
-                            }
-                        } catch (e: IOException) {
-                            disconnect()
-                        }
-                    }
-                } catch (_: Exception) {
-                }
-                processingCommandList = false
+            if (executor == null) {
+                executor = Executors.newSingleThreadScheduledExecutor()
             }
+            executor?.scheduleWithFixedDelay({ commandProcessor() }, 0, 5, TimeUnit.SECONDS)
+        }
+    }
+
+    private fun commandProcessor() {
+        try {
+            val commandTimeout = 15000 // 15 seconds
+            val sleepInterval = 500L
+            currentCommand = pendingCommands.removeFirstOrNull()
+            while (currentCommand != null) {
+                // Send the command
+                try {
+                    if (bluetoothSocket?.isConnected == true) {
+                        val commandString = currentCommand.toString()
+                        val data = commandString.encodeToByteArray()
+
+                        // Keep the data under 512 bytes. If data must be greater than 512 bytes,
+                        // implement some kind of protocol for chunking the data and also keeping up with
+                        // the 1 sec delay expected by the firmware.
+                        // For details: https://github.com/LIFsCode/ELOC-3.0/wiki/ELOC-3.0-App-Interface#limitations
+                        if (data.size > COMMAND_MAX_LENGTH) {
+                            for (errorListener in writeCommandErrorListeners.values) {
+                                errorListener("Firmware command is too long!")
+                            }
+                            clearCommandQueue()
+                        }
+                        Logger.t(commandString, TrafficDirection.ToEloc)
+                        bluetoothSocket?.outputStream?.write(data)
+                    } else {
+                        throw Exception("ELOC device not connected!")
+                    }
+                } catch (e: Exception) {
+                    disconnect()
+                }
+
+                // Wait for a pending command, if any
+                var elapsed = 0L
+                while ((currentCommand != null) && (currentCommand?.completed != true)) {
+                    try {
+                        Thread.sleep(sleepInterval)
+                    } catch (_: Exception) {
+                    }
+                    elapsed += sleepInterval
+                    if (elapsed > commandTimeout) {
+                        Logger.t(
+                            "Command (ID: ${currentCommand?.id ?: -1} timed out",
+                            TrafficDirection.ToEloc
+                        )
+                        break
+                    }
+                }
+
+                // Set next command
+                currentCommand = pendingCommands.removeFirstOrNull()
+            }
+        } catch (_: Exception) {
+        } finally {
+            processingCommandList = false
         }
     }
 
@@ -362,8 +387,8 @@ object DeviceDriver : Runnable {
 
     private fun clearCommandQueue() {
         currentCommand = null
-        if (commandList.isNotEmpty()) {
-            commandList.clear()
+        if (pendingCommands.isNotEmpty()) {
+            pendingCommands.clear()
         }
     }
 
@@ -433,9 +458,31 @@ object DeviceDriver : Runnable {
         }
     }
 
+    private fun monitorConnectionProgress() {
+        var elapsed = 0
+        val timeout = 30
+        cancelConnectionMonitor = false
+        while (elapsed <= timeout) {
+            if (cancelConnectionMonitor) {
+                break
+            }
+            try {
+                Thread.sleep(1000)
+            } catch (_: Exception) {
+            }
+            elapsed++
+        }
+        if (!cancelConnectionMonitor) {
+            // If cancelConnectionMonitor is still false and the while loop above exited
+            // it means a connection was never made - Force a disconnection.
+            disconnect()
+        }
+    }
+
     private fun doConnect() {
+        val connectionProgressListener = Executors.newSingleThreadExecutor()
         try {
-            Executors.newSingleThreadExecutor().execute(connectionMonitor)
+            connectionProgressListener.submit { monitorConnectionProgress() }
             bluetoothSocket?.connect()
         } catch (_: SecurityException) {
             disconnect()
@@ -450,8 +497,9 @@ object DeviceDriver : Runnable {
                 ConnectionStatus.Inactive
             }
         if (connectionStatus == ConnectionStatus.Active) {
+            connectionProgressListener.shutdownNow()
             onConnect()
-            Executors.newSingleThreadExecutor().submit(this)
+            startListening()
         } else {
             return
         }
@@ -669,53 +717,71 @@ object DeviceDriver : Runnable {
             .replace(KEY_B_RECORDING_TIME, KEY_RECORDING_TIME)
     }
 
-    override fun run() {
-        try {
-            val buffer = ByteArray(1024)
-            while (bluetoothSocket?.isConnected == true) {
-                try {
-                    val byteCount = bluetoothSocket?.inputStream?.read(buffer) ?: 0
-                    val data = buffer.copyOf(byteCount)
-                    bytesCache += data.toList()
-                    while (true) {
-                        val offset = bytesCache.indexOf(EOT)
-                        if (offset < 0) {
-                            break
-                        }
-                        val jsonBytes = bytesCache.slice(0 until offset)
-                        val startIndex = offset + 1
-                        val endIndex = bytesCache.size - 1
-                        bytesCache = bytesCache.slice(startIndex..endIndex)
-                        val jsonByteArray = jsonBytes.toByteArray()
-                        val json = sanitize(String(jsonByteArray))
-                        Logger.t(json, TrafficDirection.FromEloc)
-                        if (!greeted) {
-                            checkGreeting(json)
-                        } else {
-                            val intercepted = interceptCompletedSetCommand(json)
-                            if (!intercepted) {
-                                interceptCompletedGetCommand(json)
-                            }
-                        }
-                        checkPendingCommand(json)
-                    }
-                } catch (e: Exception) {
-                    if (connecting || disconnecting) {
-                        // Ignore and don't report the crash that happens while connecting
-                        return
-                    }
-                    disconnect()
-                }
-                try {
-                    Thread.sleep(500)
-                } catch (_: Exception) {
-                }
+    private fun startListening() {
+        isListening = true
+
+        bluetoothListener = Executors.newSingleThreadScheduledExecutor()
+        bluetoothListener?.scheduleWithFixedDelay({
+            // Prevent execution if already stopped.
+            if (!isListening) {
+                return@scheduleWithFixedDelay
             }
 
-        } catch (e: SecurityException) {
-            disconnect()
-            return
+            try {
+                listenForData()
+            } catch (_: Exception) {
+            }
+        }, 0, 5, TimeUnit.SECONDS)
+    }
+
+    @Throws(Exception::class)
+    private fun listenForData() {
+        val buffer = ByteArray(1024)
+        var bytesCache = emptyList<Byte>().toMutableList()
+        while (isListening && (bluetoothSocket?.isConnected == true)) {
+            try {
+                val byteCount = bluetoothSocket?.inputStream?.read(buffer) ?: 0
+                if (byteCount > 0) {
+                    val data = buffer.copyOf(byteCount)
+                    bytesCache += data.toList()
+                    val offset = bytesCache.indexOf(EOT)
+                    if (offset < 0) {
+                        continue
+                    }
+                    val jsonBytes = bytesCache.slice(0 until offset)
+                    val startIndex = offset + 1
+                    val endIndex = bytesCache.size - 1
+                    bytesCache = bytesCache.slice(startIndex..endIndex).toMutableList()
+                    val jsonByteArray = jsonBytes.toByteArray()
+                    val json = sanitize(String(jsonByteArray))
+                    Logger.t(json, TrafficDirection.FromEloc)
+                    if (!greeted) {
+                        checkGreeting(json)
+                    } else {
+                        val intercepted = interceptCompletedSetCommand(json)
+                        if (!intercepted) {
+                            interceptCompletedGetCommand(json)
+                        }
+                    }
+                    checkPendingCommand(json)
+                } else {
+                    val message = "Connection closed by remote device!"
+                    Logger.t(message, TrafficDirection.FromEloc)
+                    throw Exception(message)
+                }
+
+            } catch (e: Exception) {
+                // Make sure to close socket so that read() does not hang.
+                closeSocket()
+
+                // Ignore and don't report the crash that happens while connecting
+                val ignore = connecting || disconnecting
+                if (!ignore) {
+                    throw e
+                }
+            }
         }
+        closeSocket()
     }
 
     fun getStatus(callback: (String) -> Unit) {
