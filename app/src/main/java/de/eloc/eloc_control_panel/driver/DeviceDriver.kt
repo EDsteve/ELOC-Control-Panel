@@ -153,16 +153,6 @@ object DeviceDriver {
     val general = General()
     val session = Session()
 
-    /*
-
-   using global executor.
-   must be singlethreadexecutor because it can recreate threads on rerror
-   if a thread stop due to an error, there is no way to know, so have a
-   check point of sorts to figure out that a thread succeeded before moving on to new task.
-   if task is somehow marked an incomplete, restart the task.
-   after 3 restarts, notify user that task is failing and then disconnect.
-   also, change wait time to a minim of 5 seconds from the current value of 15.
-    */
     private var executor: ScheduledExecutorService? = null
     private var bluetoothListener: ScheduledExecutorService? = null
 
