@@ -1,5 +1,7 @@
 package de.eloc.eloc_control_panel.data.helpers.firebase
 
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldValue
@@ -7,7 +9,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.Source
-import com.google.android.gms.maps.model.LatLng
 import de.eloc.eloc_control_panel.data.ElocDeviceInfo
 import de.eloc.eloc_control_panel.data.UploadResult
 import de.eloc.eloc_control_panel.data.helpers.FileSystemHelper
@@ -205,6 +206,7 @@ class FirestoreHelper {
             }
         }
 
+        var task = Tasks.forResult<Void>(null)
         for (fileName in pendingUploads) {
             val isConfig = FileSystemHelper.isConfig(fileName)
             val isStatus = FileSystemHelper.isStatus(fileName)
@@ -260,9 +262,12 @@ class FirestoreHelper {
                 }
             }
 
-            document
-                .set(data)
-                .addOnCompleteListener { completeListener(it.isSuccessful, fileName) }
+            task = task.continueWithTask {
+                document.set(data)
+            }
+                .addOnCompleteListener {
+                    completeListener(it.isSuccessful, fileName)
+                }
         }
 
         // Safe to wait, since function runs on background thread

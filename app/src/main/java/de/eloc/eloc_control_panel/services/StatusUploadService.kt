@@ -13,6 +13,7 @@ import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import com.google.firebase.FirebaseApp
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.themable.HomeActivity
@@ -137,6 +138,9 @@ class StatusUploadService : Service() {
     }
 
     private fun doUpload(): UploadResult {
+        if (FirebaseApp.getApps(this).isEmpty()) {
+            FirebaseApp.initializeApp(this)
+        }
         var result = UploadResult.NoData
         try {
             if (serviceNotificationBuilder != null) {
