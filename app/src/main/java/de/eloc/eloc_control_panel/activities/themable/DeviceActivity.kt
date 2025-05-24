@@ -1,10 +1,8 @@
 package de.eloc.eloc_control_panel.activities.themable
 
 import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Rect
-import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -34,6 +32,8 @@ import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 import de.eloc.eloc_control_panel.receivers.ElocReceiver
 import java.util.concurrent.Executors
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.drawable.toDrawable
 
 // todo: add refresh menu item for old API levels
 
@@ -110,7 +110,6 @@ class DeviceActivity : ThemableActivity() {
             runOnUiThread {
                 gpsLocationUpdate = it
                 updateGpsViews()
-                checkGpsLocationTimeout()
             }
         }
     }
@@ -242,7 +241,8 @@ class DeviceActivity : ThemableActivity() {
                                 gpsLocationUpdate = GpsData(source = GpsDataSource.Unknown)
                             }
                             val timeout = Preferences.gpsLocationTimeoutSeconds
-                            val message: String? = when (gpsLocationUpdate!!.source) {
+                            val source = gpsLocationUpdate?.source ?: GpsDataSource.Unknown
+                            val message: String? = when (source) {
                                 GpsDataSource.Unknown -> getString(
                                     R.string.gps_unknown_coordinates,
                                     timeout
@@ -273,7 +273,7 @@ class DeviceActivity : ThemableActivity() {
 
     private fun onFirstLocationReceived() {
         setViewMode(ViewMode.FetchingDataView)
-        DeviceDriver.getElocInformation(gpsLocationUpdate!!, true) {
+        DeviceDriver.getElocInformation(gpsLocationUpdate, true) {
             val type = DeviceDriver.getCommandType(it)
             checkReceivedInfoType(type)
         }
@@ -308,11 +308,11 @@ class DeviceActivity : ThemableActivity() {
                 val oldIcon = settingsItem.icon
                 if (oldIcon != null) {
                     val newSize = 128
-                    val bitmap = Bitmap.createBitmap(newSize, newSize, Bitmap.Config.ARGB_8888)
+                    val bitmap = createBitmap(newSize, newSize)
                     val canvas = Canvas(bitmap)
                     oldIcon.bounds = Rect(0, 0, newSize, newSize)
                     oldIcon.draw(canvas)
-                    settingsItem.icon = BitmapDrawable(resources, bitmap)
+                    settingsItem.icon = bitmap.toDrawable(resources)
                 }
             } catch (_: Exception) {
             }
@@ -396,18 +396,21 @@ class DeviceActivity : ThemableActivity() {
         // Register for device found events
         elocReceiver.register(this)
         gpsLocationUpdate = null
+        checkGpsLocationTimeout()
 
-        // Do a scan to find the required device and only connect when device is found.
+        // Do a scan to find the required device and only connecBluetootht when device is found.
         setViewMode(ViewMode.ScanningView)
         BluetoothHelper.scanningSpecificEloc = true
         BluetoothHelper.startScan({ remaining ->
             runOnUiThread {
                 if (remaining <= 0) {
-                    BluetoothHelper.scanningSpecificEloc = false
-                    showModalAlert(
-                        getString(R.string.eloc_not_found),
-                        getString(R.string.eloc_not_found_rationale)
-                    ) { goBack() }
+                    DeviceDriver.connect(deviceAddress, null) {
+                        BluetoothHelper.scanningSpecificEloc = false
+                        showModalAlert(
+                            getString(R.string.eloc_not_found),
+                            getString(R.string.eloc_not_found_rationale)
+                        ) { goBack() }
+                    }
                 }
             }
         }) {
@@ -569,7 +572,7 @@ class DeviceActivity : ThemableActivity() {
 
     private fun updateGpsViews() {
         if (gpsLocationUpdate != null) {
-            binding.gpsGauge.updateValue(gpsLocationUpdate!!.accuracy.toDouble())
+            binding.gpsGauge.updateValue(gpsLocationUpdate?.accuracy?.toDouble() ?: -1.0)
             val accuracy = gpsLocationUpdate?.accuracy ?: -1
             binding.gpsAccuracyTextView.text = formatNumber(accuracy, "m", 0)
             if ((accuracy >= 0) && (accuracy <= 100)) {
@@ -660,7 +663,8 @@ class DeviceActivity : ThemableActivity() {
         }
         */
 
-        if (ignoreLocationAccuracy || (gpsLocationUpdate!!.accuracy <= 8.1)) {
+        val accuracy = gpsLocationUpdate?.accuracy ?: -1
+        if (ignoreLocationAccuracy || (accuracy <= 8.1)) {
             var proceed = true
 
             val task = {
@@ -674,10 +678,7 @@ class DeviceActivity : ThemableActivity() {
                         else -> ViewMode.SettingRecordMode
                     }
                     setViewMode(viewMode)
-                    DeviceDriver.setRecordState(
-                        newMode,
-                        gpsLocationUpdate!!
-                    ) { }
+                    DeviceDriver.setRecordState(newMode, gpsLocationUpdate) { }
                 }
             }
             if (DeviceDriver.bluetooth.enableDuringRecord) {

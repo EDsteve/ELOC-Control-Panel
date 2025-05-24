@@ -27,9 +27,10 @@ import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.data.AssociatedDeviceInfo
 import de.eloc.eloc_control_panel.data.BtDevice
 import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.Executors
 
-private const val SCAN_DURATION = 30 // Seconds
+private const val DEFAULT_SCAN_DURATION = 15 // Seconds
 
 object BluetoothHelper {
     val enablingIntent: Intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
@@ -82,7 +83,7 @@ object BluetoothHelper {
 
     val isBluetoothOn: Boolean
         get() {
-            return bluetoothManager?.adapter?.isEnabled ?: false
+            return bluetoothManager?.adapter?.isEnabled == true
         }
 
     private val hasAdapter: Boolean
@@ -124,7 +125,10 @@ object BluetoothHelper {
         }
     }
 
-    fun startScan(updateCallback: ((Int) -> Unit)?, completedCallback: (String?) -> Unit) {
+    fun startScan(
+        updateCallback: ((Int) -> Unit)?,
+        completedCallback: (String?) -> Unit
+    ) {
         return if (isScanning)
             stopScan(updateCallback, completedCallback)
         else
@@ -153,12 +157,12 @@ object BluetoothHelper {
                 Thread {
                     scannerHandle = Object()
                     while (scannerHandle != null) {
-                        if (scannerElapsed >= SCAN_DURATION) {
+                        if (scannerElapsed >= DEFAULT_SCAN_DURATION) {
                             stopScan(updateCallback, completedCallback)
                             scannerHandle = null
                         } else {
                             scannerElapsed++
-                            updateCallback?.invoke(SCAN_DURATION - scannerElapsed)
+                            updateCallback?.invoke(DEFAULT_SCAN_DURATION - scannerElapsed)
                         }
                         try {
                             Thread.sleep(1000)
@@ -177,9 +181,9 @@ object BluetoothHelper {
     fun getDevice(address: String): BluetoothDevice? =
         bluetoothManager?.adapter?.getRemoteDevice(address.uppercase(Locale.ENGLISH))
 
-    fun stopScan(updateCallback: ((Int) -> Unit)?, completedCallback: (String?) -> Unit) {
+    fun stopScan(updateCallback: ((Int) -> Unit)?, completedCallback: ((String?) -> Unit)? = null) {
         if (scanningSpecificEloc) {
-            completedCallback(null)
+            completedCallback?.invoke(null)
             return
         }
         if (ContextCompat.checkSelfPermission(
@@ -188,14 +192,14 @@ object BluetoothHelper {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                completedCallback("Set bluetooth permissions in app settings!")
+                completedCallback?.invoke("Set bluetooth permissions in app settings!")
                 return
             }
         }
         bluetoothManager?.adapter?.cancelDiscovery()
         stopExecutor()
         updateCallback?.invoke(-1)
-        completedCallback(null)
+        completedCallback?.invoke(null)
         return
     }
 

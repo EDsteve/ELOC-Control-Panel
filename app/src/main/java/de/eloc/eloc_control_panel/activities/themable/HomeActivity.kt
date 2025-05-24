@@ -264,7 +264,7 @@ class HomeActivity : ThemableActivity() {
         }
 
         onListUpdated(false)
-        BluetoothHelper.startScan(this::scanUpdate) { error ->
+        BluetoothHelper.startScan( this::scanUpdate) { error ->
             runOnUiThread {
                 if (error?.isNotEmpty() == true) {
                     showModalAlert(getString(R.string.bluetooth), error)

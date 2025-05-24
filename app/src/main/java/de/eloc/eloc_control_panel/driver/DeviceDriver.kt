@@ -339,7 +339,7 @@ object DeviceDriver {
                     } else {
                         throw Exception("ELOC device not connected!")
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     disconnect()
                 }
 
@@ -405,7 +405,7 @@ object DeviceDriver {
         }
 
     @SuppressLint("MissingPermission")
-    fun connect(deviceAddress: String, callback: (String?) -> Unit) {
+    fun connect(deviceAddress: String, callback: ((String?) -> Unit)? = null, onError: ((String) -> Unit)? = null) {
         connecting = true
         var hadError = false
         try {
@@ -429,7 +429,7 @@ object DeviceDriver {
                     )
                 }
                 bluetoothSocket = device?.createRfcommSocketToServiceRecord(BLUETOOTH_SPP)
-                BluetoothHelper.stopScan({ doConnect() }, callback)
+                BluetoothHelper.stopScan({ doConnect(onError) }, callback)
             } catch (_: Exception) {
             }
         } catch (_: Exception) {
@@ -469,12 +469,13 @@ object DeviceDriver {
         }
     }
 
-    private fun doConnect() {
+    private fun doConnect(onError: ((String) -> Unit)? = null) {
         val connectionProgressListener = Executors.newSingleThreadExecutor()
         try {
             connectionProgressListener.submit { monitorConnectionProgress() }
             bluetoothSocket?.connect()
         } catch (_: SecurityException) {
+            onError?.invoke("Failed to connect to ELOC!")
             disconnect()
             return
         }
@@ -807,8 +808,10 @@ object DeviceDriver {
         getElocConfig(location, callback)
     }
 
-    fun setRecordState(state: RecordState, location: GpsData, callback: (String) -> Unit) {
-        processCommandQueue(Command.createSetLocationCommand(location, callback))
+    fun setRecordState(state: RecordState, location: GpsData?, callback: (String) -> Unit) {
+        if (location != null) {
+            processCommandQueue(Command.createSetLocationCommand(location, callback))
+        }
         val modeCommand = Command.createSetRecordModeCommand(state, callback)
         if (modeCommand != null) {
             processCommandQueue(modeCommand)

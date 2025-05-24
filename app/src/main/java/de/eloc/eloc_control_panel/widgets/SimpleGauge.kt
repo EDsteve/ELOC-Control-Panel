@@ -11,6 +11,7 @@ import android.view.View
 import de.eloc.eloc_control_panel.R
 import kotlin.math.ceil
 import kotlin.math.min
+import androidx.core.content.withStyledAttributes
 
 const val CRITICAL_COLOR_THRESHOLD_DEFAULT = 15
 
@@ -48,32 +49,32 @@ class SimpleGauge : View {
 
     private fun initialize(attrs: AttributeSet?) {
         if (attrs != null) {
-            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.SimpleGauge)
-            val show =
-                typedArray.getBoolean(R.styleable.SimpleGauge_showDiscreteColors, false)
-            setShowDiscreteColors(show)
-            errorMode = typedArray.getBoolean(R.styleable.SimpleGauge_errorMode, false)
-            alwaysFilled = typedArray.getBoolean(R.styleable.SimpleGauge_alwaysFilled, true)
-            normalColor = typedArray.getColor(R.styleable.SimpleGauge_normalColor, Color.GREEN)
-            lowColor = typedArray.getColor(R.styleable.SimpleGauge_lowColor, Color.YELLOW)
-            criticalColor = typedArray.getColor(R.styleable.SimpleGauge_criticalColor, Color.RED)
-            lowColorThreshold =
-                typedArray.getInteger(
-                    R.styleable.SimpleGauge_lowColorThreshold,
-                    LOW_COLOR_THRESHOLD_DEFAULT
+            context.withStyledAttributes(attrs, R.styleable.SimpleGauge) {
+                val show =
+                    getBoolean(R.styleable.SimpleGauge_showDiscreteColors, false)
+                setShowDiscreteColors(show)
+                errorMode = getBoolean(R.styleable.SimpleGauge_errorMode, false)
+                alwaysFilled = getBoolean(R.styleable.SimpleGauge_alwaysFilled, true)
+                normalColor = getColor(R.styleable.SimpleGauge_normalColor, Color.GREEN)
+                lowColor = getColor(R.styleable.SimpleGauge_lowColor, Color.YELLOW)
+                criticalColor = getColor(R.styleable.SimpleGauge_criticalColor, Color.RED)
+                lowColorThreshold =
+                    getInteger(
+                        R.styleable.SimpleGauge_lowColorThreshold,
+                        LOW_COLOR_THRESHOLD_DEFAULT
+                    )
+                criticalColorThreshold = getInteger(
+                    R.styleable.SimpleGauge_criticalColorThreshold,
+                    CRITICAL_COLOR_THRESHOLD_DEFAULT
                 )
-            criticalColorThreshold = typedArray.getInteger(
-                R.styleable.SimpleGauge_criticalColorThreshold,
-                CRITICAL_COLOR_THRESHOLD_DEFAULT
-            )
-            lowRange = if (lowColorThreshold <= LOW_COLOR_THRESHOLD_MIN) {
-                LOW_COLOR_THRESHOLD_MIN.toFloat()
-            } else if (lowColorThreshold >= LOW_COLOR_THRESHOLD_MAX) {
-                LOW_COLOR_THRESHOLD_MAX.toFloat()
-            } else {
-                lowColorThreshold.toFloat()
+                lowRange = if (lowColorThreshold <= LOW_COLOR_THRESHOLD_MIN) {
+                    LOW_COLOR_THRESHOLD_MIN.toFloat()
+                } else if (lowColorThreshold >= LOW_COLOR_THRESHOLD_MAX) {
+                    LOW_COLOR_THRESHOLD_MAX.toFloat()
+                } else {
+                    lowColorThreshold.toFloat()
+                }
             }
-            typedArray.recycle()
         }
         canInvalidate = true
     }
@@ -215,6 +216,7 @@ class SimpleGauge : View {
 
     fun updateValue(percent: Double) {
         gaugeValue = percent
+        errorMode = (gaugeValue < 0)
         normalizeGaugeValue()
         invalidate()
     }
