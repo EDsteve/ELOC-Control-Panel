@@ -571,17 +571,16 @@ class DeviceActivity : ThemableActivity() {
     }
 
     private fun updateGpsViews() {
-        if (gpsLocationUpdate != null) {
-            binding.gpsGauge.updateValue(gpsLocationUpdate?.accuracy?.toDouble() ?: -1.0)
-            val accuracy = gpsLocationUpdate?.accuracy ?: -1
-            binding.gpsAccuracyTextView.text = formatNumber(accuracy, "m", 0)
-            if ((accuracy >= 0) && (accuracy <= 100)) {
-                binding.gpsAccuracyTextView.visibility = View.VISIBLE
-                binding.gpsNoAccuracyImageView.visibility = View.GONE
-            } else {
-                binding.gpsAccuracyTextView.visibility = View.GONE
-                binding.gpsNoAccuracyImageView.visibility = View.VISIBLE
-            }
+        binding.gpsGauge.updateValue(gpsLocationUpdate?.accuracy?.toDouble() ?: -1.0)
+        val accuracy = gpsLocationUpdate?.accuracy ?: -1
+        binding.gpsAccuracyTextView.text = formatNumber(accuracy, "m", 0)
+        if ((accuracy >= 0) && (accuracy <= 100)) {
+            binding.gpsAccuracyTextView.visibility = View.VISIBLE
+            binding.gpsNoAccuracyImageView.visibility = View.GONE
+        } else {
+            binding.gpsAccuracyTextView.visibility = View.GONE
+            binding.gpsNoAccuracyImageView.visibility =
+                if (gpsLocationUpdate == null) View.GONE else View.VISIBLE
         }
     }
 

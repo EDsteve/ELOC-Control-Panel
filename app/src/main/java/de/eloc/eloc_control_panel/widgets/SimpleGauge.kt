@@ -80,6 +80,14 @@ class SimpleGauge : View {
     }
 
     private fun getValueColor(): Int {
+        if (errorMode) {
+            criticalColor = Color.RED;
+            val r = Color.red(criticalColor)
+            val b = Color.blue(criticalColor)
+            val g = Color.green(criticalColor)
+            return Color.rgb(r, g, b)
+        }
+
         normalizeGaugeValue()
 
         if (showDiscreteColors) {
@@ -170,7 +178,6 @@ class SimpleGauge : View {
             val dotDiameter = dotRadius * 2
             val dotY = centerY + (dotRadius * 5)
             canvas.drawCircle(centerX, dotY, dotRadius, pen)
-
 
             val botLeftX = centerX - (dotDiameter * 0.2f)
             val botY = dotY - (dotRadius * 1.5f)
