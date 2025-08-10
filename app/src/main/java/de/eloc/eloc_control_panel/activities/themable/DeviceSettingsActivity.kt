@@ -54,7 +54,7 @@ class DeviceSettingsActivity : ThemableActivity() {
         val showMicrophoneSection = extras?.getBoolean(EXTRA_SHOW_RECORDER, false) ?: false
 
         setMicrophoneSectionState(showMicrophoneSection)
-        setIntruder2SectionState(false)
+        setIntruderSectionState(false)
         setLorawanSectionState(false)
         setBluetoothSectionState(false)
         setLogsSectionState(false)
@@ -96,9 +96,9 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding.microphoneSampleRateItem.valueText = DeviceDriver.microphone.sampleRate.toString()
         binding.microphoneUseApllItem.setSwitch(DeviceDriver.microphone.useAPLL)
 
-        binding.intruder2EnableItem.setSwitch(DeviceDriver.intruder.enabled)
-        binding.intruder2ThresholdItem.valueText = DeviceDriver.intruder.threshold.toString()
-        binding.intruder2WindowsMsItem.valueText = DeviceDriver.intruder.windowsMs.toString()
+        binding.intruderEnableItem.setSwitch(DeviceDriver.intruder.enabled)
+        binding.intruderThresholdItem.valueText = DeviceDriver.intruder.threshold.toString()
+        binding.intruderWindowsMsItem.valueText = DeviceDriver.intruder.windowsMs.toString()
 
         val secs = " secs"
         binding.lorawanEnableItem.setSwitch(DeviceDriver.lorawan.enabled)
@@ -142,7 +142,7 @@ class DeviceSettingsActivity : ThemableActivity() {
         setGeneralListeners()
         setCpuListeners()
         setLogsListeners()
-        setIntruder2Listeners()
+        setIntruderListeners()
         setLorawanListeners()
         setBtListeners()
         setMicrophoneListeners()
@@ -367,12 +367,12 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
     }
 
-    private fun setIntruder2Listeners() {
-        binding.intruder2SectionTextView.setOnClickListener {
-            setIntruder2SectionState(binding.intruder2EnableItem.visibility != View.VISIBLE)
+    private fun setIntruderListeners() {
+        binding.intruderSectionTextView.setOnClickListener {
+            setIntruderSectionState(binding.intruderEnableItem.visibility != View.VISIBLE)
         }
-        binding.intruder2EnableItem.setSwitchClickedListener {
-            val checked = binding.intruder2EnableItem.isChecked
+        binding.intruderEnableItem.setSwitchClickedListener {
+            val checked = binding.intruderEnableItem.isChecked
             Command.createSetConfigPropertyCommand(
                 Intruder.ENABLED,
                 checked.toString(),
@@ -382,7 +382,7 @@ class DeviceSettingsActivity : ThemableActivity() {
                 },
             ) { refresh() }
         }
-        binding.intruder2ThresholdItem.setOnClickListener {
+        binding.intruderThresholdItem.setOnClickListener {
             openTextEditor(
                 Intruder.THRESHOLD,
                 getString(R.string.intruder_threshold),
@@ -390,7 +390,7 @@ class DeviceSettingsActivity : ThemableActivity() {
                 true,
             )
         }
-        binding.intruder2WindowsMsItem.setOnClickListener {
+        binding.intruderWindowsMsItem.setOnClickListener {
             openTextEditor(
                 Intruder.WINDOWS_MS,
                 getString(R.string.intruder_windows_ms),
@@ -564,10 +564,10 @@ class DeviceSettingsActivity : ThemableActivity() {
         )
     }
 
-    private fun setIntruder2SectionState(expanded: Boolean) {
+    private fun setIntruderSectionState(expanded: Boolean) {
         val state = if (expanded) View.VISIBLE else View.GONE
-        binding.intruder2Section.children.forEach { child ->
-            if (child == binding.intruder2SectionTextView) {
+        binding.intruderSection.children.forEach { child ->
+            if (child == binding.intruderSectionTextView) {
                 return@forEach
             }
             child.visibility = state
@@ -578,7 +578,7 @@ class DeviceSettingsActivity : ThemableActivity() {
         } else {
             ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
         }
-        binding.intruder2SectionTextView.setCompoundDrawablesWithIntrinsicBounds(
+        binding.intruderSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
             null,
             null,
             icon,

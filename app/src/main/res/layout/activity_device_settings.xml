@@ -204,13 +204,13 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:id="@+id/intruder2_section"
+                    android:id="@+id/intruder_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/intruder2_section_text_view"
+                        android:id="@+id/intruder_section_text_view"
                         android:layout_width="match_parent"
                         android:layout_height="36dp"
                         android:background="?selectableItemBackground"
@@ -222,7 +222,7 @@
                         app:drawableEndCompat="@drawable/keyboard_arrow_down" />
 
                     <de.eloc.eloc_control_panel.widgets.ListItem
-                        android:id="@+id/intruder2_enable_item"
+                        android:id="@+id/intruder_enable_item"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:indent="16dp"
@@ -236,7 +236,7 @@
                         android:layout_marginStart="16dp" />
 
                     <de.eloc.eloc_control_panel.widgets.ListItem
-                        android:id="@+id/intruder2_threshold_item"
+                        android:id="@+id/intruder_threshold_item"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:indent="16dp"
@@ -251,7 +251,7 @@
                         android:layout_marginStart="16dp" />
 
                     <de.eloc.eloc_control_panel.widgets.ListItem
-                        android:id="@+id/intruder2_windows_ms_item"
+                        android:id="@+id/intruder_windows_ms_item"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:indent="16dp"
