@@ -251,4 +251,10 @@
     <string name="uplink_interval">Uplink Interval</string>
     <string name="increment">Increment</string>
     <string name="decrement">Decrement</string>
+    <string name="inference_threshold">Inference Threshold</string>
+    <string name="observation_window">Observation Window</string>
+    <string name="inference_observation_window">Inference Observation Window</string>
+    <string name="required_detections">Required Detections</string>
+    <string name="inference_required_detections">Inference Required Detections</string>
+    <string name="inference">Inference</string>
 </resources>

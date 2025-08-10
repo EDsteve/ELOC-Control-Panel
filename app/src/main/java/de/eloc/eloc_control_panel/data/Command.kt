@@ -15,6 +15,9 @@ import de.eloc.eloc_control_panel.driver.KEY_CPU_MIN_FREQUENCY_MHZ
 import de.eloc.eloc_control_panel.driver.KEY_GENERAL_FILE_HEADER
 import de.eloc.eloc_control_panel.driver.KEY_GENERAL_NODE_NAME
 import de.eloc.eloc_control_panel.driver.KEY_GENERAL_SECONDS_PER_FILE
+import de.eloc.eloc_control_panel.driver.KEY_INFERENCE_THRESHOLD
+import de.eloc.eloc_control_panel.driver.KEY_INFERENCE_OBS_WINDOW_SECS
+import de.eloc.eloc_control_panel.driver.KEY_INFERENCE_REQ_DETECTIONS
 import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_ENABLED
 import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_THRESHOLD
 import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_WINDOWS_MS
@@ -228,6 +231,33 @@ class Command(
 
                 KEY_LORAWAN_REGION -> {
                     """setConfig#cfg={"config":{"lorawan":{"loraRegion":"$propertyValue"}}}"""
+                }
+
+                KEY_INFERENCE_THRESHOLD -> {
+                    val threshold = propertyValue.toDoubleOrNull()?.toInt()
+                    if (threshold == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"inference":{"threshold":$threshold}}}"""
+                    }
+                }
+
+                KEY_INFERENCE_OBS_WINDOW_SECS -> {
+                    val secs = propertyValue.toDoubleOrNull()?.toInt()
+                    if (secs == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"inference":{"observationWindowS":$secs}}}"""
+                    }
+                }
+
+                KEY_INFERENCE_REQ_DETECTIONS -> {
+                    val detections = propertyValue.toDoubleOrNull()?.toInt()
+                    if (detections == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"inference":{"requiredDetections":$detections}}}"""
+                    }
                 }
 
                 KEY_INTRUDER_ENABLED -> {

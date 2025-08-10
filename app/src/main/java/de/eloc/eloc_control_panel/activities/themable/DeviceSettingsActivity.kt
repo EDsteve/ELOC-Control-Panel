@@ -27,9 +27,11 @@ import de.eloc.eloc_control_panel.activities.formatNumber
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.prettifyTime
 import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.RangeEditorActivity
 import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.data.ConnectionStatus
+import de.eloc.eloc_control_panel.driver.Inference
 import de.eloc.eloc_control_panel.driver.LoraWan
 
 class DeviceSettingsActivity : ThemableActivity() {
@@ -56,6 +58,7 @@ class DeviceSettingsActivity : ThemableActivity() {
         setMicrophoneSectionState(showMicrophoneSection)
         setIntruderSectionState(false)
         setLorawanSectionState(false)
+        setInferenceSectionState(false)
         setBluetoothSectionState(false)
         setLogsSectionState(false)
         setCpuSectionState(false)
@@ -106,6 +109,11 @@ class DeviceSettingsActivity : ThemableActivity() {
             formatNumber(DeviceDriver.lorawan.uplinkIntervalSeconds, secs, 0)
         binding.lorawanRegionItem.valueText = DeviceDriver.lorawan.region
 
+        binding.inferenceThresholdItem.valueText = DeviceDriver.inference.threshold.toString()
+        binding.inferenceObsWindowItem.valueText =
+            formatNumber(DeviceDriver.inference.observationWindow, secs, 0)
+        binding.inferenceReqDetectionsItem.valueText =
+            DeviceDriver.inference.requiredDetections.toString()
 
         binding.btEnableAtStartItem.setSwitch(DeviceDriver.bluetooth.enableAtStart)
         binding.btEnableOnTappingItem.setSwitch(DeviceDriver.bluetooth.enableOnTapping)
@@ -144,6 +152,7 @@ class DeviceSettingsActivity : ThemableActivity() {
         setLogsListeners()
         setIntruderListeners()
         setLorawanListeners()
+        setInferenceListeners()
         setBtListeners()
         setMicrophoneListeners()
         setAdvancedListeners()
@@ -352,8 +361,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             )
         }
         binding.lorawanUplinkIntervalItem.setOnClickListener {
-            val prettyCurrentInterval =
-                LoraWan.prettifyTime(DeviceDriver.lorawan.uplinkIntervalSeconds)
+            val prettyCurrentInterval = prettifyTime(DeviceDriver.lorawan.uplinkIntervalSeconds)
             val currentInterval = DeviceDriver.lorawan.uplinkIntervalSeconds
             RangeEditorActivity.openRangeEditor(
                 this,
@@ -363,6 +371,48 @@ class DeviceSettingsActivity : ThemableActivity() {
                 DeviceDriver.lorawan.uplinkIntervalSeconds.toFloat(),
                 LoraWan.MIN_INTERVAL_SECS.toFloat(),
                 LoraWan.MAX_INTERVAL_SECS.toFloat()
+            )
+        }
+    }
+
+    private fun setInferenceListeners() {
+        binding.inferenceSectionTextView.setOnClickListener {
+            setInferenceSectionState(binding.inferenceThresholdItem.visibility != View.VISIBLE)
+        }
+        binding.inferenceThresholdItem.setOnClickListener {
+            val currentThreshold = DeviceDriver.inference.threshold
+            RangeEditorActivity.openRangeEditor(
+                this,
+                Inference.THRESHOLD,
+                getString(R.string.inference_threshold),
+                currentThreshold.toString(),
+                currentThreshold.toFloat(),
+                Inference.MIN_THRESHOLD.toFloat(),
+                Inference.MAX_THRESHOLD.toFloat()
+            )
+        }
+        binding.inferenceObsWindowItem.setOnClickListener {
+            val currentObsWindow = DeviceDriver.inference.observationWindow
+            RangeEditorActivity.openRangeEditor(
+                this,
+                Inference.OBS_WINDOW_SECS,
+                getString(R.string.inference_observation_window),
+                currentObsWindow.toString(),
+                currentObsWindow.toFloat(),
+                Inference.MIN_OBS_WINDOW_SECS.toFloat(),
+                Inference.MAX_OBS_WINDOW_SECS.toFloat()
+            )
+        }
+        binding.inferenceReqDetectionsItem.setOnClickListener {
+            val currentReqDetections = DeviceDriver.inference.requiredDetections
+            RangeEditorActivity.openRangeEditor(
+                this,
+                Inference.REQ_DETECTIONS,
+                getString(R.string.inference_required_detections),
+                currentReqDetections.toString(),
+                currentReqDetections.toFloat(),
+                Inference.MIN_DETECTIONS.toFloat(),
+                Inference.MAX_DETECTIONS.toFloat()
             )
         }
     }
@@ -557,6 +607,28 @@ class DeviceSettingsActivity : ThemableActivity() {
             ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
         }
         binding.lorawanSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
+            null,
+            null,
+            icon,
+            null
+        )
+    }
+
+    private fun setInferenceSectionState(expanded: Boolean) {
+        val state = if (expanded) View.VISIBLE else View.GONE
+        binding.inferenceSection.children.forEach { child ->
+            if (child == binding.inferenceSectionTextView) {
+                return@forEach
+            }
+            child.visibility = state
+        }
+
+        val icon = if (expanded) {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
+        } else {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
+        }
+        binding.inferenceSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
             null,
             null,
             icon,

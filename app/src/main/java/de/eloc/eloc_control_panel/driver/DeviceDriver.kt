@@ -68,13 +68,18 @@ internal const val KEY_LORAWAN_ENABLE = "loraEnable"
 internal const val KEY_LORAWAN_UPLINK_INTERVAL = "upLinkIntervalS"
 internal const val KEY_LORAWAN_REGION = "loraRegion"
 
+private const val KEY_INFERENCE = "inference"
+internal const val KEY_INFERENCE_THRESHOLD = "inference_threshold"
+internal const val KEY_INFERENCE_OBS_WINDOW_SECS = "observationWindowS"
+internal const val KEY_INFERENCE_REQ_DETECTIONS = "requiredDetections"
+
 private const val KEY_CONFIG = "config"
 private const val KEY_LOCATION_CODE = "locationCode"
 private const val PATH_SEPARATOR = JsonHelper.PATH_SEPARATOR
 
 private const val KEY_INTRUDER_CONFIG = "intruderCfg"
 internal const val KEY_INTRUDER_ENABLED = "enable"
-internal const val KEY_INTRUDER_THRESHOLD = "threshold"
+internal const val KEY_INTRUDER_THRESHOLD = "intruder_threshold"
 internal const val KEY_INTRUDER_WINDOWS_MS = "windowsMs"
 
 internal const val KEY_BT_ENABLE_DURING_RECORD = "bluetoothEnableDuringRecord"
@@ -158,6 +163,7 @@ object DeviceDriver {
     val general = General()
     val session = Session()
     val lorawan = LoraWan()
+    val inference = Inference()
 
     private var executor: ScheduledExecutorService? = null
     private var bluetoothListener: ScheduledExecutorService? = null
@@ -888,7 +894,7 @@ object DeviceDriver {
         intruder.enabled = JsonHelper.getJSONBooleanAttribute(intruderEnabledPath, jsonObject)
 
         val intruderThresholdPath =
-            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_THRESHOLD"
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_CONFIG${PATH_SEPARATOR}threshold"
         intruder.threshold =
             JsonHelper.getJSONNumberAttribute(intruderThresholdPath, jsonObject).toInt()
 
@@ -967,6 +973,20 @@ object DeviceDriver {
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_BATTERY$PATH_SEPARATOR$KEY_BATTERY_NO_BAT_MODE"
         battery.noBatteryMode = JsonHelper.getJSONBooleanAttribute(batteryNoBatModePath, jsonObject)
 
+        val inferenceThresholdPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_INFERENCE${PATH_SEPARATOR}threshold"
+        inference.threshold =
+            JsonHelper.getJSONNumberAttribute(inferenceThresholdPath, jsonObject).toInt()
+
+        val inferenceObsWindowPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_INFERENCE$PATH_SEPARATOR$KEY_INFERENCE_OBS_WINDOW_SECS"
+        inference.observationWindow =
+            JsonHelper.getJSONNumberAttribute(inferenceObsWindowPath, jsonObject).toInt()
+
+        val inferenceReqDetectionsPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_INFERENCE$PATH_SEPARATOR$KEY_INFERENCE_REQ_DETECTIONS"
+        inference.requiredDetections =
+            JsonHelper.getJSONNumberAttribute(inferenceReqDetectionsPath, jsonObject).toInt()
 
         val lorawanEnabledPath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_LORAWAN$PATH_SEPARATOR$KEY_LORAWAN_ENABLE"
@@ -974,14 +994,12 @@ object DeviceDriver {
 
         val lorawanUplinkIntervalPath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_LORAWAN$PATH_SEPARATOR$KEY_LORAWAN_UPLINK_INTERVAL"
-        val uplinkIntervalSeconds =
+        lorawan.uplinkIntervalSeconds =
             JsonHelper.getJSONNumberAttribute(lorawanUplinkIntervalPath, jsonObject).toInt()
-        lorawan.setUplinkInterval(uplinkIntervalSeconds)
 
         val lorawanRegionPath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_LORAWAN$PATH_SEPARATOR$KEY_LORAWAN_REGION"
-        val region = JsonHelper.getJSONStringAttribute(lorawanRegionPath, jsonObject)
-        lorawan.setRegion(region)
+        lorawan.region = JsonHelper.getJSONStringAttribute(lorawanRegionPath, jsonObject)
     }
 
     private fun parseStatus(jsonObject: JSONObject) {

@@ -21,9 +21,51 @@ import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOkBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOptionBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
+import de.eloc.eloc_control_panel.driver.LoraWan.Companion.MAX_INTERVAL_SECS
+import de.eloc.eloc_control_panel.driver.LoraWan.Companion.MIN_INTERVAL_SECS
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.system.exitProcess
+import androidx.core.net.toUri
+
+const val DAY_SECONDS = 86400
+private const val HOUR_SECONDS = 3600
+
+fun prettifyTime(seconds: Int): String {
+    val s = if (seconds < MIN_INTERVAL_SECS) {
+        MIN_INTERVAL_SECS
+    } else if (seconds > MAX_INTERVAL_SECS) {
+        MAX_INTERVAL_SECS
+    } else {
+        seconds
+    }
+    val doubleSeconds = s.toDouble()
+    val days = (doubleSeconds / DAY_SECONDS).toInt()
+    val hours = ((doubleSeconds % DAY_SECONDS) / HOUR_SECONDS).toInt()
+    val mins = ((doubleSeconds % HOUR_SECONDS) / 60.0).toInt()
+    val secs = (doubleSeconds % 60.0).toInt()
+    val prettyDays = if (days > 0) "${days}d" else ""
+    val prettyHours = if (prettyDays.isEmpty() && (hours <= 0)) {
+        ""
+    } else if (hours <= 9) {
+        "0${hours}h"
+    } else {
+        "${hours}h"
+    }
+    val prettyMins = if (prettyHours.isEmpty() && (mins <= 0)) {
+        ""
+    } else if (mins <= 9) {
+        "0${mins}m"
+    } else {
+        "${mins}m"
+    }
+    val prettySecs = if (secs <= 0) {
+        "0${secs}s"
+    } else {
+        "${secs}s"
+    }
+    return "$prettyDays $prettyHours $prettyMins $prettySecs".trim()
+}
 
 fun formatNumber(
     number: Int,
@@ -51,7 +93,7 @@ fun AppCompatActivity.openUrl(address: String) {
     // be sure you are using the contect from an Activity.
     try {
         val intent = Intent(Intent.ACTION_VIEW)
-        intent.data = Uri.parse(address)
+        intent.data = address.toUri()
         startActivity(intent)
     } catch (_: Exception) {
     }

@@ -261,10 +261,10 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_marginVertical="24dp"
                     android:id="@+id/lorawan_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginVertical="24dp"
                     android:orientation="vertical">
 
                     <TextView
@@ -319,9 +319,67 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/inference_section"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/inference_section_text_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:background="?selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:text="@string/inference"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        app:drawableEndCompat="@drawable/keyboard_arrow_down" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/inference_threshold_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/threshold" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/inference_obs_window_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/observation_window"
+                        tools:valueText="4" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/inference_req_detections_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/required_detections"
+                        tools:valueText="4354" />
+                </LinearLayout>
+
+                <LinearLayout
                     android:id="@+id/bt_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginVertical="24dp"
                     android:orientation="vertical">
 
                     <TextView
@@ -389,7 +447,6 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_marginVertical="24dp"
                     android:id="@+id/cpu_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -450,6 +507,7 @@
                     android:id="@+id/battery_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginVertical="24dp"
                     android:orientation="vertical">
 
                     <TextView
@@ -519,7 +577,6 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_marginVertical="24dp"
                     android:id="@+id/log_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -595,6 +652,7 @@
                     android:id="@+id/advanced_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginVertical="24dp"
                     android:orientation="vertical">
 
                     <TextView
