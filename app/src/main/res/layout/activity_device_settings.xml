@@ -204,13 +204,13 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:id="@+id/intruder_section"
+                    android:id="@+id/intruder2_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/intruder_section_text_view"
+                        android:id="@+id/intruder2_section_text_view"
                         android:layout_width="match_parent"
                         android:layout_height="36dp"
                         android:background="?selectableItemBackground"
@@ -222,7 +222,7 @@
                         app:drawableEndCompat="@drawable/keyboard_arrow_down" />
 
                     <de.eloc.eloc_control_panel.widgets.ListItem
-                        android:id="@+id/intruder_enable_item"
+                        android:id="@+id/intruder2_enable_item"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:indent="16dp"
@@ -236,7 +236,7 @@
                         android:layout_marginStart="16dp" />
 
                     <de.eloc.eloc_control_panel.widgets.ListItem
-                        android:id="@+id/intruder_threshold_item"
+                        android:id="@+id/intruder2_threshold_item"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:indent="16dp"
@@ -251,7 +251,7 @@
                         android:layout_marginStart="16dp" />
 
                     <de.eloc.eloc_control_panel.widgets.ListItem
-                        android:id="@+id/intruder_windows_ms_item"
+                        android:id="@+id/intruder2_windows_ms_item"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:indent="16dp"
@@ -261,10 +261,67 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:layout_marginVertical="24dp"
+                    android:id="@+id/lorawan_section"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/lorawan_section_text_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:background="?selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:text="@string/lorawan"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        app:drawableEndCompat="@drawable/keyboard_arrow_down" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/lorawan_enable_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="toggle"
+                        app:keyText="@string/enabled" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/lorawan_uplink_interval_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/uplink_interval"
+                        tools:valueText="4" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/lorawan_region_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/region"
+                        tools:valueText="4354" />
+                </LinearLayout>
+
+                <LinearLayout
                     android:id="@+id/bt_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginVertical="24dp"
                     android:orientation="vertical">
 
                     <TextView
@@ -332,6 +389,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:layout_marginVertical="24dp"
                     android:id="@+id/cpu_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -392,7 +450,6 @@
                     android:id="@+id/battery_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginVertical="24dp"
                     android:orientation="vertical">
 
                     <TextView
@@ -462,6 +519,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:layout_marginVertical="24dp"
                     android:id="@+id/log_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -537,7 +595,6 @@
                     android:id="@+id/advanced_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginVertical="24dp"
                     android:orientation="vertical">
 
                     <TextView

@@ -22,6 +22,9 @@ import de.eloc.eloc_control_panel.driver.KEY_LOGS_FILENAME
 import de.eloc.eloc_control_panel.driver.KEY_LOGS_LOG_TO_SD_CARD
 import de.eloc.eloc_control_panel.driver.KEY_LOGS_MAX_FILES
 import de.eloc.eloc_control_panel.driver.KEY_LOGS_MAX_FILE_SIZE
+import de.eloc.eloc_control_panel.driver.KEY_LORAWAN_ENABLE
+import de.eloc.eloc_control_panel.driver.KEY_LORAWAN_REGION
+import de.eloc.eloc_control_panel.driver.KEY_LORAWAN_UPLINK_INTERVAL
 import de.eloc.eloc_control_panel.driver.KEY_MICROPHONE_APPLL
 import de.eloc.eloc_control_panel.driver.KEY_MICROPHONE_CHANNEL
 import de.eloc.eloc_control_panel.driver.KEY_MICROPHONE_SAMPLE_RATE
@@ -45,7 +48,7 @@ class CommandParameter {
     companion object {
         fun from(raw: String): CommandParameter? {
             val data = raw.trim()
-            var result : CommandParameter? = null
+            var result: CommandParameter? = null
             // First try to get bools
             if (data.lowercase() == "true") {
                 result = CommandParameter(true)
@@ -61,7 +64,7 @@ class CommandParameter {
                 } else {
                     // .. then integers
                     val intValue = data.toLongOrNull()
-                    if(intValue != null) {
+                    if (intValue != null) {
                         result = CommandParameter(intValue)
                     } else {
                         // .. finally strings
@@ -69,7 +72,7 @@ class CommandParameter {
                         // potentially have them. Check for those characters!
                         val hasForbiddenChars = (data.contains("#") || (data.contains("=")))
                         if (!hasForbiddenChars) {
-                            result =  CommandParameter(data)
+                            result = CommandParameter(data)
                         }
                     }
                 }
@@ -203,6 +206,28 @@ class Command(
                     } else {
                         """setConfig#cfg={"mic":{"MicUseAPLL":$enabled}}"""
                     }
+                }
+
+                KEY_LORAWAN_ENABLE -> {
+                    val enabled = propertyValue.lowercase().toBooleanStrictOrNull()
+                    if (enabled == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"lorawan":{"loraEnable":$enabled}}}"""
+                    }
+                }
+
+                KEY_LORAWAN_UPLINK_INTERVAL -> {
+                    val interval = propertyValue.toDoubleOrNull()?.toInt()
+                    if (interval == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"lorawan":{"upLinkIntervalS":$interval}}}"""
+                    }
+                }
+
+                KEY_LORAWAN_REGION -> {
+                    """setConfig#cfg={"config":{"lorawan":{"loraRegion":"$propertyValue"}}}"""
                 }
 
                 KEY_INTRUDER_ENABLED -> {
@@ -371,7 +396,10 @@ class Command(
             commandCreatedCallback(command)
         }
 
-        fun createSetRecordModeCommand(state: RecordState, completionTask: (String) -> Unit): Command? {
+        fun createSetRecordModeCommand(
+            state: RecordState,
+            completionTask: (String) -> Unit
+        ): Command? {
             val mode = when (state) {
                 RecordState.RecordOffDetectOff -> "recordOff_detectOff"
                 RecordState.RecordOnDetectOff -> "recordOn_detectOff"

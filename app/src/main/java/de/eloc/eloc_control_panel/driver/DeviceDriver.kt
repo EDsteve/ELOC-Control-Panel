@@ -63,6 +63,11 @@ internal const val KEY_MICROPHONE_CHANNEL = "MicChannel"
 internal const val KEY_MICROPHONE_APPLL = "MicUseAPLL"
 internal const val KEY_MICROPHONE_VOLUME_POWER = "MicVolume2_pwr"
 
+private const val KEY_LORAWAN = "lorawan"
+internal const val KEY_LORAWAN_ENABLE = "loraEnable"
+internal const val KEY_LORAWAN_UPLINK_INTERVAL = "upLinkIntervalS"
+internal const val KEY_LORAWAN_REGION = "loraRegion"
+
 private const val KEY_CONFIG = "config"
 private const val KEY_LOCATION_CODE = "locationCode"
 private const val PATH_SEPARATOR = JsonHelper.PATH_SEPARATOR
@@ -152,6 +157,7 @@ object DeviceDriver {
     val sdCard = SdCard()
     val general = General()
     val session = Session()
+    val lorawan = LoraWan()
 
     private var executor: ScheduledExecutorService? = null
     private var bluetoothListener: ScheduledExecutorService? = null
@@ -405,7 +411,11 @@ object DeviceDriver {
         }
 
     @SuppressLint("MissingPermission")
-    fun connect(deviceAddress: String, callback: ((String?) -> Unit)? = null, onError: ((String) -> Unit)? = null) {
+    fun connect(
+        deviceAddress: String,
+        callback: ((String?) -> Unit)? = null,
+        onError: ((String) -> Unit)? = null
+    ) {
         connecting = true
         var hadError = false
         try {
@@ -956,6 +966,22 @@ object DeviceDriver {
         val batteryNoBatModePath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_BATTERY$PATH_SEPARATOR$KEY_BATTERY_NO_BAT_MODE"
         battery.noBatteryMode = JsonHelper.getJSONBooleanAttribute(batteryNoBatModePath, jsonObject)
+
+
+        val lorawanEnabledPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_LORAWAN$PATH_SEPARATOR$KEY_LORAWAN_ENABLE"
+        lorawan.enabled = JsonHelper.getJSONBooleanAttribute(lorawanEnabledPath, jsonObject)
+
+        val lorawanUplinkIntervalPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_LORAWAN$PATH_SEPARATOR$KEY_LORAWAN_UPLINK_INTERVAL"
+        val uplinkIntervalSeconds =
+            JsonHelper.getJSONNumberAttribute(lorawanUplinkIntervalPath, jsonObject).toInt()
+        lorawan.setUplinkInterval(uplinkIntervalSeconds)
+
+        val lorawanRegionPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_LORAWAN$PATH_SEPARATOR$KEY_LORAWAN_REGION"
+        val region = JsonHelper.getJSONStringAttribute(lorawanRegionPath, jsonObject)
+        lorawan.setRegion(region)
     }
 
     private fun parseStatus(jsonObject: JSONObject) {

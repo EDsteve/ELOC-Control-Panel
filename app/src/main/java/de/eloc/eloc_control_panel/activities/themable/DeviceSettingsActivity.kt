@@ -30,6 +30,7 @@ import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.RangeEditorActivity
 import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.data.ConnectionStatus
+import de.eloc.eloc_control_panel.driver.LoraWan
 
 class DeviceSettingsActivity : ThemableActivity() {
     companion object {
@@ -53,7 +54,8 @@ class DeviceSettingsActivity : ThemableActivity() {
         val showMicrophoneSection = extras?.getBoolean(EXTRA_SHOW_RECORDER, false) ?: false
 
         setMicrophoneSectionState(showMicrophoneSection)
-        setIntruderSectionState(false)
+        setIntruder2SectionState(false)
+        setLorawanSectionState(false)
         setBluetoothSectionState(false)
         setLogsSectionState(false)
         setCpuSectionState(false)
@@ -94,11 +96,17 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding.microphoneSampleRateItem.valueText = DeviceDriver.microphone.sampleRate.toString()
         binding.microphoneUseApllItem.setSwitch(DeviceDriver.microphone.useAPLL)
 
-        binding.intruderEnableItem.setSwitch(DeviceDriver.intruder.enabled)
-        binding.intruderThresholdItem.valueText = DeviceDriver.intruder.threshold.toString()
-        binding.intruderWindowsMsItem.valueText = DeviceDriver.intruder.windowsMs.toString()
+        binding.intruder2EnableItem.setSwitch(DeviceDriver.intruder.enabled)
+        binding.intruder2ThresholdItem.valueText = DeviceDriver.intruder.threshold.toString()
+        binding.intruder2WindowsMsItem.valueText = DeviceDriver.intruder.windowsMs.toString()
 
         val secs = " secs"
+        binding.lorawanEnableItem.setSwitch(DeviceDriver.lorawan.enabled)
+        binding.lorawanUplinkIntervalItem.valueText =
+            formatNumber(DeviceDriver.lorawan.uplinkIntervalSeconds, secs, 0)
+        binding.lorawanRegionItem.valueText = DeviceDriver.lorawan.region
+
+
         binding.btEnableAtStartItem.setSwitch(DeviceDriver.bluetooth.enableAtStart)
         binding.btEnableOnTappingItem.setSwitch(DeviceDriver.bluetooth.enableOnTapping)
         binding.btEnableDuringRecordingItem.setSwitch(DeviceDriver.bluetooth.enableDuringRecord)
@@ -134,7 +142,8 @@ class DeviceSettingsActivity : ThemableActivity() {
         setGeneralListeners()
         setCpuListeners()
         setLogsListeners()
-        setIntruderListeners()
+        setIntruder2Listeners()
+        setLorawanListeners()
         setBtListeners()
         setMicrophoneListeners()
         setAdvancedListeners()
@@ -320,12 +329,50 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
     }
 
-    private fun setIntruderListeners() {
-        binding.intruderSectionTextView.setOnClickListener {
-            setIntruderSectionState(binding.intruderEnableItem.visibility != View.VISIBLE)
+    private fun setLorawanListeners() {
+        binding.lorawanSectionTextView.setOnClickListener {
+            setLorawanSectionState(binding.lorawanEnableItem.visibility != View.VISIBLE)
         }
-        binding.intruderEnableItem.setSwitchClickedListener {
-            val checked = binding.intruderEnableItem.isChecked
+        binding.lorawanEnableItem.setSwitchClickedListener {
+            val checked = binding.lorawanEnableItem.isChecked
+            Command.createSetConfigPropertyCommand(
+                LoraWan.ENABLED,
+                checked.toString(),
+                ::runCommand,
+                {
+                    showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+                },
+            ) { refresh() }
+        }
+        binding.lorawanRegionItem.setOnClickListener {
+            openTextEditor(
+                LoraWan.REGION,
+                getString(R.string.region),
+                DeviceDriver.lorawan.region,
+            )
+        }
+        binding.lorawanUplinkIntervalItem.setOnClickListener {
+            val prettyCurrentInterval =
+                LoraWan.prettifyTime(DeviceDriver.lorawan.uplinkIntervalSeconds)
+            val currentInterval = DeviceDriver.lorawan.uplinkIntervalSeconds
+            RangeEditorActivity.openRangeEditor(
+                this,
+                LoraWan.UPLINK_INTERVAL,
+                getString(R.string.uplink_interval),
+                "$currentInterval ($prettyCurrentInterval)",
+                DeviceDriver.lorawan.uplinkIntervalSeconds.toFloat(),
+                LoraWan.MIN_INTERVAL_SECS.toFloat(),
+                LoraWan.MAX_INTERVAL_SECS.toFloat()
+            )
+        }
+    }
+
+    private fun setIntruder2Listeners() {
+        binding.intruder2SectionTextView.setOnClickListener {
+            setIntruder2SectionState(binding.intruder2EnableItem.visibility != View.VISIBLE)
+        }
+        binding.intruder2EnableItem.setSwitchClickedListener {
+            val checked = binding.intruder2EnableItem.isChecked
             Command.createSetConfigPropertyCommand(
                 Intruder.ENABLED,
                 checked.toString(),
@@ -335,7 +382,7 @@ class DeviceSettingsActivity : ThemableActivity() {
                 },
             ) { refresh() }
         }
-        binding.intruderThresholdItem.setOnClickListener {
+        binding.intruder2ThresholdItem.setOnClickListener {
             openTextEditor(
                 Intruder.THRESHOLD,
                 getString(R.string.intruder_threshold),
@@ -343,7 +390,7 @@ class DeviceSettingsActivity : ThemableActivity() {
                 true,
             )
         }
-        binding.intruderWindowsMsItem.setOnClickListener {
+        binding.intruder2WindowsMsItem.setOnClickListener {
             openTextEditor(
                 Intruder.WINDOWS_MS,
                 getString(R.string.intruder_windows_ms),
@@ -495,10 +542,10 @@ class DeviceSettingsActivity : ThemableActivity() {
         startActivity(intent)
     }
 
-    private fun setIntruderSectionState(expanded: Boolean) {
+    private fun setLorawanSectionState(expanded: Boolean) {
         val state = if (expanded) View.VISIBLE else View.GONE
-        binding.intruderSection.children.forEach { child ->
-            if (child == binding.intruderSectionTextView) {
+        binding.lorawanSection.children.forEach { child ->
+            if (child == binding.lorawanSectionTextView) {
                 return@forEach
             }
             child.visibility = state
@@ -509,7 +556,29 @@ class DeviceSettingsActivity : ThemableActivity() {
         } else {
             ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
         }
-        binding.intruderSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
+        binding.lorawanSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
+            null,
+            null,
+            icon,
+            null
+        )
+    }
+
+    private fun setIntruder2SectionState(expanded: Boolean) {
+        val state = if (expanded) View.VISIBLE else View.GONE
+        binding.intruder2Section.children.forEach { child ->
+            if (child == binding.intruder2SectionTextView) {
+                return@forEach
+            }
+            child.visibility = state
+        }
+
+        val icon = if (expanded) {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
+        } else {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
+        }
+        binding.intruder2SectionTextView.setCompoundDrawablesWithIntrinsicBounds(
             null,
             null,
             icon,

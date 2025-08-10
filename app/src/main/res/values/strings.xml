@@ -246,4 +246,9 @@
     <string name="gps_location_timeout">GPS location timeout</string>
     <string name="diagnostics">Diagnostics</string>
     <string name="log_bt_traffic_in_logcat">Log BT traffic in logcat</string>
+    <string name="lorawan">LoraWAN</string>
+    <string name="region">Region</string>
+    <string name="uplink_interval">Uplink Interval</string>
+    <string name="increment">Increment</string>
+    <string name="decrement">Decrement</string>
 </resources>

@@ -11,6 +11,8 @@ import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.data.MicrophoneVolumePower
 import de.eloc.eloc_control_panel.databinding.ActivityEditorRangeBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
+import de.eloc.eloc_control_panel.driver.LoraWan
+import de.eloc.eloc_control_panel.driver.Microphone
 
 class RangeEditorActivity : BaseEditorActivity() {
     private lateinit var binding: ActivityEditorRangeBinding
@@ -45,22 +47,39 @@ class RangeEditorActivity : BaseEditorActivity() {
 
     override fun applyData() {
         binding.instructionsButton.setOnClickListener { showInstructions() }
-        binding.slider.addOnChangeListener { _, newValue, _ ->
-            binding.newValueTextView.text = MicrophoneVolumePower(newValue).percentage
-        }
         binding.settingNameTextView.text = getString(R.string.text_editor_setting_name, settingName)
         binding.currentValueEditText.setText(currentValue)
-        binding.newValueTextView.text = currentValue
+        binding.newValueTextView.text = if (property == LoraWan.UPLINK_INTERVAL) {
+            LoraWan.prettifyTime(rangeCurrentValue!!.toInt())
+        } else {
+            currentValue
+        }
         binding.saveButton.setOnClickListener { save() }
         binding.toolbar.setNavigationOnClickListener { goBack() }
         if ((rangeCurrentValue != null) && (rangeMinimumValue != null) && (rangeMaximumValue != null)) {
             binding.slider.stepSize = 1.0f
             binding.slider.setLabelFormatter { value ->
-                MicrophoneVolumePower(value).percentage
+                if (property == Microphone.VOLUME_POWER) {
+                    MicrophoneVolumePower(value).percentage
+                } else if (property == LoraWan.UPLINK_INTERVAL) {
+                    LoraWan.prettifyTime(value.toInt())
+                } else {
+                    "$value"
+                }
             }
             binding.slider.valueFrom = rangeMinimumValue!!
             binding.slider.valueTo = rangeMaximumValue!!
             binding.slider.value = rangeCurrentValue!!
+
+            binding.slider.addOnChangeListener { _, newValue, _ -> setNewValue(newValue, false) }
+            binding.incrementButton.setOnClickListener {
+                val newValue = binding.slider.value + binding.slider.stepSize
+                setNewValue(newValue, true)
+            }
+            binding.decrementButton.setOnClickListener {
+                val newValue = binding.slider.value - binding.slider.stepSize
+                setNewValue(newValue, true)
+            }
         } else {
             goBack()
         }
@@ -96,6 +115,30 @@ class RangeEditorActivity : BaseEditorActivity() {
                     )
                 }
             }
+        }
+    }
+
+    private fun setNewValue(newValue: Float, fromButton: Boolean) {
+        val min = binding.slider.valueFrom
+        val max = binding.slider.valueTo
+        val sanitizedValue = if (newValue <= min) {
+            min
+        } else if (newValue >= max) {
+            max
+        } else {
+            newValue
+        }
+        if (fromButton) {
+            binding.slider.value = sanitizedValue
+        } else {
+            val text = if (property == Microphone.VOLUME_POWER) {
+                MicrophoneVolumePower(sanitizedValue).percentage
+            } else if (property == LoraWan.UPLINK_INTERVAL) {
+                LoraWan.prettifyTime(sanitizedValue.toInt())
+            } else {
+                sanitizedValue.toInt().toString()
+            }
+            binding.newValueTextView.text = text
         }
     }
 }
