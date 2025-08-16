@@ -21,8 +21,6 @@ import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOkBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOptionBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
-import de.eloc.eloc_control_panel.driver.LoraWan.Companion.MAX_INTERVAL_SECS
-import de.eloc.eloc_control_panel.driver.LoraWan.Companion.MIN_INTERVAL_SECS
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.system.exitProcess
@@ -32,10 +30,8 @@ const val DAY_SECONDS = 86400
 private const val HOUR_SECONDS = 3600
 
 fun prettifyTime(seconds: Int): String {
-    val s = if (seconds < MIN_INTERVAL_SECS) {
-        MIN_INTERVAL_SECS
-    } else if (seconds > MAX_INTERVAL_SECS) {
-        MAX_INTERVAL_SECS
+    val s = if (seconds < 0) {
+        0
     } else {
         seconds
     }
@@ -59,7 +55,7 @@ fun prettifyTime(seconds: Int): String {
     } else {
         "${mins}m"
     }
-    val prettySecs = if (secs <= 0) {
+    val prettySecs = if (secs <= 9) {
         "0${secs}s"
     } else {
         "${secs}s"
@@ -69,9 +65,13 @@ fun prettifyTime(seconds: Int): String {
 
 fun formatNumber(
     number: Int,
-    units: String,
+    singularUnits: String,
+    pluraUnits: String,
     maxFractionDigits: Int = 2
-) = formatNumber(number.toDouble(), units, maxFractionDigits)
+): String {
+    val units = if (number == 1) singularUnits else pluraUnits
+    return formatNumber(number.toDouble(), units, maxFractionDigits)
+}
 
 fun formatNumber(
     number: Double,

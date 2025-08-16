@@ -103,15 +103,16 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding.intruderThresholdItem.valueText = DeviceDriver.intruder.threshold.toString()
         binding.intruderWindowsMsItem.valueText = DeviceDriver.intruder.windowsMs.toString()
 
+        val sec = " sec"
         val secs = " secs"
         binding.lorawanEnableItem.setSwitch(DeviceDriver.lorawan.enabled)
         binding.lorawanUplinkIntervalItem.valueText =
-            formatNumber(DeviceDriver.lorawan.uplinkIntervalSeconds, secs, 0)
+            formatNumber(DeviceDriver.lorawan.uplinkIntervalSeconds, sec, secs, 0)
         binding.lorawanRegionItem.valueText = DeviceDriver.lorawan.region
 
         binding.inferenceThresholdItem.valueText = DeviceDriver.inference.threshold.toString()
         binding.inferenceObsWindowItem.valueText =
-            formatNumber(DeviceDriver.inference.observationWindow, secs, 0)
+            formatNumber(DeviceDriver.inference.observationWindow, sec, secs, 0)
         binding.inferenceReqDetectionsItem.valueText =
             DeviceDriver.inference.requiredDetections.toString()
 
@@ -119,12 +120,14 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding.btEnableOnTappingItem.setSwitch(DeviceDriver.bluetooth.enableOnTapping)
         binding.btEnableDuringRecordingItem.setSwitch(DeviceDriver.bluetooth.enableDuringRecord)
         binding.btOffTimeoutSecondsItem.valueText =
-            formatNumber(DeviceDriver.bluetooth.offTimeoutSeconds, secs, 0)
+            formatNumber(DeviceDriver.bluetooth.offTimeoutSeconds, sec, secs, 0)
 
         val mHz = " MHz"
         binding.cpuEnableLightSleepItem.setSwitch(DeviceDriver.cpu.enableLightSleep)
-        binding.cpuMinFrequencyItem.valueText = formatNumber(DeviceDriver.cpu.minFrequencyMHz, mHz)
-        binding.cpuMaxFrequencyItem.valueText = formatNumber(DeviceDriver.cpu.maxFrequencyMHz, mHz)
+        binding.cpuMinFrequencyItem.valueText =
+            formatNumber(DeviceDriver.cpu.minFrequencyMHz, mHz, mHz)
+        binding.cpuMaxFrequencyItem.valueText =
+            formatNumber(DeviceDriver.cpu.maxFrequencyMHz, mHz, mHz)
 
         binding.logsLogToSdCardItem.setSwitch(DeviceDriver.logs.logToSdCard)
         binding.logsFilenameItem.valueText = DeviceDriver.logs.filename
@@ -393,11 +396,12 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
         binding.inferenceObsWindowItem.setOnClickListener {
             val currentObsWindow = DeviceDriver.inference.observationWindow
+            val prettyCurrentInterval = prettifyTime(currentObsWindow)
             RangeEditorActivity.openRangeEditor(
                 this,
                 Inference.OBS_WINDOW_SECS,
                 getString(R.string.inference_observation_window),
-                currentObsWindow.toString(),
+                "$currentObsWindow ($prettyCurrentInterval)",
                 currentObsWindow.toFloat(),
                 Inference.MIN_OBS_WINDOW_SECS.toFloat(),
                 Inference.MAX_OBS_WINDOW_SECS.toFloat()

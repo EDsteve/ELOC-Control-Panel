@@ -573,7 +573,8 @@ class DeviceActivity : ThemableActivity() {
     private fun updateGpsViews() {
         binding.gpsGauge.updateValue(gpsLocationUpdate?.accuracy?.toDouble() ?: -1.0)
         val accuracy = gpsLocationUpdate?.accuracy ?: -1
-        binding.gpsAccuracyTextView.text = formatNumber(accuracy, "m", 0)
+        val units = "m"
+        binding.gpsAccuracyTextView.text = formatNumber(accuracy, units, units, 0)
         if ((accuracy >= 0) && (accuracy <= 100)) {
             binding.gpsAccuracyTextView.visibility = View.VISIBLE
             binding.gpsNoAccuracyImageView.visibility = View.GONE
