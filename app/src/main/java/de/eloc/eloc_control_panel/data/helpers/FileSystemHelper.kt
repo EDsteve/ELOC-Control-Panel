@@ -25,6 +25,8 @@ object FileSystemHelper {
     const val PREFIX_CONFIG = "config_"
     const val PREFIX_STATUS = "status_"
     const val PREFIX_MAP = "map_"
+    private const val HEADER_MAC = "header_mac"
+    private const val HEADER_DELIMITER = ":"
 
     val pendingUploads: Array<String>
         get() = uploadCache?.list() ?: arrayOf()
@@ -65,7 +67,12 @@ object FileSystemHelper {
             return field
         }
 
-    fun saveDataFile(json: String, uploadType: UploadType, saveTime: Date): Boolean {
+    fun saveDataFile(
+        macAddress: String?,
+        json: String,
+        uploadType: UploadType,
+        saveTime: Date
+    ): Boolean {
         try {
             val dateFormatter = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-z", Locale.US)
             val captureTimestamp = dateFormatter.format(saveTime).replace(":", "")
@@ -86,7 +93,13 @@ object FileSystemHelper {
                 )
             }
             val file = File(uploadCache, fileName)
-            file.writeText(json)
+            val mac = macAddress?.lowercase()?.trim() ?: ""
+            val contents = if (mac.isEmpty()) {
+                json
+            } else {
+                "$HEADER_MAC$HEADER_DELIMITER$mac\n$json".trim()
+            }
+            file.writeText(contents)
             return true
         } catch (_: Exception) {
 
@@ -106,10 +119,47 @@ object FileSystemHelper {
     fun readDataFile(fileName: String): HashMap<String, Any>? {
         val file = File(uploadCache, fileName)
         if (file.exists()) {
-            val json = file.readText()
+            val contents = file.readText()
+            val start = contents.indexOf('{')
+            var json = ""
+            if (start >= 0) {
+                json = contents.substring(start)
+            }
             return parsePayloadMap(json)
         }
         return null
+    }
+
+    fun readMacAddress(fileName: String): String {
+        val file = File(uploadCache, fileName)
+        var macAddress = "<not available>"
+        if (file.exists()) {
+            val contents = file.readText()
+            val end = contents.indexOf('{')
+            var rawHeaders = ""
+            if (end >= 0) {
+                rawHeaders = contents.substring(0, end)
+            }
+            val headerList = rawHeaders.split("\n")
+            for (h in headerList) {
+                val header = h.trim()
+                if (header.startsWith(HEADER_MAC)) {
+                    macAddress = getHeaderValue(header)
+                }
+            }
+        }
+        return macAddress.lowercase()
+    }
+
+    private fun getHeaderValue(header: String): String {
+        val fullHeader = header.trim()
+        var headerValue = ""
+        // Do not use split - the value of the header might contain the value of the delimiter
+        val valueOffset = fullHeader.indexOf(HEADER_DELIMITER)
+        if (valueOffset > 0) {
+            headerValue = fullHeader.substring(valueOffset + HEADER_DELIMITER.length)
+        }
+        return headerValue
     }
 
     fun readMapDataFile(fileName: String): HashMap<String, Any>? =

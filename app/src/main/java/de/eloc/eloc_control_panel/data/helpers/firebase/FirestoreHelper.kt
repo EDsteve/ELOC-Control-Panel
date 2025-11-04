@@ -248,6 +248,7 @@ class FirestoreHelper {
                     continue
                 }
             } else {
+                val macAddress = FileSystemHelper.readMacAddress(fileName)
                 val metadata = fileName
                     .replace(prefix, "")
                     .replace(FileSystemHelper.JSON_EXT, "")
@@ -257,7 +258,8 @@ class FirestoreHelper {
                         "capture_timestamp" to metadata[0],
                         "ranger" to metadata[2],
                         "device_name" to metadata[1],
-                        "upload_timestamp" to FieldValue.serverTimestamp()
+                        "upload_timestamp" to FieldValue.serverTimestamp(),
+                        "mac_address" to macAddress
                     )
                 }
             }

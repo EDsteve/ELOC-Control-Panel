@@ -149,6 +149,7 @@ private const val KEY_LATITUDE = "latitude"
 private const val KEY_LONGITUDE = "longitude"
 private const val KEY_RANGER_NAME = "rangerName"
 private const val KEY_REC_TIME_HOURS = "recTimeHours"
+private const val KEY_MAC_ADDRESS = "macAddress"
 const val KEY_TIMESTAMP = "timestamp"
 
 object DeviceDriver {
@@ -237,6 +238,11 @@ object DeviceDriver {
                 buffer = "<invalid device>"
             }
             return buffer
+        }
+
+    private val macAddress
+        get(): String {
+            return device?.address ?: "<not available>"
         }
 
     private var connectionStatus = ConnectionStatus.Inactive
@@ -636,6 +642,7 @@ object DeviceDriver {
                 if (!statusSaved && cachedStatus.isNotEmpty()) {
                     statusSaved =
                         FileSystemHelper.saveDataFile(
+                            macAddress,
                             cachedStatus,
                             UploadType.Status,
                             now,
@@ -653,6 +660,7 @@ object DeviceDriver {
                 }
                 if (!statusSaved && cachedStatus.isNotEmpty()) {
                     statusSaved = FileSystemHelper.saveDataFile(
+                        macAddress,
                         cachedStatus,
                         UploadType.Status,
                         combinedStatusAndConfigTime!!,
@@ -660,6 +668,7 @@ object DeviceDriver {
                 }
                 if (!configSaved && cachedConfig.isNotEmpty()) {
                     configSaved = FileSystemHelper.saveDataFile(
+                        macAddress,
                         cachedConfig,
                         UploadType.Config,
                         combinedStatusAndConfigTime!!,
@@ -678,6 +687,7 @@ object DeviceDriver {
                         val rangerName = Preferences.rangerName
                         val recTime = general.recHoursSinceBoot
                         val timestamp = System.currentTimeMillis()
+
                         var locationData = """{
                             "$KEY_BATTERY_VOLTS": $batteryVolts,
                             "$KEY_GPS_ACCURACY_METERS": $gpsAccuracy,
@@ -685,7 +695,8 @@ object DeviceDriver {
                             "$KEY_LONGITUDE": $longitude,
                             "$KEY_RANGER_NAME": "$rangerName",
                             "$KEY_REC_TIME_HOURS": $recTime,
-                            "$KEY_TIMESTAMP": $timestamp
+                            "$KEY_TIMESTAMP": $timestamp,
+                            "$KEY_MAC_ADDRESS": "$macAddress"
                             }"""
                         val doubleSpace = "  "
                         val singleSpace = " "
@@ -693,6 +704,7 @@ object DeviceDriver {
                             locationData = locationData.replace(doubleSpace, singleSpace)
                         }
                         FileSystemHelper.saveDataFile(
+                            null,
                             locationData,
                             UploadType.Map,
                             combinedStatusAndConfigTime!!
