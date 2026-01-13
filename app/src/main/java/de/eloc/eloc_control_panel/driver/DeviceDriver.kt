@@ -154,6 +154,10 @@ const val KEY_TIMESTAMP = "timestamp"
 
 object DeviceDriver {
 
+    private var bondingInProgress = false
+    private var pendingConnectionCallback: ((String?) -> Unit)? = null
+    private var pendingConnectionErrorCallback: ((String) -> Unit)? = null
+
     val microphone = Microphone()
     val intruder = Intruder()
     val logs = Logs()
@@ -197,6 +201,52 @@ object DeviceDriver {
         override fun onReceive(context: Context, intent: Intent) {
             // disconnect now, else would be queued until UI re-attached
             disconnect()
+        }
+    }
+
+    private val bondStateReceiver = object : BroadcastReceiver() {
+        @SuppressLint("MissingPermission")
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == BluetoothDevice.ACTION_BOND_STATE_CHANGED) {
+                val bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.BOND_NONE)
+                val previousBondState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, BluetoothDevice.BOND_NONE)
+                val bondedDevice = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+
+                // Only handle bonding for our target device
+                if (bondedDevice?.address != device?.address) {
+                    return
+                }
+
+                when (bondState) {
+                    BluetoothDevice.BOND_BONDED -> {
+                        // Bonding succeeded, proceed with connection
+                        bondingInProgress = false
+                        try {
+                            App.instance.unregisterReceiver(this)
+                        } catch (_: Exception) {
+                        }
+                        pendingConnectionCallback?.invoke(null)
+                        pendingConnectionCallback = null
+                        pendingConnectionErrorCallback = null
+                        BluetoothHelper.stopScan({ proceedWithConnection() }, null)
+                    }
+                    BluetoothDevice.BOND_NONE -> {
+                        // Bonding failed or was cancelled
+                        if (previousBondState == BluetoothDevice.BOND_BONDING) {
+                            bondingInProgress = false
+                            try {
+                                App.instance.unregisterReceiver(this)
+                            } catch (_: Exception) {
+                            }
+                            val errorMessage = "Pairing was cancelled or failed. Please try again."
+                            pendingConnectionErrorCallback?.invoke(errorMessage)
+                            pendingConnectionCallback = null
+                            pendingConnectionErrorCallback = null
+                            disconnect()
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -258,6 +308,7 @@ object DeviceDriver {
     fun disconnect() {
         disconnecting = true
         greeted = false
+        bondingInProgress = false
 
         // Cancels pending tasks in queue
         processingCommandList = false
@@ -282,6 +333,12 @@ object DeviceDriver {
             App.instance.unregisterReceiver(disconnectBroadcastReceiver)
         } catch (_: Exception) {
         }
+        try {
+            App.instance.unregisterReceiver(bondStateReceiver)
+        } catch (_: Exception) {
+        }
+        pendingConnectionCallback = null
+        pendingConnectionErrorCallback = null
         connectionStatus = ConnectionStatus.Inactive
         disconnecting = false
     }
@@ -435,6 +492,10 @@ object DeviceDriver {
             connectionStatus = ConnectionStatus.Pending
             device = BluetoothHelper.getDevice(deviceAddress)
 
+            // Store callbacks for potential bonding process
+            pendingConnectionCallback = callback
+            pendingConnectionErrorCallback = onError
+
             // Connection success and most connection errors are returned asynchronously to listener
             try {
                 val filter = IntentFilter(INTENT_ACTION_DISCONNECT)
@@ -450,23 +511,78 @@ object DeviceDriver {
                         filter,
                     )
                 }
-                bluetoothSocket = device?.createRfcommSocketToServiceRecord(BLUETOOTH_SPP)
-                BluetoothHelper.stopScan({ doConnect(onError) }, callback)
+
+                // Check bonding state before attempting connection
+                val bondState = device?.bondState ?: BluetoothDevice.BOND_NONE
+                when (bondState) {
+                    BluetoothDevice.BOND_BONDED -> {
+                        // Device is already paired, proceed with connection
+                        bluetoothSocket = device?.createRfcommSocketToServiceRecord(BLUETOOTH_SPP)
+                        BluetoothHelper.stopScan({ doConnect(onError) }, callback)
+                    }
+                    BluetoothDevice.BOND_BONDING -> {
+                        // Bonding is in progress, wait for it to complete
+                        bondingInProgress = true
+                        registerBondStateReceiver()
+                    }
+                    BluetoothDevice.BOND_NONE -> {
+                        // Device is not paired, initiate bonding
+                        bondingInProgress = true
+                        registerBondStateReceiver()
+                        val bondingStarted = device?.createBond() ?: false
+                        if (!bondingStarted) {
+                            onError?.invoke("Failed to start pairing process. Please try again.")
+                            disconnect()
+                        }
+                    }
+                }
             } catch (_: Exception) {
             }
         } catch (_: Exception) {
             hadError = true
         } finally {
-            connectionStatus =
-                if (bluetoothSocket?.isConnected == true) {
-                    ConnectionStatus.Active
-                } else if (hadError) {
-                    ConnectionStatus.Inactive
-                } else {
-                    ConnectionStatus.Pending
-                }
-            connecting = false
-            BluetoothHelper.scanningSpecificEloc = false
+            if (!bondingInProgress) {
+                connectionStatus =
+                    if (bluetoothSocket?.isConnected == true) {
+                        ConnectionStatus.Active
+                    } else if (hadError) {
+                        ConnectionStatus.Inactive
+                    } else {
+                        ConnectionStatus.Pending
+                    }
+                connecting = false
+                BluetoothHelper.scanningSpecificEloc = false
+            }
+        }
+    }
+
+    private fun registerBondStateReceiver() {
+        try {
+            val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                App.instance.registerReceiver(
+                    bondStateReceiver,
+                    filter,
+                    Context.RECEIVER_NOT_EXPORTED
+                )
+            } else {
+                App.instance.registerReceiver(
+                    bondStateReceiver,
+                    filter
+                )
+            }
+        } catch (_: Exception) {
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun proceedWithConnection() {
+        try {
+            bluetoothSocket = device?.createRfcommSocketToServiceRecord(BLUETOOTH_SPP)
+            doConnect(pendingConnectionErrorCallback)
+        } catch (e: Exception) {
+            pendingConnectionErrorCallback?.invoke("Failed to create socket: ${e.message}")
+            disconnect()
         }
     }
 
