@@ -1,7 +1,7 @@
 # ELOC Control Panel - Active Context
 
 ## Current Work Focus
-Memory Bank initialization - documenting the existing codebase for future development sessions.
+Database upload optimization - reducing unnecessary Firestore uploads when connecting to ELOC devices.
 
 ## Recent Changes
 
@@ -23,6 +23,37 @@ Memory Bank initialization - documenting the existing codebase for future develo
 - Added `registerBondStateReceiver()` and `proceedWithConnection()` helpers
 
 See `BLUETOOTH_PAIRING_FIX.md` for full documentation.
+
+### Database Upload Optimization (February 2026)
+**Issue**: The app was uploading status and config data to Firestore too frequently, filling the database with unnecessary information.
+
+**Previous Behavior**:
+- When connecting to ANY ELOC → uploaded status + config to database
+- When refreshing status page → uploaded status + config to database  
+- When starting recording mode → uploaded status + config, then getStatus again
+
+**Optimized Behavior**:
+- **Connect to idle ELOC**: No database upload (just display in UI)
+- **Connect to recording ELOC**: Upload status only (no config, no location update)
+- **Start recording mode**: Upload status + config with new session ID and location
+- **Refresh status page**: No database upload (just display in UI)
+
+**Key Changes**:
+1. `DeviceDriver.kt` - Removed automatic `getElocInformation()` call from `setRecordState()`
+2. `DeviceActivity.kt` - Modified `onFirstLocationReceived()` to:
+   - If device is recording: Call `getStatus()` for DB upload, then `getElocInformation(null, false)` for UI only
+   - If device is NOT recording: Call `getElocInformation(location, false)` for UI only (no upload)
+3. `DeviceActivity.kt` - Modified `setCommandCompletedCallback` to call `getElocInformation(location, true)` after starting recording mode (uploads to DB)
+
+**Technical Details**:
+- `saveNextInfoResponse` parameter in `getElocInformation()` controls DB uploads:
+  - `true` = save/upload to Firestore
+  - `false` = display in UI only, no upload
+- `saveToDatabase` parameter in `getStatus()` controls DB uploads:
+  - `true` (default) = save/upload status to Firestore
+  - `false` = display in UI only, no upload
+
+**Bug Fix (February 2026)**: Fixed issue where `getStatus` was not uploading when reconnecting to a recording device. The first `getStatus()` call in `showDeviceInfo()` (used just to check recording state) was consuming the upload slot, preventing the second `getStatus()` call in `onFirstLocationReceived()` from uploading. Solution: Added `saveToDatabase` parameter to `getStatus()` function.
 
 ## Next Steps
 

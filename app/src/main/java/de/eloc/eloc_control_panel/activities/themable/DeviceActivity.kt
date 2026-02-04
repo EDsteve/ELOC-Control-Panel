@@ -86,7 +86,12 @@ class DeviceActivity : ThemableActivity() {
                 CommandType.SetRecordMode -> {
                     displayRecordingState()
                     if (success) {
-                        DeviceDriver.getStatus { }
+                        // After starting recording mode, upload full info (status + config) 
+                        // with new session ID and location to database
+                        DeviceDriver.getElocInformation(gpsLocationUpdate, true) {
+                            val commandType = DeviceDriver.getCommandType(it)
+                            checkReceivedInfoType(commandType)
+                        }
                     }
                 }
 
@@ -229,7 +234,8 @@ class DeviceActivity : ThemableActivity() {
                 if (gpsLocationUpdate == null && (!checkingGpsTimeoutCompleted)) {
                     setViewMode(ViewMode.LocationPendingView)
                 } else {
-                    DeviceDriver.getStatus {
+                    // First getStatus call is just to check recording state - don't save to database
+                    DeviceDriver.getStatus(saveToDatabase = false) {
                         runOnUiThread {
                             setViewMode(ViewMode.FetchingDataView)
                             val isRecording = DeviceDriver.session.recordingState.isActive
@@ -273,9 +279,30 @@ class DeviceActivity : ThemableActivity() {
 
     private fun onFirstLocationReceived() {
         setViewMode(ViewMode.FetchingDataView)
-        DeviceDriver.getElocInformation(gpsLocationUpdate, true) {
-            val type = DeviceDriver.getCommandType(it)
-            checkReceivedInfoType(type)
+        
+        // Check if the device is already in an active recording mode
+        val isRecording = DeviceDriver.session.recordingState.isActive
+        
+        if (isRecording) {
+            // Device is already recording - upload status only to database
+            // (no need to update location or config, just get current status)
+            DeviceDriver.getStatus {
+                runOnUiThread {
+                    statusReceived = true
+                    // Also get config for UI display (without saving to database)
+                    DeviceDriver.getElocInformation(null, false) {
+                        val type = DeviceDriver.getCommandType(it)
+                        checkReceivedInfoType(type)
+                    }
+                }
+            }
+        } else {
+            // Device is NOT recording - get info for UI display only, no database upload
+            // (saveNextInfoResponse = false means no upload to database)
+            DeviceDriver.getElocInformation(gpsLocationUpdate, false) {
+                val type = DeviceDriver.getCommandType(it)
+                checkReceivedInfoType(type)
+            }
         }
     }
 

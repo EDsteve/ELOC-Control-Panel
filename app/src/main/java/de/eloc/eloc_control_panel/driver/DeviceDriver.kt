@@ -919,8 +919,14 @@ object DeviceDriver {
         closeSocket()
     }
 
-    fun getStatus(callback: (String) -> Unit) {
-        infoType = InfoType.Status
+    fun getStatus(saveToDatabase: Boolean = true, callback: (String) -> Unit) {
+        if (saveToDatabase) {
+            statusSaved = false  // Reset to allow saving
+            infoType = InfoType.Status
+        } else {
+            statusSaved = true   // Prevent saving
+            infoType = null      // Don't trigger save
+        }
         getElocStatus(callback)
     }
 
@@ -960,7 +966,8 @@ object DeviceDriver {
         if (modeCommand != null) {
             processCommandQueue(modeCommand)
         }
-        getElocInformation(location, true, callback)
+        // Note: getElocInformation() is now called by the caller (DeviceActivity) 
+        // after recording mode is set, to control when database uploads happen
     }
 
     private fun parseConfig(jsonObject: JSONObject) {
