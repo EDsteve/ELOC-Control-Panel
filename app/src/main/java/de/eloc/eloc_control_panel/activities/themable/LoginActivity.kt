@@ -69,6 +69,7 @@ class LoginActivity : ThemableActivity() {
         binding.resetPasswordButton.setOnClickListener {
             openActivity(PasswordResetActivity::class.java)
         }
+        binding.googleSignInButton.setOnClickListener { signInWithGoogle() }
         overrideGoBack {
             goToWelcome()
         }
@@ -101,6 +102,7 @@ class LoginActivity : ThemableActivity() {
             binding.resetPasswordButton.isEnabled = false
             binding.loginButton.isEnabled = false
             binding.registerButton.isEnabled = false
+            binding.googleSignInButton.isEnabled = false
         } else {
             binding.loginProgressIndicator.isEnabled = false
             binding.loginProgressIndicator.visibility = View.GONE
@@ -109,6 +111,7 @@ class LoginActivity : ThemableActivity() {
             binding.resetPasswordButton.isEnabled = true
             binding.loginButton.isEnabled = true
             binding.registerButton.isEnabled = true
+            binding.googleSignInButton.isEnabled = true
         }
     }
 
@@ -137,6 +140,35 @@ class LoginActivity : ThemableActivity() {
             checkAuthState()
         } else {
             showModalAlert(getString(R.string.oops), message)
+        }
+    }
+
+    private fun signInWithGoogle() {
+        updateUI(true)
+        authHelper.signInWithGoogle(this) { signedIn, _, error ->
+            runOnUiThread {
+                updateUI(false)
+                if (signedIn) {
+                    checkAuthStateForGoogleSignIn()
+                } else if (error.isNotEmpty()) {
+                    showModalAlert(getString(R.string.oops), error)
+                }
+            }
+        }
+    }
+
+    private fun checkAuthStateForGoogleSignIn() {
+        // Google accounts are automatically verified
+        if (authHelper.isSignedIn) {
+            FirestoreHelper.instance.hasProfile(authHelper.userId) { profileFound, firebaseUnavailable ->
+                if (firebaseUnavailable) {
+                    updateUI(false)
+                } else {
+                    val target =
+                        if (profileFound) LoadProfileActivity::class.java else ProfileSetupActivity::class.java
+                    openActivity(target, finishTask = true)
+                }
+            }
         }
     }
 }

@@ -1,17 +1,30 @@
 package de.eloc.eloc_control_panel.data.helpers.firebase
 
+import android.content.Context
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.lifecycleScope
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.openActivity
 import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
 import de.eloc.eloc_control_panel.activities.themable.WelcomeActivity
 import de.eloc.eloc_control_panel.data.util.Preferences
+import de.eloc.eloc_control_panel.interfaces.GoogleSignInCallback
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -182,5 +195,73 @@ class AuthHelper {
                 callback(it.isSuccessful)
             }
         }
+    }
+
+    fun signInWithGoogle(activity: ThemableActivity, callback: GoogleSignInCallback) {
+        val webClientId = App.instance.getString(R.string.web_client_id)
+        
+        val googleIdOption = GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(false)
+            .setServerClientId(webClientId)
+            .setAutoSelectEnabled(true)
+            .build()
+
+        val request = GetCredentialRequest.Builder()
+            .addCredentialOption(googleIdOption)
+            .build()
+
+        val credentialManager = CredentialManager.create(activity)
+
+        activity.lifecycleScope.launch {
+            try {
+                val result = credentialManager.getCredential(
+                    request = request,
+                    context = activity
+                )
+                handleGoogleSignInResult(result, callback)
+            } catch (e: GetCredentialCancellationException) {
+                callback.handler(false, false, App.instance.getString(R.string.google_sign_in_cancelled))
+            } catch (e: NoCredentialException) {
+                callback.handler(false, false, App.instance.getString(R.string.no_google_accounts_found))
+            } catch (e: GetCredentialException) {
+                callback.handler(false, false, e.message ?: App.instance.getString(R.string.google_sign_in_failed))
+            }
+        }
+    }
+
+    private fun handleGoogleSignInResult(result: GetCredentialResponse, callback: GoogleSignInCallback) {
+        val credential = result.credential
+
+        when (credential) {
+            is CustomCredential -> {
+                if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                    try {
+                        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                        val idToken = googleIdTokenCredential.idToken
+                        firebaseAuthWithGoogle(idToken, callback)
+                    } catch (e: GoogleIdTokenParsingException) {
+                        callback.handler(false, false, App.instance.getString(R.string.invalid_token_credential))
+                    }
+                } else {
+                    callback.handler(false, false, App.instance.getString(R.string.invalid_credential_type))
+                }
+            }
+            else -> {
+                callback.handler(false, false, App.instance.getString(R.string.invalid_credential_type))
+            }
+        }
+    }
+
+    private fun firebaseAuthWithGoogle(idToken: String, callback: GoogleSignInCallback) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        FirebaseAuth.getInstance().signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    callback.handler(true, false, "")
+                } else {
+                    val errorMessage = task.exception?.message ?: App.instance.getString(R.string.google_sign_in_failed)
+                    callback.handler(false, false, errorMessage)
+                }
+            }
     }
 }

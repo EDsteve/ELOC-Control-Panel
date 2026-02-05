@@ -1,7 +1,7 @@
 # ELOC Control Panel - Active Context
 
 ## Current Work Focus
-Database upload optimization - reducing unnecessary Firestore uploads when connecting to ELOC devices.
+Google Sign-In implementation - completed reimplementation of Google Sign-In using the modern Credential Manager API.
 
 ## Recent Changes
 
@@ -54,6 +54,29 @@ See `BLUETOOTH_PAIRING_FIX.md` for full documentation.
   - `false` = display in UI only, no upload
 
 **Bug Fix (February 2026)**: Fixed issue where `getStatus` was not uploading when reconnecting to a recording device. The first `getStatus()` call in `showDeviceInfo()` (used just to check recording state) was consuming the upload slot, preventing the second `getStatus()` call in `onFirstLocationReceived()` from uploading. Solution: Added `saveToDatabase` parameter to `getStatus()` function.
+
+### Google Sign-In Implementation (February 2026)
+**Issue**: Google Sign-In option was planned but never implemented.
+
+**Solution**: Implemented Google Sign-In using the modern Credential Manager API.
+
+**Key Changes**:
+1. `AuthHelper.kt` - Added `signInWithGoogle()`, `handleGoogleSignInResult()`, and `firebaseAuthWithGoogle()` methods
+2. `activity_login.xml` - Added "Sign in with Google" button with Material Design styling
+3. `activity_register.xml` - Added "Sign in with Google" button
+4. `LoginActivity.kt` - Added Google Sign-In handler with `signInWithGoogle()` method
+5. `RegisterActivity.kt` - Added Google Sign-In handler
+6. `strings.xml` - Added `sign_in_with_google`, `google_sign_in_failed`, `google_sign_in_cancelled`, `web_client_id` strings
+
+**Technical Details**:
+- Uses `CredentialManager` API with `GetGoogleIdOption`
+- Authenticates with Firebase using `GoogleAuthProvider.getCredential(idToken)`
+- Google accounts are automatically verified (skip email verification flow)
+- Web Client ID from Firebase: `773327231765-igglaupgt12mct4ii7kiil5ktda2nqfd.apps.googleusercontent.com`
+
+**Configuration Required**:
+- Debug SHA-1 fingerprint must be added to Firebase project settings
+- SHA-1 for current debug keystore: `74:FD:1E:8A:FA:90:12:7F:4B:D8:C9:06:F0:35:83:CE:AB:E1:BA:04`
 
 ## Next Steps
 

@@ -8,7 +8,9 @@ import de.eloc.eloc_control_panel.activities.hideKeyboard
 import de.eloc.eloc_control_panel.activities.openActivity
 import de.eloc.eloc_control_panel.activities.overrideGoBack
 import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.activities.themable.media.ProfileSetupActivity
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
+import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import de.eloc.eloc_control_panel.databinding.ActivityRegisterBinding
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
 
@@ -55,6 +57,7 @@ class RegisterActivity : ThemableActivity() {
             openActivity(LoginActivity::class.java, true)
         }
         binding.registerButton.setOnClickListener { register() }
+        binding.googleSignInButton.setOnClickListener { signInWithGoogle() }
         binding.root.setOnClickListener { hideKeyboard() }
         overrideGoBack { goToWelcome() }
     }
@@ -110,5 +113,37 @@ class RegisterActivity : ThemableActivity() {
         binding.passwordLayout.isEnabled = !locked
         binding.verifyPasswordLayout.isEnabled = !locked
         binding.registerButton.isEnabled = !locked
+        binding.googleSignInButton.isEnabled = !locked
+        binding.loginButton.isEnabled = !locked
+    }
+
+    private fun signInWithGoogle() {
+        updateUI(true)
+        AuthHelper.instance.signInWithGoogle(this) { signedIn, _, error ->
+            runOnUiThread {
+                updateUI(false)
+                if (signedIn) {
+                    checkAuthStateForGoogleSignIn()
+                } else if (error.isNotEmpty()) {
+                    showModalAlert(getString(R.string.oops), error)
+                }
+            }
+        }
+    }
+
+    private fun checkAuthStateForGoogleSignIn() {
+        // Google accounts are automatically verified
+        val authHelper = AuthHelper.instance
+        if (authHelper.isSignedIn) {
+            FirestoreHelper.instance.hasProfile(authHelper.userId) { profileFound, firebaseUnavailable ->
+                if (firebaseUnavailable) {
+                    updateUI(false)
+                } else {
+                    val target =
+                        if (profileFound) LoadProfileActivity::class.java else ProfileSetupActivity::class.java
+                    openActivity(target, finishTask = true)
+                }
+            }
+        }
     }
 }

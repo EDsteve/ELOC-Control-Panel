@@ -39,7 +39,6 @@
 | Issue | Status | Priority |
 |-------|--------|----------|
 | Bluetooth ON/OFF toggle not working | Not Started | Medium |
-| Swipe refresh doesn't update all values | Not Started | Medium |
 | Refresh only works after scroll | Not Started | Low |
 | Google Maps crashes on some devices | Not Started | Medium |
 
@@ -72,8 +71,7 @@ The Bluetooth ON/OFF button in settings doesn't work. This may be related to And
 
 ### Pull-to-Refresh Behavior
 The swipe-to-refresh on the status page:
-1. Only refreshes SD card info, not all device values
-2. Requires scrolling down first before the gesture is recognized
+2. Sometimes it refreshes the svreen even though i am in the middle of the status page and not on top.
 
 ### Google Maps Crashes
 Some devices experience crashes with Google Maps. Details in `maps.log`. May be device-specific or related to map utils version.
@@ -108,6 +106,7 @@ Some devices experience crashes with Google Maps. Details in `maps.log`. May be 
 - [x] Bluetooth pairing fix (Jan 2026)
 - [x] Memory Bank initialization (Feb 2026)
 - [x] Database upload optimization (Feb 2026)
+- [x] Google Sign-In implementation (Feb 2026)
 
 ### Upcoming 🎯
 - [ ] Fix remaining bugs (BT toggle, refresh)
