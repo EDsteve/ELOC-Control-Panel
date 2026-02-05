@@ -258,6 +258,8 @@
     <string name="inference_required_detections">Inference Required Detections</string>
     <string name="inference">Inference</string>
     <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_in_with_email">Sign in with Email</string>
+    <string name="sign_up_with_email">Sign up with Email</string>
     <string name="google_sign_in_failed">Google sign-in failed</string>
     <string name="google_sign_in_cancelled">Google sign-in was cancelled</string>
     <string name="web_client_id">773327231765-igglaupgt12mct4ii7kiil5ktda2nqfd.apps.googleusercontent.com</string>

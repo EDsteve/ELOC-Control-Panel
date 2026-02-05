@@ -23,163 +23,177 @@
         app:text="@string/checking_internet_connection"
         tools:visibility="invisible" />
 
-    <LinearLayout
-        android:id="@+id/sign_in_layout"
+    <ScrollView
+        android:id="@+id/sign_in_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:orientation="vertical"
+        android:fillViewport="true"
         tools:visibility="visible">
 
-        <ImageButton
-            android:id="@+id/back_button"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_gravity="start"
-            android:layout_margin="16dp"
-            android:background="@android:color/transparent"
-            android:contentDescription="@string/go_back"
-            android:padding="8dp"
-            android:scaleType="fitXY"
-            android:src="@drawable/arrow_back"
-            app:tint="#fff" />
-
-        <Space
+        <LinearLayout
+            android:id="@+id/sign_in_layout"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <include layout="@layout/layout_app_header" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/email_address_layout"
-            style="@style/Widget.Material3.TextInputLayout.FilledBox"
-            android:layout_width="@dimen/auth_input_width"
-            android:layout_height="wrap_content"
-            app:boxBackgroundColor="@android:color/transparent"
-            app:counterEnabled="true"
-            app:counterMaxLength="@integer/auth_input_max_length"
-            app:errorEnabled="true">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/email_address_text_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:hint="@string/email_address"
-                android:imeOptions="actionNext"
-                android:inputType="textEmailAddress"
-                android:maxLength="@integer/auth_input_max_length" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/password_layout"
-            style="@style/Widget.Material3.TextInputLayout.FilledBox"
-            android:layout_width="@dimen/auth_input_width"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:maxLength="@integer/auth_input_max_length"
-            app:boxBackgroundColor="@android:color/transparent"
-            app:counterEnabled="true"
-            app:counterMaxLength="@integer/auth_input_max_length"
-            app:errorEnabled="true"
-            app:passwordToggleEnabled="true">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/password_text_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:focusableInTouchMode="true"
-                android:hint="@string/password"
-                android:imeOptions="actionDone"
-                android:inputType="textPassword"
-                android:maxLength="@integer/auth_input_max_length" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <LinearLayout
-            android:layout_width="@dimen/auth_input_width"
-            android:layout_height="wrap_content"
-            android:layout_marginVertical="8dp"
-            android:gravity="end">
-
-            <Button
-                android:id="@+id/reset_password_button"
-                style="@style/AppTextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="24dp"
-                android:padding="0dp"
-                android:text="@string/forgot_password"
-                android:textSize="12sp" />
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/login_button"
-            android:layout_width="@dimen/auth_input_width"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/sign_in"
-            android:textAllCaps="true" />
-
-        <de.eloc.eloc_control_panel.widgets.ProgressIndicator
-            android:id="@+id/login_progress_indicator"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:compact="true" />
-
-        <Button
-            android:id="@+id/register_button"
-            style="@style/AppTextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="@string/create_new_account"
-            android:textAllCaps="true" />
-
-        <LinearLayout
-            android:layout_width="@dimen/auth_input_width"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginVertical="24dp"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+            <ImageButton
+                android:id="@+id/back_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="start"
+                android:layout_margin="16dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/go_back"
+                android:padding="8dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/arrow_back"
+                app:tint="#fff" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
                 android:layout_weight="1" />
 
-            <TextView
-                android:layout_width="wrap_content"
+            <include layout="@layout/layout_app_header" />
+
+            <!-- Google Sign-in button -->
+            <Button
+                android:id="@+id/google_sign_in_button"
+                android:layout_width="@dimen/auth_input_width"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:text="@string/or"
-                android:textAllCaps="true" />
+                android:layout_marginTop="16dp"
+                android:text="@string/sign_in_with_google"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                app:icon="@drawable/google_logo"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp"
+                app:iconTint="@null" />
 
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
-
-        </LinearLayout>
-
+        <!-- Email Sign-in button -->
         <Button
-            android:id="@+id/google_sign_in_button"
+            android:id="@+id/email_sign_in_button"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="@dimen/auth_input_width"
             android:layout_height="wrap_content"
-            android:text="@string/sign_in_with_google"
-            android:textAllCaps="false" />
+            android:layout_marginTop="8dp"
+            android:text="@string/sign_in_with_email"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            app:icon="@drawable/keyboard_arrow_down"
+            app:iconGravity="textEnd"
+            app:iconPadding="8dp"
+            app:iconTint="@android:color/white" />
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            <!-- Email/Password section (collapsible) -->
+            <LinearLayout
+                android:id="@+id/email_section_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
 
-    </LinearLayout>
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/email_address_layout"
+                    style="@style/Widget.Material3.TextInputLayout.FilledBox"
+                    android:layout_width="@dimen/auth_input_width"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:boxBackgroundColor="@android:color/transparent"
+                    app:counterEnabled="true"
+                    app:counterMaxLength="@integer/auth_input_max_length"
+                    app:errorEnabled="true">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/email_address_text_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:hint="@string/email_address"
+                        android:imeOptions="actionNext"
+                        android:inputType="textEmailAddress"
+                        android:maxLength="@integer/auth_input_max_length" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/password_layout"
+                    style="@style/Widget.Material3.TextInputLayout.FilledBox"
+                    android:layout_width="@dimen/auth_input_width"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:maxLength="@integer/auth_input_max_length"
+                    app:boxBackgroundColor="@android:color/transparent"
+                    app:counterEnabled="true"
+                    app:counterMaxLength="@integer/auth_input_max_length"
+                    app:errorEnabled="true"
+                    app:passwordToggleEnabled="true">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/password_text_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:focusableInTouchMode="true"
+                        android:hint="@string/password"
+                        android:imeOptions="actionDone"
+                        android:inputType="textPassword"
+                        android:maxLength="@integer/auth_input_max_length" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <LinearLayout
+                    android:layout_width="@dimen/auth_input_width"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="8dp"
+                    android:gravity="end">
+
+                    <Button
+                        android:id="@+id/reset_password_button"
+                        style="@style/AppTextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="24dp"
+                        android:padding="0dp"
+                        android:text="@string/forgot_password"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/login_button"
+                    android:layout_width="@dimen/auth_input_width"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/sign_in"
+                    android:textAllCaps="true" />
+
+            </LinearLayout>
+
+            <de.eloc.eloc_control_panel.widgets.ProgressIndicator
+                android:id="@+id/login_progress_indicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:compact="true" />
+
+            <Button
+                android:id="@+id/register_button"
+                style="@style/AppTextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:text="@string/create_new_account"
+                android:textAllCaps="true" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+    </ScrollView>
 </FrameLayout>

@@ -186,7 +186,6 @@
     <string name="show_all_elocs">Show all ELOCs</string>
     <string name="sign_in">Sign in</string>
     <string name="sign_in_existing_account">Sign in existing account</string>
-    <string name="sign_in_with_email">Sign in with email</string>
     <string name="sign_out">Sign out</string>
     <string name="small">Small</string>
     <string name="snippet_template">Last Update: %1$s\n\nGPS Accuracy: %2$s\n\nBattery volts: %3$s\n\nRec Time: %4$s</string>

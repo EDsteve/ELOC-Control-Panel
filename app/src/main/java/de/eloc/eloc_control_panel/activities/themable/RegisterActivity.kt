@@ -2,6 +2,8 @@ package de.eloc.eloc_control_panel.activities.themable
 
 import android.os.Bundle
 import android.view.View
+import androidx.appcompat.content.res.AppCompatResources
+import com.google.android.material.button.MaterialButton
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.hideKeyboard
@@ -16,6 +18,7 @@ import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
 
 class RegisterActivity : ThemableActivity() {
     private lateinit var binding: ActivityRegisterBinding
+    private var isEmailSectionExpanded = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,11 +27,11 @@ class RegisterActivity : ThemableActivity() {
 
         App.instance.addNetworkChangedHandler(localClassName) {
             runOnUiThread {
-                binding.registrationLayout.visibility = View.GONE
+                binding.registrationScrollView.visibility = View.GONE
                 binding.checkInternetAccessProgressIndicator.visibility = View.GONE
                 binding.offlineLayout.visibility = View.GONE
                 when (App.instance.isOnline()) {
-                    true -> binding.registrationLayout.visibility = View.VISIBLE
+                    true -> binding.registrationScrollView.visibility = View.VISIBLE
                     false -> binding.offlineLayout.visibility = View.VISIBLE
                     null -> binding.checkInternetAccessProgressIndicator.visibility = View.VISIBLE
                 }
@@ -58,8 +61,22 @@ class RegisterActivity : ThemableActivity() {
         }
         binding.registerButton.setOnClickListener { register() }
         binding.googleSignInButton.setOnClickListener { signInWithGoogle() }
+        binding.emailSignUpButton.setOnClickListener { toggleEmailSection() }
         binding.root.setOnClickListener { hideKeyboard() }
         overrideGoBack { goToWelcome() }
+    }
+
+    private fun toggleEmailSection() {
+        isEmailSectionExpanded = !isEmailSectionExpanded
+        val emailButton = binding.emailSignUpButton as MaterialButton
+        if (isEmailSectionExpanded) {
+            binding.emailSectionLayout.visibility = View.VISIBLE
+            emailButton.icon = AppCompatResources.getDrawable(this, R.drawable.keyboard_arrow_up)
+        } else {
+            binding.emailSectionLayout.visibility = View.GONE
+            emailButton.icon = AppCompatResources.getDrawable(this, R.drawable.keyboard_arrow_down)
+            hideKeyboard()
+        }
     }
 
     private fun register() {
@@ -114,6 +131,7 @@ class RegisterActivity : ThemableActivity() {
         binding.verifyPasswordLayout.isEnabled = !locked
         binding.registerButton.isEnabled = !locked
         binding.googleSignInButton.isEnabled = !locked
+        binding.emailSignUpButton.isEnabled = !locked
         binding.loginButton.isEnabled = !locked
     }
 
