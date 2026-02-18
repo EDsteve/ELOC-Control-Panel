@@ -68,6 +68,16 @@ internal const val KEY_LORAWAN_ENABLE = "loraEnable"
 internal const val KEY_LORAWAN_UPLINK_INTERVAL = "upLinkIntervalS"
 internal const val KEY_LORAWAN_REGION = "loraRegion"
 
+// LoRa status keys (from getStatus response)
+private const val KEY_LORA = "lora"
+private const val KEY_LORA_ENABLED = "enabled"
+private const val KEY_LORA_JOINED = "joined"
+private const val KEY_LORA_HAS_SIGNAL_INFO = "hasSignalInfo"
+private const val KEY_LORA_RSSI = "RSSI"
+private const val KEY_B_LORA_RSSI = "RSSI[dBm]"
+private const val KEY_LORA_SNR = "SNR"
+private const val KEY_B_LORA_SNR = "SNR[dB]"
+
 private const val KEY_INFERENCE = "inference"
 internal const val KEY_INFERENCE_THRESHOLD = "inference_threshold"
 internal const val KEY_INFERENCE_OBS_WINDOW_SECS = "observationWindowS"
@@ -92,6 +102,14 @@ internal const val KEY_LOGS_LOG_TO_SD_CARD = "logToSdCard"
 internal const val KEY_LOGS_FILENAME = "filename"
 internal const val KEY_LOGS_MAX_FILES = "maxFiles"
 internal const val KEY_LOGS_MAX_FILE_SIZE = "maxFileSize"
+
+private const val KEY_DUTY_CYCLE = "dutyCycle"
+internal const val KEY_DUTY_CYCLE_ENABLE = "dutyCycleEnable"
+internal const val KEY_DUTY_CYCLE_SLEEP_DURATION_S = "dutyCycleSleepDurationS"
+internal const val KEY_DUTY_CYCLE_AWAKE_DURATION_S = "dutyCycleAwakeDurationS"
+private const val KEY_DUTY_CYCLE_ENABLE_FIELD = "enable"
+private const val KEY_DUTY_CYCLE_SLEEP_DURATION_S_FIELD = "sleepDurationS"
+private const val KEY_DUTY_CYCLE_AWAKE_DURATION_S_FIELD = "awakeDurationS"
 
 internal const val KEY_CPU_MAX_FREQUENCY_MHZ = "cpuMaxFrequencyMHZ"
 internal const val KEY_CPU_MIN_FREQUENCY_MHZ = "cpuMinFrequencyMHZ"
@@ -169,6 +187,7 @@ object DeviceDriver {
     val session = Session()
     val lorawan = LoraWan()
     val inference = Inference()
+    val dutyCycle = DutyCycle()
 
     private var executor: ScheduledExecutorService? = null
     private var bluetoothListener: ScheduledExecutorService? = null
@@ -850,6 +869,8 @@ object DeviceDriver {
             .replace(KEY_B_UPTIME, KEY_UPTIME)
             .replace(KEY_B_TOTAL_RECORDING_TIME, KEY_TOTAL_RECORDING_TIME)
             .replace(KEY_B_RECORDING_TIME, KEY_RECORDING_TIME)
+            .replace(KEY_B_LORA_RSSI, KEY_LORA_RSSI)
+            .replace(KEY_B_LORA_SNR, KEY_LORA_SNR)
     }
 
     private fun startListening() {
@@ -1135,6 +1156,20 @@ object DeviceDriver {
         val lorawanRegionPath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_LORAWAN$PATH_SEPARATOR$KEY_LORAWAN_REGION"
         lorawan.region = JsonHelper.getJSONStringAttribute(lorawanRegionPath, jsonObject)
+
+        val dutyCycleEnablePath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_DUTY_CYCLE$PATH_SEPARATOR$KEY_DUTY_CYCLE_ENABLE_FIELD"
+        dutyCycle.enabled = JsonHelper.getJSONBooleanAttribute(dutyCycleEnablePath, jsonObject)
+
+        val dutyCycleSleepDurationPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_DUTY_CYCLE$PATH_SEPARATOR$KEY_DUTY_CYCLE_SLEEP_DURATION_S_FIELD"
+        dutyCycle.sleepDurationS =
+            JsonHelper.getJSONNumberAttribute(dutyCycleSleepDurationPath, jsonObject).toInt()
+
+        val dutyCycleAwakeDurationPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_DUTY_CYCLE$PATH_SEPARATOR$KEY_DUTY_CYCLE_AWAKE_DURATION_S_FIELD"
+        dutyCycle.awakeDurationS =
+            JsonHelper.getJSONNumberAttribute(dutyCycleAwakeDurationPath, jsonObject).toInt()
     }
 
     private fun parseStatus(jsonObject: JSONObject) {
@@ -1202,6 +1237,27 @@ object DeviceDriver {
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_RECORDING_STATE$PATH_SEPARATOR$KEY_VAL"
         val stateCode = JsonHelper.getJSONNumberAttribute(statePath, jsonObject).toInt()
         session.recordingState = RecordState.parse(stateCode)
+
+        // Parse LoRa status
+        val loraEnabledPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_LORA$PATH_SEPARATOR$KEY_LORA_ENABLED"
+        lorawan.enabled = JsonHelper.getJSONBooleanAttribute(loraEnabledPath, jsonObject)
+
+        val loraJoinedPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_LORA$PATH_SEPARATOR$KEY_LORA_JOINED"
+        lorawan.joined = JsonHelper.getJSONBooleanAttribute(loraJoinedPath, jsonObject)
+
+        val loraHasSignalInfoPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_LORA$PATH_SEPARATOR$KEY_LORA_HAS_SIGNAL_INFO"
+        lorawan.hasSignalInfo = JsonHelper.getJSONBooleanAttribute(loraHasSignalInfoPath, jsonObject)
+
+        val loraRssiPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_LORA$PATH_SEPARATOR$KEY_LORA_RSSI"
+        lorawan.rssi = JsonHelper.getJSONNumberAttribute(loraRssiPath, jsonObject)
+
+        val loraSnrPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_LORA$PATH_SEPARATOR$KEY_LORA_SNR"
+        lorawan.snr = JsonHelper.getJSONNumberAttribute(loraSnrPath, jsonObject)
     }
 
     private fun parseDeviceState(jsonObject: JSONObject) {

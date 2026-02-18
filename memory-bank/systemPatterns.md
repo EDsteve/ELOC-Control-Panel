@@ -140,7 +140,8 @@ DeviceDriver (singleton)
     │   ├── Logs
     │   ├── BtConfig
     │   ├── Cpu
-    │   └── LoraWan
+    │   ├── LoraWan (config + status with signal strength)
+    │   └── DutyCycle
     │
     ├── Command Queue (pendingCommands)
     │

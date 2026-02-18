@@ -330,6 +330,46 @@
                                 app:keyText="@string/communication"
                                 tools:valueText="LoRa" />
 
+                            <LinearLayout
+                                android:id="@+id/lora_signal_container"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="16dp"
+                                android:layout_marginEnd="16dp"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:paddingVertical="4dp"
+                                android:visibility="gone"
+                                tools:visibility="visible">
+
+                                <TextView
+                                    android:id="@+id/lora_signal_label"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="@string/lora_signal"
+                                    android:textSize="14sp" />
+
+                                <ImageView
+                                    android:id="@+id/lora_signal_icon"
+                                    android:layout_width="24dp"
+                                    android:layout_height="24dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:contentDescription="@string/lora_signal"
+                                    android:src="@drawable/rssi_0"
+                                    app:tint="@color/white"
+                                    tools:src="@drawable/rssi_4" />
+
+                                <TextView
+                                    android:id="@+id/lora_signal_value"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold"
+                                    tools:text="-85.5 dBm" />
+
+                            </LinearLayout>
+
                             <com.google.android.material.divider.MaterialDivider
                                 android:layout_width="match_parent"
                                 android:layout_height="2dp"

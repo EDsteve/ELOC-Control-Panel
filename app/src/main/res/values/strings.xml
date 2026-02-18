@@ -247,6 +247,10 @@
     <string name="diagnostics">Diagnostics</string>
     <string name="log_bt_traffic_in_logcat">Log BT traffic in logcat</string>
     <string name="lorawan">LoraWAN</string>
+    <string name="lora_signal">LoRa Signal</string>
+    <string name="lora_signal_dbm">%.1f dBm</string>
+    <string name="lora_not_joined">Not Joined</string>
+    <string name="lora_no_signal">No Signal</string>
     <string name="region">Region</string>
     <string name="uplink_interval">Uplink Interval</string>
     <string name="increment">Increment</string>
@@ -257,6 +261,11 @@
     <string name="required_detections">Required Detections</string>
     <string name="inference_required_detections">Inference Required Detections</string>
     <string name="inference">Inference</string>
+    <string name="duty_cycle">Duty Cycle</string>
+    <string name="sleep_duration">Sleep Duration</string>
+    <string name="awake_duration">Awake Duration</string>
+    <string name="duty_cycle_sleep_duration">Duty Cycle Sleep Duration (Seconds)</string>
+    <string name="duty_cycle_awake_duration">Duty Cycle Awake Duration (Seconds)</string>
     <string name="sign_in_with_google">Sign in with Google</string>
     <string name="sign_in_with_email">Sign in with Email</string>
     <string name="sign_up_with_email">Sign up with Email</string>

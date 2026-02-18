@@ -394,7 +394,35 @@ class DeviceActivity : ThemableActivity() {
         } else {
             binding.storageTextView.text = formatNumber(gb, "GB")
         }
+        updateLoraSignalDisplay()
         displayRecordingState()
+    }
+
+    private fun updateLoraSignalDisplay() {
+        val lorawan = DeviceDriver.lorawan
+        
+        // Only show LoRa signal if LoRa is enabled
+        if (!lorawan.enabled) {
+            binding.loraSignalContainer.visibility = View.GONE
+            return
+        }
+        
+        binding.loraSignalContainer.visibility = View.VISIBLE
+        
+        // Update icon and value based on signal status
+        if (!lorawan.joined) {
+            // Not joined to network
+            binding.loraSignalIcon.setImageResource(R.drawable.rssi_0)
+            binding.loraSignalValue.text = getString(R.string.lora_not_joined)
+        } else if (!lorawan.hasSignalInfo) {
+            // Joined but no signal info yet
+            binding.loraSignalIcon.setImageResource(R.drawable.rssi_1)
+            binding.loraSignalValue.text = getString(R.string.lora_no_signal)
+        } else {
+            // Has valid signal - show icon and dBm value
+            binding.loraSignalIcon.setImageResource(lorawan.signalStrength.iconResource)
+            binding.loraSignalValue.text = getString(R.string.lora_signal_dbm, lorawan.rssi)
+        }
     }
 
     private fun setConfigInfo() {

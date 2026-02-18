@@ -1,6 +1,40 @@
 package de.eloc.eloc_control_panel.driver
 
+import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.DAY_SECONDS
+
+/**
+ * Represents LoRa signal strength description based on RSSI values.
+ * LoRa RSSI typically ranges from -40 dBm (very strong) to -150 dBm (very weak).
+ */
+enum class LoraSignalStrength(val minRssi: Double, val maxRssi: Double) {
+    Excellent(-90.0, 0.0),      // > -90 dBm
+    Good(-110.0, -90.0),        // -90 to -110 dBm
+    Fair(-120.0, -110.0),       // -110 to -120 dBm
+    Poor(-130.0, -120.0),       // -120 to -130 dBm
+    VeryPoor(-200.0, -130.0);   // < -130 dBm
+
+    companion object {
+        fun fromRssi(rssi: Double): LoraSignalStrength {
+            return when {
+                rssi > -90 -> Excellent
+                rssi > -110 -> Good
+                rssi > -120 -> Fair
+                rssi > -130 -> Poor
+                else -> VeryPoor
+            }
+        }
+    }
+
+    val iconResource: Int
+        get() = when (this) {
+            Excellent -> R.drawable.rssi_5
+            Good -> R.drawable.rssi_4
+            Fair -> R.drawable.rssi_3
+            Poor -> R.drawable.rssi_2
+            VeryPoor -> R.drawable.rssi_1
+        }
+}
 
 class LoraWan {
     companion object {
@@ -13,6 +47,7 @@ class LoraWan {
         internal const val REGION_MAX_LEN = 50
     }
 
+    // Config properties (from getConfig)
     var region: String = ""
         set(value) {
             var sanitizedName = value.trim()
@@ -35,4 +70,19 @@ class LoraWan {
         }
 
     var enabled = false
+
+    // Status properties (from getStatus)
+    var joined = false
+    var hasSignalInfo = false
+    var rssi: Double = 0.0
+    var snr: Double = 0.0
+
+    val signalStrength: LoraSignalStrength
+        get() = LoraSignalStrength.fromRssi(rssi)
+
+    /**
+     * Returns true if LoRa is enabled, joined to network, and has valid signal info
+     */
+    val hasValidSignal: Boolean
+        get() = enabled && joined && hasSignalInfo
 }

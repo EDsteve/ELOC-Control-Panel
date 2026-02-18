@@ -1,9 +1,57 @@
 # ELOC Control Panel - Active Context
 
 ## Current Work Focus
-Google Sign-In implementation - completed reimplementation of Google Sign-In using the modern Credential Manager API.
+LoRa RSSI Signal Strength Indicator - added LoRa signal strength display to the Device Status page.
 
 ## Recent Changes
+
+### LoRa RSSI Signal Strength Indicator (February 2026)
+**Feature**: Added LoRa signal strength indicator to the Device Status page, displaying signal quality when LoRa is enabled and connected.
+
+**Key Changes**:
+1. `LoraWan.kt` - Added `LoraSignalStrength` enum with 5 levels (Excellent, Good, Fair, Poor, VeryPoor) based on RSSI thresholds, plus new status properties: `joined`, `hasSignalInfo`, `rssi`, `snr`, and computed `signalStrength`
+2. `DeviceDriver.kt` - Added LoRa status keys constants, updated `sanitize()` method to handle bracketed keys (`RSSI[dBm]`, `SNR[dB]`), added LoRa status parsing in `parseStatus()` method
+3. `activity_device.xml` - Added LoRa signal container with RSSI icon and dBm value display below the "Communication" item
+4. `DeviceActivity.kt` - Added `updateLoraSignalDisplay()` method that updates the UI based on LoRa status
+5. `strings.xml` - Added string resources: `lora_signal`, `lora_signal_dbm`, `lora_not_joined`, `lora_no_signal`
+
+**Technical Details**:
+- LoRa RSSI thresholds: Excellent (> -90 dBm), Good (-90 to -110 dBm), Fair (-110 to -120 dBm), Poor (-120 to -130 dBm), VeryPoor (< -130 dBm)
+- Uses existing RSSI drawable icons (rssi_0 through rssi_5)
+- Container is hidden when LoRa is disabled
+- Shows "Not Joined" when LoRa is enabled but not joined to network
+- Shows "No Signal" when joined but no signal info available yet
+- Shows dBm value and signal icon when valid signal is available
+
+**JSON Status Data Parsed** (from `getStatus` response):
+```json
+"lora": {
+    "enabled": true,
+    "joined": true,
+    "hasSignalInfo": true,
+    "RSSI[dBm]": -85.5,
+    "SNR[dB]": 7.2
+}
+```
+
+### Duty Cycle Settings Implementation (February 2026)
+**Feature**: Added duty cycle configuration settings to the ELOC Device Settings screen, allowing users to enable/disable duty cycling and configure sleep/awake durations.
+
+**Key Changes**:
+1. `DutyCycle.kt` - New driver component class with constants for JSON keys, min/max ranges, and default values
+2. `DeviceDriver.kt` - Added `dutyCycle` property, parsing logic for duty cycle JSON config keys (`dutyCycle_enable`, `dutyCycle_sleep`, `dutyCycle_awake`)
+3. `Command.kt` - Added duty cycle property cases (`setDutyCycleEnable`, `setDutyCycleSleep`, `setDutyCycleAwake`) to the set config command builder
+4. `activity_device_settings.xml` - Added collapsible Duty Cycle section with enable toggle, sleep duration, and awake duration items
+5. `DeviceSettingsActivity.kt` - Added duty cycle data binding, listeners (toggle + range editors), and section expand/collapse logic
+6. `strings.xml` - Added string resources: `duty_cycle`, `sleep_duration`, `awake_duration`, `duty_cycle_sleep_duration`, `duty_cycle_awake_duration`
+
+**Technical Details**:
+- Sleep duration range: 10 - 86400 seconds (10s to 24h), default 300s
+- Awake duration range: 10 - 86400 seconds (10s to 24h), default 1800s
+- Uses RangeEditorActivity for duration settings with prettified time display
+- Follows same pattern as LoraWan, Inference, and other existing settings sections
+
+## Previous Changes
 
 ### Bluetooth Pairing Fix (January 2026)
 **Issue**: Android phones experiencing connection failures and crashes when connecting to ELOC devices.

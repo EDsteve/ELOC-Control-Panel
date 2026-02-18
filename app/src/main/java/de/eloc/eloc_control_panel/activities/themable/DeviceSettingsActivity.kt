@@ -31,6 +31,7 @@ import de.eloc.eloc_control_panel.activities.prettifyTime
 import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.RangeEditorActivity
 import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.data.ConnectionStatus
+import de.eloc.eloc_control_panel.driver.DutyCycle
 import de.eloc.eloc_control_panel.driver.Inference
 import de.eloc.eloc_control_panel.driver.LoraWan
 
@@ -63,6 +64,7 @@ class DeviceSettingsActivity : ThemableActivity() {
         setLogsSectionState(false)
         setCpuSectionState(false)
         setGeneralSectionState(false)
+        setDutyCycleSectionState(false)
         setAdvancedSectionState(false)
         setBatterySectionState(false)
         setData()
@@ -141,6 +143,12 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding.batteryUpdateIntervalItem.valueText =
             formatNumber(DeviceDriver.battery.updateIntervalSecs, secs, 0)
 
+        binding.dutyCycleEnableItem.setSwitch(DeviceDriver.dutyCycle.enabled)
+        binding.dutyCycleSleepDurationItem.valueText =
+            formatNumber(DeviceDriver.dutyCycle.sleepDurationS, sec, secs, 0)
+        binding.dutyCycleAwakeDurationItem.valueText =
+            formatNumber(DeviceDriver.dutyCycle.awakeDurationS, sec, secs, 0)
+
         showContent()
     }
 
@@ -158,6 +166,7 @@ class DeviceSettingsActivity : ThemableActivity() {
         setInferenceListeners()
         setBtListeners()
         setMicrophoneListeners()
+        setDutyCycleListeners()
         setAdvancedListeners()
     }
 
@@ -765,6 +774,71 @@ class DeviceSettingsActivity : ThemableActivity() {
             ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
         }
         binding.batterySectionTextView.setCompoundDrawablesWithIntrinsicBounds(
+            null,
+            null,
+            icon,
+            null
+        )
+    }
+
+    private fun setDutyCycleListeners() {
+        binding.dutyCycleSectionTextView.setOnClickListener {
+            setDutyCycleSectionState(binding.dutyCycleEnableItem.visibility != View.VISIBLE)
+        }
+        binding.dutyCycleEnableItem.setSwitchClickedListener {
+            val checked = binding.dutyCycleEnableItem.isChecked
+            Command.createSetConfigPropertyCommand(
+                DutyCycle.ENABLE,
+                checked.toString(),
+                ::runCommand,
+                {
+                    showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+                },
+            ) { refresh() }
+        }
+        binding.dutyCycleSleepDurationItem.setOnClickListener {
+            val currentSleepDuration = DeviceDriver.dutyCycle.sleepDurationS
+            val prettyCurrentInterval = prettifyTime(currentSleepDuration)
+            RangeEditorActivity.openRangeEditor(
+                this,
+                DutyCycle.SLEEP_DURATION_S,
+                getString(R.string.duty_cycle_sleep_duration),
+                "$currentSleepDuration ($prettyCurrentInterval)",
+                currentSleepDuration.toFloat(),
+                DutyCycle.MIN_SLEEP_DURATION_S.toFloat(),
+                DutyCycle.MAX_SLEEP_DURATION_S.toFloat()
+            )
+        }
+        binding.dutyCycleAwakeDurationItem.setOnClickListener {
+            val currentAwakeDuration = DeviceDriver.dutyCycle.awakeDurationS
+            val prettyCurrentInterval = prettifyTime(currentAwakeDuration)
+            RangeEditorActivity.openRangeEditor(
+                this,
+                DutyCycle.AWAKE_DURATION_S,
+                getString(R.string.duty_cycle_awake_duration),
+                "$currentAwakeDuration ($prettyCurrentInterval)",
+                currentAwakeDuration.toFloat(),
+                DutyCycle.MIN_AWAKE_DURATION_S.toFloat(),
+                DutyCycle.MAX_AWAKE_DURATION_S.toFloat()
+            )
+        }
+    }
+
+    private fun setDutyCycleSectionState(expanded: Boolean) {
+        val state = if (expanded) View.VISIBLE else View.GONE
+        binding.dutyCycleSection.children.forEach { child ->
+            if (child == binding.dutyCycleSectionTextView) {
+                return@forEach
+            }
+            child.visibility = state
+        }
+
+        val icon = if (expanded) {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
+        } else {
+            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
+        }
+        binding.dutyCycleSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
             null,
             null,
             icon,

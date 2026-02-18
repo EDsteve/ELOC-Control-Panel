@@ -28,6 +28,9 @@ import de.eloc.eloc_control_panel.driver.KEY_LOGS_MAX_FILE_SIZE
 import de.eloc.eloc_control_panel.driver.KEY_LORAWAN_ENABLE
 import de.eloc.eloc_control_panel.driver.KEY_LORAWAN_REGION
 import de.eloc.eloc_control_panel.driver.KEY_LORAWAN_UPLINK_INTERVAL
+import de.eloc.eloc_control_panel.driver.KEY_DUTY_CYCLE_AWAKE_DURATION_S
+import de.eloc.eloc_control_panel.driver.KEY_DUTY_CYCLE_ENABLE
+import de.eloc.eloc_control_panel.driver.KEY_DUTY_CYCLE_SLEEP_DURATION_S
 import de.eloc.eloc_control_panel.driver.KEY_MICROPHONE_APPLL
 import de.eloc.eloc_control_panel.driver.KEY_MICROPHONE_CHANNEL
 import de.eloc.eloc_control_panel.driver.KEY_MICROPHONE_SAMPLE_RATE
@@ -414,6 +417,33 @@ class Command(
                         ""
                     } else {
                         """setConfig#cfg={"config":{"battery":{"noBatteryMode":$noBatteryMode}}}"""
+                    }
+                }
+
+                KEY_DUTY_CYCLE_ENABLE -> {
+                    val enable = propertyValue.lowercase().toBooleanStrictOrNull()
+                    if (enable == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"dutyCycle":{"enable":$enable}}}"""
+                    }
+                }
+
+                KEY_DUTY_CYCLE_SLEEP_DURATION_S -> {
+                    val duration = propertyValue.toDoubleOrNull()?.toInt()
+                    if (duration == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"dutyCycle":{"sleepDurationS":$duration}}}"""
+                    }
+                }
+
+                KEY_DUTY_CYCLE_AWAKE_DURATION_S -> {
+                    val duration = propertyValue.toDoubleOrNull()?.toInt()
+                    if (duration == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"dutyCycle":{"awakeDurationS":$duration}}}"""
                     }
                 }
 
