@@ -1,9 +1,24 @@
 # ELOC Control Panel - Active Context
 
 ## Current Work Focus
-LoRa RSSI Signal Strength Indicator - added LoRa signal strength display to the Device Status page.
+Map Firestore Document - added `batteryType` and `recordingState` fields to the map collection upload.
 
 ## Recent Changes
+
+### Map Document New Fields (February 2026)
+**Feature**: Added `batteryType` and `recordingState` fields to the Firestore map collection document (`eloc_app/uploads/map/map_{deviceName}.json`).
+
+**Key Changes**:
+1. `Session.kt` - Added `recordingStateString` property to store the raw recording state string from firmware (e.g., "recordOn_detectOn")
+2. `DeviceDriver.kt` - Added parsing of `payload/session/recordingState/state` string in `parseStatus()` method
+3. `DeviceDriver.kt` - Added `KEY_BATTERY_TYPE_MAP` ("batteryType") and `KEY_RECORDING_STATE_MAP` ("recordingState") constants
+4. `DeviceDriver.kt` - Added both new fields to the map data JSON in `saveLocal()` method
+
+**Technical Details**:
+- `batteryType` (String): Sourced from `battery.type` which is already parsed from firmware status at `payload/battery/type`. Values: "LiPo" or "LiFePo"
+- `recordingState` (String): Sourced from `session.recordingStateString` parsed from firmware status at `payload/session/recordingState/state`. Values: e.g., "recordOff_detectOff", "recordOn_detectOn", etc.
+- Both values come from the `getStatus` firmware command response
+- No changes needed to FirestoreHelper or FileSystemHelper since the map data flows through as raw JSON
 
 ### LoRa RSSI Signal Strength Indicator (February 2026)
 **Feature**: Added LoRa signal strength indicator to the Device Status page, displaying signal quality when LoRa is enabled and connected.

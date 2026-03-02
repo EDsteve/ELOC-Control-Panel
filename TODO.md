@@ -1,41 +1,15 @@
-## Bugs:
-- BT on/ off button still don't work
-
 ## To-Do:
 
-User Accounts
- - Sign up with 
- 	- email/password
- 	- Google
- - Sign in with
- 	- email/password
- 	- Google
- - User profile
- 	- Set profile picture
- 	- Set display name
- 	- Set ranger ID to be used with ELOC device
- - Management
- 	- Change email
- 	- Change password
- 	- Delete account
-
 Start Page
-- Map feature: It should zoom to all the ELOC markers automatically - If too complicated. Forget it :)
-- "Please update your ELOC Controll Panel app. Your version is not supported any more" - This should show when i choose so in the code (Not a priority and maybe never needed hopefully)
+- Remove (?) browse Eloc status
 
 Status page: 
-- Swipe down refresh problems:
-	- It does refresh the SD card but not the recording or other values from the EP32? A manual reconnect refreshes all.
-	- refresh only possible after scrolled down first.
 - Show remaining recording time (calculating from Sample rate and SD space available. See example below)
+- Reorganize shown data
 
 Settings page: 
-- Turn ON/OFF bluetooth doesn't work
+- Make it more user friendly
 
-## General
- - Low priority - // todo: fix view binding issue; Why can't it see the toolbar
- - Google maps crashes on some devices see maps.log for details
- - Migrate old java code kotlin
 
 
 The formula to calculate the size of a WAV file is:

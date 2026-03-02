@@ -10,4 +10,5 @@ class Session {
     var eventsDetected = 0
     var aiModel = ""
     var recordingState = RecordState.Invalid
+    var recordingStateString = ""
 }

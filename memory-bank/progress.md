@@ -109,6 +109,7 @@ Some devices experience crashes with Google Maps. Details in `maps.log`. May be 
 - [x] Google Sign-In implementation (Feb 2026)
 - [x] Duty Cycle settings implementation (Feb 2026)
 - [x] LoRa RSSI signal strength indicator (Feb 2026)
+- [x] Map document: added batteryType and recordingState fields (Feb 2026)
 
 ### Upcoming 🎯
 - [ ] Fix remaining bugs (BT toggle, refresh)

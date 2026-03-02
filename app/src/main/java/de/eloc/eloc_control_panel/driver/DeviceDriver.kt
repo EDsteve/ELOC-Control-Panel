@@ -162,6 +162,8 @@ private const val KEY_DETECTING_TIME = "detectingTime"
 private const val KEY_B_DETECTING_TIME = "detectingTime[h]"
 
 private const val KEY_BATTERY_VOLTS = "batteryVolts"
+private const val KEY_BATTERY_TYPE_MAP = "batteryType"
+private const val KEY_RECORDING_STATE_MAP = "recordingState"
 private const val KEY_GPS_ACCURACY_METERS = "gpsAccuracyMeters"
 private const val KEY_LATITUDE = "latitude"
 private const val KEY_LONGITUDE = "longitude"
@@ -823,8 +825,13 @@ object DeviceDriver {
                         val recTime = general.recHoursSinceBoot
                         val timestamp = System.currentTimeMillis()
 
+                        val batteryType = battery.type
+                        val recordingStateStr = session.recordingStateString
+
                         var locationData = """{
                             "$KEY_BATTERY_VOLTS": $batteryVolts,
+                            "$KEY_BATTERY_TYPE_MAP": "$batteryType",
+                            "$KEY_RECORDING_STATE_MAP": "$recordingStateStr",
                             "$KEY_GPS_ACCURACY_METERS": $gpsAccuracy,
                             "$KEY_LATITUDE": $latitude,
                             "$KEY_LONGITUDE": $longitude,
@@ -1237,6 +1244,10 @@ object DeviceDriver {
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_RECORDING_STATE$PATH_SEPARATOR$KEY_VAL"
         val stateCode = JsonHelper.getJSONNumberAttribute(statePath, jsonObject).toInt()
         session.recordingState = RecordState.parse(stateCode)
+
+        val stateStringPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_SESSION$PATH_SEPARATOR$KEY_RECORDING_STATE$PATH_SEPARATOR$KEY_STATE"
+        session.recordingStateString = JsonHelper.getJSONStringAttribute(stateStringPath, jsonObject)
 
         // Parse LoRa status
         val loraEnabledPath =
