@@ -360,6 +360,15 @@ object DeviceDriver {
         }
         pendingConnectionCallback = null
         pendingConnectionErrorCallback = null
+
+        // Clear save state to prevent stale timestamps across connections
+        combinedStatusAndConfigTime = null
+        configSaved = false
+        statusSaved = false
+        cachedStatus = ""
+        cachedConfig = ""
+        infoType = null
+
         connectionStatus = ConnectionStatus.Inactive
         disconnecting = false
     }
@@ -977,6 +986,7 @@ object DeviceDriver {
         if (saveNextInfoResponse) {
             configSaved = false
             statusSaved = false
+            combinedStatusAndConfigTime = null // Reset to ensure fresh timestamp for new save cycle
         } else {
             configSaved = true
             statusSaved = true

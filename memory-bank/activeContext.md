@@ -1,9 +1,20 @@
 # ELOC Control Panel - Active Context
 
 ## Current Work Focus
-Map Firestore Document - added `batteryType` and `recordingState` fields to the map collection upload.
+Status Document Stale Timestamp Bug Fix - fixed `combinedStatusAndConfigTime` not being reset, causing status documents to overwrite existing ones instead of creating new ones.
 
 ## Recent Changes
+
+### Status Document Stale Timestamp Bug Fix (March 2026)
+**Issue**: When changing device recording mode on a different day than the initial status document was created, the Android app updated the existing Firestore document instead of creating a new one. The `capture_timestamp` stayed at the original date, while `upload_timestamp` was refreshed and session data was updated with the new state.
+
+**Root Cause**: `combinedStatusAndConfigTime` in the `DeviceDriver` singleton was not being reset properly. If a `StatusWithConfig` save partially completed (status saved but config response never arrived due to disconnect/timeout), the timestamp was never cleared. Since `disconnect()` also didn't clear it, the stale timestamp persisted across connections. On the next save cycle, `saveLocal()` checked `if (combinedStatusAndConfigTime == null)` and found it NOT null, so it reused the old timestamp, generating a file with the same name as the previous one. Firestore's `document.set(data)` then overwrote the existing document.
+
+**Fix** (two changes in `DeviceDriver.kt`):
+1. **`getElocInformation()`**: Added `combinedStatusAndConfigTime = null` when `saveNextInfoResponse=true`, ensuring every new save cycle starts with a fresh timestamp
+2. **`disconnect()`**: Added cleanup of all save-related state (`combinedStatusAndConfigTime`, `configSaved`, `statusSaved`, `cachedStatus`, `cachedConfig`, `infoType`) to prevent stale values from persisting across connections
+
+**Verified via Firestore**: The document `status_2026-03-01-12-17-58-GMT+0700_e_ELOC_00244_r_edsteve2.json` was created on March 1 but updated on March 2 with March 2 device data (1m 30s uptime from device restart, new session ID, new recording state), confirming March 2 data was incorrectly saved with March 1's filename.
 
 ### Map Document New Fields (February 2026)
 **Feature**: Added `batteryType` and `recordingState` fields to the Firestore map collection document (`eloc_app/uploads/map/map_{deviceName}.json`).
