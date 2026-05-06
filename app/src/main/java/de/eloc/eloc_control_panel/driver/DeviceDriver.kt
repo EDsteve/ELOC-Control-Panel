@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.jvm.Throws
 
 private const val COMMAND_MAX_LENGTH = 512
+private const val CONNECT_TIMEOUT_MS = 10_000L
 
 private const val KEY_PAYLOAD = "payload"
 private const val KEY_RECORDING_STATE = "recordingState"
@@ -201,7 +202,6 @@ object DeviceDriver {
     private var cachedStatus = ""
     private var cachedConfig = ""
     private var infoType: InfoType? = null
-    private var cancelConnectionMonitor = false
     private var configSaved = false
     private var statusSaved = false
     private var combinedStatusAndConfigTime: Date? = null
@@ -499,10 +499,6 @@ object DeviceDriver {
         processCommandQueue(command)
     }
 
-    private fun onConnect() {
-        cancelConnectionMonitor = true
-    }
-
     val nextCommandId: Long
         get() {
             lastUsedCommandId++
@@ -616,52 +612,55 @@ object DeviceDriver {
         }
     }
 
-    private fun monitorConnectionProgress() {
-        var elapsed = 0
-        val timeout = 30
-        cancelConnectionMonitor = false
-        while (elapsed <= timeout) {
-            if (cancelConnectionMonitor) {
-                break
-            }
-            try {
-                Thread.sleep(1000)
-            } catch (_: Exception) {
-            }
-            elapsed++
-        }
-        if (!cancelConnectionMonitor) {
-            // If cancelConnectionMonitor is still false and the while loop above exited
-            // it means a connection was never made - Force a disconnection.
-            disconnect()
-        }
-    }
-
     private fun doConnect(onError: ((String) -> Unit)? = null) {
-        val connectionProgressListener = Executors.newSingleThreadExecutor()
-        try {
-            connectionProgressListener.submit { monitorConnectionProgress() }
-            bluetoothSocket?.connect()
-        } catch (_: SecurityException) {
-            onError?.invoke("Failed to connect to ELOC!")
-            disconnect()
-            return
-        }
+        // BluetoothSocket.connect() blocks until the SPP link is established
+        // (or fails). With weak signal this can take many seconds, so it must
+        // run off the main thread or Android will fire an ANR.
+        Thread {
+            // Watchdog: if connect() hasn't returned within CONNECT_TIMEOUT_MS,
+            // close the socket so the blocking connect() unblocks with an IOException.
+            val watchdog = Executors.newSingleThreadScheduledExecutor()
+            val socketAtStart = bluetoothSocket
+            val timeoutTask = watchdog.schedule({
+                try {
+                    if (socketAtStart?.isConnected != true) {
+                        socketAtStart?.close()
+                    }
+                } catch (_: Exception) {
+                }
+            }, CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
 
-        resetCommandIdTracker()
-        connectionStatus =
-            if (bluetoothSocket?.isConnected == true) {
-                ConnectionStatus.Active
-            } else {
-                ConnectionStatus.Inactive
+            var connectFailed = false
+            try {
+                bluetoothSocket?.connect()
+            } catch (_: SecurityException) {
+                connectFailed = true
+                onError?.invoke("Failed to connect to ELOC!")
+            } catch (_: Exception) {
+                // IOException from socket close (timeout) or genuine connection failure.
+                connectFailed = true
+                onError?.invoke("Failed to connect to ELOC!")
+            } finally {
+                timeoutTask.cancel(false)
+                watchdog.shutdownNow()
             }
-        if (connectionStatus == ConnectionStatus.Active) {
-            connectionProgressListener.shutdownNow()
-            onConnect()
-            startListening()
-        } else {
-            return
-        }
+
+            if (connectFailed) {
+                disconnect()
+                return@Thread
+            }
+
+            resetCommandIdTracker()
+            connectionStatus =
+                if (bluetoothSocket?.isConnected == true) {
+                    ConnectionStatus.Active
+                } else {
+                    ConnectionStatus.Inactive
+                }
+            if (connectionStatus == ConnectionStatus.Active) {
+                startListening()
+            }
+        }.start()
     }
 
     private fun checkPendingCommand(json: String) {

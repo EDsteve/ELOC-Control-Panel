@@ -31,7 +31,6 @@ import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 import de.eloc.eloc_control_panel.receivers.ElocReceiver
-import java.util.concurrent.Executors
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toDrawable
 
@@ -54,13 +53,12 @@ class DeviceActivity : ThemableActivity() {
         StoppingRecordMode,
     }
 
-    private var checkingGpsTimeoutStarted = false
-    private var checkingGpsTimeoutCompleted = false
     private val listenerId = "deviceActivity"
     private var hasSDCardError = false
     private lateinit var binding: ActivityDeviceBinding
     private var deviceAddress = ""
     private var timeSyncHandled = false
+    private var showDeviceInfoStarted = false
     private var refreshing = false
     private var paused = false
     private var statusReceived = false
@@ -135,25 +133,6 @@ class DeviceActivity : ThemableActivity() {
         DeviceDriver.disconnect()
     }
 
-    private fun checkGpsLocationTimeout() {
-        if (!checkingGpsTimeoutStarted) {
-            checkingGpsTimeoutStarted = true
-            checkingGpsTimeoutCompleted = false
-            Executors.newSingleThreadExecutor().execute {
-                var waitTime = Preferences.gpsLocationTimeoutSeconds
-                while ((waitTime > 0) && (!paused) && (gpsLocationUpdate == null)) {
-                    try {
-                        Thread.sleep(1000)
-                    } catch (_: Exception) {
-                    }
-                    waitTime--
-                }
-                checkingGpsTimeoutCompleted = true
-                showDeviceInfo()
-            }
-        }
-    }
-
     private fun onConnectionStatusChanged(status: ConnectionStatus) {
         runOnUiThread {
             refreshing = false
@@ -165,11 +144,13 @@ class DeviceActivity : ThemableActivity() {
                 ConnectionStatus.Inactive -> {
                     binding.swipeRefreshLayout.isEnabled = true
                     timeSyncHandled = false
+                    showDeviceInfoStarted = false
                     setViewMode(ViewMode.Disconnected)
                 }
 
                 ConnectionStatus.Pending -> {
                     timeSyncHandled = false
+                    showDeviceInfoStarted = false
                     binding.swipeRefreshLayout.isEnabled = false
                     setViewMode(ViewMode.ConnectingView)
                 }
@@ -203,7 +184,7 @@ class DeviceActivity : ThemableActivity() {
                 binding.appVersionItem.valueText = App.versionName
                 updateGpsViews()
                 setListeners()
-                scanForDevice()
+                connectToDevice()
             }
         }
     }
@@ -230,47 +211,23 @@ class DeviceActivity : ThemableActivity() {
 
     private fun showDeviceInfo() {
         runOnUiThread {
-            if (timeSyncHandled) {
-                if (gpsLocationUpdate == null && (!checkingGpsTimeoutCompleted)) {
-                    setViewMode(ViewMode.LocationPendingView)
-                } else {
-                    // First getStatus call is just to check recording state - don't save to database
-                    DeviceDriver.getStatus(saveToDatabase = false) {
-                        runOnUiThread {
-                            setViewMode(ViewMode.FetchingDataView)
-                            val isRecording = DeviceDriver.session.recordingState.isActive
-                            if (isRecording && (gpsLocationUpdate == null)) {
-                                val savedUpdate = Preferences.lastKnownGpsLocation
-                                gpsLocationUpdate =
-                                    savedUpdate ?: GpsData(source = GpsDataSource.Unknown)
-                            } else if (gpsLocationUpdate == null) {
-                                gpsLocationUpdate = GpsData(source = GpsDataSource.Unknown)
-                            }
-                            val timeout = Preferences.gpsLocationTimeoutSeconds
-                            val source = gpsLocationUpdate?.source ?: GpsDataSource.Unknown
-                            val message: String? = when (source) {
-                                GpsDataSource.Unknown -> getString(
-                                    R.string.gps_unknown_coordinates,
-                                    timeout
-                                )
-
-                                GpsDataSource.Cache -> getString(
-                                    R.string.gps_cached_coordinates,
-                                    timeout
-                                )
-
-                                GpsDataSource.Radio -> null
-                            }
-
-                            if (message != null) {
-                                showModalAlert(
-                                    getString(R.string.gps_coordinates),
-                                    message
-                                ) { onFirstLocationReceived() }
-                            } else {
-                                onFirstLocationReceived()
-                            }
+            if (timeSyncHandled && !showDeviceInfoStarted) {
+                showDeviceInfoStarted = true
+                // First getStatus call is just to check recording state - don't save to database
+                DeviceDriver.getStatus(saveToDatabase = false) {
+                    runOnUiThread {
+                        setViewMode(ViewMode.FetchingDataView)
+                        val isRecording = DeviceDriver.session.recordingState.isActive
+                        if (isRecording && (gpsLocationUpdate == null)) {
+                            val savedUpdate = Preferences.lastKnownGpsLocation
+                            gpsLocationUpdate =
+                                savedUpdate ?: GpsData(source = GpsDataSource.Unknown)
+                        } else if (gpsLocationUpdate == null) {
+                            gpsLocationUpdate = GpsData(source = GpsDataSource.Unknown)
                         }
+                        // Don't block on a GPS modal — go straight to data fetch.
+                        // The GPS gauge already conveys whether the fix is real, cached, or unknown.
+                        onFirstLocationReceived()
                     }
                 }
             }
@@ -443,17 +400,15 @@ class DeviceActivity : ThemableActivity() {
             elocReceiver.unregister(this)
             BluetoothHelper.scanningSpecificEloc = false
             setViewMode(ViewMode.ConnectingView)
-            connectToDevice()
+            connectToDevice(fallbackToScanOnFailure = false)
         }
     }
 
     private fun scanForDevice() {
         // Register for device found events
         elocReceiver.register(this)
-        gpsLocationUpdate = null
-        checkGpsLocationTimeout()
 
-        // Do a scan to find the required device and only connecBluetootht when device is found.
+        // Do a scan to find the required device and only connect when device is found.
         setViewMode(ViewMode.ScanningView)
         BluetoothHelper.scanningSpecificEloc = true
         BluetoothHelper.startScan({ remaining ->
@@ -497,7 +452,7 @@ class DeviceActivity : ThemableActivity() {
         binding.swipeRefreshLayout.setOnRefreshListener {
             if (!refreshing) {
                 refreshing = true
-                scanForDevice()
+                connectToDevice()
             }
         }
 
@@ -519,11 +474,18 @@ class DeviceActivity : ThemableActivity() {
         }
     }
 
-    private fun connectToDevice() {
+    private fun connectToDevice(fallbackToScanOnFailure: Boolean = true) {
         timeSyncHandled = false
+        showDeviceInfoStarted = false
+        gpsLocationUpdate = null
+        setViewMode(ViewMode.ConnectingView)
         DeviceDriver.connect(deviceAddress) {
             runOnUiThread {
-                if (it?.isNotEmpty() == true) {
+                if (fallbackToScanOnFailure) {
+                    // Direct connect failed (device may be out of range or stale bond
+                    // info). Fall back to discovery scan as a recovery path.
+                    scanForDevice()
+                } else if (it.isNotEmpty()) {
                     showModalAlert(getString(R.string.bluetooth), it)
                 }
             }
