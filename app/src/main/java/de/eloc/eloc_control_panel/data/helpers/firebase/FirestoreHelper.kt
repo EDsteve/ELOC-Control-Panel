@@ -1,5 +1,6 @@
 package de.eloc.eloc_control_panel.data.helpers.firebase
 
+import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.CollectionReference
@@ -20,6 +21,7 @@ import de.eloc.eloc_control_panel.interfaces.ProfileCheckCallback
 class FirestoreHelper {
 
     companion object {
+        private const val TAG = "FirestoreHelper"
         private var cInstance: FirestoreHelper? = null
         const val FIELD_PROFILE_PICTURE = "profile_picture"
         const val FIELD_USER_ID = "user_id"
@@ -181,8 +183,11 @@ class FirestoreHelper {
         var completed: Boolean
         var wait = true
         if (totalCount == 0) {
+            Log.d(TAG, "uploadDataFiles: no pending uploads")
             return UploadResult.NoData
         }
+
+        Log.i(TAG, "uploadDataFiles: starting upload of $totalCount file(s): $pendingUploads")
 
         var failCount = 0
         var successCount = 0
@@ -190,9 +195,11 @@ class FirestoreHelper {
         val completeListener = fun(successful: Boolean, fileName: String) {
             if (successful) {
                 successCount++
+                Log.i(TAG, "uploadDataFiles: write acked for '$fileName' (cache or server) — deleting local file")
                 FileSystemHelper.deleteUploadedFile(fileName)
             } else {
                 failCount++
+                Log.w(TAG, "uploadDataFiles: write FAILED for '$fileName' — local file kept for retry")
             }
 
             completed = ((successCount + failCount) == pendingUploads.size)
@@ -202,6 +209,10 @@ class FirestoreHelper {
                 } else {
                     UploadResult.Failed
                 }
+                Log.i(
+                    TAG,
+                    "uploadDataFiles: done — success=$successCount fail=$failCount total=$totalCount result=$result"
+                )
                 wait = false
             }
         }
@@ -236,6 +247,7 @@ class FirestoreHelper {
             }
 
             if (data.isNullOrEmpty()) {
+                Log.w(TAG, "uploadDataFiles: skipping '$fileName' — empty/unreadable data file")
                 continue
             }
 
@@ -264,10 +276,23 @@ class FirestoreHelper {
                 }
             }
 
+            val docPath = document.path
+            Log.d(TAG, "uploadDataFiles: dispatching set() for '$fileName' -> $docPath")
             task = task.continueWithTask {
                 document.set(data)
             }
                 .addOnCompleteListener {
+                    if (!it.isSuccessful) {
+                        val ex = it.exception
+                        val code = (ex as? FirebaseFirestoreException)?.code?.name
+                        Log.e(
+                            TAG,
+                            "uploadDataFiles: set() failed for '$fileName' -> $docPath (code=$code)",
+                            ex
+                        )
+                    } else {
+                        Log.d(TAG, "uploadDataFiles: set() task complete for '$fileName' -> $docPath")
+                    }
                     completeListener(it.isSuccessful, fileName)
                 }
         }
