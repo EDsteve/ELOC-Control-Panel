@@ -272,4 +272,10 @@
     <string name="google_sign_in_failed">Google sign-in failed</string>
     <string name="google_sign_in_cancelled">Google sign-in was cancelled</string>
     <string name="web_client_id">773327231765-igglaupgt12mct4ii7kiil5ktda2nqfd.apps.googleusercontent.com</string>
+    <string name="time_unit_seconds">Seconds</string>
+    <string name="time_unit_minutes">Minutes</string>
+    <string name="time_unit_hours">Hours</string>
+    <string name="time_unit_days">Days</string>
+    <string name="enter_value">Value</string>
+    <string name="unit">Unit</string>
 </resources>

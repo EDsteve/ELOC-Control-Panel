@@ -97,10 +97,68 @@
                     android:layout_height="match_parent"
                     android:text="@string/new_value" />
 
+                <LinearLayout
+                    android:id="@+id/time_controls"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chip_group_quick_picks"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:selectionRequired="false"
+                        app:singleSelection="true" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.Material3.TextInputLayout.FilledBox.Dense"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:layout_weight="1"
+                            android:hint="@string/enter_value">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/numeric_value_edit_text"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone"
+                                android:inputType="number"
+                                android:maxLines="1" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.Material3.TextInputLayout.FilledBox.ExposedDropdownMenu"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:hint="@string/unit">
+
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                android:id="@+id/unit_dropdown"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:focusable="false"
+                                android:inputType="none"
+                                android:maxLines="1" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
                 <com.google.android.material.slider.Slider
                     android:id="@+id/slider"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:stepSize="1"
                     android:value="13"
                     android:valueFrom="10"
