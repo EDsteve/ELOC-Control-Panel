@@ -13,8 +13,8 @@ android {
         applicationId "de.eloc.eloc_control_panel_2"
         minSdk 21
         targetSdk 35
-        versionCode 57
-        versionName '5.36'
+        versionCode 59
+        versionName '5.41'
         versionNameSuffix 'AppBeta'
         vectorDrawables.useSupportLibrary = true
     }
@@ -78,6 +78,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:21.3.0'
     implementation 'com.google.android.gms:play-services-maps:19.2.0'
     implementation "com.google.android.gms:play-services-basement:18.7.0"
+    implementation 'com.google.android.recaptcha:recaptcha:18.8.0'
 
     // Keep BOM at 32.6 so that API 21 (Android 5) devices are supported
     //noinspection GradleDependency
