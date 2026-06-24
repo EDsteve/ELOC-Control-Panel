@@ -79,6 +79,18 @@ private const val KEY_B_LORA_RSSI = "RSSI[dBm]"
 private const val KEY_LORA_SNR = "SNR"
 private const val KEY_B_LORA_SNR = "SNR[dB]"
 
+// GPS status keys (from getStatus response, "gps" section). This is the device's on-board GNSS,
+// not the phone's location.
+private const val KEY_GPS = "gps"
+private const val KEY_GPS_PRESENT = "present"
+private const val KEY_GPS_POWERED = "powered"
+private const val KEY_GPS_HAS_FIX = "hasFix"
+private const val KEY_GPS_SATELLITES = "satellites"
+private const val KEY_GPS_TIME_SYNCED = "timeSynced"
+
+// Device wall-clock time (from getStatus response, "device/time").
+private const val KEY_DEVICE_TIME = "time"
+
 private const val KEY_INFERENCE = "inference"
 internal const val KEY_INFERENCE_THRESHOLD = "inference_threshold"
 internal const val KEY_INFERENCE_OBS_WINDOW_SECS = "observationWindowS"
@@ -189,6 +201,7 @@ object DeviceDriver {
     val general = General()
     val session = Session()
     val lorawan = LoraWan()
+    val gps = Gps()
     val inference = Inference()
     val dutyCycle = DutyCycle()
 
@@ -368,6 +381,16 @@ object DeviceDriver {
         cachedStatus = ""
         cachedConfig = ""
         infoType = null
+
+        // Clear cached device config too. `macAddress` is read live from the socket
+        // and is always fresh, but `general.nodeName` (which backs DeviceDriver.name /
+        // the Firestore device_name) survived across connections — so a status read
+        // from the next device could be saved under the PREVIOUS device's name while
+        // carrying the new device's MAC. Resetting here forces DeviceDriver.name to
+        // fall back to the live BT device name/address until the new device's
+        // getConfig refreshes it, keeping device_name and MAC in sync.
+        general.reset()
+        gps.reset()
 
         connectionStatus = ConnectionStatus.Inactive
         disconnecting = false
@@ -1278,6 +1301,32 @@ object DeviceDriver {
         val loraSnrPath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_LORA$PATH_SEPARATOR$KEY_LORA_SNR"
         lorawan.snr = JsonHelper.getJSONNumberAttribute(loraSnrPath, jsonObject)
+
+        // Device wall-clock time (preformatted local-time string from the firmware)
+        val deviceTimePath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_DEVICE_TIME"
+        general.deviceTime = JsonHelper.getJSONStringAttribute(deviceTimePath, jsonObject)
+
+        // Parse on-board GPS status
+        val gpsPresentPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_GPS$PATH_SEPARATOR$KEY_GPS_PRESENT"
+        gps.present = JsonHelper.getJSONBooleanAttribute(gpsPresentPath, jsonObject)
+
+        val gpsPoweredPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_GPS$PATH_SEPARATOR$KEY_GPS_POWERED"
+        gps.powered = JsonHelper.getJSONBooleanAttribute(gpsPoweredPath, jsonObject)
+
+        val gpsHasFixPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_GPS$PATH_SEPARATOR$KEY_GPS_HAS_FIX"
+        gps.hasFix = JsonHelper.getJSONBooleanAttribute(gpsHasFixPath, jsonObject)
+
+        val gpsSatellitesPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_GPS$PATH_SEPARATOR$KEY_GPS_SATELLITES"
+        gps.satellites = JsonHelper.getJSONNumberAttribute(gpsSatellitesPath, jsonObject).toInt()
+
+        val gpsTimeSyncedPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_GPS$PATH_SEPARATOR$KEY_GPS_TIME_SYNCED"
+        gps.timeSynced = JsonHelper.getJSONBooleanAttribute(gpsTimeSyncedPath, jsonObject)
     }
 
     private fun parseDeviceState(jsonObject: JSONObject) {

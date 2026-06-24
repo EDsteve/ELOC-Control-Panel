@@ -486,6 +486,22 @@
                                 tools:valueText="13453+GT" />
 
                             <de.eloc.eloc_control_panel.widgets.ListItem
+                                android:id="@+id/device_time_item"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="16dp"
+                                app:keyText="@string/device_time"
+                                tools:valueText="Wed, Jun 24 2026 14:30:01" />
+
+                            <de.eloc.eloc_control_panel.widgets.ListItem
+                                android:id="@+id/device_gps_item"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="16dp"
+                                app:keyText="@string/device_gps"
+                                tools:valueText="Fix (7 sats)" />
+
+                            <de.eloc.eloc_control_panel.widgets.ListItem
                                 android:id="@+id/uptime_item"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"

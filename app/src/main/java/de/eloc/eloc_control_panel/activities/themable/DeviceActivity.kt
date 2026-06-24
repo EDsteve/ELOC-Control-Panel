@@ -330,6 +330,8 @@ class DeviceActivity : ThemableActivity() {
         binding.recSinceBootItem.valueText =
             TimeHelper.formatHours(this, DeviceDriver.general.recHoursSinceBoot)
         binding.firmwareVersionItem.valueText = DeviceDriver.general.version
+        binding.deviceTimeItem.valueText = DeviceDriver.general.deviceTime.ifBlank { "—" }
+        binding.deviceGpsItem.valueText = describeDeviceGps()
         binding.uptimeItem.valueText =
             TimeHelper.formatHours(this, DeviceDriver.general.uptimeHours)
         val level = DeviceDriver.battery.level
@@ -353,6 +355,20 @@ class DeviceActivity : ThemableActivity() {
         }
         updateLoraSignalDisplay()
         displayRecordingState()
+    }
+
+    /**
+     * One-line status of the device's on-board GPS for the status list. Distinct from the phone GPS
+     * shown by the gps_gauge.
+     */
+    private fun describeDeviceGps(): String {
+        val gps = DeviceDriver.gps
+        return when {
+            !gps.present -> getString(R.string.not_available)
+            gps.hasFix -> getString(R.string.gps_fix, gps.satellites)
+            gps.powered -> getString(R.string.gps_searching, gps.satellites)
+            else -> getString(R.string.gps_idle)
+        }
     }
 
     private fun updateLoraSignalDisplay() {

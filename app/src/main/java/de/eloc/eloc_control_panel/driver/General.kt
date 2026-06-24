@@ -32,4 +32,30 @@ class General {
 
     var uptimeHours = 0.0
         internal set
+
+    // Device wall-clock time as a preformatted local-time string reported by the firmware (getStatus).
+    var deviceTime = ""
+        internal set
+
+    /**
+     * Reset all cached config/status fields to defaults.
+     *
+     * Called on disconnect so that none of these values survive into the next
+     * connection. `nodeName` in particular feeds [DeviceDriver.name] (the
+     * device_name written to Firestore status uploads); if it lingered, a status
+     * read from the next device could be saved with the PREVIOUS device's name
+     * even though the MAC (taken from the live socket) is already correct —
+     * producing the device_name/MAC desync seen in the status_uploads collection.
+     */
+    fun reset() {
+        nodeName = ""
+        fileHeader = ""
+        timePerFile = TimePerFile.Unknown
+        recHoursSinceBoot = 0.0
+        lastLocation = ""
+        locationAccuracy = 0
+        version = ""
+        uptimeHours = 0.0
+        deviceTime = ""
+    }
 }

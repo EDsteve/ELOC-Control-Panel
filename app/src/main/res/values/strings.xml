@@ -251,6 +251,11 @@
     <string name="lora_signal_dbm">%.1f dBm</string>
     <string name="lora_not_joined">Not Joined</string>
     <string name="lora_no_signal">No Signal</string>
+    <string name="device_time">Device Time</string>
+    <string name="device_gps">GPS</string>
+    <string name="gps_fix">Fix (%1$d sats)</string>
+    <string name="gps_searching">Searching… (%1$d sats)</string>
+    <string name="gps_idle">Idle</string>
     <string name="region">Region</string>
     <string name="uplink_interval">Uplink Interval</string>
     <string name="increment">Increment</string>
