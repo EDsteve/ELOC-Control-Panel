@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Thin-stroke help icon: outlined circle, question hook, dot. -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M12,3.2a8.8,8.8 0 1,0 0,17.6a8.8,8.8 0 1,0 0,-17.6"
+        android:strokeColor="@android:color/white"
+        android:strokeWidth="1.4" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M9.7,9.5C9.7,8.1 10.7,7.1 12,7.1C13.3,7.1 14.3,8.1 14.3,9.4C14.3,11.4 12,11.4 12,13.6"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.4" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,16.6m-1,0a1,1 0 1,0 2,0a1,1 0 1,0 -2,0" />
+</vector>

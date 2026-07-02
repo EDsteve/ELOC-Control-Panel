@@ -1,9 +1,53 @@
 # ELOC Control Panel - Active Context
 
 ## Current Work Focus
-Status Document Stale Timestamp Bug Fix - fixed `combinedStatusAndConfigTime` not being reset, causing status documents to overwrite existing ones instead of creating new ones.
+Device screen redesign (July 2026) — complete visual overhaul of `DeviceActivity` (dark gray + green with orange accent). Verify on real hardware; extend the design language to the remaining screens later.
 
 ## Recent Changes
+
+### Settings screen: section icons + per-setting help (July 2026)
+1. **Section icons** — each of the 11 settings sections has a green start icon on its header (`app:drawableStartCompat` + `app:drawableTint`): General=edit, Recorder=ic_waveform, Intruder=ic_shield, LoraWAN=ic_lora, Inference=ic_sparkle, Duty Cycle=access_time, Bluetooth=bluetooth, CPU=ic_chip, Battery=ic_battery, Logs=list_view, Advanced=run. The 11 chevron-swap blocks in `DeviceSettingsActivity` were replaced by `updateSectionHeader()`, which preserves the start icon via `compoundDrawablesRelative[0]` + `setCompoundDrawablesRelativeWithIntrinsicBounds`.
+2. **Per-setting help** — `ListItem` widget gained an optional `app:helpText` attr: shows a small "?" icon between label and value; tapping it opens the styled alert dialog (title = the setting's label). Every settings row (36) has a `help_*` string in `strings.xml`. Note: helpText only wires up at inflation; icons on 21–22 devices may lose tint after chevron swaps (framework drawableTint is 23+).
+3. **Follow-up tweaks** — settings footer (instructions link) removed; all toggle switches (ListItem rows + device-screen section headers) scaled to 65% via scaleX/scaleY to match the help-icon size, and ListItem switches now use the orange track tints from the design system.
+4. **Help-text corrections** — node-name help carries a strong "do not change" warning (changing it can break device identity). **Intruder detection is accelerometer-based** (detects the device being moved/removed), NOT sound-based — all intruder help texts corrected accordingly.
+
+### Redesign Round 3 — feedback from hardware test (July 2026)
+1. Gauge ring thickness halved (`SimpleGauge` 0.065 → 0.0325 of smallest side; widget only used on device screen).
+2. Active-section stripe now green (was orange); switch stays orange.
+3. Status words (Good/Low/…) under the gauges removed (layout + code); "No SD card" now shows in the storage sub-label on error.
+4. ELOC Time is device-reported only again (phone-time fallback removed at user's request) and matches the other stat font size (14sp). Old firmware shows "—" until updated.
+5. `tile_gradient.xml` changed from linear to **radial anchored at bottom-right** (top-left corner darkest) since the diagonal linear read as horizontal.
+6. wildlifebug.com footer removed from the device screen (home/settings instruction links remain).
+7. Mode button now floats transparently over the scroll content (bottom-center, 220dp wide, text has drop shadows; ScrollView full-height with 150dp bottom padding).
+8. Mode chooser bottom sheet redesigned: rounded gradient sheet, drag handle, title + dismiss chevron, option cards with colored icons (`ic_record/ic_waveform/ic_lora/ic_bolt/ic_stop`) and one-line descriptions; stop styled red; sheet container made transparent in `openModeChooser()`.
+
+### Redesign Round 2 — feedback from hardware test (July 2026)
+After testing on ELOC_00168:
+1. **ELOC Time blank** — that device's firmware predates `device["time"]` in getStatus (added in `ElocCommands.cpp` alongside `epoch`). App now falls back to phone time (valid because the app syncs the device clock via setTime on every connect). Uptime parses from the same `device` section, which is why it worked.
+2. **Dialogs restyled** — `layout_alert_ok/option.xml` rebuilt (rounded gradient card, green caps title, orange filled OK/positive button, outlined gray negative). `showStyledDialog()` helper in `ActivityExtensions.kt` makes the dialog window transparent and sets width to 88%.
+3. **Tile gradient** — `drawable/tile_gradient.xml` (angle 315, darker top-left) applied to all cards on the device screen, settings sections, and list items.
+4. **Mode button** — `layout_mode_button.xml` rebuilt: centered 72dp circular button with vertical gradient + 8dp elevation, icon inside, MODE caption + state verb below; busy state = circular progress in orange circle. `ModeButton.setButtonColor()` maps the legacy color resources to gradient drawables (`mode_circle_green/red/orange`).
+5. **Home (device list)** — `layout_eloc_info.xml` rebuilt as gradient cards (BT icon green, name/address, RSSI at end) keeping all view-holder ids; refresh button orange; footer link green; toolbar shadow removed.
+6. **Settings page** — all 11 section LinearLayouts in `activity_device_settings.xml` got gradient card backgrounds + bold headers (structure/ids untouched so expand/collapse code still works).
+7. **Toolbar menu** — hamburger + submenu replaced by a single settings-gear action (`app_bar_device.xml`); instructions entry removed (footer link remains).
+8. **Global theme** — `@color/window` now #141618; toolbar + status bar use it; toolbar subtitle green. Whole app inherits the dark base.
+
+### Device Screen Redesign (July 2026)
+**Feature**: Complete redesign of the main device screen (`activity_device.xml` + `DeviceActivity.kt`). Card-based dark UI: `ui_*` palette in `colors.xml` (window #141618, cards #1C1F23, green #8CC63F, orange accent #F58220).
+
+**New screen structure (top → bottom)**:
+1. **Gauge cards** — SD Card (free % + GB free), Battery (% + voltage), GPS Accuracy (phone GPS, gates recording) — each with a `SimpleGauge` ring and a colored status word (Good/Low/Critical…) derived from the same thresholds as the gauge colors.
+2. **Key stats card** — ELOC Time (device wall clock), Sample Rate, Gain, device GPS, Uptime, Rec Since Boot, Detected Events.
+3. **Toggle sections** (expandable cards with header switch, orange stripe when enabled, help `?` dialog, content dimmed to 40% alpha when off):
+   - **LoRa** → `LoraWan` (enable, Region, Uplink Interval + read-only Network joined/signal RSSI rows)
+   - **Scheduler** → currently backed by **DutyCycle** (enable, Awake/Sleep Duration); a real scheduler is planned to replace it later
+   - **Intruder Detection** → `Intruder` (enable, Threshold, Window ms)
+   - Toggles/rows write config directly via `Command.createSetConfigPropertyCommand` + `DeviceDriver.processCommandQueue`, then `refreshDeviceInfo()` re-fetches status+config; edits are blocked while recording (same gate as settings screen). Value rows reuse `TextEditorActivity`/`RangeEditorActivity`.
+4. **Device Details** — plain expandable card with the remaining status rows (session ID, AI model, durations, mic/battery/file info, last location, BT during recording).
+5. **Versions row** — firmware + app version.
+6. **Mode button** (unchanged logic) pinned above a **footer link** to wildlifebug.com (`showInstructions()`).
+
+**Other changes**: toolbar now uses `menu/app_bar_device.xml` (hamburger `mnu_more` with submenu: Settings, Help & Instructions) replacing the gear icon + bitmap-resize hack; `DeviceActivity.onResume()` calls `refreshDeviceInfo()` when returning from editors; new drawables `ic_lora`, `ic_calendar`, `ic_shield`, `ic_help_outline`, `ic_details`; switch tint selectors under `res/color/`. Only data already present in the driver objects is displayed (nothing invented).
 
 ### Status Document Stale Timestamp Bug Fix (March 2026)
 **Issue**: When changing device recording mode on a different day than the initial status document was created, the Android app updated the existing Firestore document instead of creating a new one. The `capture_timestamp` stayed at the original date, while `upload_timestamp` was refreshed and session data was updated with the new state.

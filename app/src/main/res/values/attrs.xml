@@ -25,6 +25,7 @@
             <enum name="selectable" value="3" />
         </attr>
         <attr name="indent" format="dimension" />
+        <attr name="helpText" format="string" />
     </declare-styleable>
 
     <declare-styleable name="ModeButton">

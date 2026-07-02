@@ -20,6 +20,18 @@
         android:layout_weight="2"
         tools:text="Item label" />
 
+    <ImageView
+        android:id="@+id/help_icon"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="?selectableItemBackgroundBorderless"
+        android:contentDescription="@string/help"
+        android:padding="6dp"
+        android:src="@drawable/ic_help_outline"
+        android:visibility="gone"
+        app:tint="@color/ui_text_faint"
+        tools:visibility="visible" />
+
     <TextView
         android:id="@+id/value_text_view"
         android:layout_width="0dp"
@@ -43,6 +55,10 @@
         android:id="@+id/toggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:thumbTint="@color/white" />
+        android:scaleX="0.65"
+        android:scaleY="0.65"
+        app:thumbTint="@color/switch_thumb_tint"
+        app:trackDecorationTint="@color/switch_track_decoration_tint"
+        app:trackTint="@color/switch_track_tint" />
 
 </LinearLayout>

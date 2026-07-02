@@ -133,7 +133,7 @@ class SimpleGauge : View {
     }
 
     private fun updateData() {
-        val dips = 0.065f * min(width, height) // 6.5% of smallest side
+        val dips = 0.0325f * min(width, height) // 3.25% of smallest side
         val penWidth = dips * context.resources.displayMetrics.density
         pen.color = getValueColor()
         pen.style = Paint.Style.STROKE

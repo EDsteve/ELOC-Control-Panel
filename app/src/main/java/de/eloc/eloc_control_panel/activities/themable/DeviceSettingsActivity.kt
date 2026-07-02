@@ -25,7 +25,6 @@ import de.eloc.eloc_control_panel.driver.Logs
 import de.eloc.eloc_control_panel.driver.Microphone
 import de.eloc.eloc_control_panel.activities.formatNumber
 import de.eloc.eloc_control_panel.activities.showModalAlert
-import de.eloc.eloc_control_panel.activities.showInstructions
 import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.prettifyTime
 import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.RangeEditorActivity
@@ -154,7 +153,6 @@ class DeviceSettingsActivity : ThemableActivity() {
 
     private fun setListeners() {
         DeviceDriver.addConnectionChangedListener(listenerId, ::onConnectionChanged)
-        binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.toolbar.setNavigationOnClickListener { goBack() }
 
         setBatteryListeners()
@@ -605,6 +603,22 @@ class DeviceSettingsActivity : ThemableActivity() {
         startActivity(intent)
     }
 
+    // Swap the expand/collapse chevron while preserving the section icon set in XML
+    // (app:drawableStartCompat).
+    private fun updateSectionHeader(headerView: android.widget.TextView, expanded: Boolean) {
+        val chevron = ContextCompat.getDrawable(
+            this,
+            if (expanded) R.drawable.keyboard_arrow_up else R.drawable.keyboard_arrow_down
+        )
+        val sectionIcon = headerView.compoundDrawablesRelative[0]
+        headerView.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            sectionIcon,
+            null,
+            chevron,
+            null
+        )
+    }
+
     private fun setLorawanSectionState(expanded: Boolean) {
         val state = if (expanded) View.VISIBLE else View.GONE
         binding.lorawanSection.children.forEach { child ->
@@ -614,17 +628,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             child.visibility = state
         }
 
-        val icon = if (expanded) {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
-        } else {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
-        }
-        binding.lorawanSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
-            null,
-            null,
-            icon,
-            null
-        )
+        updateSectionHeader(binding.lorawanSectionTextView, expanded)
     }
 
     private fun setInferenceSectionState(expanded: Boolean) {
@@ -636,17 +640,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             child.visibility = state
         }
 
-        val icon = if (expanded) {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
-        } else {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
-        }
-        binding.inferenceSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
-            null,
-            null,
-            icon,
-            null
-        )
+        updateSectionHeader(binding.inferenceSectionTextView, expanded)
     }
 
     private fun setIntruderSectionState(expanded: Boolean) {
@@ -658,17 +652,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             child.visibility = state
         }
 
-        val icon = if (expanded) {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
-        } else {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
-        }
-        binding.intruderSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
-            null,
-            null,
-            icon,
-            null
-        )
+        updateSectionHeader(binding.intruderSectionTextView, expanded)
     }
 
     private fun setBluetoothSectionState(expanded: Boolean) {
@@ -680,17 +664,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             child.visibility = state
         }
 
-        val icon = if (expanded) {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
-        } else {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
-        }
-        binding.btSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
-            null,
-            null,
-            icon,
-            null
-        )
+        updateSectionHeader(binding.btSectionTextView, expanded)
     }
 
     private fun setLogsSectionState(expanded: Boolean) {
@@ -702,17 +676,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             child.visibility = state
         }
 
-        val icon = if (expanded) {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
-        } else {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
-        }
-        binding.logsSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
-            null,
-            null,
-            icon,
-            null
-        )
+        updateSectionHeader(binding.logsSectionTextView, expanded)
     }
 
     private fun setAdvancedSectionState(expanded: Boolean) {
@@ -724,17 +688,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             child.visibility = state
         }
 
-        val icon = if (expanded) {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
-        } else {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
-        }
-        binding.advancedSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
-            null,
-            null,
-            icon,
-            null
-        )
+        updateSectionHeader(binding.advancedSectionTextView, expanded)
     }
 
     private fun setGeneralSectionState(expanded: Boolean) {
@@ -746,17 +700,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             child.visibility = state
         }
 
-        val icon = if (expanded) {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
-        } else {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
-        }
-        binding.generalSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
-            null,
-            null,
-            icon,
-            null
-        )
+        updateSectionHeader(binding.generalSectionTextView, expanded)
     }
 
     private fun setBatterySectionState(expanded: Boolean) {
@@ -768,17 +712,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             child.visibility = state
         }
 
-        val icon = if (expanded) {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
-        } else {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
-        }
-        binding.batterySectionTextView.setCompoundDrawablesWithIntrinsicBounds(
-            null,
-            null,
-            icon,
-            null
-        )
+        updateSectionHeader(binding.batterySectionTextView, expanded)
     }
 
     private fun setDutyCycleListeners() {
@@ -833,17 +767,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             child.visibility = state
         }
 
-        val icon = if (expanded) {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
-        } else {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
-        }
-        binding.dutyCycleSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
-            null,
-            null,
-            icon,
-            null
-        )
+        updateSectionHeader(binding.dutyCycleSectionTextView, expanded)
     }
 
     private fun setCpuSectionState(expanded: Boolean) {
@@ -855,17 +779,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             child.visibility = state
         }
 
-        val icon = if (expanded) {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
-        } else {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
-        }
-        binding.cpuSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
-            null,
-            null,
-            icon,
-            null
-        )
+        updateSectionHeader(binding.cpuSectionTextView, expanded)
     }
 
     private fun setMicrophoneSectionState(expanded: Boolean) {
@@ -877,17 +791,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             child.visibility = state
         }
 
-        val icon = if (expanded) {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_up)
-        } else {
-            ContextCompat.getDrawable(this, R.drawable.keyboard_arrow_down)
-        }
-        binding.microphoneSectionTextView.setCompoundDrawablesWithIntrinsicBounds(
-            null,
-            null,
-            icon,
-            null
-        )
+        updateSectionHeader(binding.microphoneSectionTextView, expanded)
     }
 
     private fun showProgress() {

@@ -29,6 +29,17 @@ import androidx.core.net.toUri
 const val DAY_SECONDS = 86400
 private const val HOUR_SECONDS = 3600
 
+// Show a custom-layout dialog with a transparent window (so the rounded card
+// background of the layout is what the user sees) at a consistent width.
+private fun AppCompatActivity.showStyledDialog(dialog: Dialog) {
+    dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+    dialog.show()
+    dialog.window?.setLayout(
+        (resources.displayMetrics.widthPixels * 0.88).toInt(),
+        android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+    )
+}
+
 fun prettifyTime(seconds: Int): String {
     val s = if (seconds < 0) {
         0
@@ -208,17 +219,25 @@ private fun AppCompatActivity.showAlert(
     val dialogMessage = message.trim().ifEmpty {
         return
     }
-    val binding = LayoutAlertOkBinding.inflate(layoutInflater)
-    val dialog = Dialog(this)
-    dialog.setContentView(binding.root)
-    binding.titleTextView.text = title
-    binding.messageTextView.text = dialogMessage
-    binding.okButton.setOnClickListener {
-        dialog.dismiss()
-        callback?.invoke()
+    // Dialogs must be created and shown on the UI thread (some callers, e.g. the
+    // Bluetooth connect worker, reach here off-thread), and only while the activity
+    // window is still valid (delayed Handler callbacks can fire after finish/destroy).
+    runOnUiThread {
+        if (isFinishing || isDestroyed) {
+            return@runOnUiThread
+        }
+        val binding = LayoutAlertOkBinding.inflate(layoutInflater)
+        val dialog = Dialog(this)
+        dialog.setContentView(binding.root)
+        binding.titleTextView.text = title
+        binding.messageTextView.text = dialogMessage
+        binding.okButton.setOnClickListener {
+            dialog.dismiss()
+            callback?.invoke()
+        }
+        dialog.setCancelable(false)
+        showStyledDialog(dialog)
     }
-    dialog.setCancelable(false)
-    dialog.show()
 }
 
 fun ThemableActivity.onWriteCommandError(errorMessage: String) {
@@ -267,5 +286,5 @@ fun AppCompatActivity.showModalOptionAlert(
         positiveCallback?.invoke()
     }
     dialog.setCancelable(false)
-    dialog.show()
+    showStyledDialog(dialog)
 }

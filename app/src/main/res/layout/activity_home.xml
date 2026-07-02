@@ -56,7 +56,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="@string/initializing" />
+                        android:text="@string/initializing"
+                        android:textColor="@color/ui_text_secondary" />
 
                     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
                         android:id="@+id/swipe_refresh_layout"
@@ -78,7 +79,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/button_height"
                         android:layout_marginHorizontal="16dp"
-                        android:text="@string/refresh_list" />
+                        android:backgroundTint="@color/ui_orange"
+                        android:text="@string/refresh_list"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/instructions_button"
@@ -90,13 +93,9 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="@string/instructions"
-                        android:textAlignment="center" />
+                        android:textAlignment="center"
+                        android:textColor="@color/ui_green" />
                 </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="8dp"
-                    android:background="@drawable/toolbar_shadow" />
             </FrameLayout>
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

@@ -76,7 +76,14 @@ class ModeButton : FrameLayout {
         listener = onClickListener
     }
 
+    // Kept as a color-resource API for compatibility with existing callers; the
+    // state colors are rendered as gradient circles in the redesigned button.
     fun setButtonColor(@ColorRes colorResource: Int) {
-        binding.root.setBackgroundResource(colorResource)
+        val circleDrawable = when (colorResource) {
+            R.color.recording_on_button -> R.drawable.mode_circle_red
+            R.color.detecting_off_button -> R.drawable.mode_circle_orange
+            else -> R.drawable.mode_circle_green
+        }
+        binding.modeCircle.setBackgroundResource(circleDrawable)
     }
 }

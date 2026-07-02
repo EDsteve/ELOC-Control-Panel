@@ -1,21 +1,25 @@
 package de.eloc.eloc_control_panel.activities.themable
 
 import android.content.Intent
-import android.graphics.Canvas
-import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.formatNumber
 import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.onWriteCommandError
-import de.eloc.eloc_control_panel.activities.showInstructions
+import de.eloc.eloc_control_panel.activities.prettifyTime
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.activities.showModalOptionAlert
+import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.BaseEditorActivity
+import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.RangeEditorActivity
+import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.TextEditorActivity
 import de.eloc.eloc_control_panel.data.BtDevice
+import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
 import de.eloc.eloc_control_panel.data.GpsData
@@ -28,17 +32,19 @@ import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.databinding.ActivityDeviceBinding
 import de.eloc.eloc_control_panel.databinding.LayoutModeChooserBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
+import de.eloc.eloc_control_panel.driver.DutyCycle
+import de.eloc.eloc_control_panel.driver.Intruder
+import de.eloc.eloc_control_panel.driver.LoraWan
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 import de.eloc.eloc_control_panel.receivers.ElocReceiver
-import androidx.core.graphics.createBitmap
-import androidx.core.graphics.drawable.toDrawable
 
 // todo: add refresh menu item for old API levels
 
 class DeviceActivity : ThemableActivity() {
     companion object {
         const val EXTRA_DEVICE_ADDRESS = "device_address"
+        private const val DISABLED_SECTION_ALPHA = 0.4f
     }
 
     private enum class ViewMode {
@@ -84,7 +90,7 @@ class DeviceActivity : ThemableActivity() {
                 CommandType.SetRecordMode -> {
                     displayRecordingState()
                     if (success) {
-                        // After starting recording mode, upload full info (status + config) 
+                        // After starting recording mode, upload full info (status + config)
                         // with new session ID and location to database
                         DeviceDriver.getElocInformation(gpsLocationUpdate, true) {
                             val commandType = DeviceDriver.getCommandType(it)
@@ -114,6 +120,10 @@ class DeviceActivity : ThemableActivity() {
                 gpsLocationUpdate = it
                 updateGpsViews()
             }
+        }
+        // Coming back from a settings editor: re-fetch so edited values show up.
+        if (showDeviceInfoStarted && statusReceived && configReceived) {
+            refreshDeviceInfo()
         }
     }
 
@@ -159,6 +169,7 @@ class DeviceActivity : ThemableActivity() {
     }
 
     private fun initialize() {
+        window.statusBarColor = ContextCompat.getColor(this, R.color.ui_window)
         displayRecordingState()
         registerListeners()
         elocReceiver = ElocReceiver(null) { elocFound(it) }
@@ -181,7 +192,7 @@ class DeviceActivity : ThemableActivity() {
             } else {
                 binding.toolbar.title = getString(R.string.getting_node_name)
                 binding.toolbar.subtitle = getString(R.string.eloc_user, Preferences.rangerName)
-                binding.appVersionItem.valueText = App.versionName
+                binding.appVersionText.text = App.versionName
                 updateGpsViews()
                 setListeners()
                 connectToDevice()
@@ -236,10 +247,10 @@ class DeviceActivity : ThemableActivity() {
 
     private fun onFirstLocationReceived() {
         setViewMode(ViewMode.FetchingDataView)
-        
+
         // Check if the device is already in an active recording mode
         val isRecording = DeviceDriver.session.recordingState.isActive
-        
+
         if (isRecording) {
             // Device is already recording - upload status only to database
             // (no need to update location or config, just get current status)
@@ -284,26 +295,23 @@ class DeviceActivity : ThemableActivity() {
             binding.swipeRefreshLayout.isRefreshing = false
             binding.swipeRefreshLayout.isEnabled = true
             binding.toolbar.menu.clear()
-            menuInflater.inflate(R.menu.app_bar_settings, binding.toolbar.menu)
-
-            try {
-                // Make settings icon larger (at least 128x128)
-                val settingsItem = binding.toolbar.menu.findItem(R.id.mnu_settings)
-                val oldIcon = settingsItem.icon
-                if (oldIcon != null) {
-                    val newSize = 128
-                    val bitmap = createBitmap(newSize, newSize)
-                    val canvas = Canvas(bitmap)
-                    oldIcon.bounds = Rect(0, 0, newSize, newSize)
-                    oldIcon.draw(canvas)
-                    settingsItem.icon = bitmap.toDrawable(resources)
-                }
-            } catch (_: Exception) {
-            }
-
+            menuInflater.inflate(R.menu.app_bar_device, binding.toolbar.menu)
             setConfigInfo()
             setStatusInfo()
             setViewMode(ViewMode.ContentView)
+        }
+    }
+
+    // Re-fetch status + config (no database upload) and rebind the UI when both arrive.
+    private fun refreshDeviceInfo() {
+        runOnUiThread {
+            statusReceived = false
+            configReceived = false
+            binding.swipeRefreshLayout.isRefreshing = true
+            DeviceDriver.getElocInformation(null, false) {
+                val type = DeviceDriver.getCommandType(it)
+                checkReceivedInfoType(type)
+            }
         }
     }
 
@@ -325,36 +333,51 @@ class DeviceActivity : ThemableActivity() {
         } else {
             TimeHelper.formatSeconds(this, recordingDuration)
         }
-        binding.detectedEventsItem.valueText = DeviceDriver.session.eventsDetected.toString()
+        binding.statEventsValue.text = DeviceDriver.session.eventsDetected.toString()
         binding.aiModelItem.valueText = DeviceDriver.session.aiModel
-        binding.recSinceBootItem.valueText =
+        binding.statRecBootValue.text =
             TimeHelper.formatHours(this, DeviceDriver.general.recHoursSinceBoot)
-        binding.firmwareVersionItem.valueText = DeviceDriver.general.version
-        binding.deviceTimeItem.valueText = DeviceDriver.general.deviceTime.ifBlank { "—" }
-        binding.deviceGpsItem.valueText = describeDeviceGps()
-        binding.uptimeItem.valueText =
+        binding.firmwareVersionText.text = DeviceDriver.general.version.ifBlank { "—" }
+        // Device-reported time only; firmware older than the device/time getStatus
+        // field shows a dash until it is updated.
+        binding.statTimeValue.text = DeviceDriver.general.deviceTime.ifBlank { "—" }
+        binding.statGpsValue.text = describeDeviceGps()
+        binding.statUptimeValue.text =
             TimeHelper.formatHours(this, DeviceDriver.general.uptimeHours)
+
+        updateBatteryGauge()
+        updateStorageGauge()
+        updateLoraSection()
+        updateSchedulerSection()
+        updateIntruderSection()
+        displayRecordingState()
+    }
+
+    private fun updateBatteryGauge() {
         val level = DeviceDriver.battery.level
         binding.batteryStatus.text = getString(R.string.gauge_battery_level, level.toInt())
+        binding.batterySubLabel.text =
+            getString(R.string.voltage_template, DeviceDriver.battery.voltage)
         binding.batteryGauge.updateValue(level)
         binding.batteryVoltItem.valueText = formatNumber(DeviceDriver.battery.voltage, "V")
         binding.batteryTypeItem.valueText = DeviceDriver.battery.type
+    }
+
+    private fun updateStorageGauge() {
         val free = DeviceDriver.sdCard.freeGb
-        binding.storageGauge.errorMode = (free <= 0)
-        binding.storageStatus.text = if (binding.storageGauge.errorMode)
-            ""
-        else
-            getString(R.string.gauge_free_space, free.toInt())
-        binding.storageGauge.updateValue(DeviceDriver.sdCard.freePercentage)
+        val freePercentage = DeviceDriver.sdCard.freePercentage
         val gb = DeviceDriver.sdCard.sizeGb
-        if (gb <= 0.0) {
-            binding.storageTextView.text = getString(R.string.no_sd_card)
+        binding.storageGauge.errorMode = (free <= 0) || (gb <= 0.0)
+        if (binding.storageGauge.errorMode) {
+            binding.storageStatus.text = ""
+            binding.storageSubLabel.text = getString(R.string.no_sd_card)
             binding.storageGauge.updateValue(0.0)
         } else {
-            binding.storageTextView.text = formatNumber(gb, "GB")
+            binding.storageStatus.text =
+                getString(R.string.gauge_battery_level, freePercentage.toInt())
+            binding.storageSubLabel.text = getString(R.string.free_space_template, free)
+            binding.storageGauge.updateValue(freePercentage)
         }
-        updateLoraSignalDisplay()
-        displayRecordingState()
     }
 
     /**
@@ -371,44 +394,276 @@ class DeviceActivity : ThemableActivity() {
         }
     }
 
-    private fun updateLoraSignalDisplay() {
-        val lorawan = DeviceDriver.lorawan
-        
-        // Only show LoRa signal if LoRa is enabled
-        if (!lorawan.enabled) {
-            binding.loraSignalContainer.visibility = View.GONE
-            return
-        }
-        
-        binding.loraSignalContainer.visibility = View.VISIBLE
-        
-        // Update icon and value based on signal status
-        if (!lorawan.joined) {
-            // Not joined to network
-            binding.loraSignalIcon.setImageResource(R.drawable.rssi_0)
-            binding.loraSignalValue.text = getString(R.string.lora_not_joined)
-        } else if (!lorawan.hasSignalInfo) {
-            // Joined but no signal info yet
-            binding.loraSignalIcon.setImageResource(R.drawable.rssi_1)
-            binding.loraSignalValue.text = getString(R.string.lora_no_signal)
-        } else {
-            // Has valid signal - show icon and dBm value
-            binding.loraSignalIcon.setImageResource(lorawan.signalStrength.iconResource)
-            binding.loraSignalValue.text = getString(R.string.lora_signal_dbm, lorawan.rssi)
-        }
-    }
-
     private fun setConfigInfo() {
         binding.toolbar.title = DeviceDriver.general.nodeName
-        binding.sampleRateItem.valueText = DeviceDriver.microphone.sampleRate.toString()
+        binding.statSampleRateValue.text = DeviceDriver.microphone.sampleRate.toString()
         binding.microphoneTypeItem.valueText = DeviceDriver.microphone.type
-        binding.gainItem.valueText = DeviceDriver.microphone.volumePower.percentage
+        binding.statGainValue.text = DeviceDriver.microphone.volumePower.percentage
         binding.timePerFileItem.valueText = DeviceDriver.general.timePerFile.toString()
         binding.lastLocationItem.valueText = DeviceDriver.general.lastLocation
         val enabledLabel =
             getString(if (DeviceDriver.bluetooth.enableDuringRecord) R.string.on else R.string.off)
         binding.bluetoothDuringRecordingItem.valueText = enabledLabel
         binding.fileHeaderItem.valueText = DeviceDriver.general.fileHeader
+    }
+
+    // ==================== Toggle sections (LoRa / Scheduler / Intruder) ====================
+
+    private fun updateLoraSection() {
+        val lorawan = DeviceDriver.lorawan
+        applySectionState(
+            enabled = lorawan.enabled,
+            switch = binding.loraSwitch,
+            stripe = binding.loraStripe,
+            content = binding.loraContent
+        )
+        binding.loraRegionItem.valueText = lorawan.region.ifBlank { "—" }
+        binding.loraUplinkItem.valueText = prettifyTime(lorawan.uplinkIntervalSeconds)
+        binding.loraNetworkItem.valueText = getString(
+            if (lorawan.joined) R.string.joined else R.string.lora_not_joined
+        )
+        if (!lorawan.joined) {
+            binding.loraSignalIcon.setImageResource(R.drawable.rssi_0)
+            binding.loraSignalValue.text = getString(R.string.lora_not_joined)
+        } else if (!lorawan.hasSignalInfo) {
+            binding.loraSignalIcon.setImageResource(R.drawable.rssi_1)
+            binding.loraSignalValue.text = getString(R.string.lora_no_signal)
+        } else {
+            binding.loraSignalIcon.setImageResource(lorawan.signalStrength.iconResource)
+            binding.loraSignalValue.text = getString(R.string.lora_signal_dbm, lorawan.rssi)
+        }
+    }
+
+    private fun updateSchedulerSection() {
+        val dutyCycle = DeviceDriver.dutyCycle
+        applySectionState(
+            enabled = dutyCycle.enabled,
+            switch = binding.schedulerSwitch,
+            stripe = binding.schedulerStripe,
+            content = binding.schedulerContent
+        )
+        binding.dutyAwakeItem.valueText = prettifyTime(dutyCycle.awakeDurationS)
+        binding.dutySleepItem.valueText = prettifyTime(dutyCycle.sleepDurationS)
+    }
+
+    private fun updateIntruderSection() {
+        val intruder = DeviceDriver.intruder
+        applySectionState(
+            enabled = intruder.enabled,
+            switch = binding.intruderSwitch,
+            stripe = binding.intruderStripe,
+            content = binding.intruderContent
+        )
+        binding.intruderThresholdItem.valueText = intruder.threshold.toString()
+        binding.intruderWindowItem.valueText =
+            getString(R.string.milliseconds_template, intruder.windowsMs)
+    }
+
+    private fun applySectionState(
+        enabled: Boolean,
+        switch: com.google.android.material.materialswitch.MaterialSwitch,
+        stripe: View,
+        content: ViewGroup
+    ) {
+        switch.isChecked = enabled
+        stripe.setBackgroundColor(
+            ContextCompat.getColor(this, if (enabled) R.color.ui_green else R.color.ui_stroke)
+        )
+        content.alpha = if (enabled) 1f else DISABLED_SECTION_ALPHA
+    }
+
+    private fun toggleSection(content: View, chevron: View) {
+        val expand = content.visibility != View.VISIBLE
+        content.visibility = if (expand) View.VISIBLE else View.GONE
+        chevron.rotation = if (expand) 180f else 0f
+    }
+
+    private fun expandSection(content: View, chevron: View) {
+        content.visibility = View.VISIBLE
+        chevron.rotation = 180f
+    }
+
+    // Config changes are rejected by the firmware while recording/detecting; mirror the
+    // gate used for the settings screen.
+    private fun canEditConfig(): Boolean {
+        if (DeviceDriver.session.recordingState.isInactive) {
+            return true
+        }
+        showModalAlert(
+            getString(R.string.not_available),
+            getString(R.string.device_settings_not_available)
+        )
+        return false
+    }
+
+    private fun runCommand(command: Command) {
+        binding.swipeRefreshLayout.isRefreshing = true
+        DeviceDriver.processCommandQueue(command)
+    }
+
+    private fun setBoolConfigProperty(property: String, value: Boolean) {
+        Command.createSetConfigPropertyCommand(
+            property,
+            value.toString(),
+            ::runCommand,
+            {
+                showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+                refreshDeviceInfo()
+            },
+        ) { refreshDeviceInfo() }
+    }
+
+    private fun openTextEditor(
+        property: String,
+        settingName: String,
+        currentValue: String,
+        isNumeric: Boolean = false,
+    ) {
+        val intent = Intent(this, TextEditorActivity::class.java)
+        intent.putExtra(BaseEditorActivity.EXTRA_SETTING_NAME, settingName)
+        intent.putExtra(BaseEditorActivity.EXTRA_CURRENT_VALUE, currentValue)
+        intent.putExtra(BaseEditorActivity.EXTRA_PROPERTY, property)
+        intent.putExtra(BaseEditorActivity.EXTRA_IS_NUMERIC, isNumeric)
+        intent.putExtra(BaseEditorActivity.EXTRA_PREFIX, "")
+        startActivity(intent)
+    }
+
+    private fun setSectionListeners() {
+        // LoRa
+        binding.loraHeader.setOnClickListener {
+            toggleSection(binding.loraContent, binding.loraChevron)
+        }
+        binding.loraHelpButton.setOnClickListener {
+            showModalAlert(getString(R.string.lora), getString(R.string.help_lora))
+        }
+        binding.loraSwitch.setOnClickListener {
+            val checked = binding.loraSwitch.isChecked
+            if (canEditConfig()) {
+                if (checked) {
+                    expandSection(binding.loraContent, binding.loraChevron)
+                }
+                setBoolConfigProperty(LoraWan.ENABLED, checked)
+            } else {
+                binding.loraSwitch.isChecked = !checked
+            }
+        }
+        binding.loraRegionItem.setOnClickListener {
+            if (binding.loraSwitch.isChecked && canEditConfig()) {
+                openTextEditor(
+                    LoraWan.REGION,
+                    getString(R.string.region),
+                    DeviceDriver.lorawan.region,
+                )
+            }
+        }
+        binding.loraUplinkItem.setOnClickListener {
+            if (binding.loraSwitch.isChecked && canEditConfig()) {
+                val currentInterval = DeviceDriver.lorawan.uplinkIntervalSeconds
+                RangeEditorActivity.openRangeEditor(
+                    this,
+                    LoraWan.UPLINK_INTERVAL,
+                    getString(R.string.uplink_interval),
+                    "$currentInterval (${prettifyTime(currentInterval)})",
+                    currentInterval.toFloat(),
+                    LoraWan.MIN_INTERVAL_SECS.toFloat(),
+                    LoraWan.MAX_INTERVAL_SECS.toFloat()
+                )
+            }
+        }
+
+        // Scheduler (duty cycle)
+        binding.schedulerHeader.setOnClickListener {
+            toggleSection(binding.schedulerContent, binding.schedulerChevron)
+        }
+        binding.schedulerHelpButton.setOnClickListener {
+            showModalAlert(getString(R.string.scheduler), getString(R.string.help_scheduler))
+        }
+        binding.schedulerSwitch.setOnClickListener {
+            val checked = binding.schedulerSwitch.isChecked
+            if (canEditConfig()) {
+                if (checked) {
+                    expandSection(binding.schedulerContent, binding.schedulerChevron)
+                }
+                setBoolConfigProperty(DutyCycle.ENABLE, checked)
+            } else {
+                binding.schedulerSwitch.isChecked = !checked
+            }
+        }
+        binding.dutyAwakeItem.setOnClickListener {
+            if (binding.schedulerSwitch.isChecked && canEditConfig()) {
+                val current = DeviceDriver.dutyCycle.awakeDurationS
+                RangeEditorActivity.openRangeEditor(
+                    this,
+                    DutyCycle.AWAKE_DURATION_S,
+                    getString(R.string.duty_cycle_awake_duration),
+                    "$current (${prettifyTime(current)})",
+                    current.toFloat(),
+                    DutyCycle.MIN_AWAKE_DURATION_S.toFloat(),
+                    DutyCycle.MAX_AWAKE_DURATION_S.toFloat()
+                )
+            }
+        }
+        binding.dutySleepItem.setOnClickListener {
+            if (binding.schedulerSwitch.isChecked && canEditConfig()) {
+                val current = DeviceDriver.dutyCycle.sleepDurationS
+                RangeEditorActivity.openRangeEditor(
+                    this,
+                    DutyCycle.SLEEP_DURATION_S,
+                    getString(R.string.duty_cycle_sleep_duration),
+                    "$current (${prettifyTime(current)})",
+                    current.toFloat(),
+                    DutyCycle.MIN_SLEEP_DURATION_S.toFloat(),
+                    DutyCycle.MAX_SLEEP_DURATION_S.toFloat()
+                )
+            }
+        }
+
+        // Intruder detection
+        binding.intruderHeader.setOnClickListener {
+            toggleSection(binding.intruderContent, binding.intruderChevron)
+        }
+        binding.intruderHelpButton.setOnClickListener {
+            showModalAlert(
+                getString(R.string.intruder_detection),
+                getString(R.string.help_intruder)
+            )
+        }
+        binding.intruderSwitch.setOnClickListener {
+            val checked = binding.intruderSwitch.isChecked
+            if (canEditConfig()) {
+                if (checked) {
+                    expandSection(binding.intruderContent, binding.intruderChevron)
+                }
+                setBoolConfigProperty(Intruder.ENABLED, checked)
+            } else {
+                binding.intruderSwitch.isChecked = !checked
+            }
+        }
+        binding.intruderThresholdItem.setOnClickListener {
+            if (binding.intruderSwitch.isChecked && canEditConfig()) {
+                openTextEditor(
+                    Intruder.THRESHOLD,
+                    getString(R.string.intruder_threshold),
+                    DeviceDriver.intruder.threshold.toString(),
+                    true,
+                )
+            }
+        }
+        binding.intruderWindowItem.setOnClickListener {
+            if (binding.intruderSwitch.isChecked && canEditConfig()) {
+                openTextEditor(
+                    Intruder.WINDOWS_MS,
+                    getString(R.string.intruder_windows_ms),
+                    DeviceDriver.intruder.windowsMs.toString(),
+                    true,
+                )
+            }
+        }
+
+        // Device details (plain expander, no switch)
+        binding.detailsHeader.setOnClickListener {
+            toggleSection(binding.detailsContent, binding.detailsChevron)
+        }
     }
 
     private fun elocFound(device: BtDevice) {
@@ -452,13 +707,10 @@ class DeviceActivity : ThemableActivity() {
     private fun setListeners() {
         DeviceDriver.addConnectionChangedListener(listenerId, ::onConnectionStatusChanged)
         binding.skipButton.setOnClickListener { skipTimeSync() }
-        binding.instructionsButton.setOnClickListener { showInstructions() }
         binding.modeButton.addClickListener { modeButtonClicked() }
         binding.toolbar.setNavigationOnClickListener { goBack() }
         binding.backButton.setOnClickListener { goBack() }
-        binding.recorderContainer.setOnClickListener {
-            openSettings(true)
-        }
+        setSectionListeners()
         binding.toolbar.setOnMenuItemClickListener {
             if (it.itemId == R.id.mnu_settings) {
                 openSettings()
@@ -610,9 +862,11 @@ class DeviceActivity : ThemableActivity() {
         binding.gpsAccuracyTextView.text = formatNumber(accuracy, units, units, 0)
         if ((accuracy >= 0) && (accuracy <= 100)) {
             binding.gpsAccuracyTextView.visibility = View.VISIBLE
+            binding.gpsSubLabel.visibility = View.VISIBLE
             binding.gpsNoAccuracyImageView.visibility = View.GONE
         } else {
             binding.gpsAccuracyTextView.visibility = View.GONE
+            binding.gpsSubLabel.visibility = View.GONE
             binding.gpsNoAccuracyImageView.visibility =
                 if (gpsLocationUpdate == null) View.GONE else View.VISIBLE
         }
@@ -670,6 +924,11 @@ class DeviceActivity : ThemableActivity() {
             setRecordingState(RecordState.RecordOffDetectOff, true)
         }
         modeSheet.setContentView(modeSheetBinding.root)
+        // The sheet container has its own opaque background; clear it so the rounded
+        // top corners of our layout are visible.
+        (modeSheetBinding.root.parent as? View)?.setBackgroundColor(
+            android.graphics.Color.TRANSPARENT
+        )
         modeSheet.setCancelable(true)
         modeSheet.show()
     }

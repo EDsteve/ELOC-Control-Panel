@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Subtle card gradient: radial from the bottom-right corner, so the
+     top-left corner (farthest from the center) is slightly darker. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="16dp" />
+    <gradient
+        android:centerX="1"
+        android:centerY="1"
+        android:endColor="#14171A"
+        android:gradientRadius="450dp"
+        android:startColor="#23272D"
+        android:type="radial" />
+</shape>

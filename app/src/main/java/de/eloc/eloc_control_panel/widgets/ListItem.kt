@@ -5,7 +5,9 @@ import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
 import android.widget.LinearLayout
+import androidx.appcompat.app.AppCompatActivity
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.databinding.LayoutListItemBinding
 
 private const val TYPE_NORMAL = 0
@@ -53,6 +55,14 @@ class ListItem : LinearLayout {
             val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ListItem)
             keyText = typedArray.getString(R.styleable.ListItem_keyText) ?: "-"
             valueText = typedArray.getString(R.styleable.ListItem_valueText) ?: "-"
+
+            val helpText = typedArray.getString(R.styleable.ListItem_helpText) ?: ""
+            if (helpText.isNotBlank()) {
+                binding.helpIcon.visibility = View.VISIBLE
+                binding.helpIcon.setOnClickListener {
+                    (context as? AppCompatActivity)?.showModalAlert(keyText, helpText)
+                }
+            }
 
             var indentDp = typedArray.getDimension(R.styleable.ListItem_indent, 0f)
             if (indentDp <= 0) {

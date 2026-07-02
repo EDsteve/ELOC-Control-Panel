@@ -35,7 +35,7 @@ The ELOC Control Panel is an Android application designed to connect to and cont
 
 ## Firmware Reference
 The ELOC firmware is developed separately and located at:
-`C:\Development\Firmware\ELOC-3.0\eloc610LowPowerPartition`
+`C:\Development\ELOC\Firmware\ELOC-3.0\eloc610LowPowerPartition`
 
 ## Repository
 - GitHub: https://github.com/EDsteve/ELOC-Control-Panel
