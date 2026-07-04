@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
+import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOkBinding
 import de.eloc.eloc_control_panel.databinding.LayoutAlertOptionBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
@@ -250,6 +251,23 @@ fun ThemableActivity.onWriteCommandError(errorMessage: String) {
             )
         }
     }
+}
+
+// Shown after changing a device setting the firmware only reads at boot
+// (see Command.requiresDeviceRestart). "Restart now" sends the firmware's 'reboot'
+// command; the resulting Bluetooth disconnect is handled by the callers' existing
+// connection-changed listeners, so no navigation is done here.
+fun AppCompatActivity.showRestartRequiredDialog(onDismissed: (() -> Unit)? = null) {
+    showModalOptionAlert(
+        title = getString(R.string.restart_required),
+        message = getString(R.string.setting_requires_restart),
+        positiveButtonLabel = getString(R.string.restart_now),
+        negativeButtonLabel = getString(R.string.later),
+        positiveCallback = {
+            DeviceDriver.processCommandQueue(Command.createRebootCommand { })
+        },
+        negativeCallback = onDismissed,
+    )
 }
 
 fun AppCompatActivity.showModalOptionAlert(

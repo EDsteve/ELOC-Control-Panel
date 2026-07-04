@@ -4,7 +4,9 @@ import android.os.Bundle
 import android.view.View
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.showRestartRequiredDialog
 import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
+import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.ConnectionStatus
 import de.eloc.eloc_control_panel.data.SampleRate
@@ -157,7 +159,13 @@ abstract class BaseEditorActivity : ThemableActivity() {
                 }
 
                 if (statusUpdated && configUpdated) {
-                    goBack()
+                    if (Command.requiresDeviceRestart(property)) {
+                        // On "Restart now" the device reboots and the resulting Bluetooth
+                        // disconnect navigates back via onConnectionChanged().
+                        showRestartRequiredDialog { goBack() }
+                    } else {
+                        goBack()
+                    }
                 }
             }
         }

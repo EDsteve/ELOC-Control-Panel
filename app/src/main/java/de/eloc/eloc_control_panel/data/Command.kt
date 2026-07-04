@@ -151,6 +151,37 @@ class Command(
         private const val COMMAND_SET_CONFIG = "setConfig"
         private const val COMMAND_GET_STATUS = "getStatus"
         private const val COMMAND_GET_CONFIG = "getConfig"
+        private const val COMMAND_REBOOT = "reboot"
+
+        // Settings the firmware only reads at boot; see the firmware's
+        // README-Config-Restart-Semantics.md for the trace behind each entry.
+        // CPU frequencies are deliberately reboot-only: applying them live would relock
+        // the ESP32 PLL that the Bluetooth radio runs on, crashing the device.
+        private val restartRequiredProperties = setOf(
+            KEY_MICROPHONE_SAMPLE_RATE,
+            KEY_MICROPHONE_CHANNEL,
+            KEY_MICROPHONE_APPLL,
+            KEY_MICROPHONE_VOLUME_POWER,
+            KEY_BT_ENABLE_AT_START,
+            KEY_BATTERY_AVG_SAMPLES,
+            KEY_BATTERY_AVG_INTERVAL_MS,
+            KEY_BATTERY_UPDATE_INTERVAL_MS,
+            KEY_LORAWAN_REGION,
+            KEY_CPU_MAX_FREQUENCY_MHZ,
+            KEY_CPU_MIN_FREQUENCY_MHZ,
+            KEY_CPU_ENABLE_LIGHT_SLEEP,
+        )
+
+        fun requiresDeviceRestart(property: String, value: String = ""): Boolean {
+            // Disabling LoRa applies live; enabling only happens at boot.
+            if (property == KEY_LORAWAN_ENABLE) {
+                return value.trim().lowercase() == "true"
+            }
+            return restartRequiredProperties.contains(property)
+        }
+
+        fun createRebootCommand(completionTask: (String) -> Unit): Command =
+            from(COMMAND_REBOOT, completionTask)
 
         fun createSetConfigPropertyCommand(
             property: String,

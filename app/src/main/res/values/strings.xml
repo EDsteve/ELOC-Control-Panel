@@ -92,6 +92,7 @@
     <string name="invalid_setting">Invalid setting!</string>
     <string name="invalid_token_credential">Invalid token credential!</string>
     <string name="last_location">Last Location</string>
+    <string name="later">Later</string>
     <string name="less_than_one_minute"><![CDATA[< 1m]]></string>
     <string name="list_view">List View</string>
     <string name="loading_ranger_profile">Loading ranger profile…</string>
@@ -153,6 +154,8 @@
     <string name="recording_duration">Recording Duration</string>
     <string name="recording_time_template">Recording Time: %.1fh</string>
     <string name="required">Required</string>
+    <string name="restart_now">Restart Now</string>
+    <string name="restart_required">Device Restart Required</string>
     <string name="retrying_in_time">Retrying in %s</string>
     <string name="sample_rate">Sample Rate</string>
     <string name="scanner">Scanner</string>
@@ -166,6 +169,7 @@
     <string name="session_id">Session ID</string>
     <string name="set_notifications_permission">Set Notifications permission</string>
     <string name="setting_mode">Setting mode…</string>
+    <string name="setting_requires_restart">The setting was saved, but it will only take effect after the ELOC device restarts.\n\nRestart the device now?</string>
     <string name="stopping">Stopping…</string>
     <string name="show_details">Show details</string>
     <string name="skip_time_sync"><u>Skip time sync</u></string>
@@ -315,6 +319,13 @@
     <string name="firmware">Firmware</string>
     <string name="milliseconds_template">%d ms</string>
     <string name="visit_wildlifebug"><u>wildlifebug.com</u></string>
+    <string name="signal_excellent">Excellent</string>
+    <string name="signal_good">Good</string>
+    <string name="signal_fair">Fair</string>
+    <string name="signal_poor">Poor</string>
+    <string name="signal_very_poor">Very poor</string>
+    <string name="lora_signal_subtitle">%1$s · %2$.1f dBm</string>
+    <string name="scheduler_active_subtitle">%1$s on · %2$s off</string>
     <string name="state_label_template">● %s</string>
     <string name="mode_record_desc">Continuous recording to SD card</string>
     <string name="mode_record_ai_desc">Record continuously and run AI detection</string>

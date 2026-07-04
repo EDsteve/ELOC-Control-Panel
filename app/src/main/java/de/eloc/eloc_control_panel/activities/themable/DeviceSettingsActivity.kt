@@ -25,6 +25,7 @@ import de.eloc.eloc_control_panel.driver.Logs
 import de.eloc.eloc_control_panel.driver.Microphone
 import de.eloc.eloc_control_panel.activities.formatNumber
 import de.eloc.eloc_control_panel.activities.showModalAlert
+import de.eloc.eloc_control_panel.activities.showRestartRequiredDialog
 import de.eloc.eloc_control_panel.activities.goBack
 import de.eloc.eloc_control_panel.activities.prettifyTime
 import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.RangeEditorActivity
@@ -326,24 +327,27 @@ class DeviceSettingsActivity : ThemableActivity() {
                 ::runCommand,
                 {
                     showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
-                }) { refresh() }
+                }) {
+                refresh()
+                maybeShowRestartDialog(Cpu.ENABLE_LIGHT_SLEEP, checked.toString(), it)
+            }
         }
         binding.cpuMinFrequencyItem.setOnClickListener {
-            openTextEditor(
+            // Only hardware-valid min clocks, capped at the current max so min can never exceed max.
+            openFrequencyEditor(
                 Cpu.MIN_FREQUENCY,
                 getString(R.string.minimum_cpu_frequency),
-                DeviceDriver.cpu.minFrequencyMHz.toString(),
-                isNumeric = true,
-                minimum = 1.0,
+                DeviceDriver.cpu.minFrequencyMHz,
+                Cpu.VALID_MIN_FREQUENCIES.filter { it <= DeviceDriver.cpu.maxFrequencyMHz },
             )
         }
         binding.cpuMaxFrequencyItem.setOnClickListener {
-            openTextEditor(
+            // Only hardware-valid max clocks, floored at the current min so max can never be below min.
+            openFrequencyEditor(
                 Cpu.MAX_FREQUENCY,
                 getString(R.string.maximum_cpu_frequency),
-                DeviceDriver.cpu.maxFrequencyMHz.toString(),
-                isNumeric = true,
-                minimum = 80.0,
+                DeviceDriver.cpu.maxFrequencyMHz,
+                Cpu.VALID_MAX_FREQUENCIES.filter { it >= DeviceDriver.cpu.minFrequencyMHz },
             )
         }
     }
@@ -361,7 +365,11 @@ class DeviceSettingsActivity : ThemableActivity() {
                 {
                     showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
                 },
-            ) { refresh() }
+            ) {
+                refresh()
+                // enabling LoRa only takes effect at boot; disabling applies live
+                maybeShowRestartDialog(LoraWan.ENABLED, checked.toString(), it)
+            }
         }
         binding.lorawanRegionItem.setOnClickListener {
             openTextEditor(
@@ -474,7 +482,10 @@ class DeviceSettingsActivity : ThemableActivity() {
                 {
                     showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
                 },
-            ) { refresh() }
+            ) {
+                refresh()
+                maybeShowRestartDialog(BtConfig.ENABLE_AT_START, checked.toString(), it)
+            }
         }
         binding.btEnableOnTappingItem.setSwitchClickedListener {
             val checked = binding.btEnableOnTappingItem.isChecked
@@ -573,7 +584,10 @@ class DeviceSettingsActivity : ThemableActivity() {
                 errorCallback = {
                     showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
                 },
-            ) { refresh() }
+            ) {
+                refresh()
+                maybeShowRestartDialog(Microphone.USE_APLL, checked.toString(), it)
+            }
         }
     }
 
@@ -581,6 +595,16 @@ class DeviceSettingsActivity : ThemableActivity() {
         commandId = command.id
         showProgress()
         DeviceDriver.processCommandQueue(command)
+    }
+
+    // For switch-based settings the firmware only reads at boot: after a successful
+    // save, tell the user a device restart is needed (with the option to do it now).
+    private fun maybeShowRestartDialog(property: String, value: String, response: String) {
+        if (DeviceDriver.commandSucceeded(response) &&
+            Command.requiresDeviceRestart(property, value)
+        ) {
+            runOnUiThread { showRestartRequiredDialog() }
+        }
     }
 
     private fun openTextEditor(
@@ -601,6 +625,26 @@ class DeviceSettingsActivity : ThemableActivity() {
             intent.putExtra(BaseEditorActivity.EXTRA_MINIMUM, minimum)
         }
         startActivity(intent)
+    }
+
+    // CPU clocks are only selectable at fixed hardware-valid values, so present them as a
+    // picker instead of free text. The caller pre-filters the list to enforce min <= max.
+    private fun openFrequencyEditor(
+        property: String,
+        settingName: String,
+        currentMHz: Int,
+        validFrequencies: List<Int>,
+    ) {
+        val options = validFrequencies
+            .ifEmpty { listOf(currentMHz) }
+            .map { "$it|$it MHz" }
+        OptionEditorActivity.open(
+            this,
+            property,
+            settingName,
+            "$currentMHz MHz",
+            options,
+        )
     }
 
     // Swap the expand/collapse chevron while preserving the section icon set in XML
