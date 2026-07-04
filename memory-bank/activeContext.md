@@ -5,6 +5,12 @@ Device screen redesign (July 2026) — complete visual overhaul of `DeviceActivi
 
 ## Recent Changes
 
+### Status page toggle-section polish (July 2026)
+1. **LoRa header** — when LoRa is enabled, the subtitle "Long range wireless communication" is replaced with live signal status ("Excellent · -85.5 dBm", "Not joined", or "No signal"); the antenna icon is tinted by signal strength (green/amber/orange/red via `signalColorRes()`). Disabled → static subtitle restored.
+2. **Scheduler header** — when active, subtitle shows "{awake} on · {sleep} off" (from duty-cycle timings) instead of "Duty-cycled recording schedule".
+3. **Section icons gray when inactive** — `applySectionState()` now also tints the header icon (LoRa/Scheduler/Intruder): green when enabled, gray (`ui_text_secondary`) when off. Icons default to gray in XML.
+4. Gauge ring thickness +15% (`SimpleGauge` 0.0325 → 0.0374 of smallest side).
+
 ### Settings screen: section icons + per-setting help (July 2026)
 1. **Section icons** — each of the 11 settings sections has a green start icon on its header (`app:drawableStartCompat` + `app:drawableTint`): General=edit, Recorder=ic_waveform, Intruder=ic_shield, LoraWAN=ic_lora, Inference=ic_sparkle, Duty Cycle=access_time, Bluetooth=bluetooth, CPU=ic_chip, Battery=ic_battery, Logs=list_view, Advanced=run. The 11 chevron-swap blocks in `DeviceSettingsActivity` were replaced by `updateSectionHeader()`, which preserves the start icon via `compoundDrawablesRelative[0]` + `setCompoundDrawablesRelativeWithIntrinsicBounds`.
 2. **Per-setting help** — `ListItem` widget gained an optional `app:helpText` attr: shows a small "?" icon between label and value; tapping it opens the styled alert dialog (title = the setting's label). Every settings row (36) has a `help_*` string in `strings.xml`. Note: helpText only wires up at inflation; icons on 21–22 devices may lose tint after chevron swaps (framework drawableTint is 23+).

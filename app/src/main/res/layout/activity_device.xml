@@ -609,12 +609,12 @@
                                             android:paddingVertical="12dp">
 
                                             <ImageView
+                                                android:id="@+id/lora_icon"
                                                 android:layout_width="24dp"
                                                 android:layout_height="24dp"
                                                 android:importantForAccessibility="no"
                                                 android:src="@drawable/ic_lora"
-                                                app:tint="@color/ui_green"
-                                                tools:viewBindingIgnore="true" />
+                                                app:tint="@color/ui_text_secondary" />
 
                                             <LinearLayout
                                                 android:layout_width="0dp"
@@ -633,12 +633,12 @@
                                                     tools:viewBindingIgnore="true" />
 
                                                 <TextView
+                                                    android:id="@+id/lora_subtitle"
                                                     android:layout_width="wrap_content"
                                                     android:layout_height="wrap_content"
                                                     android:text="@string/lora_subtitle"
                                                     android:textColor="@color/ui_text_secondary"
-                                                    android:textSize="12sp"
-                                                    tools:viewBindingIgnore="true" />
+                                                    android:textSize="12sp" />
                                             </LinearLayout>
 
                                             <ImageButton
@@ -794,12 +794,12 @@
                                             android:paddingVertical="12dp">
 
                                             <ImageView
+                                                android:id="@+id/scheduler_icon"
                                                 android:layout_width="24dp"
                                                 android:layout_height="24dp"
                                                 android:importantForAccessibility="no"
                                                 android:src="@drawable/ic_calendar"
-                                                app:tint="@color/ui_green"
-                                                tools:viewBindingIgnore="true" />
+                                                app:tint="@color/ui_text_secondary" />
 
                                             <LinearLayout
                                                 android:layout_width="0dp"
@@ -818,12 +818,12 @@
                                                     tools:viewBindingIgnore="true" />
 
                                                 <TextView
+                                                    android:id="@+id/scheduler_subtitle"
                                                     android:layout_width="wrap_content"
                                                     android:layout_height="wrap_content"
                                                     android:text="@string/scheduler_subtitle"
                                                     android:textColor="@color/ui_text_secondary"
-                                                    android:textSize="12sp"
-                                                    tools:viewBindingIgnore="true" />
+                                                    android:textSize="12sp" />
                                             </LinearLayout>
 
                                             <ImageButton
@@ -938,12 +938,12 @@
                                             android:paddingVertical="12dp">
 
                                             <ImageView
+                                                android:id="@+id/intruder_icon"
                                                 android:layout_width="24dp"
                                                 android:layout_height="24dp"
                                                 android:importantForAccessibility="no"
                                                 android:src="@drawable/ic_shield"
-                                                app:tint="@color/ui_green"
-                                                tools:viewBindingIgnore="true" />
+                                                app:tint="@color/ui_text_secondary" />
 
                                             <LinearLayout
                                                 android:layout_width="0dp"

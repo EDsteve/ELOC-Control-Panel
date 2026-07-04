@@ -34,6 +34,7 @@ import de.eloc.eloc_control_panel.databinding.LayoutModeChooserBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.driver.DutyCycle
 import de.eloc.eloc_control_panel.driver.Intruder
+import de.eloc.eloc_control_panel.driver.LoraSignalStrength
 import de.eloc.eloc_control_panel.driver.LoraWan
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
@@ -415,13 +416,44 @@ class DeviceActivity : ThemableActivity() {
             enabled = lorawan.enabled,
             switch = binding.loraSwitch,
             stripe = binding.loraStripe,
-            content = binding.loraContent
+            content = binding.loraContent,
+            icon = binding.loraIcon
         )
         binding.loraRegionItem.valueText = lorawan.region.ifBlank { "—" }
         binding.loraUplinkItem.valueText = prettifyTime(lorawan.uplinkIntervalSeconds)
         binding.loraNetworkItem.valueText = getString(
             if (lorawan.joined) R.string.joined else R.string.lora_not_joined
         )
+
+        // Header: when LoRa is active, replace the static description with live signal
+        // status and tint the antenna icon by signal strength.
+        if (lorawan.enabled) {
+            when {
+                !lorawan.joined -> {
+                    binding.loraSubtitle.text = getString(R.string.lora_not_joined)
+                    tintLoraIcon(R.color.ui_text_secondary)
+                }
+
+                !lorawan.hasSignalInfo -> {
+                    binding.loraSubtitle.text = getString(R.string.lora_no_signal)
+                    tintLoraIcon(R.color.ui_text_secondary)
+                }
+
+                else -> {
+                    val strength = lorawan.signalStrength
+                    binding.loraSubtitle.text = getString(
+                        R.string.lora_signal_subtitle,
+                        getString(signalLabelRes(strength)),
+                        lorawan.rssi
+                    )
+                    tintLoraIcon(signalColorRes(strength))
+                }
+            }
+        } else {
+            binding.loraSubtitle.text = getString(R.string.lora_subtitle)
+        }
+
+        // Expanded signal row (unchanged behavior).
         if (!lorawan.joined) {
             binding.loraSignalIcon.setImageResource(R.drawable.rssi_0)
             binding.loraSignalValue.text = getString(R.string.lora_not_joined)
@@ -434,16 +466,47 @@ class DeviceActivity : ThemableActivity() {
         }
     }
 
+    private fun tintLoraIcon(colorRes: Int) {
+        binding.loraIcon.setColorFilter(ContextCompat.getColor(this, colorRes))
+    }
+
+    private fun signalLabelRes(strength: LoraSignalStrength): Int = when (strength) {
+        LoraSignalStrength.Excellent -> R.string.signal_excellent
+        LoraSignalStrength.Good -> R.string.signal_good
+        LoraSignalStrength.Fair -> R.string.signal_fair
+        LoraSignalStrength.Poor -> R.string.signal_poor
+        LoraSignalStrength.VeryPoor -> R.string.signal_very_poor
+    }
+
+    private fun signalColorRes(strength: LoraSignalStrength): Int = when (strength) {
+        LoraSignalStrength.Excellent -> R.color.ui_green
+        LoraSignalStrength.Good -> R.color.ui_green
+        LoraSignalStrength.Fair -> R.color.ui_amber
+        LoraSignalStrength.Poor -> R.color.ui_orange
+        LoraSignalStrength.VeryPoor -> R.color.ui_red
+    }
+
     private fun updateSchedulerSection() {
         val dutyCycle = DeviceDriver.dutyCycle
         applySectionState(
             enabled = dutyCycle.enabled,
             switch = binding.schedulerSwitch,
             stripe = binding.schedulerStripe,
-            content = binding.schedulerContent
+            content = binding.schedulerContent,
+            icon = binding.schedulerIcon
         )
         binding.dutyAwakeItem.valueText = prettifyTime(dutyCycle.awakeDurationS)
         binding.dutySleepItem.valueText = prettifyTime(dutyCycle.sleepDurationS)
+        // When active, summarize the awake/sleep timing in the header.
+        binding.schedulerSubtitle.text = if (dutyCycle.enabled) {
+            getString(
+                R.string.scheduler_active_subtitle,
+                prettifyTime(dutyCycle.awakeDurationS),
+                prettifyTime(dutyCycle.sleepDurationS)
+            )
+        } else {
+            getString(R.string.scheduler_subtitle)
+        }
     }
 
     private fun updateIntruderSection() {
@@ -452,7 +515,8 @@ class DeviceActivity : ThemableActivity() {
             enabled = intruder.enabled,
             switch = binding.intruderSwitch,
             stripe = binding.intruderStripe,
-            content = binding.intruderContent
+            content = binding.intruderContent,
+            icon = binding.intruderIcon
         )
         binding.intruderThresholdItem.valueText = intruder.threshold.toString()
         binding.intruderWindowItem.valueText =
@@ -463,13 +527,21 @@ class DeviceActivity : ThemableActivity() {
         enabled: Boolean,
         switch: com.google.android.material.materialswitch.MaterialSwitch,
         stripe: View,
-        content: ViewGroup
+        content: ViewGroup,
+        icon: android.widget.ImageView
     ) {
         switch.isChecked = enabled
         stripe.setBackgroundColor(
             ContextCompat.getColor(this, if (enabled) R.color.ui_green else R.color.ui_stroke)
         )
         content.alpha = if (enabled) 1f else DISABLED_SECTION_ALPHA
+        // Section icon is green when the feature is active, gray when off.
+        icon.setColorFilter(
+            ContextCompat.getColor(
+                this,
+                if (enabled) R.color.ui_green else R.color.ui_text_secondary
+            )
+        )
     }
 
     private fun toggleSection(content: View, chevron: View) {
