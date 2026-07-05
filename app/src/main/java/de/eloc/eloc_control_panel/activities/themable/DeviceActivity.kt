@@ -784,8 +784,9 @@ class DeviceActivity : ThemableActivity() {
         binding.backButton.setOnClickListener { goBack() }
         setSectionListeners()
         binding.toolbar.setOnMenuItemClickListener {
-            if (it.itemId == R.id.mnu_settings) {
-                openSettings()
+            when (it.itemId) {
+                R.id.mnu_settings -> openSettings()
+                R.id.mnu_reboot -> confirmReboot()
             }
             return@setOnMenuItemClickListener true
         }
@@ -799,6 +800,20 @@ class DeviceActivity : ThemableActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             binding.scrollView.setOnScrollChangeListener(scrollChangeListener)
         }
+    }
+
+    // The firmware replies first and restarts ~1 s later; the resulting Bluetooth
+    // disconnect is handled by onConnectionStatusChanged (Disconnected view).
+    private fun confirmReboot() {
+        showModalOptionAlert(
+            title = getString(R.string.reboot_device),
+            message = getString(R.string.reboot_device_message),
+            positiveButtonLabel = getString(R.string.reboot_now),
+            negativeButtonLabel = getString(R.string.cancel),
+            positiveCallback = {
+                DeviceDriver.processCommandQueue(Command.createRebootCommand { })
+            },
+        )
     }
 
     private fun openSettings(showMicrophoneSection: Boolean = false) {

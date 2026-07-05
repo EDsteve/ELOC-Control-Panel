@@ -2,6 +2,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/mnu_reboot"
+        android:icon="@drawable/restart"
+        android:title="@string/reboot_device"
+        app:iconTint="@color/ui_text_primary"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/mnu_settings"
         android:icon="@drawable/settings_outline"
         android:title="@string/settings"

@@ -147,6 +147,9 @@
     <string name="ranger_profile_missing_details">Failed to load the ranger profile.\nYou will be signed out now.</string>
     <string name="record_anyway">Record Anyway</string>
     <string name="record_when_detected">Record When Detected</string>
+    <string name="reboot_device">Reboot Device</string>
+    <string name="reboot_device_message">The ELOC device will restart and the Bluetooth connection will be lost. If a recording is in progress, it will be stopped.\n\nReboot the device now?</string>
+    <string name="reboot_now">Reboot Now</string>
     <string name="recorder_channel">Recorder Channel</string>
     <string name="recorder_sample_rate">Recorder Sample Rate</string>
     <string name="recorder_settings">Recorder Settings</string>
