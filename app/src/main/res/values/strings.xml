@@ -196,6 +196,7 @@
     <string name="stopping_upload_service">Stopping upload service…</string>
     <string name="storage">Storage</string>
     <string name="sync_failed_check_internet_connection">Sync failed\nCheck internet connection</string>
+    <string name="sync_time_now">Sync ELOC time with phone</string>
     <string name="syncing_time">Syncing time… Please wait</string>
     <string name="system_settings">System settings</string>
     <string name="text_editor_setting_name">Setting: %s</string>

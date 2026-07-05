@@ -366,25 +366,49 @@
                                     android:orientation="vertical"
                                     android:padding="16dp">
 
-                                    <TextView
-                                        android:layout_width="wrap_content"
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
-                                        android:letterSpacing="0.12"
-                                        android:text="@string/eloc_time"
-                                        android:textAllCaps="true"
-                                        android:textColor="@color/ui_text_secondary"
-                                        android:textSize="10sp"
-                                        tools:viewBindingIgnore="true" />
+                                        android:baselineAligned="false"
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal">
 
-                                    <TextView
-                                        android:id="@+id/stat_time_value"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginTop="2dp"
-                                        android:textColor="@color/ui_text_primary"
-                                        android:textSize="14sp"
-                                        android:textStyle="bold"
-                                        tools:text="Wed, Jun 24 2026 14:30:01" />
+                                        <LinearLayout
+                                            android:layout_width="0dp"
+                                            android:layout_height="wrap_content"
+                                            android:layout_weight="1"
+                                            android:orientation="vertical">
+
+                                            <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:letterSpacing="0.12"
+                                                android:text="@string/eloc_time"
+                                                android:textAllCaps="true"
+                                                android:textColor="@color/ui_text_secondary"
+                                                android:textSize="10sp"
+                                                tools:viewBindingIgnore="true" />
+
+                                            <TextView
+                                                android:id="@+id/stat_time_value"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:layout_marginTop="2dp"
+                                                android:textColor="@color/ui_text_primary"
+                                                android:textSize="14sp"
+                                                android:textStyle="bold"
+                                                tools:text="Wed, Jun 24 2026 14:30:01" />
+                                        </LinearLayout>
+
+                                        <ImageButton
+                                            android:id="@+id/sync_time_button"
+                                            android:layout_width="40dp"
+                                            android:layout_height="40dp"
+                                            android:background="?attr/selectableItemBackgroundBorderless"
+                                            android:contentDescription="@string/sync_time_now"
+                                            android:src="@drawable/sync"
+                                            app:tint="@color/ui_text_secondary" />
+                                    </LinearLayout>
 
                                     <LinearLayout
                                         android:layout_width="match_parent"

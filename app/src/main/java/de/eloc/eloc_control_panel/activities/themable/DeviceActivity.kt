@@ -149,8 +149,11 @@ class DeviceActivity : ThemableActivity() {
             refreshing = false
             binding.swipeRefreshLayout.isRefreshing = false
             binding.toolbar.menu.clear()
+            // Any state change re-enables the manual sync button (it is
+            // disabled while a manual setTime round-trip is in flight).
+            setSyncTimeButtonBusy(false)
             when (status) {
-                ConnectionStatus.Active -> synchronizeTime()
+                ConnectionStatus.Active -> showDeviceInfo()
 
                 ConnectionStatus.Inactive -> {
                     binding.swipeRefreshLayout.isEnabled = true
@@ -217,32 +220,43 @@ class DeviceActivity : ThemableActivity() {
     }
 
     private fun onTimeSyncCompleted() {
-        timeSyncHandled = true
-        showDeviceInfo()
+        // Guard against double-completion (e.g. the skip dialog is dismissed
+        // after the pending setTime response already arrived).
+        if (!timeSyncHandled) {
+            timeSyncHandled = true
+            continueDeviceInfo()
+        }
     }
 
     private fun showDeviceInfo() {
         runOnUiThread {
-            if (timeSyncHandled && !showDeviceInfoStarted) {
+            if (!showDeviceInfoStarted) {
                 showDeviceInfoStarted = true
-                // First getStatus call is just to check recording state - don't save to database
+                setViewMode(ViewMode.FetchingDataView)
+                // First getStatus call checks the recording state AND the on-board GPS
+                // clock state, so synchronizeTime() can skip the setTime round-trip when
+                // GPS already disciplines the device clock. Not saved to database.
                 DeviceDriver.getStatus(saveToDatabase = false) {
-                    runOnUiThread {
-                        setViewMode(ViewMode.FetchingDataView)
-                        val isRecording = DeviceDriver.session.recordingState.isActive
-                        if (isRecording && (gpsLocationUpdate == null)) {
-                            val savedUpdate = Preferences.lastKnownGpsLocation
-                            gpsLocationUpdate =
-                                savedUpdate ?: GpsData(source = GpsDataSource.Unknown)
-                        } else if (gpsLocationUpdate == null) {
-                            gpsLocationUpdate = GpsData(source = GpsDataSource.Unknown)
-                        }
-                        // Don't block on a GPS modal — go straight to data fetch.
-                        // The GPS gauge already conveys whether the fix is real, cached, or unknown.
-                        onFirstLocationReceived()
-                    }
+                    runOnUiThread { synchronizeTime() }
                 }
             }
+        }
+    }
+
+    private fun continueDeviceInfo() {
+        runOnUiThread {
+            setViewMode(ViewMode.FetchingDataView)
+            val isRecording = DeviceDriver.session.recordingState.isActive
+            if (isRecording && (gpsLocationUpdate == null)) {
+                val savedUpdate = Preferences.lastKnownGpsLocation
+                gpsLocationUpdate =
+                    savedUpdate ?: GpsData(source = GpsDataSource.Unknown)
+            } else if (gpsLocationUpdate == null) {
+                gpsLocationUpdate = GpsData(source = GpsDataSource.Unknown)
+            }
+            // Don't block on a GPS modal — go straight to data fetch.
+            // The GPS gauge already conveys whether the fix is real, cached, or unknown.
+            onFirstLocationReceived()
         }
     }
 
@@ -779,6 +793,7 @@ class DeviceActivity : ThemableActivity() {
     private fun setListeners() {
         DeviceDriver.addConnectionChangedListener(listenerId, ::onConnectionStatusChanged)
         binding.skipButton.setOnClickListener { skipTimeSync() }
+        binding.syncTimeButton.setOnClickListener { manualTimeSync() }
         binding.modeButton.addClickListener { modeButtonClicked() }
         binding.toolbar.setNavigationOnClickListener { goBack() }
         binding.backButton.setOnClickListener { goBack() }
@@ -849,12 +864,41 @@ class DeviceActivity : ThemableActivity() {
     }
 
     private fun synchronizeTime() {
-        if (timeSyncHandled) {
-            onTimeSyncCompleted()
+        // Skip the setTime round-trip when the device's on-board GPS has already
+        // synced the clock AND has a position fix (the fix lets the firmware derive
+        // the timezone from longitude). Sending phone time in that state would only
+        // replace GPS-disciplined time with phone time and permanently pin the
+        // phone's timezone, disabling the GPS timezone self-localisation.
+        // The manual sync button on the status page remains the explicit override.
+        val gpsHandlesTime = DeviceDriver.gps.timeSynced && DeviceDriver.gps.hasFix
+        if (timeSyncHandled || gpsHandlesTime) {
+            timeSyncHandled = true
+            continueDeviceInfo()
         } else {
             setViewMode(ViewMode.SyncingTimeView)
             DeviceDriver.syncTime { onTimeSyncCompleted() }
         }
+    }
+
+    // Manual "sync now" from the status page: always sends phone time + timezone,
+    // regardless of the device's GPS state. This is the deliberate override for the
+    // automatic skip in synchronizeTime() — note it permanently pins the phone's
+    // timezone on the device (GPS longitude-derived TZ is disabled from then on).
+    private fun manualTimeSync() {
+        setSyncTimeButtonBusy(true)
+        DeviceDriver.syncTime {
+            runOnUiThread {
+                setSyncTimeButtonBusy(false)
+                // Re-read status so the displayed ELOC time reflects the sync;
+                // the get-command listener rebinds the UI when the response arrives.
+                DeviceDriver.getStatus(saveToDatabase = false) { }
+            }
+        }
+    }
+
+    private fun setSyncTimeButtonBusy(busy: Boolean) {
+        binding.syncTimeButton.isEnabled = !busy
+        binding.syncTimeButton.alpha = if (busy) DISABLED_SECTION_ALPHA else 1f
     }
 
     private fun setViewMode(mode: ViewMode) {
