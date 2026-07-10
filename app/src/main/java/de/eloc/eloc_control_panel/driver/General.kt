@@ -37,6 +37,16 @@ class General {
     var deviceTime = ""
         internal set
 
+    // Firmware-update capability advertisement (getStatus "device" section).
+    // fwUpdateProto == 0 means the connected firmware has no BT update support;
+    // the update UI is hidden in that case.
+    var fwUpdateProto = 0
+        internal set
+
+    // "ei" (Edge Impulse) or "no-ai" — used to pick/refuse the matching release binary.
+    var buildVariant = ""
+        internal set
+
     /**
      * Reset all cached config/status fields to defaults.
      *
@@ -57,5 +67,7 @@ class General {
         version = ""
         uptimeHours = 0.0
         deviceTime = ""
+        fwUpdateProto = 0
+        buildVariant = ""
     }
 }

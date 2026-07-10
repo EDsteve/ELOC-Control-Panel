@@ -16,6 +16,11 @@
 - **Device Status** - Redesigned card-based dark UI (July 2026): gauge cards (SD/battery/GPS), key-stats card, expandable LoRa/Scheduler/Intruder toggle sections with inline editing + help dialogs, device-details expander, versions row, mode button + wildlifebug.com footer, hamburger menu; pull-to-refresh kept. Needs verification on real hardware (BT features untestable in emulator). Remaining screens still use the old look.
 - **Settings Editor** - Individual setting modification
 - **Command Line** - Raw command interface for advanced users
+- **Firmware Update over BT** - (2026-07-06, built, hardware test pending) file-picker MVP:
+  `FirmwareUpdater` engine + foreground `FirmwareUpdateService` + `FirmwareUpdateActivity`
+  (Device Settings → Advanced, gated on firmware `fwUpdateProto`). Resume after BT drop,
+  variant guard, rollback detection. Needs firmware ≥ V1.47. Phase 3 (Firestore release
+  distribution / "update available") not started.
 - **Map View** - Google Maps integration for device locations
 
 ### Cloud Integration ✅

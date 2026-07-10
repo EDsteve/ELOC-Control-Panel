@@ -15,9 +15,12 @@ intent, architecture, and current state:
 - `memory-bank/techContext.md` — stack, dependencies, permissions, BT constraints, JSON command/response format
 - `memory-bank/activeContext.md` — current work focus, recent changes, decisions in flight
 - `memory-bank/progress.md` — what works, what's left, known issues
+- `memory-bank/changelog.md` — dated history of *completed* work, moved out of `activeContext.md`; read only when you need the history
 
-Per `.clinerules`: read all six on every task, and after a significant change update `activeContext.md` and
-`progress.md`. The phrase **"update memory bank"** means review *all* memory-bank files.
+Per `.clinerules`: read all six core files on every task, and after a significant change update
+`activeContext.md` and `progress.md`. When a work stream is *finished*, move its dated entry from
+`activeContext.md` → `changelog.md` (verbatim, newest first) so activeContext stays focused on current
+work. The phrase **"update memory bank"** means review *all* memory-bank files.
 
 Also useful: [`BLUETOOTH_PAIRING_FIX.md`](BLUETOOTH_PAIRING_FIX.md) (pairing edge cases),
 [`TODO.md`](TODO.md), and [`README.md`](README.md).
@@ -78,6 +81,15 @@ Classic SPP, **512-byte max** per command, **EOT (0x04)** message terminator, RF
 JSON `{"id", "cmd", "ecode", "payload": {...}}`. Config/status values are read with path-based extraction
 (e.g. `payload/microphone/MicSampleRate`). Core commands: `getStatus`, `getConfig`, `setConfig`, `setTime`,
 `setRecordMode`.
+
+**Firmware update over BT** (firmware ≥ V1.47, advertised via `getStatus` `device/fwUpdateProto`):
+`setFwUpdateBegin#meta={size,sha256,version,variant,chunkSize}` switches the link into a **binary frame
+mode** — the app streams `[seq:u16 LE][len:u16 LE][payload][crc32:u32 LE]` frames (CRC32 over
+seq+len+payload, `java.util.zip.CRC32`; `len==0` = end-of-stream sentinel), stop-and-wait against
+`cmd:"fwFrame"` EOT-JSON acks, then `getFwUpdateStatus` / `setFwUpdateAbort` / `setFwUpdateApply`.
+While a transfer runs, **no normal commands may be written** (the firmware bypasses its command parser);
+`DeviceDriver.firmwareTransferActive` enforces this. Engine: `driver/FirmwareUpdater.kt`; UI:
+`FirmwareUpdateActivity` (Device Settings → Advanced).
 
 Authoritative protocol specs live in the **parent `App/` folder** (alongside this project):
 [`../API_Protocol.txt`](../API_Protocol.txt), [`../Design_cmdInterface.txt`](../Design_cmdInterface.txt),

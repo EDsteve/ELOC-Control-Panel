@@ -183,6 +183,10 @@ class DeviceSettingsActivity : ThemableActivity() {
             val intent = Intent(this, CommandLineActivity::class.java)
             startActivity(intent)
         }
+        binding.advancedFirmwareUpdateItem.setOnClickListener {
+            val intent = Intent(this, FirmwareUpdateActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     private fun setGeneralListeners() {
@@ -730,6 +734,13 @@ class DeviceSettingsActivity : ThemableActivity() {
                 return@forEach
             }
             child.visibility = state
+        }
+
+        // Firmware update over BT needs firmware that advertises the protocol
+        // (getStatus device/fwUpdateProto); hide the entry for older firmware.
+        if (DeviceDriver.general.fwUpdateProto < 1) {
+            binding.advancedFirmwareUpdateDivider.visibility = View.GONE
+            binding.advancedFirmwareUpdateItem.visibility = View.GONE
         }
 
         updateSectionHeader(binding.advancedSectionTextView, expanded)

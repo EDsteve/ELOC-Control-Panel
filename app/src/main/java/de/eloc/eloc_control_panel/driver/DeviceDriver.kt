@@ -91,6 +91,12 @@ private const val KEY_GPS_TIME_SYNCED = "timeSynced"
 // Device wall-clock time (from getStatus response, "device/time").
 private const val KEY_DEVICE_TIME = "time"
 
+// Firmware-update capability advertisement (from getStatus response, "device" section).
+private const val KEY_FW_UPDATE_PROTO = "fwUpdateProto"
+private const val KEY_BUILD_VARIANT = "buildVariant"
+// Frame acks sent by the firmware while a BT firmware transfer is receiving.
+private const val CMD_FW_FRAME = "fwFrame"
+
 private const val KEY_INFERENCE = "inference"
 internal const val KEY_INFERENCE_THRESHOLD = "inference_threshold"
 internal const val KEY_INFERENCE_OBS_WINDOW_SECS = "observationWindowS"
@@ -329,6 +335,45 @@ object DeviceDriver {
             return device?.address ?: "<not available>"
         }
 
+    // Address of the current/last device — used by FirmwareUpdater to reconnect
+    // after a BT drop or the post-update device restart.
+    val deviceAddress get() = device?.address
+
+    val isConnected get() = bluetoothSocket?.isConnected == true
+
+    /**
+     * While true, a firmware transfer owns the socket (binary frame mode on the
+     * firmware side): the command processor holds queued commands back instead
+     * of writing them, because the firmware would misparse them as frame bytes.
+     * Set/cleared only by [FirmwareUpdater].
+     */
+    @Volatile
+    internal var firmwareTransferActive = false
+
+    /**
+     * Receives the raw EOT-JSON frame acks (cmd == "fwFrame") emitted by the
+     * firmware during a transfer. Not cleared on disconnect — the updater
+     * re-uses it across resume reconnects.
+     */
+    @Volatile
+    internal var fwFrameListener: ((String) -> Unit)? = null
+
+    /**
+     * Write raw bytes to the socket, bypassing the command queue. Only for
+     * [FirmwareUpdater] binary frames — everything else must go through
+     * [processCommandQueue] (single-socket rule).
+     */
+    internal fun writeRaw(data: ByteArray): Boolean {
+        return try {
+            val stream = bluetoothSocket?.outputStream ?: return false
+            stream.write(data)
+            stream.flush()
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     private var connectionStatus = ConnectionStatus.Inactive
         set(value) {
             if (field != value) {
@@ -446,6 +491,16 @@ object DeviceDriver {
             val sleepInterval = 500L
             currentCommand = pendingCommands.removeFirstOrNull()
             while (currentCommand != null) {
+                // A firmware transfer owns the socket (binary frame mode): hold
+                // queued commands back until it finishes, or they would be
+                // misparsed by the firmware as frame data.
+                while (firmwareTransferActive && (bluetoothSocket?.isConnected == true)) {
+                    try {
+                        Thread.sleep(200)
+                    } catch (_: Exception) {
+                    }
+                }
+
                 // Send the command
                 try {
                     if (bluetoothSocket?.isConnected == true) {
@@ -700,6 +755,14 @@ object DeviceDriver {
         }
     }
 
+    private fun isFwFrameAck(json: String): Boolean {
+        return try {
+            JSONObject(json).optString(KEY_CMD) == CMD_FW_FRAME
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     private fun checkGreeting(json: String) {
         try {
             val root = JSONObject(json)
@@ -949,6 +1012,12 @@ object DeviceDriver {
                     val jsonByteArray = jsonBytes.toByteArray()
                     val json = sanitize(String(jsonByteArray))
                     Logger.t(json, TrafficDirection.FromEloc)
+                    // Frame acks from an active firmware transfer are routed
+                    // straight to the updater; they are not command responses.
+                    if (isFwFrameAck(json)) {
+                        fwFrameListener?.invoke(json)
+                        continue
+                    }
                     if (!greeted) {
                         checkGreeting(json)
                     } else {
@@ -1244,6 +1313,15 @@ object DeviceDriver {
 
         val versionPath = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_FIRMWARE"
         general.version = JsonHelper.getJSONStringAttribute(versionPath, jsonObject)
+
+        val fwUpdateProtoPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_FW_UPDATE_PROTO"
+        general.fwUpdateProto =
+            JsonHelper.getJSONNumberAttribute(fwUpdateProtoPath, jsonObject).toInt()
+
+        val buildVariantPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_BUILD_VARIANT"
+        general.buildVariant = JsonHelper.getJSONStringAttribute(buildVariantPath, jsonObject)
 
         val uptimePath = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_UPTIME"
         general.uptimeHours = JsonHelper.getJSONNumberAttribute(uptimePath, jsonObject)

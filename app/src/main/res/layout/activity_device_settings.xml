@@ -849,6 +849,23 @@
                         app:itemType="button"
                         app:keyText="@string/command_line"
                         app:valueText="@string/open" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:id="@+id/advanced_firmware_update_divider"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/advanced_firmware_update_item"
+                        app:helpText="@string/help_firmware_update"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/firmware_update"
+                        app:valueText="@string/open" />
                 </LinearLayout>
 
                 <Space

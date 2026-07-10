@@ -34,6 +34,8 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- Keeps the CPU running during a Bluetooth firmware transfer (FirmwareUpdateService) -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:name=".App"
@@ -82,6 +84,12 @@
             tools:ignore="DiscouragedApi,LockedOrientationActivity" />
         <activity
             android:name=".activities.themable.CommandLineActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activities.themable.FirmwareUpdateActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
@@ -248,6 +256,11 @@
 
         <service
             android:name=".services.StatusUploadService"
+            android:enabled="true"
+            android:foregroundServiceType="dataSync" />
+
+        <service
+            android:name=".services.FirmwareUpdateService"
             android:enabled="true"
             android:foregroundServiceType="dataSync" />
 

@@ -1,9 +1,70 @@
-# ELOC Control Panel - Active Context
+﻿# ELOC Control Panel - Active Context
 
 ## Current Work Focus
-Device screen redesign (July 2026) — complete visual overhaul of `DeviceActivity` (dark gray + green with orange accent). Verify on real hardware; extend the design language to the remaining screens later.
+Firmware update over Bluetooth (July 2026) — Phase 2 MVP implemented plus the 2026-07-10 review
+fixes (see below); needs real-hardware verification against firmware V1.51 (full matrix: happy
+path, resume after BT kill incl. fully-staged resume, downgrade, refusals, rollback). Phase 3
+(Firestore distribution + "update available" badge) is designed but not started. Also: device
+screen redesign — extend the design language to the remaining screens later.
 
 ## Recent Changes
+
+### GPS accuracy gauge color inversion fixed (2026-07-10)
+`SimpleGauge.getValueColor()`'s errorMode branch permanently mutated the member
+`criticalColor = Color.RED`. The GPS gauge inverts its scale by swapping XML attrs
+(`criticalColor=green`, `normalColor=red`, since low meters = good), so any session that
+*started* without a GPS fix (accuracy −1 → errorMode) destroyed the swap: once a fix arrived,
+good accuracy rendered red. Fix in `widgets/SimpleGauge.kt`: errorMode now returns/paints hard
+`Color.RED` without touching the configured colors. Sessions that never hit errorMode were
+always correct, which is why the bug only appeared "when there was no GPS fix at first".
+
+### Firmware update — review fixes (2026-07-10, alongside firmware V1.51)
+1. **Fully-staged resume deadlock fixed** (`FirmwareUpdater`): when Begin returns
+   `resumeOffset >= totalBytes` (previous session staged 100% but the final ack was lost),
+   `streamFrames` used to send nothing and fail all 5 attempts while the firmware sat in binary
+   mode — permanently unrecoverable. Now: firmware ≥ V1.51 answers Begin with
+   `payload/state == "staged"` → skip straight to `setFwUpdateApply`; older V1.47–V1.50 firmware
+   (no `state` field) → `finishFullyStagedResume()` sends the len==0 end-of-stream sentinel and
+   treats its `"staged"` ack as transfer complete.
+2. **Variant guard hardened** (`FirmwareUpdateActivity`): file name now comes from
+   `OpenableColumns.DISPLAY_NAME` (SAF `lastPathSegment` is an opaque `msf:<id>` for the
+   Downloads provider, which silently reduced the ei/no-ai guard to a soft warning).
+3. Firmware side (V1.51) additionally refuses images whose `project_name` doesn't match the
+   running image. Deferred minor findings from the review are listed in the firmware repo's
+   `memory-bank/activeContext.md`.
+
+### Firmware update over Bluetooth — Phase 2 MVP (2026-07-06)
+Counterpart of firmware V1.47 Phases 0+1 (plan: firmware repo
+`README-FirmwareUpdate-From-App-Plan.md`). New flow: Device Settings → Advanced → **Firmware
+Update** (entry hidden unless `getStatus` `device/fwUpdateProto ≥ 1`).
+
+1. **`driver/FirmwareUpdater.kt`** — transfer engine (object, own worker thread):
+   `setFwUpdateBegin#meta={size,sha256,version,variant,chunkSize:4096}` → streams stop-and-wait
+   binary frames `[seq:u16 LE][len:u16 LE][payload][crc32:u32 LE]` (CRC via `java.util.zip.CRC32`
+   over seq+len+payload; len==0 = abort sentinel) → per-frame `cmd:"fwFrame"` EOT-JSON acks
+   (10 s timeout) → `setFwUpdateApply` → device double-reboots → reconnect loop (150 s) →
+   `getStatus` version comparison (Success / RolledBack). BT drops or firmware NAKs recover by
+   reconnect + re-Begin, which returns the device's `resumeOffset`. Also `FirmwareImage` helper:
+   validates the ESP image magic locally and reads the embedded `esp_app_desc_t`
+   (version/project name) + SHA-256.
+2. **`DeviceDriver` additions** (single-socket rule kept): `writeRaw()` (frames only),
+   `fwFrameListener` (acks routed out of `listenForData()` before normal interception),
+   `firmwareTransferActive` (command processor holds queued commands back during binary mode —
+   a stray command would be misparsed by the firmware as frame bytes), `deviceAddress`,
+   `isConnected`; `General` gained `fwUpdateProto`/`buildVariant` (parsed from getStatus).
+3. **`services/FirmwareUpdateService.kt`** — foreground service (dataSync, like
+   `StatusUploadService`) with progress notification + partial wake lock (30 min cap) so
+   screen-off can't kill a transfer; terminal notification for success/rollback/cancel/failure.
+   New `WAKE_LOCK` permission.
+4. **`FirmwareUpdateActivity`** (+ `activity_firmware_update.xml`, ~30 new strings): SAF file
+   picker (copies to `cacheDir/fwupdate.bin`), shows installed vs. file version/variant/size/
+   SHA-256, **variant guard** (release filename convention `…-ei/-no-ai`; refuses definite
+   mismatch, warns if undeterminable), recording-must-be-off preflight with one-tap stop,
+   progress + rate + ETA, does NOT auto-close on disconnect (expected during the update cycle).
+
+**Not yet done:** hardware test of the full matrix (happy path, resume after BT kill, downgrade,
+refusals, rollback); Phase 3 (Firestore `firmware_releases` distribution + "update available"
+badge) is designed in the plan but not started.
 
 ### Status page toggle-section polish (July 2026)
 1. **LoRa header** — when LoRa is enabled, the subtitle "Long range wireless communication" is replaced with live signal status ("Excellent · -85.5 dBm", "Not joined", or "No signal"); the antenna icon is tinted by signal strength (green/amber/orange/red via `signalColorRes()`). Disabled → static subtitle restored.
@@ -55,152 +116,10 @@ After testing on ELOC_00168:
 
 **Other changes**: toolbar now uses `menu/app_bar_device.xml` (hamburger `mnu_more` with submenu: Settings, Help & Instructions) replacing the gear icon + bitmap-resize hack; `DeviceActivity.onResume()` calls `refreshDeviceInfo()` when returning from editors; new drawables `ic_lora`, `ic_calendar`, `ic_shield`, `ic_help_outline`, `ic_details`; switch tint selectors under `res/color/`. Only data already present in the driver objects is displayed (nothing invented).
 
-### Status Document Stale Timestamp Bug Fix (March 2026)
-**Issue**: When changing device recording mode on a different day than the initial status document was created, the Android app updated the existing Firestore document instead of creating a new one. The `capture_timestamp` stayed at the original date, while `upload_timestamp` was refreshed and session data was updated with the new state.
-
-**Root Cause**: `combinedStatusAndConfigTime` in the `DeviceDriver` singleton was not being reset properly. If a `StatusWithConfig` save partially completed (status saved but config response never arrived due to disconnect/timeout), the timestamp was never cleared. Since `disconnect()` also didn't clear it, the stale timestamp persisted across connections. On the next save cycle, `saveLocal()` checked `if (combinedStatusAndConfigTime == null)` and found it NOT null, so it reused the old timestamp, generating a file with the same name as the previous one. Firestore's `document.set(data)` then overwrote the existing document.
-
-**Fix** (two changes in `DeviceDriver.kt`):
-1. **`getElocInformation()`**: Added `combinedStatusAndConfigTime = null` when `saveNextInfoResponse=true`, ensuring every new save cycle starts with a fresh timestamp
-2. **`disconnect()`**: Added cleanup of all save-related state (`combinedStatusAndConfigTime`, `configSaved`, `statusSaved`, `cachedStatus`, `cachedConfig`, `infoType`) to prevent stale values from persisting across connections
-
-**Verified via Firestore**: The document `status_2026-03-01-12-17-58-GMT+0700_e_ELOC_00244_r_edsteve2.json` was created on March 1 but updated on March 2 with March 2 device data (1m 30s uptime from device restart, new session ID, new recording state), confirming March 2 data was incorrectly saved with March 1's filename.
-
-### Map Document New Fields (February 2026)
-**Feature**: Added `batteryType` and `recordingState` fields to the Firestore map collection document (`eloc_app/uploads/map/map_{deviceName}.json`).
-
-**Key Changes**:
-1. `Session.kt` - Added `recordingStateString` property to store the raw recording state string from firmware (e.g., "recordOn_detectOn")
-2. `DeviceDriver.kt` - Added parsing of `payload/session/recordingState/state` string in `parseStatus()` method
-3. `DeviceDriver.kt` - Added `KEY_BATTERY_TYPE_MAP` ("batteryType") and `KEY_RECORDING_STATE_MAP` ("recordingState") constants
-4. `DeviceDriver.kt` - Added both new fields to the map data JSON in `saveLocal()` method
-
-**Technical Details**:
-- `batteryType` (String): Sourced from `battery.type` which is already parsed from firmware status at `payload/battery/type`. Values: "LiPo" or "LiFePo"
-- `recordingState` (String): Sourced from `session.recordingStateString` parsed from firmware status at `payload/session/recordingState/state`. Values: e.g., "recordOff_detectOff", "recordOn_detectOn", etc.
-- Both values come from the `getStatus` firmware command response
-- No changes needed to FirestoreHelper or FileSystemHelper since the map data flows through as raw JSON
-
-### LoRa RSSI Signal Strength Indicator (February 2026)
-**Feature**: Added LoRa signal strength indicator to the Device Status page, displaying signal quality when LoRa is enabled and connected.
-
-**Key Changes**:
-1. `LoraWan.kt` - Added `LoraSignalStrength` enum with 5 levels (Excellent, Good, Fair, Poor, VeryPoor) based on RSSI thresholds, plus new status properties: `joined`, `hasSignalInfo`, `rssi`, `snr`, and computed `signalStrength`
-2. `DeviceDriver.kt` - Added LoRa status keys constants, updated `sanitize()` method to handle bracketed keys (`RSSI[dBm]`, `SNR[dB]`), added LoRa status parsing in `parseStatus()` method
-3. `activity_device.xml` - Added LoRa signal container with RSSI icon and dBm value display below the "Communication" item
-4. `DeviceActivity.kt` - Added `updateLoraSignalDisplay()` method that updates the UI based on LoRa status
-5. `strings.xml` - Added string resources: `lora_signal`, `lora_signal_dbm`, `lora_not_joined`, `lora_no_signal`
-
-**Technical Details**:
-- LoRa RSSI thresholds: Excellent (> -90 dBm), Good (-90 to -110 dBm), Fair (-110 to -120 dBm), Poor (-120 to -130 dBm), VeryPoor (< -130 dBm)
-- Uses existing RSSI drawable icons (rssi_0 through rssi_5)
-- Container is hidden when LoRa is disabled
-- Shows "Not Joined" when LoRa is enabled but not joined to network
-- Shows "No Signal" when joined but no signal info available yet
-- Shows dBm value and signal icon when valid signal is available
-
-**JSON Status Data Parsed** (from `getStatus` response):
-```json
-"lora": {
-    "enabled": true,
-    "joined": true,
-    "hasSignalInfo": true,
-    "RSSI[dBm]": -85.5,
-    "SNR[dB]": 7.2
-}
-```
-
-### Duty Cycle Settings Implementation (February 2026)
-**Feature**: Added duty cycle configuration settings to the ELOC Device Settings screen, allowing users to enable/disable duty cycling and configure sleep/awake durations.
-
-**Key Changes**:
-1. `DutyCycle.kt` - New driver component class with constants for JSON keys, min/max ranges, and default values
-2. `DeviceDriver.kt` - Added `dutyCycle` property, parsing logic for duty cycle JSON config keys (`dutyCycle_enable`, `dutyCycle_sleep`, `dutyCycle_awake`)
-3. `Command.kt` - Added duty cycle property cases (`setDutyCycleEnable`, `setDutyCycleSleep`, `setDutyCycleAwake`) to the set config command builder
-4. `activity_device_settings.xml` - Added collapsible Duty Cycle section with enable toggle, sleep duration, and awake duration items
-5. `DeviceSettingsActivity.kt` - Added duty cycle data binding, listeners (toggle + range editors), and section expand/collapse logic
-6. `strings.xml` - Added string resources: `duty_cycle`, `sleep_duration`, `awake_duration`, `duty_cycle_sleep_duration`, `duty_cycle_awake_duration`
-
-**Technical Details**:
-- Sleep duration range: 10 - 86400 seconds (10s to 24h), default 300s
-- Awake duration range: 10 - 86400 seconds (10s to 24h), default 1800s
-- Uses RangeEditorActivity for duration settings with prettified time display
-- Follows same pattern as LoraWan, Inference, and other existing settings sections
-
-## Previous Changes
-
-### Bluetooth Pairing Fix (January 2026)
-**Issue**: Android phones experiencing connection failures and crashes when connecting to ELOC devices.
-
-**Root Cause**: The app was attempting to establish a Bluetooth socket connection before waiting for the pairing/bonding process to complete, creating a race condition.
-
-**Solution**: Implemented proper Bluetooth bonding state management in `DeviceDriver.kt`:
-1. Check bonding state before attempting connection
-2. Initiate bonding if device is unpaired
-3. Wait for bonding completion via broadcast receiver
-4. Only connect after successful bonding
-
-**Key Changes**:
-- Added `bondingInProgress` flag and pending callbacks
-- Created `bondStateReceiver` broadcast receiver
-- Modified `connect()` to check `device.bondState` first
-- Added `registerBondStateReceiver()` and `proceedWithConnection()` helpers
-
-See `BLUETOOTH_PAIRING_FIX.md` for full documentation.
-
-### Database Upload Optimization (February 2026)
-**Issue**: The app was uploading status and config data to Firestore too frequently, filling the database with unnecessary information.
-
-**Previous Behavior**:
-- When connecting to ANY ELOC → uploaded status + config to database
-- When refreshing status page → uploaded status + config to database  
-- When starting recording mode → uploaded status + config, then getStatus again
-
-**Optimized Behavior**:
-- **Connect to idle ELOC**: No database upload (just display in UI)
-- **Connect to recording ELOC**: Upload status only (no config, no location update)
-- **Start recording mode**: Upload status + config with new session ID and location
-- **Refresh status page**: No database upload (just display in UI)
-
-**Key Changes**:
-1. `DeviceDriver.kt` - Removed automatic `getElocInformation()` call from `setRecordState()`
-2. `DeviceActivity.kt` - Modified `onFirstLocationReceived()` to:
-   - If device is recording: Call `getStatus()` for DB upload, then `getElocInformation(null, false)` for UI only
-   - If device is NOT recording: Call `getElocInformation(location, false)` for UI only (no upload)
-3. `DeviceActivity.kt` - Modified `setCommandCompletedCallback` to call `getElocInformation(location, true)` after starting recording mode (uploads to DB)
-
-**Technical Details**:
-- `saveNextInfoResponse` parameter in `getElocInformation()` controls DB uploads:
-  - `true` = save/upload to Firestore
-  - `false` = display in UI only, no upload
-- `saveToDatabase` parameter in `getStatus()` controls DB uploads:
-  - `true` (default) = save/upload status to Firestore
-  - `false` = display in UI only, no upload
-
-**Bug Fix (February 2026)**: Fixed issue where `getStatus` was not uploading when reconnecting to a recording device. The first `getStatus()` call in `showDeviceInfo()` (used just to check recording state) was consuming the upload slot, preventing the second `getStatus()` call in `onFirstLocationReceived()` from uploading. Solution: Added `saveToDatabase` parameter to `getStatus()` function.
-
-### Google Sign-In Implementation (February 2026)
-**Issue**: Google Sign-In option was planned but never implemented.
-
-**Solution**: Implemented Google Sign-In using the modern Credential Manager API.
-
-**Key Changes**:
-1. `AuthHelper.kt` - Added `signInWithGoogle()`, `handleGoogleSignInResult()`, and `firebaseAuthWithGoogle()` methods
-2. `activity_login.xml` - Added "Sign in with Google" button with Material Design styling
-3. `activity_register.xml` - Added "Sign in with Google" button
-4. `LoginActivity.kt` - Added Google Sign-In handler with `signInWithGoogle()` method
-5. `RegisterActivity.kt` - Added Google Sign-In handler
-6. `strings.xml` - Added `sign_in_with_google`, `google_sign_in_failed`, `google_sign_in_cancelled`, `web_client_id` strings
-
-**Technical Details**:
-- Uses `CredentialManager` API with `GetGoogleIdOption`
-- Authenticates with Firebase using `GoogleAuthProvider.getCredential(idToken)`
-- Google accounts are automatically verified (skip email verification flow)
-- Web Client ID from Firebase: `773327231765-igglaupgt12mct4ii7kiil5ktda2nqfd.apps.googleusercontent.com`
-
-**Configuration Required**:
-- Debug SHA-1 fingerprint must be added to Firebase project settings
-- SHA-1 for current debug keystore: `74:FD:1E:8A:FA:90:12:7F:4B:D8:C9:06:F0:35:83:CE:AB:E1:BA:04`
+### Older completed entries have moved to `changelog.md` (same folder)
+Status stale-timestamp fix (March 2026), map document new fields, LoRa RSSI indicator, duty-cycle
+settings (February 2026), Bluetooth pairing fix (January 2026), database upload optimization,
+Google Sign-In (February 2026).
 
 ## Next Steps
 
