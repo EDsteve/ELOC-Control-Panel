@@ -81,11 +81,9 @@ class SimpleGauge : View {
 
     private fun getValueColor(): Int {
         if (errorMode) {
-            criticalColor = Color.RED;
-            val r = Color.red(criticalColor)
-            val b = Color.blue(criticalColor)
-            val g = Color.green(criticalColor)
-            return Color.rgb(r, g, b)
+            // Error is always red, but never overwrite criticalColor: gauges like GPS
+            // accuracy swap the color attributes (criticalColor=green) to invert the scale.
+            return Color.RED
         }
 
         normalizeGaugeValue()
@@ -169,7 +167,7 @@ class SimpleGauge : View {
 
         updateData()
         if (errorMode) {
-            pen.color = criticalColor
+            pen.color = Color.RED
             canvas.drawCircle(centerX, centerY, radius, pen)
 
             pen.style = Paint.Style.FILL
