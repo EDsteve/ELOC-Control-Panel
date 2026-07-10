@@ -11,8 +11,12 @@ object TimeHelper {
     private const val ONE_HOUR_SECONDS = ONE_MINUTE_SECONDS * 60
     private const val ONE_DAY_SECONDS = ONE_HOUR_SECONDS * 24
 
-    val timeZoneOffsetHours: Int =
-        (TimeZone.getDefault().rawOffset.toDouble() / (ONE_HOUR_SECONDS * 1000)).toInt()
+    // getOffset(now) includes DST when it is in effect; rawOffset is the standard (winter)
+    // offset only, which left device time 1 h behind wall time in summer. Must be a getter,
+    // not a cached val, so a DST change while the app is running is picked up.
+    val timeZoneOffsetHours: Int
+        get() = (TimeZone.getDefault().getOffset(System.currentTimeMillis())
+            .toDouble() / (ONE_HOUR_SECONDS * 1000)).toInt()
 
     fun formatHours(context: Context, hours: Double) =
         formatSeconds(context, toSeconds(hours))
