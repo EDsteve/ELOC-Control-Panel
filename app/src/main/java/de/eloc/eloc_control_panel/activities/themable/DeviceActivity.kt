@@ -1,8 +1,9 @@
 package de.eloc.eloc_control_panel.activities.themable
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
@@ -39,6 +40,7 @@ import de.eloc.eloc_control_panel.driver.LoraWan
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 import de.eloc.eloc_control_panel.receivers.ElocReceiver
+import kotlin.math.roundToInt
 
 // todo: add refresh menu item for old API levels
 
@@ -46,6 +48,12 @@ class DeviceActivity : ThemableActivity() {
     companion object {
         const val EXTRA_DEVICE_ADDRESS = "device_address"
         private const val DISABLED_SECTION_ALPHA = 0.4f
+
+        // How often the status page silently re-reads status from the device
+        // while it is foregrounded. Long enough that the extra BT/SD/CPU load on
+        // the device during AI recording is negligible; short enough that
+        // battery, SD fill, GPS fix and the recording timers feel live.
+        private const val AUTO_REFRESH_INTERVAL_MS = 15_000L
     }
 
     private enum class ViewMode {
@@ -71,11 +79,19 @@ class DeviceActivity : ThemableActivity() {
     private var statusReceived = false
     private var configReceived = false
     private var gpsLocationUpdate: GpsData? = null
-    private val scrollChangeListener =
-        View.OnScrollChangeListener { _, _, y, _, _ ->
-            binding.swipeRefreshLayout.isEnabled = (y <= 5)
-        }
     private lateinit var elocReceiver: ElocReceiver
+
+    // Periodic silent status refresh: keeps the on-screen numbers ticking over
+    // without a manual pull-to-refresh. Runs only while the page is foregrounded
+    // (started in onResume, stopped in onPause) and each tick is gated so it
+    // never competes with a user action or a firmware transfer.
+    private val autoRefreshHandler = Handler(Looper.getMainLooper())
+    private val autoRefreshRunnable = object : Runnable {
+        override fun run() {
+            maybeAutoRefreshStatus()
+            autoRefreshHandler.postDelayed(this, AUTO_REFRESH_INTERVAL_MS)
+        }
+    }
 
     private val getCommandCompletedListener = GetCommandCompletedCallback {
         runOnUiThread {
@@ -92,8 +108,8 @@ class DeviceActivity : ThemableActivity() {
                     displayRecordingState()
                     if (success) {
                         // After starting recording mode, upload full info (status + config)
-                        // with new session ID and location to database
-                        DeviceDriver.getElocInformation(gpsLocationUpdate, true) {
+                        // with new session ID and location to database (best of phone / ELOC fix)
+                        DeviceDriver.getElocInformation(effectiveGpsData(), true) {
                             val commandType = DeviceDriver.getCommandType(it)
                             checkReceivedInfoType(commandType)
                         }
@@ -126,16 +142,19 @@ class DeviceActivity : ThemableActivity() {
         if (showDeviceInfoStarted && statusReceived && configReceived) {
             refreshDeviceInfo()
         }
+        startAutoRefresh()
     }
 
     override fun onPause() {
         super.onPause()
         paused = true
+        stopAutoRefresh()
         LocationHelper.stopUpdates()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        stopAutoRefresh()
         gpsLocationUpdate = null
         DeviceDriver.removeConnectionChangedListener(listenerId)
         DeviceDriver.removeWriteCommandLister(listenerId)
@@ -282,7 +301,7 @@ class DeviceActivity : ThemableActivity() {
         } else {
             // Device is NOT recording - get info for UI display only, no database upload
             // (saveNextInfoResponse = false means no upload to database)
-            DeviceDriver.getElocInformation(gpsLocationUpdate, false) {
+            DeviceDriver.getElocInformation(effectiveGpsData(), false) {
                 val type = DeviceDriver.getCommandType(it)
                 checkReceivedInfoType(type)
             }
@@ -315,6 +334,35 @@ class DeviceActivity : ThemableActivity() {
             setStatusInfo()
             setViewMode(ViewMode.ContentView)
         }
+    }
+
+    private fun startAutoRefresh() {
+        autoRefreshHandler.removeCallbacks(autoRefreshRunnable)
+        autoRefreshHandler.postDelayed(autoRefreshRunnable, AUTO_REFRESH_INTERVAL_MS)
+    }
+
+    private fun stopAutoRefresh() {
+        autoRefreshHandler.removeCallbacks(autoRefreshRunnable)
+    }
+
+    // One auto-refresh tick: enqueue a silent, status-only read if — and only
+    // if — the page is showing live content and nothing else is using the link.
+    // The existing getCommandCompletedListener rebinds the status views when the
+    // response arrives, so no explicit callback is needed here.
+    private fun maybeAutoRefreshStatus() {
+        // Only while the status page is actually showing content...
+        val showingContent = showDeviceInfoStarted && statusReceived && configReceived
+        if (paused || refreshing || !showingContent) {
+            return
+        }
+        // ...and the link is connected and idle (isIdle also excludes an
+        // in-progress firmware transfer). Skipping here just defers to the next
+        // tick — it never delays a user-initiated command.
+        if (!DeviceDriver.isConnected || !DeviceDriver.isIdle) {
+            return
+        }
+        // Status only, no database upload (so this does not spam Firestore).
+        DeviceDriver.getStatus(saveToDatabase = false) { }
     }
 
     // Re-fetch status + config (no database upload) and rebind the UI when both arrive.
@@ -353,9 +401,22 @@ class DeviceActivity : ThemableActivity() {
         binding.statRecBootValue.text =
             TimeHelper.formatHours(this, DeviceDriver.general.recHoursSinceBoot)
         binding.firmwareVersionText.text = DeviceDriver.general.version.ifBlank { "—" }
-        // Device-reported time only; firmware older than the device/time getStatus
-        // field shows a dash until it is updated.
-        binding.statTimeValue.text = DeviceDriver.general.deviceTime.ifBlank { "—" }
+        // Device-reported time, with a source suffix ("· GPS" / "· Phone") when the firmware reports
+        // one (V1.54+); older firmware sends no timeSource, so the bare time is shown (or a dash).
+        val baseTime = DeviceDriver.general.deviceTime
+        binding.statTimeValue.text = if (baseTime.isBlank()) {
+            "—"
+        } else {
+            when (DeviceDriver.general.deviceTimeSource) {
+                "gps" -> getString(
+                    R.string.time_with_source, baseTime, getString(R.string.time_source_gps)
+                )
+                "app" -> getString(
+                    R.string.time_with_source, baseTime, getString(R.string.time_source_phone)
+                )
+                else -> baseTime
+            }
+        }
         binding.statGpsValue.text = describeDeviceGps()
         binding.statUptimeValue.text =
             TimeHelper.formatHours(this, DeviceDriver.general.uptimeHours)
@@ -366,6 +427,9 @@ class DeviceActivity : ThemableActivity() {
         updateSchedulerSection()
         updateIntruderSection()
         displayRecordingState()
+        // Repaint the accuracy gauge on every status refresh (15 s auto-refresh) so the phone↔ELOC
+        // comparison stays current between phone-location callbacks.
+        updateGpsViews()
     }
 
     private fun updateBatteryGauge() {
@@ -812,8 +876,12 @@ class DeviceActivity : ThemableActivity() {
             }
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            binding.scrollView.setOnScrollChangeListener(scrollChangeListener)
+        // The SwipeRefreshLayout's direct child is a (non-scrollable) ConstraintLayout,
+        // so its default canChildScrollUp() always reports "at top" and every downward
+        // drag looks like a pull-to-refresh. Ask the real ScrollView instead, so refresh
+        // only arms when the content is genuinely scrolled to the very top.
+        binding.swipeRefreshLayout.setOnChildScrollUpCallback { _, _ ->
+            binding.scrollView.canScrollVertically(-1)
         }
     }
 
@@ -870,7 +938,18 @@ class DeviceActivity : ThemableActivity() {
         // replace GPS-disciplined time with phone time and permanently pin the
         // phone's timezone, disabling the GPS timezone self-localisation.
         // The manual sync button on the status page remains the explicit override.
-        val gpsHandlesTime = DeviceDriver.gps.timeSynced && DeviceDriver.gps.hasFix
+        //
+        // V1.54 made getStatus "hasFix" live-gated, so the old timeSynced+hasFix heuristic no longer
+        // works at connect time (the GPS may not hold a live fix at that instant even though it is
+        // GPS-disciplined). Prefer the firmware's own persisted markers when present: skip the sync
+        // only when the clock is GPS-set AND the timezone is not still the compile-time default.
+        // Old firmware (no timeSource) falls back to the original heuristic.
+        val gpsHandlesTime = if (DeviceDriver.general.deviceTimeSource.isNotBlank()) {
+            DeviceDriver.general.deviceTimeSource == "gps" &&
+                DeviceDriver.general.deviceTzSource != "default"
+        } else {
+            DeviceDriver.gps.timeSynced && DeviceDriver.gps.hasFix   // old-firmware fallback
+        }
         if (timeSyncHandled || gpsHandlesTime) {
             timeSyncHandled = true
             continueDeviceInfo()
@@ -986,13 +1065,65 @@ class DeviceActivity : ThemableActivity() {
         }
     }
 
+    private enum class GpsChoice { PHONE, ELOC, NONE }
+
+    // The more accurate of the two fixes: the phone's Location.accuracy vs the ELOC's HDOP-derived
+    // accuracy (both meters, both capped at 100 m to reject wild values). The ELOC only qualifies
+    // when it has a live fix AND real coordinates to record. Old firmware reports hdop 0.0 ⇒
+    // accuracyMeters -1.0 (and no lat/lon) ⇒ the ELOC branch never wins (phone-only, as before).
+    private fun chooseGpsSource(): GpsChoice {
+        val phone = gpsLocationUpdate?.accuracy?.toDouble()?.takeIf { it in 0.0..100.0 }
+        val eloc = DeviceDriver.gps.let {
+            if (it.hasFix && it.hasLocation) it.accuracyMeters.takeIf { m -> m in 0.0..100.0 } else null
+        }
+        return when {
+            phone != null && (eloc == null || phone <= eloc) -> GpsChoice.PHONE
+            eloc != null -> GpsChoice.ELOC
+            else -> GpsChoice.NONE
+        }
+    }
+
+    // The location that should actually be recorded/uploaded: the ELOC's own fix when it wins the
+    // accuracy comparison, otherwise the phone's fix (unchanged from the historical behaviour). This
+    // feeds both the setLocation command sent to the device and the Firebase upload.
+    private fun effectiveGpsData(): GpsData? = when (chooseGpsSource()) {
+        GpsChoice.ELOC -> DeviceDriver.gps.let {
+            GpsData(
+                accuracy = it.accuracyMeters.roundToInt(),
+                source = GpsDataSource.Radio,
+                latitude = it.latitude,
+                longitude = it.longitude,
+            )
+        }
+        GpsChoice.PHONE, GpsChoice.NONE -> gpsLocationUpdate
+    }
+
+    // Merged accuracy gauge: shows whichever source chooseGpsSource() prefers, labelling it.
     private fun updateGpsViews() {
-        binding.gpsGauge.updateValue(gpsLocationUpdate?.accuracy?.toDouble() ?: -1.0)
-        val accuracy = gpsLocationUpdate?.accuracy ?: -1
+        val phone = gpsLocationUpdate?.accuracy?.toDouble()?.takeIf { it in 0.0..100.0 }
+        val eloc = DeviceDriver.gps.accuracyMeters.takeIf { it in 0.0..100.0 }
+        val best: Double?
+        val sourceRes: Int
+        when (chooseGpsSource()) {
+            GpsChoice.PHONE -> {
+                best = phone
+                sourceRes = R.string.accuracy_source_phone
+            }
+            GpsChoice.ELOC -> {
+                best = eloc
+                sourceRes = R.string.accuracy_source_eloc
+            }
+            GpsChoice.NONE -> {
+                best = null
+                sourceRes = R.string.accuracy_source_phone
+            }
+        }
+        binding.gpsGauge.updateValue(best ?: -1.0)  // negative ⇒ errorMode (unchanged)
         val units = "m"
-        binding.gpsAccuracyTextView.text = formatNumber(accuracy, units, units, 0)
-        if ((accuracy >= 0) && (accuracy <= 100)) {
+        if (best != null) {
+            binding.gpsAccuracyTextView.text = formatNumber(best.toInt(), units, units, 0)
             binding.gpsAccuracyTextView.visibility = View.VISIBLE
+            binding.gpsSubLabel.text = getString(sourceRes)
             binding.gpsSubLabel.visibility = View.VISIBLE
             binding.gpsNoAccuracyImageView.visibility = View.GONE
         } else {
@@ -1086,7 +1217,10 @@ class DeviceActivity : ThemableActivity() {
         }
         */
 
-        val accuracy = gpsLocationUpdate?.accuracy ?: -1
+        // Gate on the accuracy of the source we would actually record (best of phone / ELOC fix),
+        // and record that same fix.
+        val recordLocation = effectiveGpsData()
+        val accuracy = recordLocation?.accuracy ?: -1
         if (ignoreLocationAccuracy || (accuracy <= 8.1)) {
             var proceed = true
 
@@ -1101,7 +1235,7 @@ class DeviceActivity : ThemableActivity() {
                         else -> ViewMode.SettingRecordMode
                     }
                     setViewMode(viewMode)
-                    DeviceDriver.setRecordState(newMode, gpsLocationUpdate) { }
+                    DeviceDriver.setRecordState(newMode, recordLocation) { }
                 }
             }
             if (DeviceDriver.bluetooth.enableDuringRecord) {

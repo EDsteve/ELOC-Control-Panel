@@ -21,6 +21,23 @@
   (Device Settings → Advanced, gated on firmware `fwUpdateProto`). Resume after BT drop,
   variant guard, rollback detection. Needs firmware ≥ V1.47. Phase 3 (Firestore release
   distribution / "update available") not started.
+- **Best-GPS-source recording + 15 s refresh** - (2026-07-22, 5.43/61, `compileDebugKotlin` green;
+  on-device test pending). The phone-vs-ELOC comparison now drives the *recorded* location, not just the
+  gauge: `Gps` gains `latitude`/`longitude`/`hasLocation`, `DeviceDriver` parses `gps/lat`+`gps/lon`, and
+  `DeviceActivity.effectiveGpsData()` feeds the best fix to the record-start/display `getElocInformation`,
+  `setRecordState`, and the record-accuracy gate. Auto-refresh 30 s → 15 s. Backward compatible (old
+  firmware has no lat/lon → phone-only). Owed: on-device test of the ELOC-wins path.
+- **GPS live accuracy & time-source** - (2026-07-21, 5.42/60, `compileDebugKotlin` green; on-device
+  test pending against firmware V1.54). Merged phone-vs-ELOC accuracy gauge (`updateGpsViews()` shows the
+  better of phone accuracy and ELOC HDOP-derived accuracy in meters, labelling the source), ELOC Time row
+  source suffix ("· GPS"/"· Phone"), and a `synchronizeTime()` redesign that reads the firmware's new
+  `timeSource`/`tzSource` markers (mandatory once fw `hasFix` became live-gated). New `Gps` fields
+  (`fixAgeS`, `hdop`, `accuracyMeters`) + `General` fields (`deviceTimeSource`/`deviceTzSource`) parsed
+  from new getStatus keys. Backward compatible with pre-1.54 firmware (defaults → phone-only gauge, no
+  suffix, old skip heuristic). Firmware counterpart: firmware repo `changelog.md` (V1.54).
+- **Recording Scheduler driver + UI** - ⏮️ REVERTED, not shipped (removed 2026-07-21). Was
+  code-complete but never on-device-verified; removed before the V1.54 push so the GPS-accuracy work
+  could ship alone. Backup under the session scratchpad `sched-removal-backup/app/`.
 - **Map View** - Google Maps integration for device locations
 
 ### Cloud Integration ✅
@@ -44,7 +61,7 @@
 | Issue | Status | Priority |
 |-------|--------|----------|
 | Bluetooth ON/OFF toggle not working | Not Started | Medium |
-| Refresh only works after scroll | Not Started | Low |
+| Refresh only works after scroll / refresh triggers when scrolling up | Fix applied 2026-07-22 (needs on-device verify) | Low |
 | Google Maps crashes on some devices | Not Started | Medium |
 
 ### Features 📋
@@ -74,9 +91,13 @@
 ### Bluetooth Toggle
 The Bluetooth ON/OFF button in settings doesn't work. This may be related to Android permission changes in newer API levels.
 
-### Pull-to-Refresh Behavior
-The swipe-to-refresh on the status page:
-2. Sometimes it refreshes the svreen even though i am in the middle of the status page and not on top.
+### Pull-to-Refresh Behavior — fix applied 2026-07-22 (needs on-device verify)
+The swipe-to-refresh on the status page used to refresh even when scrolling up mid-page (and felt
+"stuck" at the bottom). Cause: the `SwipeRefreshLayout`'s direct child is a non-scrollable
+ConstraintLayout, so its default at-top check always said "at top" and grabbed every downward drag.
+Fixed in `DeviceActivity.kt` by replacing the racy `isEnabled = (y <= 5)` scroll listener with
+`setOnChildScrollUpCallback { _, _ -> binding.scrollView.canScrollVertically(-1) }`. See
+`activeContext.md` for details. Verify on hardware, then close this out.
 
 ### Google Maps Crashes
 Some devices experience crashes with Google Maps. Details in `maps.log`. May be device-specific or related to map utils version.

@@ -87,9 +87,16 @@ private const val KEY_GPS_POWERED = "powered"
 private const val KEY_GPS_HAS_FIX = "hasFix"
 private const val KEY_GPS_SATELLITES = "satellites"
 private const val KEY_GPS_TIME_SYNCED = "timeSynced"
+private const val KEY_GPS_FIX_AGE = "fixAge[s]"
+private const val KEY_GPS_HDOP = "hdop"
+private const val KEY_GPS_LAT = "lat"
+private const val KEY_GPS_LON = "lon"
 
 // Device wall-clock time (from getStatus response, "device/time").
 private const val KEY_DEVICE_TIME = "time"
+// Clock/timezone provenance markers (firmware V1.54+; absent on older firmware).
+private const val KEY_DEVICE_TIME_SOURCE = "timeSource"
+private const val KEY_DEVICE_TZ_SOURCE = "tzSource"
 
 // Firmware-update capability advertisement (from getStatus response, "device" section).
 private const val KEY_FW_UPDATE_PROTO = "fwUpdateProto"
@@ -340,6 +347,18 @@ object DeviceDriver {
     val deviceAddress get() = device?.address
 
     val isConnected get() = bluetoothSocket?.isConnected == true
+
+    /**
+     * True when nothing is queued, no command is in flight, and no firmware
+     * transfer owns the socket — i.e. it is safe to enqueue a background
+     * command (the status-page auto-refresh) without delaying a user-initiated
+     * one. Reads volatile/queue state without locking; a stale read at worst
+     * skips or allows one poll, which the next tick corrects.
+     */
+    val isIdle: Boolean
+        get() = !firmwareTransferActive &&
+                (currentCommand == null) &&
+                pendingCommands.isEmpty()
 
     /**
      * While true, a firmware transfer owns the socket (binary frame mode on the
@@ -1385,6 +1404,16 @@ object DeviceDriver {
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_DEVICE_TIME"
         general.deviceTime = JsonHelper.getJSONStringAttribute(deviceTimePath, jsonObject)
 
+        // Clock/timezone provenance (V1.54+); empty string on older firmware, which the UI treats
+        // as "no source suffix".
+        val timeSourcePath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_DEVICE_TIME_SOURCE"
+        general.deviceTimeSource = JsonHelper.getJSONStringAttribute(timeSourcePath, jsonObject)
+
+        val tzSourcePath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_DEVICE$PATH_SEPARATOR$KEY_DEVICE_TZ_SOURCE"
+        general.deviceTzSource = JsonHelper.getJSONStringAttribute(tzSourcePath, jsonObject)
+
         // Parse on-board GPS status
         val gpsPresentPath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_GPS$PATH_SEPARATOR$KEY_GPS_PRESENT"
@@ -1405,6 +1434,26 @@ object DeviceDriver {
         val gpsTimeSyncedPath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_GPS$PATH_SEPARATOR$KEY_GPS_TIME_SYNCED"
         gps.timeSynced = JsonHelper.getJSONBooleanAttribute(gpsTimeSyncedPath, jsonObject)
+
+        // Live fix age (−1 when no fix) and HDOP (0.0 = no live solution); V1.54+. On older
+        // firmware these keys are absent, so they keep their -1.0 / 0.0 defaults.
+        val gpsFixAgePath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_GPS$PATH_SEPARATOR$KEY_GPS_FIX_AGE"
+        gps.fixAgeS = JsonHelper.getJSONNumberAttribute(gpsFixAgePath, jsonObject, -1.0).toInt()
+
+        val gpsHdopPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_GPS$PATH_SEPARATOR$KEY_GPS_HDOP"
+        gps.hdop = JsonHelper.getJSONNumberAttribute(gpsHdopPath, jsonObject, 0.0)
+
+        // Last-known position — the firmware only includes lat/lon while it has (or has had) a fix
+        // this power session, so an absent key means "no device location". NaN sentinel distinguishes
+        // absent from a real 0.0 coordinate.
+        val gpsLatPath = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_GPS$PATH_SEPARATOR$KEY_GPS_LAT"
+        val gpsLonPath = "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_GPS$PATH_SEPARATOR$KEY_GPS_LON"
+        val lat = JsonHelper.getJSONNumberAttribute(gpsLatPath, jsonObject, Double.NaN)
+        val lon = JsonHelper.getJSONNumberAttribute(gpsLonPath, jsonObject, Double.NaN)
+        gps.latitude = if (lat.isNaN()) null else lat
+        gps.longitude = if (lon.isNaN()) null else lon
     }
 
     private fun parseDeviceState(jsonObject: JSONObject) {

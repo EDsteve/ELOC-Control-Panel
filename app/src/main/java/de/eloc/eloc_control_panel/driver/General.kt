@@ -47,6 +47,14 @@ class General {
     var buildVariant = ""
         internal set
 
+    // Clock/timezone source markers from getStatus device block ("" = firmware too old to report).
+    // deviceTimeSource: "build" / "app" / "gps"; deviceTzSource: "app" / "gps" / "default".
+    var deviceTimeSource = ""
+        internal set
+
+    var deviceTzSource = ""
+        internal set
+
     /**
      * Reset all cached config/status fields to defaults.
      *
@@ -69,5 +77,7 @@ class General {
         deviceTime = ""
         fwUpdateProto = 0
         buildVariant = ""
+        deviceTimeSource = ""
+        deviceTzSource = ""
     }
 }

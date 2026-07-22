@@ -264,6 +264,11 @@
     <string name="gps_fix">Fix (%1$d sats)</string>
     <string name="gps_searching">Searching… (%1$d sats)</string>
     <string name="gps_idle">Idle</string>
+    <string name="accuracy_source_phone">Phone</string>
+    <string name="accuracy_source_eloc">ELOC</string>
+    <string name="time_with_source">%1$s · %2$s</string>
+    <string name="time_source_gps">GPS</string>
+    <string name="time_source_phone">Phone</string>
     <string name="region">Region</string>
     <string name="uplink_interval">Uplink Interval</string>
     <string name="increment">Increment</string>
@@ -401,4 +406,5 @@
     <string name="firmware_transfer_progress">Sending firmware… %1$d%% (%2$d kB/s)</string>
     <string name="firmware_progress_detail">Sending firmware… %1$s of %2$s (%3$d kB/s)</string>
     <string name="firmware_progress_eta">, about %1$d s left</string>
+
 </resources>

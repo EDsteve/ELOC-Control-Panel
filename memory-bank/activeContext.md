@@ -1,6 +1,56 @@
 ﻿# ELOC Control Panel - Active Context
 
 ## Current Work Focus
+**Best-GPS-source recording + 15 s refresh (2026-07-22, 5.43/61) — code-complete, `compileDebugKotlin`
+green; needs on-device test against firmware V1.54.** Extends the 2026-07-21 GPS-accuracy work below: the
+merged phone-vs-ELOC comparison previously drove only the *gauge display* — the location actually recorded
+/uploaded was still always the phone's. Now the more accurate source is recorded. Changes: `driver/Gps.kt`
+gains `latitude`/`longitude` (nullable, latched like the firmware fields) + `hasLocation`;
+`driver/DeviceDriver.kt` parses the `gps/lat` + `gps/lon` status keys (`KEY_GPS_LAT`/`KEY_GPS_LON`, NaN
+sentinel → null when absent); `DeviceActivity` factors the comparison into `chooseGpsSource()` (PHONE/ELOC
+/NONE) reused by `updateGpsViews()` and a new `effectiveGpsData()` — the ELOC only wins with a live fix
+AND real coordinates, ties go to phone. `effectiveGpsData()` now feeds the three location call sites (the
+record-start `getElocInformation`, the display-mode `getElocInformation`, and `setRecordState`) and the
+record-accuracy gate. `AUTO_REFRESH_INTERVAL_MS` 30 s → **15 s** so the ELOC side of the comparison stays
+fresher during field setup (skip-if-busy gating unchanged, so a slow `getStatus` under AI load just defers
+the next tick). `build.gradle` bumped 5.42/60 → 5.43/61. Backward compatible: pre-V1.54 firmware sends no
+`lat`/`lon`/`hdop` → `hasLocation` false, ELOC never wins → phone-only as before. **Owed**: on-device test
+of the ELOC-wins path (needs a real device fix more accurate than the phone).
+
+---
+
+**GPS live accuracy & time-source (2026-07-21, 5.42/60) — code-complete, `compileDebugKotlin` green;
+needs on-device test against firmware V1.54.** Counterpart of the same-day firmware work (firmware repo
+`memory-bank/activeContext.md` + `changelog.md`). The 30 s status auto-refresh added earlier exposed two
+problems this fixes: (1) the firmware's latched `hasFix` showed "Fix (9 sats)" indoors then a
+contradictory "Fix (0 sats)" — firmware V1.54 now live-gates it; (2) the GPS gauge only showed **phone**
+accuracy and the ELOC Time row didn't say whether the clock was GPS- or phone-set. App changes:
+`driver/Gps.kt` (`UERE_METERS=5.0`, `fixAgeS`, `hdop`, derived `accuracyMeters`), `driver/General.kt`
+(`deviceTimeSource`/`deviceTzSource`), `driver/DeviceDriver.kt` (parse new keys `fixAge[s]`, `hdop`,
+`timeSource`, `tzSource`), `DeviceActivity.updateGpsViews()` **merged phone-vs-ELOC gauge** (shows the
+better accuracy in meters, labels the source), ELOC Time **source suffix** ("· GPS"/"· Phone") +
+`updateGpsViews()` now called at the end of `setStatusInfo()` so 30 s refreshes repaint the gauge, and a
+**mandatory `synchronizeTime()` redesign** — the live-gated `hasFix` broke the old skip heuristic, so it
+now prefers the firmware's `timeSource`/`tzSource` markers (skip only when time is GPS-set and TZ isn't
+the compile default), falling back to the old `timeSynced && hasFix` on pre-1.54 firmware. New strings:
+`accuracy_source_phone/eloc`, `time_with_source`, `time_source_gps/phone`. Backward compatible: on old
+firmware the new keys default to ""/0.0 → phone-only gauge, no time suffix, old skip heuristic. **R3**:
+the `synchronizeTime()` redesign must ship with V1.54 (same release train) or the app pins phone TZ at
+every connect. `build.gradle` was already at 5.42/60. **Owed**: on-device test (5.42 vs fw V1.54, plus
+the 5.41-vs-1.54 and 5.42-vs-1.53 compat cells).
+
+---
+
+**Recording Scheduler driver + UI — REVERTED, not shipped (removed 2026-07-21).** The scheduler app
+work (`driver/Scheduler.kt`, `SchedulerActivity`, `ScheduleEntryEditorActivity`, the DeviceSettings
+"Recording Schedule" section, `Command`/`JsonHelper` support) was code-complete but never
+on-device-verified. It was surgically removed so the V1.54 GPS-accuracy/time-source work (5.42) could
+ship on its own (user decision; firmware scheduler pulled at the same time). Entangled files
+(`DeviceDriver.kt`, `DeviceSettingsActivity.kt`, `Command.kt`, `JsonHelper.kt`, manifest, layouts,
+`strings.xml`) were reverted to HEAD with the V1.54 hunks (`isIdle`, GPS/time parsing) re-applied;
+`compileDebugKotlin` green after removal. **Full pre-removal state is backed up** (git-diff patch +
+untracked files) under the session scratchpad `sched-removal-backup/app/` — reapply to resurrect.
+
 Firmware update over Bluetooth (July 2026) — Phase 2 MVP implemented plus the 2026-07-10 review
 fixes (see below); needs real-hardware verification against firmware V1.51 (full matrix: happy
 path, resume after BT kill incl. fully-staged resume, downgrade, refusals, rollback). Phase 3
@@ -8,6 +58,34 @@ path, resume after BT kill incl. fully-staged resume, downgrade, refusals, rollb
 screen redesign — extend the design language to the remaining screens later.
 
 ## Recent Changes
+
+### Status-page pull-to-refresh vs. scroll conflict fixed (2026-07-22)
+On the device status screen, scrolling up from the bottom often triggered a pull-to-refresh instead
+of scrolling — and felt "stuck." Root cause: in `activity_device.xml` the `SwipeRefreshLayout`'s
+**direct child is a (non-scrollable) ConstraintLayout**, not the `ScrollView`, so its default
+`canChildScrollUp()` always reports "at top" and treats every downward drag as a refresh pull. The
+prior workaround toggled `swipeRefreshLayout.isEnabled = (y <= 5)` from an `OnScrollChangeListener` —
+racy (read at touch-down before the scroll delta lands), API-gated to M+ (broken on API 21–22), and it
+fought the connection-state `isEnabled` toggles. **Fix** (`DeviceActivity.kt`): removed the scroll
+listener + its registration + now-unused `import android.os.Build`; added
+`swipeRefreshLayout.setOnChildScrollUpCallback { _, _ -> binding.scrollView.canScrollVertically(-1) }`
+so refresh only arms when the ScrollView is genuinely at the very top, evaluated at interception time,
+on all API levels. Connection-state `isEnabled` toggles (Pending/Inactive/onElocInfoReceived) left as-is.
+`compileDebugKotlin` green. **Owed:** on-device check — scroll-up from bottom no longer refreshes;
+pull-to-refresh still fires at the top.
+
+### GPS live accuracy & time-source (2026-07-21, 5.42/60)
+See Current Work Focus above for the full description. Files: `driver/Gps.kt` (companion `UERE_METERS`,
+`fixAgeS`/`hdop` fields + `accuracyMeters` derived getter, `reset()`), `driver/General.kt`
+(`deviceTimeSource`/`deviceTzSource` + reset), `driver/DeviceDriver.kt` (`KEY_GPS_FIX_AGE`/`KEY_GPS_HDOP`
+/`KEY_DEVICE_TIME_SOURCE`/`KEY_DEVICE_TZ_SOURCE` constants + `parseStatus` wiring; `fixAge[s]` parsed with
+a −1.0 default, `hdop` with 0.0), `activities/themable/DeviceActivity.kt` (`updateGpsViews()` merged
+gauge, `setStatusInfo()` time suffix + trailing `updateGpsViews()` call, `synchronizeTime()` redesign),
+`res/values/strings.xml` (5 new strings). No `build.gradle` change (already 5.42/60).
+
+### Recording Scheduler driver + UI (2026-07-14) — REVERTED 2026-07-21 (see Current Work Focus)
+The scheduler app work was code-complete but never on-device-verified, and was removed before the V1.54
+push. Backup under the session scratchpad `sched-removal-backup/app/`.
 
 ### GPS accuracy gauge color inversion fixed (2026-07-10)
 `SimpleGauge.getValueColor()`'s errorMode branch permanently mutated the member
