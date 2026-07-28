@@ -29,6 +29,7 @@ abstract class BaseEditorActivity : ThemableActivity() {
         const val EXTRA_IS_NUMERIC = "is_numeric"
         const val EXTRA_PREFIX = "prefix"
         const val EXTRA_MINIMUM = "minimum"
+        const val EXTRA_ALLOW_CUSTOM = "allow_custom"
     }
 
     protected var property = ""
@@ -37,6 +38,7 @@ abstract class BaseEditorActivity : ThemableActivity() {
     protected var prefix = ""
     private val listenerId = "editorActivity"
     protected var isNumeric = false
+    protected var allowCustom = false
     protected var minimumValue: Double? = null
     protected var rangeCurrentValue: Float? = null
     protected var rangeMinimumValue: Float? = null
@@ -78,6 +80,7 @@ abstract class BaseEditorActivity : ThemableActivity() {
     private fun setData() {
         val extras = intent.extras
         isNumeric = extras?.getBoolean(EXTRA_IS_NUMERIC, false) ?: false
+        allowCustom = extras?.getBoolean(EXTRA_ALLOW_CUSTOM, false) ?: false
 
         if (extras?.containsKey(EXTRA_MINIMUM) == true) {
             minimumValue = extras.getDouble(EXTRA_MINIMUM)

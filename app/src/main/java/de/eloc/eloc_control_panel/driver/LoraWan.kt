@@ -45,6 +45,22 @@ class LoraWan {
         internal const val MIN_INTERVAL_SECS = 60 // 1 minute
         internal const val MAX_INTERVAL_SECS = DAY_SECONDS * 3 // 3 days
         internal const val REGION_MAX_LEN = 50
+
+        // Frequency plans the firmware maps to a RadioLib band (ElocLora::getRegionFromConfig).
+        // Offered as a picker, but the editor also accepts free text so a device running newer
+        // firmware can still be set to a region this app build does not know about.
+        internal val REGIONS = listOf(
+            "EU868",
+            "US915",
+            "AU915",
+            "AS923",
+            "AS923_2",
+            "AS923_3",
+            "AS923_4",
+            "IN865",
+            "KR920",
+            "CN500",
+        )
     }
 
     // Config properties (from getConfig)

@@ -6,8 +6,8 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import de.eloc.eloc_control_panel.R
-import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.BaseEditorActivity
 import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.OptionEditorActivity
+import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.SettingEditors
 import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.TextEditorActivity
 import de.eloc.eloc_control_panel.data.Channel
 import de.eloc.eloc_control_panel.data.CommandType
@@ -376,24 +376,10 @@ class DeviceSettingsActivity : ThemableActivity() {
             }
         }
         binding.lorawanRegionItem.setOnClickListener {
-            openTextEditor(
-                LoraWan.REGION,
-                getString(R.string.region),
-                DeviceDriver.lorawan.region,
-            )
+            SettingEditors.openLoraRegion(this)
         }
         binding.lorawanUplinkIntervalItem.setOnClickListener {
-            val prettyCurrentInterval = prettifyTime(DeviceDriver.lorawan.uplinkIntervalSeconds)
-            val currentInterval = DeviceDriver.lorawan.uplinkIntervalSeconds
-            RangeEditorActivity.openRangeEditor(
-                this,
-                LoraWan.UPLINK_INTERVAL,
-                getString(R.string.uplink_interval),
-                "$currentInterval ($prettyCurrentInterval)",
-                DeviceDriver.lorawan.uplinkIntervalSeconds.toFloat(),
-                LoraWan.MIN_INTERVAL_SECS.toFloat(),
-                LoraWan.MAX_INTERVAL_SECS.toFloat()
-            )
+            SettingEditors.openLoraUplinkInterval(this)
         }
     }
 
@@ -456,20 +442,10 @@ class DeviceSettingsActivity : ThemableActivity() {
             ) { refresh() }
         }
         binding.intruderThresholdItem.setOnClickListener {
-            openTextEditor(
-                Intruder.THRESHOLD,
-                getString(R.string.intruder_threshold),
-                DeviceDriver.intruder.threshold.toString(),
-                true,
-            )
+            SettingEditors.openIntruderThreshold(this)
         }
         binding.intruderWindowsMsItem.setOnClickListener {
-            openTextEditor(
-                Intruder.WINDOWS_MS,
-                getString(R.string.intruder_windows_ms),
-                DeviceDriver.intruder.windowsMs.toString(),
-                true,
-            )
+            SettingEditors.openIntruderWindowsMs(this)
         }
     }
 
@@ -611,6 +587,8 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
     }
 
+    // Settings that exist only on this screen; the ones shared with the Status page cards go
+    // through SettingEditors so both entry points open the same editor.
     private fun openTextEditor(
         property: String,
         settingName: String,
@@ -618,18 +596,15 @@ class DeviceSettingsActivity : ThemableActivity() {
         isNumeric: Boolean = false,
         minimum: Double? = null,
         prefix: String = ""
-    ) {
-        val intent = Intent(this, TextEditorActivity::class.java)
-        intent.putExtra(BaseEditorActivity.EXTRA_SETTING_NAME, settingName)
-        intent.putExtra(BaseEditorActivity.EXTRA_CURRENT_VALUE, currentValue)
-        intent.putExtra(BaseEditorActivity.EXTRA_PROPERTY, property)
-        intent.putExtra(BaseEditorActivity.EXTRA_IS_NUMERIC, isNumeric)
-        intent.putExtra(BaseEditorActivity.EXTRA_PREFIX, prefix)
-        if (minimum != null) {
-            intent.putExtra(BaseEditorActivity.EXTRA_MINIMUM, minimum)
-        }
-        startActivity(intent)
-    }
+    ) = TextEditorActivity.open(
+        this,
+        property,
+        settingName,
+        currentValue,
+        isNumeric,
+        minimum,
+        prefix,
+    )
 
     // CPU clocks are only selectable at fixed hardware-valid values, so present them as a
     // picker instead of free text. The caller pre-filters the list to enforce min <= max.
@@ -786,30 +761,10 @@ class DeviceSettingsActivity : ThemableActivity() {
             ) { refresh() }
         }
         binding.dutyCycleSleepDurationItem.setOnClickListener {
-            val currentSleepDuration = DeviceDriver.dutyCycle.sleepDurationS
-            val prettyCurrentInterval = prettifyTime(currentSleepDuration)
-            RangeEditorActivity.openRangeEditor(
-                this,
-                DutyCycle.SLEEP_DURATION_S,
-                getString(R.string.duty_cycle_sleep_duration),
-                "$currentSleepDuration ($prettyCurrentInterval)",
-                currentSleepDuration.toFloat(),
-                DutyCycle.MIN_SLEEP_DURATION_S.toFloat(),
-                DutyCycle.MAX_SLEEP_DURATION_S.toFloat()
-            )
+            SettingEditors.openDutyCycleSleepDuration(this)
         }
         binding.dutyCycleAwakeDurationItem.setOnClickListener {
-            val currentAwakeDuration = DeviceDriver.dutyCycle.awakeDurationS
-            val prettyCurrentInterval = prettifyTime(currentAwakeDuration)
-            RangeEditorActivity.openRangeEditor(
-                this,
-                DutyCycle.AWAKE_DURATION_S,
-                getString(R.string.duty_cycle_awake_duration),
-                "$currentAwakeDuration ($prettyCurrentInterval)",
-                currentAwakeDuration.toFloat(),
-                DutyCycle.MIN_AWAKE_DURATION_S.toFloat(),
-                DutyCycle.MAX_AWAKE_DURATION_S.toFloat()
-            )
+            SettingEditors.openDutyCycleAwakeDuration(this)
         }
     }
 

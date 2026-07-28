@@ -270,6 +270,8 @@
     <string name="time_source_gps">GPS</string>
     <string name="time_source_phone">Phone</string>
     <string name="region">Region</string>
+    <string name="custom">Custom…</string>
+    <string name="custom_value">Custom value</string>
     <string name="uplink_interval">Uplink Interval</string>
     <string name="increment">Increment</string>
     <string name="decrement">Decrement</string>

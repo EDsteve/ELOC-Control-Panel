@@ -1,6 +1,39 @@
 ﻿# ELOC Control Panel - Active Context
 
 ## Current Work Focus
+**LoRa region picker with custom entry + one editor per setting (2026-07-28) — code-complete,
+`assembleDebug` green; needs on-device check.** Region was a free-text field, so a typo silently produced
+a region the firmware rejects (`ElocLora::getRegionFromConfig()` → `ESP_ERR_INVALID_ARG`, LoRa stays
+dead). It is now an `OptionEditorActivity` picker listing the ten plans the firmware maps to a RadioLib
+band — EU868, US915, AU915, AS923, AS923_2, AS923_3, AS923_4, IN865, KR920, CN500 (`LoraWan.REGIONS`) —
+plus a **"Custom…"** radio that reveals a text field, so a region added by newer firmware can still be
+typed in. Generic mechanism, not region-specific: `BaseEditorActivity.EXTRA_ALLOW_CUSTOM` + an
+`allowCustom` flag on `OptionEditorActivity.open()` (default false, all existing callers unchanged); the
+custom radio carries the sentinel tag `"custom|value"` (uncollidable — `|` is the option key/label
+splitter) and `activity_editor_options.xml` gained a `custom_value_input_layout`/`custom_value_edit_text`
+pair, GONE until that radio is picked. A device value that is not in the list preselects "Custom…" and
+prefills the field, so unknown regions round-trip instead of being lost. New strings: `custom`,
+`custom_value`. Region already sits in `restartRequiredProperties`, so the restart prompt still fires on
+save.
+
+**The duplication that caused this, now removed.** The picker at first only appeared in Device Settings —
+the Status page's LoRa card still opened the old free-text editor for the *same* setting, because the
+Status cards (`DeviceActivity`) and the Device Settings sections (`DeviceSettingsActivity`) each built
+their own editor intent for every shared row. New **`editors/eloc_settings/SettingEditors.kt`** holds one
+function per shared setting — `openLoraRegion`, `openLoraUplinkInterval`, `openDutyCycleAwakeDuration`,
+`openDutyCycleSleepDuration`, `openIntruderThreshold`, `openIntruderWindowsMs` — each reading current
+values straight off `DeviceDriver` and owning the editor choice, options and limits; both screens now just
+call them (the caller still owns *whether* the row is editable: recording state + section switch). Also
+added `TextEditorActivity.open()` (companion, mirrors `OptionEditorActivity.open` /
+`RangeEditorActivity.openRangeEditor`) so intent-building for the text editor exists once —
+`DeviceActivity`'s private `openTextEditor` is deleted, `DeviceSettingsActivity`'s now delegates to it and
+serves only the rows unique to that screen. **Rule going forward: a setting reachable from two screens
+gets its editor defined once in `SettingEditors`, never re-wired per screen.** Untouched: the section
+enable switches (LoRa/Scheduler/Intruder), which issue `setConfig` directly and have deliberately
+different post-save behaviour per screen (restart dialog vs. `refreshDeviceInfo()`).
+
+---
+
 **Best-GPS-source recording + 15 s refresh (2026-07-22, 5.43/61) — code-complete, `compileDebugKotlin`
 green; needs on-device test against firmware V1.54.** Extends the 2026-07-21 GPS-accuracy work below: the
 merged phone-vs-ELOC comparison previously drove only the *gauge display* — the location actually recorded
@@ -58,21 +91,6 @@ path, resume after BT kill incl. fully-staged resume, downgrade, refusals, rollb
 screen redesign — extend the design language to the remaining screens later.
 
 ## Recent Changes
-
-### Status-page pull-to-refresh vs. scroll conflict fixed (2026-07-22)
-On the device status screen, scrolling up from the bottom often triggered a pull-to-refresh instead
-of scrolling — and felt "stuck." Root cause: in `activity_device.xml` the `SwipeRefreshLayout`'s
-**direct child is a (non-scrollable) ConstraintLayout**, not the `ScrollView`, so its default
-`canChildScrollUp()` always reports "at top" and treats every downward drag as a refresh pull. The
-prior workaround toggled `swipeRefreshLayout.isEnabled = (y <= 5)` from an `OnScrollChangeListener` —
-racy (read at touch-down before the scroll delta lands), API-gated to M+ (broken on API 21–22), and it
-fought the connection-state `isEnabled` toggles. **Fix** (`DeviceActivity.kt`): removed the scroll
-listener + its registration + now-unused `import android.os.Build`; added
-`swipeRefreshLayout.setOnChildScrollUpCallback { _, _ -> binding.scrollView.canScrollVertically(-1) }`
-so refresh only arms when the ScrollView is genuinely at the very top, evaluated at interception time,
-on all API levels. Connection-state `isEnabled` toggles (Pending/Inactive/onElocInfoReceived) left as-is.
-`compileDebugKotlin` green. **Owed:** on-device check — scroll-up from bottom no longer refreshes;
-pull-to-refresh still fires at the top.
 
 ### GPS live accuracy & time-source (2026-07-21, 5.42/60)
 See Current Work Focus above for the full description. Files: `driver/Gps.kt` (companion `UERE_METERS`,

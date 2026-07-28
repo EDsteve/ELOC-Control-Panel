@@ -1,5 +1,7 @@
 package de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
 import de.eloc.eloc_control_panel.R
@@ -14,6 +16,28 @@ import de.eloc.eloc_control_panel.driver.General
 import de.eloc.eloc_control_panel.interfaces.TextInputWatcher
 
 class TextEditorActivity : BaseEditorActivity() {
+    companion object {
+        fun open(
+            context: Context,
+            property: String,
+            settingName: String,
+            currentValue: String,
+            isNumeric: Boolean = false,
+            minimum: Double? = null,
+            prefix: String = "",
+        ) {
+            val intent = Intent(context, TextEditorActivity::class.java)
+            intent.putExtra(EXTRA_SETTING_NAME, settingName)
+            intent.putExtra(EXTRA_CURRENT_VALUE, currentValue)
+            intent.putExtra(EXTRA_PROPERTY, property)
+            intent.putExtra(EXTRA_IS_NUMERIC, isNumeric)
+            intent.putExtra(EXTRA_PREFIX, prefix)
+            if (minimum != null) {
+                intent.putExtra(EXTRA_MINIMUM, minimum)
+            }
+            context.startActivity(intent)
+        }
+    }
 
     private lateinit var binding: ActivityEditorTextBinding
 

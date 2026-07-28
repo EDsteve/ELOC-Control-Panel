@@ -16,9 +16,7 @@ import de.eloc.eloc_control_panel.activities.onWriteCommandError
 import de.eloc.eloc_control_panel.activities.prettifyTime
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.activities.showModalOptionAlert
-import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.BaseEditorActivity
-import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.RangeEditorActivity
-import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.TextEditorActivity
+import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.SettingEditors
 import de.eloc.eloc_control_panel.data.BtDevice
 import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.data.CommandType
@@ -663,21 +661,6 @@ class DeviceActivity : ThemableActivity() {
         ) { refreshDeviceInfo() }
     }
 
-    private fun openTextEditor(
-        property: String,
-        settingName: String,
-        currentValue: String,
-        isNumeric: Boolean = false,
-    ) {
-        val intent = Intent(this, TextEditorActivity::class.java)
-        intent.putExtra(BaseEditorActivity.EXTRA_SETTING_NAME, settingName)
-        intent.putExtra(BaseEditorActivity.EXTRA_CURRENT_VALUE, currentValue)
-        intent.putExtra(BaseEditorActivity.EXTRA_PROPERTY, property)
-        intent.putExtra(BaseEditorActivity.EXTRA_IS_NUMERIC, isNumeric)
-        intent.putExtra(BaseEditorActivity.EXTRA_PREFIX, "")
-        startActivity(intent)
-    }
-
     private fun setSectionListeners() {
         // LoRa
         binding.loraHeader.setOnClickListener {
@@ -699,25 +682,12 @@ class DeviceActivity : ThemableActivity() {
         }
         binding.loraRegionItem.setOnClickListener {
             if (binding.loraSwitch.isChecked && canEditConfig()) {
-                openTextEditor(
-                    LoraWan.REGION,
-                    getString(R.string.region),
-                    DeviceDriver.lorawan.region,
-                )
+                SettingEditors.openLoraRegion(this)
             }
         }
         binding.loraUplinkItem.setOnClickListener {
             if (binding.loraSwitch.isChecked && canEditConfig()) {
-                val currentInterval = DeviceDriver.lorawan.uplinkIntervalSeconds
-                RangeEditorActivity.openRangeEditor(
-                    this,
-                    LoraWan.UPLINK_INTERVAL,
-                    getString(R.string.uplink_interval),
-                    "$currentInterval (${prettifyTime(currentInterval)})",
-                    currentInterval.toFloat(),
-                    LoraWan.MIN_INTERVAL_SECS.toFloat(),
-                    LoraWan.MAX_INTERVAL_SECS.toFloat()
-                )
+                SettingEditors.openLoraUplinkInterval(this)
             }
         }
 
@@ -741,30 +711,12 @@ class DeviceActivity : ThemableActivity() {
         }
         binding.dutyAwakeItem.setOnClickListener {
             if (binding.schedulerSwitch.isChecked && canEditConfig()) {
-                val current = DeviceDriver.dutyCycle.awakeDurationS
-                RangeEditorActivity.openRangeEditor(
-                    this,
-                    DutyCycle.AWAKE_DURATION_S,
-                    getString(R.string.duty_cycle_awake_duration),
-                    "$current (${prettifyTime(current)})",
-                    current.toFloat(),
-                    DutyCycle.MIN_AWAKE_DURATION_S.toFloat(),
-                    DutyCycle.MAX_AWAKE_DURATION_S.toFloat()
-                )
+                SettingEditors.openDutyCycleAwakeDuration(this)
             }
         }
         binding.dutySleepItem.setOnClickListener {
             if (binding.schedulerSwitch.isChecked && canEditConfig()) {
-                val current = DeviceDriver.dutyCycle.sleepDurationS
-                RangeEditorActivity.openRangeEditor(
-                    this,
-                    DutyCycle.SLEEP_DURATION_S,
-                    getString(R.string.duty_cycle_sleep_duration),
-                    "$current (${prettifyTime(current)})",
-                    current.toFloat(),
-                    DutyCycle.MIN_SLEEP_DURATION_S.toFloat(),
-                    DutyCycle.MAX_SLEEP_DURATION_S.toFloat()
-                )
+                SettingEditors.openDutyCycleSleepDuration(this)
             }
         }
 
@@ -791,22 +743,12 @@ class DeviceActivity : ThemableActivity() {
         }
         binding.intruderThresholdItem.setOnClickListener {
             if (binding.intruderSwitch.isChecked && canEditConfig()) {
-                openTextEditor(
-                    Intruder.THRESHOLD,
-                    getString(R.string.intruder_threshold),
-                    DeviceDriver.intruder.threshold.toString(),
-                    true,
-                )
+                SettingEditors.openIntruderThreshold(this)
             }
         }
         binding.intruderWindowItem.setOnClickListener {
             if (binding.intruderSwitch.isChecked && canEditConfig()) {
-                openTextEditor(
-                    Intruder.WINDOWS_MS,
-                    getString(R.string.intruder_windows_ms),
-                    DeviceDriver.intruder.windowsMs.toString(),
-                    true,
-                )
+                SettingEditors.openIntruderWindowsMs(this)
             }
         }
 
