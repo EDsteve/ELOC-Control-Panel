@@ -624,7 +624,7 @@ class DeviceActivity : ThemableActivity() {
 
     // Alarm row of the Intruder section. The alarm latches: once knocked, the device keeps sending
     // LoRa alarm uplinks with its GPS position until detection is switched off or it reboots - and
-    // the siren goes quiet 5 minutes in while the alarm itself carries on, so the two are reported
+    // the siren goes quiet 30 s in while the alarm itself carries on, so the two are reported
     // separately. Firmware older than 1.69 reports no alarm state and always shows "not triggered".
     private fun describeIntruderAlarm(intruder: Intruder): String {
         val age = TimeHelper.formatSeconds(this, intruder.alarmAgeS, useSeconds = true)

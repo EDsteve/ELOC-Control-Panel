@@ -65,7 +65,7 @@ class Intruder {
     var alarmActive = false
         internal set
 
-    // The siren stops 5 minutes after the trigger while the alarm itself carries on.
+    // The siren stops 30 s after the trigger while the alarm itself carries on.
     var sirenActive = false
         internal set
 
