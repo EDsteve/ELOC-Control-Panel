@@ -306,6 +306,12 @@
     <string name="scheduler">Scheduler</string>
     <string name="scheduler_subtitle">Duty-cycled recording schedule</string>
     <string name="intruder_detection">Intruder Detection</string>
+    <string name="intruder_alarm">Alarm</string>
+    <string name="intruder_alarm_interval">Alarm Interval</string>
+    <string name="intruder_alarm_none">Not triggered</string>
+    <string name="intruder_alarm_active_siren">ACTIVE · siren on (%1$s)</string>
+    <string name="intruder_alarm_active_silent">ACTIVE · siren off (%1$s)</string>
+    <string name="intruder_alarm_not_armed">Off while duty cycle is on</string>
     <string name="intruder_subtitle">Detect and record intruder events</string>
     <string name="device_details">Device Details</string>
     <string name="device_details_subtitle">Session, hardware and status info</string>
@@ -357,6 +363,7 @@
     <string name="help_intruder_enable">Use the built-in accelerometer to detect when someone is moving or removing the device, and record the event.</string>
     <string name="help_intruder_threshold">How much movement (acceleration) is needed to count as an intruder event.</string>
     <string name="help_intruder_window">Time window in milliseconds over which the accelerometer data is evaluated.</string>
+    <string name="help_intruder_alarm_interval">How often the device sends a LoRa alarm message with its GPS position while an alarm is active, so a device that is being carried away can be tracked. Shorter intervals track more closely but use more battery and LoRa airtime. The device does not go below 60 seconds.</string>
     <string name="help_lorawan_enable">Report detections and regular heartbeats over LoRaWAN (The Things Network) — long-range radio, independent of cell coverage.</string>
     <string name="help_lorawan_uplink">How often the device sends a status message over LoRa. Shorter intervals give fresher data but use more power.</string>
     <string name="help_lorawan_region">The LoRaWAN frequency plan for your country or region (e.g. EU868, AS923).</string>

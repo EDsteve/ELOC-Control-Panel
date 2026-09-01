@@ -21,6 +21,7 @@ import de.eloc.eloc_control_panel.driver.KEY_INFERENCE_REQ_DETECTIONS
 import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_ENABLED
 import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_THRESHOLD
 import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_WINDOWS_MS
+import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_ALARM_INTERVAL_S
 import de.eloc.eloc_control_panel.driver.KEY_LOGS_FILENAME
 import de.eloc.eloc_control_panel.driver.KEY_LOGS_LOG_TO_SD_CARD
 import de.eloc.eloc_control_panel.driver.KEY_LOGS_MAX_FILES
@@ -318,6 +319,15 @@ class Command(
                         ""
                     } else {
                         """setConfig#cfg={"config":{"intruderCfg":{"windowsMs":$windowsMs}}}"""
+                    }
+                }
+
+                KEY_INTRUDER_ALARM_INTERVAL_S -> {
+                    val intervalS = propertyValue.toDoubleOrNull()?.toInt()
+                    if (intervalS == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"intruderCfg":{"alarmIntervalS":$intervalS}}}"""
                     }
                 }
 

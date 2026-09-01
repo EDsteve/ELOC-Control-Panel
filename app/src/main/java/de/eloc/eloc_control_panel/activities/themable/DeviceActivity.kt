@@ -610,9 +610,27 @@ class DeviceActivity : ThemableActivity() {
             content = binding.intruderContent,
             icon = binding.intruderIcon
         )
+        binding.intruderAlarmItem.valueText = describeIntruderAlarm(intruder)
         binding.intruderThresholdItem.valueText = intruder.threshold.toString()
         binding.intruderWindowItem.valueText =
             getString(R.string.milliseconds_template, intruder.windowsMs)
+        binding.intruderAlarmIntervalItem.valueText = prettifyTime(intruder.alarmIntervalS)
+    }
+
+    // Alarm row of the Intruder section. The alarm latches: once knocked, the device keeps sending
+    // LoRa alarm uplinks with its GPS position until detection is switched off or it reboots - and
+    // the siren goes quiet 5 minutes in while the alarm itself carries on, so the two are reported
+    // separately. Firmware older than 1.69 reports no alarm state and always shows "not triggered".
+    private fun describeIntruderAlarm(intruder: Intruder): String {
+        val age = TimeHelper.formatSeconds(this, intruder.alarmAgeS, useSeconds = true)
+        return when {
+            intruder.alarmActive && intruder.sirenActive ->
+                getString(R.string.intruder_alarm_active_siren, age)
+
+            intruder.alarmActive -> getString(R.string.intruder_alarm_active_silent, age)
+            intruder.enabled && !intruder.armed -> getString(R.string.intruder_alarm_not_armed)
+            else -> getString(R.string.intruder_alarm_none)
+        }
     }
 
     private fun applySectionState(
@@ -765,6 +783,11 @@ class DeviceActivity : ThemableActivity() {
         binding.intruderWindowItem.setOnClickListener {
             if (binding.intruderSwitch.isChecked && canEditConfig()) {
                 SettingEditors.openIntruderWindowsMs(this)
+            }
+        }
+        binding.intruderAlarmIntervalItem.setOnClickListener {
+            if (binding.intruderSwitch.isChecked && canEditConfig()) {
+                SettingEditors.openIntruderAlarmInterval(this)
             }
         }
 

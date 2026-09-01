@@ -117,6 +117,15 @@ private const val KEY_INTRUDER_CONFIG = "intruderCfg"
 internal const val KEY_INTRUDER_ENABLED = "enable"
 internal const val KEY_INTRUDER_THRESHOLD = "intruder_threshold"
 internal const val KEY_INTRUDER_WINDOWS_MS = "windowsMs"
+internal const val KEY_INTRUDER_ALARM_INTERVAL_S = "alarmIntervalS"
+
+// Intruder alarm status keys (getStatus -> "intruder" section, firmware >= 1.69). Older firmware
+// omits the section; the JSON helpers then return false/0, which reads as "no alarm".
+private const val KEY_INTRUDER_STATUS = "intruder"
+private const val KEY_INTRUDER_ARMED = "armed"
+private const val KEY_INTRUDER_ALARM_ACTIVE = "alarmActive"
+private const val KEY_INTRUDER_SIREN_ACTIVE = "sirenActive"
+private const val KEY_INTRUDER_ALARM_AGE = "alarmAge[s]"
 
 internal const val KEY_BT_ENABLE_DURING_RECORD = "bluetoothEnableDuringRecord"
 internal const val KEY_BT_ENABLE_AT_START = "bluetoothEnableAtStart"
@@ -1202,6 +1211,16 @@ object DeviceDriver {
         intruder.windowsMs =
             JsonHelper.getJSONNumberAttribute(intruderWindowsMsPath, jsonObject).toInt()
 
+        // Firmware older than 1.43 has no alarmIntervalS; keep the compiled default rather than
+        // showing 0 s, which would read as "every uplink".
+        val intruderAlarmIntervalPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_ALARM_INTERVAL_S"
+        val alarmIntervalS =
+            JsonHelper.getJSONNumberAttribute(intruderAlarmIntervalPath, jsonObject).toInt()
+        if (alarmIntervalS > 0) {
+            intruder.alarmIntervalS = alarmIntervalS
+        }
+
         val logToSdCardPath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_LOG_CONFIG$PATH_SEPARATOR$KEY_LOGS_LOG_TO_SD_CARD"
         logs.logToSdCard = JsonHelper.getJSONBooleanAttribute(logToSdCardPath, jsonObject)
@@ -1470,6 +1489,25 @@ object DeviceDriver {
         val lon = JsonHelper.getJSONNumberAttribute(gpsLonPath, jsonObject, Double.NaN)
         gps.latitude = if (lat.isNaN()) null else lat
         gps.longitude = if (lon.isNaN()) null else lon
+
+        // Parse intruder alarm status. Absent on firmware < 1.69, which falls back to
+        // false/0 - i.e. "no alarm", the correct default for a device that cannot report one.
+        val intruderArmedPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_INTRUDER_STATUS$PATH_SEPARATOR$KEY_INTRUDER_ARMED"
+        intruder.armed = JsonHelper.getJSONBooleanAttribute(intruderArmedPath, jsonObject)
+
+        val intruderAlarmActivePath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_INTRUDER_STATUS$PATH_SEPARATOR$KEY_INTRUDER_ALARM_ACTIVE"
+        intruder.alarmActive = JsonHelper.getJSONBooleanAttribute(intruderAlarmActivePath, jsonObject)
+
+        val intruderSirenActivePath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_INTRUDER_STATUS$PATH_SEPARATOR$KEY_INTRUDER_SIREN_ACTIVE"
+        intruder.sirenActive = JsonHelper.getJSONBooleanAttribute(intruderSirenActivePath, jsonObject)
+
+        val intruderAlarmAgePath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_INTRUDER_STATUS$PATH_SEPARATOR$KEY_INTRUDER_ALARM_AGE"
+        intruder.alarmAgeS =
+            JsonHelper.getJSONNumberAttribute(intruderAlarmAgePath, jsonObject).toInt()
     }
 
     private fun parseDeviceState(jsonObject: JSONObject) {

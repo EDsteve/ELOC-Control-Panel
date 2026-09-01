@@ -1217,6 +1217,14 @@
                                                 tools:viewBindingIgnore="true" />
 
                                             <de.eloc.eloc_control_panel.widgets.ListItem
+                                                android:id="@+id/intruder_alarm_item"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content"
+                                                app:itemType="normal"
+                                                app:keyText="@string/intruder_alarm"
+                                                tools:valueText="Not triggered" />
+
+                                            <de.eloc.eloc_control_panel.widgets.ListItem
                                                 android:id="@+id/intruder_threshold_item"
                                                 android:layout_width="match_parent"
                                                 android:layout_height="wrap_content"
@@ -1231,6 +1239,14 @@
                                                 app:itemType="button"
                                                 app:keyText="@string/detection_window"
                                                 tools:valueText="500 ms" />
+
+                                            <de.eloc.eloc_control_panel.widgets.ListItem
+                                                android:id="@+id/intruder_alarm_interval_item"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content"
+                                                app:itemType="button"
+                                                app:keyText="@string/intruder_alarm_interval"
+                                                tools:valueText="10m 00s" />
                                         </LinearLayout>
                                     </LinearLayout>
                                 </LinearLayout>
