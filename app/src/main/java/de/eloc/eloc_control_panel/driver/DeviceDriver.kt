@@ -148,6 +148,7 @@ internal const val KEY_GENERAL_LOCATION_ACCURACY = "locationAccuracy"
 
 private const val KEY_CMD = "cmd"
 private const val KEY_ECODE = "ecode"
+private const val KEY_ERROR = "error"
 private const val CMD_GET_CONFIG = "getConfig"
 private const val CMD_GET_STATUS = "getStatus"
 private const val CMD_SET_CONFIG = "setConfig"
@@ -827,6 +828,19 @@ object DeviceDriver {
         return succeeded
     }
 
+    /**
+     * The device's explanation for a rejected command, e.g. "No SD card - cannot start recording".
+     * Empty when the command succeeded or the response carried no message.
+     */
+    private fun commandErrorMessage(json: String): String {
+        return try {
+            val root = JSONObject(json)
+            JsonHelper.getJSONStringAttribute(KEY_ERROR, root).trim()
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
     private fun interceptCompletedSetCommand(json: String): Boolean {
         var intercepted = false
         try {
@@ -837,8 +851,10 @@ object DeviceDriver {
                 if (commandType == CommandType.SetRecordMode) {
                     parseDeviceState(root)
                 }
+                val succeeded = commandSucceeded(json)
+                val errorMessage = if (succeeded) "" else commandErrorMessage(json)
                 onSetCommandCompletedListeners.forEach {
-                    it?.handler(commandSucceeded(json), commandType)
+                    it?.handler(succeeded, commandType, errorMessage)
                 }
             }
         } catch (_: Exception) {

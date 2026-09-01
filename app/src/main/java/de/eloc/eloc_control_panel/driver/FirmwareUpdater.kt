@@ -2,6 +2,7 @@ package de.eloc.eloc_control_panel.driver
 
 import de.eloc.eloc_control_panel.data.ConnectionStatus
 import de.eloc.eloc_control_panel.data.helpers.JsonHelper
+import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import org.json.JSONObject
 import java.io.File
 import java.io.RandomAccessFile
@@ -151,6 +152,10 @@ object FirmwareUpdater {
 
     private fun runUpdate(file: File, sha256: String, imageVersion: String, variant: String) {
         val oldVersion = DeviceDriver.general.version
+        // Captured up front: after the device restarts to flash, the driver may
+        // have no device attached when the outcome is finally known.
+        val macAddress = DeviceDriver.deviceAddress ?: ""
+        val deviceName = DeviceDriver.general.nodeName
         DeviceDriver.addConnectionChangedListener(connectionListenerId) { connectionStatus = it }
         connectionStatus =
             if (DeviceDriver.isConnected) ConnectionStatus.Active else ConnectionStatus.Inactive
@@ -277,6 +282,41 @@ object FirmwareUpdater {
             DeviceDriver.firmwareTransferActive = false
             DeviceDriver.fwFrameListener = null
             DeviceDriver.removeConnectionChangedListener(connectionListenerId)
+            reportResult(macAddress, deviceName, oldVersion, imageVersion)
+        }
+    }
+
+    /**
+     * Write the outcome to Firestore on a terminal state. A cancelled update is
+     * not an outcome — the partial file is still on the device and the tech will
+     * resume it — so only Success / RolledBack / Failed are reported.
+     */
+    private fun reportResult(
+        macAddress: String,
+        deviceName: String,
+        oldVersion: String,
+        imageVersion: String,
+    ) {
+        val outcome = when (state) {
+            State.Success -> "success"
+            State.RolledBack -> "rolled_back"
+            State.Failed -> "failed"
+            else -> return
+        }
+        val newVersion = if (state == State.Success) {
+            DeviceDriver.general.version.ifEmpty { imageVersion }
+        } else {
+            imageVersion
+        }
+        try {
+            FirestoreHelper.instance.uploadFirmwareUpdateResult(
+                macAddress,
+                deviceName,
+                oldVersion,
+                newVersion,
+                outcome,
+            )
+        } catch (_: Exception) {
         }
     }
 

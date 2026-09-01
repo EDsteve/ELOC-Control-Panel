@@ -12,6 +12,7 @@ import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.formatNumber
 import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.markdownToSpanned
 import de.eloc.eloc_control_panel.activities.onWriteCommandError
 import de.eloc.eloc_control_panel.activities.prettifyTime
 import de.eloc.eloc_control_panel.activities.showModalAlert
@@ -25,6 +26,7 @@ import de.eloc.eloc_control_panel.data.GpsData
 import de.eloc.eloc_control_panel.data.GpsDataSource
 import de.eloc.eloc_control_panel.data.RecordState
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
+import de.eloc.eloc_control_panel.data.helpers.FirmwareReleaseHelper
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.data.util.Preferences
@@ -32,6 +34,8 @@ import de.eloc.eloc_control_panel.databinding.ActivityDeviceBinding
 import de.eloc.eloc_control_panel.databinding.LayoutModeChooserBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.driver.DutyCycle
+import de.eloc.eloc_control_panel.driver.FirmwareUpdater
+import de.eloc.eloc_control_panel.driver.FirmwareVersion
 import de.eloc.eloc_control_panel.driver.Intruder
 import de.eloc.eloc_control_panel.driver.LoraSignalStrength
 import de.eloc.eloc_control_panel.driver.LoraWan
@@ -77,6 +81,9 @@ class DeviceActivity : ThemableActivity() {
     private var statusReceived = false
     private var configReceived = false
     private var gpsLocationUpdate: GpsData? = null
+    // Expander state of the firmware card's "What's new" section; kept here so a
+    // status auto-refresh re-binding the card does not collapse it under the tech.
+    private var firmwareNotesExpanded = false
     private lateinit var elocReceiver: ElocReceiver
 
     // Periodic silent status refresh: keeps the on-screen numbers ticking over
@@ -99,7 +106,7 @@ class DeviceActivity : ThemableActivity() {
         }
     }
 
-    private val setCommandCompletedCallback = SetCommandCompletedCallback { success, type ->
+    private val setCommandCompletedCallback = SetCommandCompletedCallback { success, type, errorMessage ->
         runOnUiThread {
             when (type) {
                 CommandType.SetRecordMode -> {
@@ -111,6 +118,14 @@ class DeviceActivity : ThemableActivity() {
                             val commandType = DeviceDriver.getCommandType(it)
                             checkReceivedInfoType(commandType)
                         }
+                    } else {
+                        // The device refused the mode - most commonly because no SD card is
+                        // inserted. Without this the screen just snapped back to "not recording"
+                        // and the tech had no way to tell whether it was recording or not.
+                        showModalAlert(
+                            getString(R.string.recording),
+                            errorMessage.ifBlank { getString(R.string.record_mode_rejected) }
+                        )
                     }
                 }
 
@@ -330,6 +345,7 @@ class DeviceActivity : ThemableActivity() {
             menuInflater.inflate(R.menu.app_bar_device, binding.toolbar.menu)
             setConfigInfo()
             setStatusInfo()
+            bindFirmwareUpdateCard()
             setViewMode(ViewMode.ContentView)
         }
     }
@@ -1215,5 +1231,96 @@ class DeviceActivity : ThemableActivity() {
         if (err.isNotEmpty()) {
             showModalAlert(getString(R.string.oops), err)
         }
+    }
+
+    /**
+     * Bind (or hide) the "firmware update available" card — Phase 3 of the
+     * firmware-update plan. Called from [onElocInfoReceived], the point where
+     * getStatus and getConfig have both landed, so it never issues a read of its
+     * own; it only reads what [DeviceDriver.general] already holds. That also
+     * makes it re-run on every pull-to-refresh and every silent auto-refresh,
+     * hence: evaluate and re-bind, never append or re-show.
+     *
+     * The card is offered only when every condition holds. A device that fails
+     * any of them keeps the Advanced file picker, which is the permanent path.
+     */
+    private fun bindFirmwareUpdateCard() {
+        val release = FirmwareReleaseHelper.cachedRelease()
+        val installed = DeviceDriver.general.version
+        val offer = (release != null) &&
+                (DeviceDriver.general.fwUpdateProto >= 1) &&
+                // Positive match: an empty or unknown variant gets nothing.
+                (DeviceDriver.general.buildVariant == release.variant) &&
+                FirmwareVersion.isNewer(release.version, installed) &&
+                !FirmwareVersion.isBelowOtaSource(installed) &&
+                (Preferences.skippedFirmwareVersion(deviceAddress) != release.version) &&
+                !FirmwareUpdater.isBusy
+        // Kotlin carries the null check inside offer, so release is non-null below.
+        if (!offer) {
+            binding.firmwareUpdateCard.visibility = View.GONE
+            return
+        }
+
+        binding.firmwareCardTitle.text =
+            getString(R.string.firmware_update_available, release.version)
+        binding.firmwareCardSubtitle.text =
+            getString(R.string.firmware_card_subtitle, installed)
+
+        // A known-but-not-yet-downloaded release is still worth showing: it tells
+        // the tech to fetch it next time there is signal. Never download here —
+        // this screen is used in the forest.
+        val downloaded = release.isDownloaded
+        binding.firmwareDownloadHint.visibility = if (downloaded) View.GONE else View.VISIBLE
+        binding.firmwareInstallButton.isEnabled = downloaded
+
+        // Release bodies are Markdown written for GitHub; render the inline
+        // emphasis rather than showing the asterisks to a ranger.
+        val notes = release.parsedNotes
+        val hasSections = notes.features.isNotEmpty() || notes.fixes.isNotEmpty()
+        if (hasSections) {
+            binding.firmwareFeaturesLabel.visibility =
+                if (notes.features.isEmpty()) View.GONE else View.VISIBLE
+            binding.firmwareFeaturesText.visibility = binding.firmwareFeaturesLabel.visibility
+            binding.firmwareFeaturesText.text = markdownToSpanned(notes.features.joinToString("\n"))
+            binding.firmwareFixesLabel.visibility =
+                if (notes.fixes.isEmpty()) View.GONE else View.VISIBLE
+            binding.firmwareFixesText.visibility = binding.firmwareFixesLabel.visibility
+            binding.firmwareFixesText.text = markdownToSpanned(notes.fixes.joinToString("\n"))
+        } else {
+            // Body did not follow the "## Features" / "## Fixes" convention:
+            // show it verbatim rather than nothing.
+            binding.firmwareFeaturesLabel.visibility = View.GONE
+            binding.firmwareFeaturesText.visibility = View.GONE
+            binding.firmwareFixesLabel.visibility = View.GONE
+            binding.firmwareFixesText.visibility = View.VISIBLE
+            binding.firmwareFixesText.text = markdownToSpanned(notes.body)
+        }
+        binding.firmwareNotesToggle.visibility =
+            if (hasSections || notes.body.isNotEmpty()) View.VISIBLE else View.GONE
+        showFirmwareNotes(firmwareNotesExpanded)
+
+        binding.firmwareNotesToggle.setOnClickListener {
+            showFirmwareNotes(!firmwareNotesExpanded)
+        }
+        // Per-device skip, keyed on mac_address: the moment a tech deliberately
+        // reverts a device, the card would otherwise reappear on every connect
+        // telling them to undo it.
+        binding.firmwareDismissButton.setOnClickListener {
+            Preferences.skipFirmwareVersion(deviceAddress, release.version)
+            binding.firmwareUpdateCard.visibility = View.GONE
+        }
+        binding.firmwareInstallButton.setOnClickListener {
+            val intent = Intent(this, FirmwareUpdateActivity::class.java)
+            intent.putExtra(FirmwareUpdateActivity.EXTRA_RELEASE_VERSION, release.version)
+            startActivity(intent)
+        }
+        binding.firmwareUpdateCard.visibility = View.VISIBLE
+    }
+
+    private fun showFirmwareNotes(expanded: Boolean) {
+        firmwareNotesExpanded = expanded
+        binding.firmwareNotesLayout.visibility = if (expanded) View.VISIBLE else View.GONE
+        binding.firmwareNotesToggle.text =
+            getString(R.string.firmware_whats_new) + if (expanded) "  ▴" else "  ▾"
     }
 }

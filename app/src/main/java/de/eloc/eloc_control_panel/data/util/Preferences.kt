@@ -4,6 +4,7 @@ import de.eloc.eloc_control_panel.App
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
 import de.eloc.eloc_control_panel.R
+import de.eloc.eloc_control_panel.data.FirmwareRelease
 import de.eloc.eloc_control_panel.data.GpsData
 import de.eloc.eloc_control_panel.data.MainMenuPosition
 import de.eloc.eloc_control_panel.data.PreferredFontSize
@@ -11,6 +12,8 @@ import de.eloc.eloc_control_panel.data.RssiLabel
 import de.eloc.eloc_control_panel.data.StatusUploadInterval
 import de.eloc.eloc_control_panel.data.helpers.LocationHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
+import de.eloc.eloc_control_panel.driver.FirmwareVersion
+import org.json.JSONObject
 
 object Preferences {
     private const val PREF_LOG_BT_TRAFFIC = "log_bt_traffic"
@@ -28,6 +31,15 @@ object Preferences {
     private const val PREF_ACCOUNT_RANGER_NAME = "account_ranger_name"
     private const val PREF_ACCOUNT_PROFILE_PIC_URL = "account_pfp_url"
     private const val PREF_RSS_LABEL_TYPE = "rssi_label_type"
+
+    // Firmware releases (Phase 3): channel opt-in, the one cached release, when
+    // GitHub was last polled, and the per-device "don't offer this again" list.
+    private const val PREF_FIRMWARE_BETA_CHANNEL = "firmware_beta_channel"
+    private const val PREF_FIRMWARE_RELEASE = "firmware_cached_release"
+    private const val PREF_FIRMWARE_LAST_CHECK = "firmware_last_check"
+    private const val PREF_FIRMWARE_SKIPPED = "firmware_skipped_versions"
+    const val CHANNEL_STABLE = "stable"
+    const val CHANNEL_BETA = "beta"
     private const val RANGER_NOT_SET = "<ranger not set>"
     const val MIN_GPS_TIMEOUT_SECONDS = 15
     const val MAX_GPS_TIMEOUT_SECONDS = 120
@@ -119,6 +131,77 @@ object Preferences {
             return StatusUploadInterval.parse(code)
         }
         set(value) = preferences.edit().putInt(PREF_STATUS_UPLOAD_INTERVAL, value.seconds).apply()
+
+    var betaFirmwareChannel: Boolean
+        get() = preferences.getBoolean(PREF_FIRMWARE_BETA_CHANNEL, false)
+        set(value) = preferences.edit().putBoolean(PREF_FIRMWARE_BETA_CHANNEL, value).apply()
+
+    /** Which GitHub release the prefetch reads: the latest full release, or the newest prerelease. */
+    val firmwareChannel: String
+        get() = if (betaFirmwareChannel) CHANNEL_BETA else CHANNEL_STABLE
+
+    /**
+     * The single release the app carries. Downloaded and verified in town; the
+     * card and the release-mode update screen read it offline in the field.
+     */
+    var cachedFirmwareRelease: FirmwareRelease?
+        get() = FirmwareRelease.deserialize(
+            preferences.getString(PREF_FIRMWARE_RELEASE, "") ?: ""
+        )
+        set(value) = preferences.edit()
+            .putString(PREF_FIRMWARE_RELEASE, value?.serialize() ?: "")
+            .apply()
+
+    var lastFirmwareCheckMillis: Long
+        get() = preferences.getLong(PREF_FIRMWARE_LAST_CHECK, 0L)
+        set(value) = preferences.edit().putLong(PREF_FIRMWARE_LAST_CHECK, value).apply()
+
+    /**
+     * Version the tech dismissed for this device, keyed on **mac_address** (not
+     * device_name, which is not unique). Without this, deliberately reverting a
+     * device would make the card reappear on every connect telling them to undo it.
+     */
+    fun skippedFirmwareVersion(macAddress: String): String {
+        val key = macAddress.trim()
+        if (key.isEmpty()) {
+            return ""
+        }
+        return readFirmwareSkips().optString(key, "")
+    }
+
+    fun skipFirmwareVersion(macAddress: String, version: String) {
+        val key = macAddress.trim()
+        if (key.isEmpty() || version.isBlank()) {
+            return
+        }
+        writeFirmwareSkips(readFirmwareSkips().put(key, version))
+    }
+
+    /**
+     * Drop the dismissals a newer release supersedes: once something newer than
+     * what a tech skipped is published, that device is offered again.
+     */
+    fun pruneFirmwareSkips(newVersion: String) {
+        val skips = readFirmwareSkips()
+        val stale = skips.keys().asSequence().filter {
+            FirmwareVersion.isNewer(newVersion, skips.optString(it, ""))
+        }.toList()
+        if (stale.isNotEmpty()) {
+            stale.forEach { skips.remove(it) }
+            writeFirmwareSkips(skips)
+        }
+    }
+
+    private fun readFirmwareSkips(): JSONObject {
+        return try {
+            JSONObject(preferences.getString(PREF_FIRMWARE_SKIPPED, "{}") ?: "{}")
+        } catch (_: Exception) {
+            JSONObject()
+        }
+    }
+
+    private fun writeFirmwareSkips(skips: JSONObject) =
+        preferences.edit().putString(PREF_FIRMWARE_SKIPPED, skips.toString()).apply()
 
     val cameraRequested: Boolean get() = preferences.getBoolean(PREF_CAMERA_REQUESTED, false)
     val locationRequested: Boolean get() = preferences.getBoolean(PREF_LOCATION_REQUESTED, false)

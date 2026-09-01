@@ -154,6 +154,7 @@
     <string name="recorder_sample_rate">Recorder Sample Rate</string>
     <string name="recorder_settings">Recorder Settings</string>
     <string name="recording">Recording</string>
+    <string name="record_mode_rejected">The device did not accept the recording mode.</string>
     <string name="recording_duration">Recording Duration</string>
     <string name="recording_time_template">Recording Time: %.1fh</string>
     <string name="required">Required</string>
@@ -389,7 +390,7 @@
     <string name="firmware_no_file_selected">No firmware file selected.</string>
     <string name="firmware_reading_file">Reading file…</string>
     <string name="firmware_invalid_image">The selected file is not a valid ELOC firmware image.</string>
-    <string name="firmware_selected_file">Selected firmware</string>
+    <string name="firmware_new_file">New firmware</string>
     <string name="firmware_project">Project</string>
     <string name="firmware_size">Size</string>
     <string name="firmware_sha256">SHA-256</string>
@@ -408,5 +409,24 @@
     <string name="firmware_transfer_progress">Sending firmware… %1$d%% (%2$d kB/s)</string>
     <string name="firmware_progress_detail">Sending firmware… %1$s of %2$s (%3$d kB/s)</string>
     <string name="firmware_progress_eta">, about %1$d s left</string>
+    <!-- Phase 3: "update available" flow distributed through GitHub Releases -->
+    <string name="firmware_update_available">Firmware %1$s available</string>
+    <string name="firmware_card_subtitle">Installed: %1$s</string>
+    <string name="firmware_whats_new">What\'s new</string>
+    <string name="firmware_notes_features">Features</string>
+    <string name="firmware_notes_fixes">Fixes</string>
+    <string name="firmware_install">Install</string>
+    <string name="firmware_dismiss">Dismiss</string>
+    <string name="firmware_release_not_downloaded">Connect the phone to the internet to download this release. The install itself works offline.</string>
+    <string name="firmware_update_badge">%1$s available</string>
+    <string name="firmware_choose_different">Choose different firmware</string>
+    <string name="firmware_no_release_cached">No firmware release downloaded yet. Connect the phone to the internet to fetch one, or choose a file below.</string>
+    <string name="firmware_release_beta_hint">No firmware release downloaded yet. Only test releases are published right now — switch on \"Beta firmware releases\" in Preferences and open the home screen while online.</string>
+    <string name="firmware_up_to_date">This device already runs the newest published release (%1$s).</string>
+    <string name="firmware_beta_channel">Beta firmware releases</string>
+    <string name="help_firmware_beta_channel">Offer firmware releases that are still being tested (marked as pre-release). Leave this off unless you are bench-testing a new build.</string>
+    <string name="firmware_release_missing">The downloaded firmware file is no longer on this phone. Connect to the internet to fetch it again.</string>
+    <string name="firmware_revert_warning">%1$s is older than %2$s and cannot be updated over Bluetooth. Getting back off it needs an SD-card swap at the device.</string>
+
 
 </resources>

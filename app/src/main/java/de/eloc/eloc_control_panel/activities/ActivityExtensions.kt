@@ -15,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
+import androidx.core.text.HtmlCompat
 import com.google.android.material.snackbar.Snackbar
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.themable.ThemableActivity
@@ -29,6 +30,36 @@ import androidx.core.net.toUri
 
 const val DAY_SECONDS = 86400
 private const val HOUR_SECONDS = 3600
+
+// Inline Markdown used in GitHub release bodies. Deliberately small: bold, code
+// and single-asterisk emphasis only. Underscores are NOT treated as emphasis —
+// device names like ELOC_00247 are full of them.
+private val markdownBold = Regex("""\*\*(.+?)\*\*""")
+private val markdownCode = Regex("""`([^`\n]+)`""")
+private val markdownItalic = Regex("""\*([^*\n]+)\*""")
+
+/**
+ * Render the inline Markdown of a release note as styled text.
+ *
+ * Release bodies are written for GitHub, so they carry `**bold**` and backticks
+ * that would otherwise show up verbatim in the app. Anything not recognised is
+ * left as literal text — this is a renderer for our own release notes, not a
+ * general Markdown implementation.
+ */
+fun markdownToSpanned(text: String): CharSequence {
+    if (text.isEmpty()) {
+        return ""
+    }
+    var html = text
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    html = markdownBold.replace(html) { "<b>" + it.groupValues[1] + "</b>" }
+    html = markdownCode.replace(html) { "<tt>" + it.groupValues[1] + "</tt>" }
+    html = markdownItalic.replace(html) { "<i>" + it.groupValues[1] + "</i>" }
+    html = html.replace("\n", "<br>")
+    return HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_LEGACY)
+}
 
 // Show a custom-layout dialog with a transparent window (so the rounded card
 // background of the layout is what the user sees) at a consistent width.

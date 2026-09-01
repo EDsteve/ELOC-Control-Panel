@@ -24,6 +24,7 @@ import de.eloc.eloc_control_panel.data.BtDevice
 import de.eloc.eloc_control_panel.data.MainMenuPosition
 import de.eloc.eloc_control_panel.data.adapters.ElocInfoAdapter
 import de.eloc.eloc_control_panel.data.helpers.BluetoothHelper
+import de.eloc.eloc_control_panel.data.helpers.FirmwareReleaseHelper
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.data.util.Preferences
@@ -74,6 +75,10 @@ class HomeActivity : ThemableActivity() {
         super.onResume()
         setAppBar()
         setProfileInfo()
+        // Firmware discovery has to happen where there is signal. This is the
+        // app's "in town" moment: rate-limited, off the main thread, and a no-op
+        // offline — the install itself never needs the internet.
+        FirmwareReleaseHelper.maybeCheckForRelease(this)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

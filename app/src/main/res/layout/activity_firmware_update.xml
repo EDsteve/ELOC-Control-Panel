@@ -23,12 +23,16 @@
         android:layout_height="match_parent"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
+        <!-- Reading order is deliberate: what is on the device now, what would
+             replace it, what changed, the action, and only then the escape hatch
+             to a different file. -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp">
 
+            <!-- ===================== 1. Installed ===================== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -59,7 +63,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textStyle="bold"
-                        tools:text="1.46" />
+                        tools:text="ELOC-P_V1.67" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -82,18 +86,12 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <Button
-                android:id="@+id/choose_file_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/firmware_choose_file" />
-
+            <!-- ===================== 2. New firmware ===================== -->
             <TextView
                 android:id="@+id/file_status_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="16dp"
                 android:textAlignment="center"
                 tools:text="@string/firmware_no_file_selected" />
 
@@ -101,7 +99,7 @@
                 android:id="@+id/file_details_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="16dp"
                 android:background="@drawable/tile_gradient"
                 android:orientation="vertical"
                 android:padding="12dp"
@@ -111,7 +109,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/firmware_selected_file"
+                    android:text="@string/firmware_new_file"
                     android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                     android:textStyle="bold" />
 
@@ -131,7 +129,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textStyle="bold"
-                        tools:text="1.47" />
+                        tools:text="ELOC-P_V1.68" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -150,7 +148,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textStyle="bold"
-                        tools:text="eloc610LowPowerPartition" />
+                        tools:text="idf-wav-sdcard" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -188,7 +186,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textStyle="bold"
-                        tools:text="2.98 MB" />
+                        tools:text="1.70 MB" />
                 </LinearLayout>
 
                 <TextView
@@ -203,9 +201,45 @@
                     android:layout_height="wrap_content"
                     android:textIsSelectable="true"
                     android:textSize="11sp"
-                    tools:text="ab54c9…" />
+                    tools:text="902aca19…" />
             </LinearLayout>
 
+            <!-- ===================== 3. What's new ===================== -->
+            <!-- Only a prefetched release carries notes; a picked file has none. -->
+            <LinearLayout
+                android:id="@+id/release_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/release_notes_toggle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:paddingVertical="8dp"
+                    android:text="@string/firmware_whats_new"
+                    android:textColor="@color/ui_green"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/release_notes_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/tile_gradient"
+                    android:lineSpacingExtra="2dp"
+                    android:padding="12dp"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    tools:text="FEATURES\n• Faster GPS fix"
+                    tools:visibility="visible" />
+            </LinearLayout>
+
+            <!-- ===================== 4. Update ===================== -->
             <Button
                 android:id="@+id/stop_recording_button"
                 android:layout_width="match_parent"
@@ -220,8 +254,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:backgroundTint="@color/button_background_stateful"
                 android:enabled="false"
-                android:text="@string/firmware_update_now" />
+                android:text="@string/firmware_update_now"
+                android:textColor="@color/button_text_stateful" />
 
             <com.google.android.material.progressindicator.LinearProgressIndicator
                 android:id="@+id/progress_bar"
@@ -238,7 +274,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:textAlignment="center"
-                tools:text="Sending firmware… 1.2 of 2.98 MB (45 kB/s)" />
+                tools:text="Sending firmware… 1.2 of 1.70 MB (45 kB/s)" />
 
             <Button
                 android:id="@+id/abort_button"
@@ -249,6 +285,22 @@
                 android:text="@string/cancel"
                 android:visibility="gone"
                 tools:visibility="visible" />
+
+            <!-- ===================== 5. Different file ===================== -->
+            <!-- The permanent revert path: never hidden, never gated. -->
+            <!-- Secondary, but not decorative: keep the app's own button shape and
+                 a readable label. The Material3 outlined style bypasses
+                 AppButtonStyle and loses both. -->
+            <Button
+                android:id="@+id/choose_file_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:backgroundTint="@color/ui_card_high"
+                android:text="@string/firmware_choose_file"
+                android:textColor="@color/ui_text_primary"
+                app:strokeColor="@color/ui_stroke"
+                app:strokeWidth="1dp" />
 
             <Space
                 android:layout_width="match_parent"

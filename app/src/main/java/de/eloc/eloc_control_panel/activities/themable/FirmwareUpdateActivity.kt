@@ -7,26 +7,46 @@ import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.activities.goBack
+import de.eloc.eloc_control_panel.activities.markdownToSpanned
 import de.eloc.eloc_control_panel.activities.showModalAlert
 import de.eloc.eloc_control_panel.activities.showModalOptionAlert
+import de.eloc.eloc_control_panel.data.FirmwareRelease
 import de.eloc.eloc_control_panel.data.RecordState
+import de.eloc.eloc_control_panel.data.helpers.FirmwareReleaseHelper
+import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.databinding.ActivityFirmwareUpdateBinding
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.driver.FirmwareImage
 import de.eloc.eloc_control_panel.driver.FirmwareUpdater
+import de.eloc.eloc_control_panel.driver.FirmwareVersion
 import de.eloc.eloc_control_panel.services.FirmwareUpdateService
 import java.io.File
 import java.util.Locale
 import java.util.concurrent.Executors
 
 /**
- * MVP firmware-update screen (Phase 2 of the firmware-update plan): pick a
- * local .bin (SAF), show its embedded version + SHA-256, run the preflight-
- * gated transfer via [FirmwareUpdater], then confirm the new version after
- * the device's flash-and-restart cycle. Only reachable when the connected
- * firmware advertises fwUpdateProto in getStatus.
+ * Firmware-update screen. Two entry points, one pipeline.
+ *
+ * **Picker mode** (Phase 2, the default): pick a local .bin (SAF), show its
+ * embedded version + SHA-256, run the preflight-gated transfer via
+ * [FirmwareUpdater], then confirm the new version after the device's
+ * flash-and-restart cycle. Reached from Device Settings -> Advanced, this path
+ * is permanent — it is how a device is deliberately reverted to older firmware.
+ *
+ * **Release mode** (Phase 3, [EXTRA_RELEASE_VERSION]): the prefetched GitHub
+ * release replaces the picker; the binary comes straight from `filesDir`, its
+ * variant is known from the asset name, and its notes are shown. Everything
+ * after the confirm dialog — preflight, transfer, abort, reconnect, verify — is
+ * the picker path unchanged.
+ *
+ * Only reachable when the connected firmware advertises fwUpdateProto in getStatus.
  */
 class FirmwareUpdateActivity : ThemableActivity() {
+
+    companion object {
+        /** Version tag of a prefetched release to install instead of a picked file. */
+        const val EXTRA_RELEASE_VERSION = "release_version"
+    }
 
     private lateinit var binding: ActivityFirmwareUpdateBinding
     private val listenerId = "firmwareUpdateActivity"
@@ -35,6 +55,8 @@ class FirmwareUpdateActivity : ThemableActivity() {
     private var stagedFile: File? = null
     private var imageInfo: FirmwareImage.Info? = null
     private var imageVariant = ""
+    private var release: FirmwareRelease? = null
+    private var releaseNotesExpanded = false
 
     private val filePicker =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -53,6 +75,7 @@ class FirmwareUpdateActivity : ThemableActivity() {
             filePicker.launch(arrayOf("application/octet-stream", "application/*"))
         }
         binding.startButton.setOnClickListener { confirmAndStart() }
+        binding.releaseNotesToggle.setOnClickListener { showReleaseNotes(!releaseNotesExpanded) }
         binding.abortButton.setOnClickListener { FirmwareUpdater.abort() }
         binding.stopRecordingButton.setOnClickListener { stopRecording() }
 
@@ -64,6 +87,135 @@ class FirmwareUpdateActivity : ThemableActivity() {
         // Reflect an update that is already running (e.g. re-entered via the notification)
         onUpdaterState(FirmwareUpdater.state, FirmwareUpdater.lastMessage)
         updateFileViews()
+
+        val requestedRelease = intent.extras?.getString(EXTRA_RELEASE_VERSION)?.trim() ?: ""
+        if (requestedRelease.isNotEmpty()) {
+            loadRelease(requestedRelease, fromCard = true)
+        } else {
+            offerCachedRelease()
+        }
+    }
+
+    /**
+     * Opened from Device Settings -> Advanced. If the app is already holding a
+     * release this device could install, offer it right here — otherwise the
+     * screen greets the tech with a disabled "Update now" and no explanation of
+     * the update the badge just told them about. The picker stays visible: this
+     * entry point is the revert path and must never be gated.
+     */
+    private fun offerCachedRelease() {
+        val cached = FirmwareReleaseHelper.cachedRelease() ?: return
+        val installable = cached.isDownloaded &&
+                (DeviceDriver.general.fwUpdateProto >= 1) &&
+                (DeviceDriver.general.buildVariant == cached.variant) &&
+                FirmwareVersion.isNewer(cached.version, DeviceDriver.general.version)
+        if (installable) {
+            loadRelease(cached.version, fromCard = false)
+        }
+    }
+
+    /**
+     * Release mode: install the prefetched release instead of a picked file.
+     * The binary was downloaded, digest-checked and self-description-checked by
+     * [FirmwareReleaseHelper]; here it is only re-inspected so the same views the
+     * picker fills (version, project, size, SHA-256) show the real bytes on disk.
+     * If the file has gone missing the screen falls back to the picker rather
+     * than dead-ending.
+     */
+    private fun loadRelease(version: String, fromCard: Boolean) {
+        val cached = FirmwareReleaseHelper.cachedRelease()
+        val file = cached?.localFile
+        if ((cached == null) || (cached.version != version) || (file == null) || !cached.isDownloaded) {
+            // Only worth an alert when the tech explicitly asked to install this
+            // release; the Advanced entry point just falls back to the picker.
+            if (fromCard) {
+                showModalAlert(
+                    getString(R.string.firmware_update),
+                    getString(R.string.firmware_release_missing)
+                )
+            }
+            return
+        }
+        release = cached
+        binding.chooseFileButton.visibility = if (fromCard) View.GONE else View.VISIBLE
+        binding.releaseLayout.visibility = View.VISIBLE
+        binding.releaseNotesText.text = markdownToSpanned(formatNotes(cached))
+        showReleaseNotes(false)
+        binding.fileStatusText.text = getString(R.string.firmware_reading_file)
+        executor.execute {
+            val info = FirmwareImage.inspect(file)
+            runOnUiThread {
+                if (info == null) {
+                    showModalAlert(
+                        getString(R.string.error),
+                        getString(R.string.firmware_invalid_image)
+                    )
+                } else {
+                    stagedFile = file
+                    imageInfo = info
+                    // Known from the asset name, not sniffed at pick time.
+                    imageVariant = cached.variant
+                }
+                updateFileViews()
+            }
+        }
+    }
+
+    /**
+     * Why there is nothing to install. "No firmware file selected" is true but
+     * useless when the app *has* a release and simply cannot offer it here —
+     * the tech needs to know whether to go and find signal, pick a file, or do
+     * nothing at all.
+     */
+    private fun nothingOnOfferReason(): String {
+        val cached = FirmwareReleaseHelper.cachedRelease()
+            ?: return getString(
+                if (Preferences.betaFirmwareChannel) {
+                    R.string.firmware_no_release_cached
+                } else {
+                    // Nothing is published on the stable channel yet, so a stable
+                    // phone will never cache anything; say so rather than implying
+                    // a download is on its way.
+                    R.string.firmware_release_beta_hint
+                }
+            )
+        if (!cached.isDownloaded) {
+            return getString(R.string.firmware_release_not_downloaded)
+        }
+        if (!FirmwareVersion.isNewer(cached.version, DeviceDriver.general.version)) {
+            return getString(R.string.firmware_up_to_date, cached.version)
+        }
+        return getString(R.string.firmware_no_file_selected)
+    }
+
+    /** Collapsed by default: the version and the action matter more than the prose. */
+    private fun showReleaseNotes(expanded: Boolean) {
+        releaseNotesExpanded = expanded
+        binding.releaseNotesText.visibility = if (expanded) View.VISIBLE else View.GONE
+        binding.releaseNotesToggle.text =
+            getString(R.string.firmware_whats_new) + if (expanded) "  ▴" else "  ▾"
+    }
+
+    /** Release body as the two plain-language sections a ranger reads in the field. */
+    private fun formatNotes(source: FirmwareRelease): String {
+        val notes = source.parsedNotes
+        if (notes.features.isEmpty() && notes.fixes.isEmpty()) {
+            return notes.body
+        }
+        val sections = mutableListOf<String>()
+        if (notes.features.isNotEmpty()) {
+            sections.add(
+                getString(R.string.firmware_notes_features).uppercase(Locale.US) + "\n" +
+                        notes.features.joinToString("\n")
+            )
+        }
+        if (notes.fixes.isNotEmpty()) {
+            sections.add(
+                getString(R.string.firmware_notes_fixes).uppercase(Locale.US) + "\n" +
+                        notes.fixes.joinToString("\n")
+            )
+        }
+        return sections.joinToString("\n\n")
     }
 
     override fun onDestroy() {
@@ -77,12 +229,19 @@ class FirmwareUpdateActivity : ThemableActivity() {
     // an expected part of the update cycle (device restarts to flash).
 
     private fun loadImageFile(uri: Uri) {
+        // A deliberately picked file wins over the release offered on arrival,
+        // and carries no notes of its own, so What's-new goes with it.
+        release = null
+        binding.releaseLayout.visibility = View.GONE
         binding.fileStatusText.text = getString(R.string.firmware_reading_file)
         executor.execute {
             var info: FirmwareImage.Info? = null
             var staged: File? = null
             try {
-                val target = File(cacheDir, "fwupdate.bin")
+                // filesDir, not cacheDir: a resume re-opens this file after the
+                // app has been backgrounded (the "walk back to the tree tomorrow"
+                // case), and Android may evict the cache in exactly that window.
+                val target = FirmwareReleaseHelper.pickerStagingFile(this@FirmwareUpdateActivity)
                 contentResolver.openInputStream(uri)?.use { input ->
                     target.outputStream().use { output ->
                         input.copyTo(output)
@@ -148,9 +307,13 @@ class FirmwareUpdateActivity : ThemableActivity() {
 
     private fun updateFileViews() {
         val info = imageInfo
+        // "different" only reads correctly once something is already on offer.
+        binding.chooseFileButton.setText(
+            if (info == null) R.string.firmware_choose_file else R.string.firmware_choose_different
+        )
         if (info == null) {
             binding.fileDetailsLayout.visibility = View.GONE
-            binding.fileStatusText.text = getString(R.string.firmware_no_file_selected)
+            binding.fileStatusText.text = nothingOnOfferReason()
             binding.startButton.isEnabled = false
             return
         }
@@ -179,10 +342,20 @@ class FirmwareUpdateActivity : ThemableActivity() {
             return
         }
 
-        val warning = if (imageVariant.isEmpty()) {
+        var warning = if (imageVariant.isEmpty()) {
             getString(R.string.firmware_variant_unknown_warning) + "\n\n"
         } else {
             ""
+        }
+        // Reverting below the first firmware that speaks the BT update protocol is
+        // one-way: the app cannot update that device again. Warn and allow — this
+        // path exists precisely so a bad release can be undone.
+        if (FirmwareVersion.isBelowOtaSource(info.version)) {
+            warning += getString(
+                R.string.firmware_revert_warning,
+                info.version,
+                FirmwareVersion.MIN_OTA_SOURCE_VERSION
+            ) + "\n\n"
         }
         showModalOptionAlert(
             getString(R.string.firmware_update),

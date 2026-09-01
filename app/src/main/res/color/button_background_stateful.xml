@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AppButtonStyle hard-codes a flat backgroundTint, so a disabled button looks
+     identical to an enabled one. Buttons that can legitimately be disabled use
+     this instead, so "nothing happens" reads as "not available yet". -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/disabled_button" android:state_enabled="false" />
+    <item android:color="@color/colorPrimary" />
+</selector>

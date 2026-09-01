@@ -89,7 +89,20 @@ seq+len+payload, `java.util.zip.CRC32`; `len==0` = end-of-stream sentinel), stop
 `cmd:"fwFrame"` EOT-JSON acks, then `getFwUpdateStatus` / `setFwUpdateAbort` / `setFwUpdateApply`.
 While a transfer runs, **no normal commands may be written** (the firmware bypasses its command parser);
 `DeviceDriver.firmwareTransferActive` enforces this. Engine: `driver/FirmwareUpdater.kt`; UI:
-`FirmwareUpdateActivity` (Device Settings → Advanced).
+`FirmwareUpdateActivity`, reachable two ways:
+
+- **Device Settings → Advanced → Firmware update** — SAF file picker. Permanent: this is the
+  revert-to-older-firmware path and must never be hidden or gated by the automatic flow. If a
+  prefetched release is installable on the connected device, this screen also offers it on arrival
+  (notes and all) *alongside* the picker — picking a file replaces the offer.
+- **The "update available" card on the status page** — `FirmwareUpdateActivity.EXTRA_RELEASE_VERSION`
+  installs a release the app prefetched from **GitHub Releases** (`LIFsCode/ELOC-3.0`). No backend:
+  `data/helpers/FirmwareReleaseHelper.kt` polls `/releases/latest` (or `/releases?per_page=1` on the beta
+  channel) while the phone is online, verifies the asset `digest`, then verifies that the binary
+  *describes itself* as the tag claims (`FirmwareImage.inspect` — version == tag, project name
+  `idf-wav-sdcard`), and keeps it in `filesDir/firmware/releases/<version>/`. Installing is fully offline.
+  Version ordering is `driver/FirmwareVersion.kt` (prefix must match exactly, numeric tail compared
+  component-wise, unparsable → offer nothing). Dismissals are per **mac_address** in `Preferences`.
 
 Authoritative protocol specs live in the **parent `App/` folder** (alongside this project):
 [`../API_Protocol.txt`](../API_Protocol.txt), [`../Design_cmdInterface.txt`](../Design_cmdInterface.txt),

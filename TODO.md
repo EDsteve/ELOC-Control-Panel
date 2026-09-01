@@ -1,5 +1,10 @@
 ## To-Do:
 
+### Bugs
+
+- [ ] Bluetooth: the app can no longer connect to the ELOC device after Bluetooth wakes in response to the knock sensor. Cause not yet investigated. (Reported 2026-07-26.)
+- [ ] SD-card guard is dead code: `hasSDCardError` (DeviceActivity.kt:70) is declared but never assigned `true`, so the record-start guard at DeviceActivity.kt:1153 never fires on any firmware - the app will happily start a record-ON mode with no card. Firmware V1.62+ rejects it device-side, so this is only exposed on older firmware (e.g. V1.41-P), which accepts silently and writes nothing. Either wire the flag up from the status/SD keys or delete it. (Noticed 2026-09-01.)
+
 Start Page
 - Remove (?) browse Eloc status
 

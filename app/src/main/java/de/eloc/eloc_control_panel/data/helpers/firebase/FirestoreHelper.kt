@@ -30,6 +30,7 @@ class FirestoreHelper {
         private const val COL_CONFIG = "$COL_UPLOADS/config"
         private const val COL_STATUS = "$COL_UPLOADS/status"
         private const val COL_MAP = "$COL_UPLOADS/map"
+        private const val COL_FIRMWARE_RESULTS = "firmware_update_results"
 
         val instance
             get():  FirestoreHelper {
@@ -174,6 +175,49 @@ class FirestoreHelper {
             .document(documentId)
             .delete()
             .addOnCompleteListener { callback?.invoke(it.isSuccessful) }
+    }
+
+    /**
+     * Record the outcome of a Bluetooth firmware update (Phase 3 of the
+     * firmware-update plan), keyed on **mac_address** — device_name is not
+     * reliable enough to identify a unit.
+     *
+     * Fire-and-forget on purpose: Firestore's offline write queue holds this
+     * until the phone next has signal, which in the field is hours or days
+     * later, so no custom retry is needed and nothing waits on the result.
+     */
+    fun uploadFirmwareUpdateResult(
+        macAddress: String,
+        deviceName: String,
+        fromVersion: String,
+        toVersion: String,
+        outcome: String,
+    ) {
+        val documentId = macAddress.trim().ifEmpty { return }
+        val data = hashMapOf<String, Any>(
+            "mac_address" to documentId,
+            "device_name" to deviceName,
+            "from_version" to fromVersion,
+            "to_version" to toVersion,
+            "outcome" to outcome,
+            "ranger" to Preferences.rangerName,
+            "timestamp" to FieldValue.serverTimestamp(),
+        )
+        try {
+            FirebaseFirestore.getInstance()
+                .collection(COL_FIRMWARE_RESULTS)
+                .document(documentId)
+                .set(data)
+                .addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        Log.i(TAG, "firmware update result stored for $documentId ($outcome)")
+                    } else {
+                        Log.w(TAG, "firmware update result write failed for $documentId", it.exception)
+                    }
+                }
+        } catch (e: Exception) {
+            Log.w(TAG, "could not queue firmware update result", e)
+        }
     }
 
     fun uploadDataFiles(): UploadResult {

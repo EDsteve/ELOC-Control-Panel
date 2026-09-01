@@ -1,6 +1,112 @@
 ﻿# ELOC Control Panel - Active Context
 
 ## Current Work Focus
+
+**Firmware "update available" flow — GitHub Releases (Phase 3, 2026-09-01) — HARDWARE-VERIFIED
+end to end.** `ELOC-P_V1.68` was published as a prerelease, prefetched by a phone on the beta
+channel, offered on the status page against a device running V1.67, and installed over Bluetooth. After Phase 2 the only way to get a `.bin` onto a device was the SAF file
+picker under Device Settings → Advanced. Phase 3 adds a *second* entry point without replacing it: the
+app carries the current release in `filesDir`, notices on connect that the device is behind, shows what
+changed, and installs with one tap. Everything after that tap is the Phase-2 pipeline unchanged.
+
+**No backend.** Distribution is the repo's own GitHub Releases page (`LIFsCode/ELOC-3.0`, public, no
+auth): the tag is the version, the body is the notes, the asset `digest` is the integrity hash, and
+`/releases/latest` skipping prereleases *is* the channel logic — un-publishing a bad release is the kill
+switch, because the previous release becomes latest again and the app follows it back. No Firebase
+Storage, no Firestore manifest, no GitHub Action (the maintainer has push but not admin on that repo, so
+Actions secrets were never available anyway).
+
+**New files.** `driver/FirmwareVersion.kt` — prefix + numeric-tail comparison of `ELOC-P_V1.67`-style
+strings; the prefix must match **exactly** (a Patrol build is never offered to a mainline device on a
+string-sort accident), the tail is compared component-wise, and anything unparsable returns `null`, which
+every caller treats as "offer nothing". `MIN_OTA_SOURCE_VERSION = ELOC-P_V1.47` lives here as a constant,
+not a manifest field. `data/FirmwareRelease.kt` — the cached release + the `## Features`/`## Fixes` notes
+split (falls back to the body verbatim). `data/helpers/FirmwareReleaseHelper.kt` — the prefetch: triggered
+from `HomeActivity.onResume()`, rate-limited to one check per 6 h (30 min after a failure), a no-op
+offline, `HttpsURLConnection` off the main thread. It picks the asset whose name contains `-ei`, verifies
+the published `sha256:` digest, and then **verifies the download describes itself correctly** —
+`FirmwareImage.inspect()` must report the tag as its embedded version and `idf-wav-sdcard` (or the
+allow-listed future `ELOC`) as its project, or the release is discarded. That is the stale-`PROJECT_VER`
+guard: the app never trusts release metadata for anything safety-relevant, the tag is only a cheap "is
+there something newer" signal before spending 1.8 MB.
+
+**The card.** Evaluated in `DeviceActivity.onElocInfoReceived()` (where `getStatus` + `getConfig` have both
+landed) and bound into `activity_device.xml`'s `firmware_update_card`. Offered only when `fwUpdateProto ≥ 1`,
+`buildVariant == "ei"` (a positive match, so an unknown variant gets nothing), the release parses as newer,
+the installed version is not below `MIN_OTA_SOURCE_VERSION`, the version is not in the per-device skip list,
+and `!FirmwareUpdater.isBusy`. A **card, not a dialog** — a tech connecting to check a recording must not be
+interrupted. `onElocInfoReceived()` re-runs on every pull-to-refresh *and* every 15 s auto-refresh, so the
+binding is idempotent: evaluate and re-bind, never append. A known-but-undownloaded release still shows,
+with the Install button disabled and "connect to the internet" — never a live download in the field.
+**Per-device dismissal is required, not polish**: it keys on **mac_address** (never device_name) and is
+cleared when something newer than the skipped version is published, otherwise reverting a device would make
+the card reappear on every connect telling the tech to undo it. Settings gets a matching badge on the
+Advanced → Firmware update row (same gate minus the dismissal — a row is not an interruption).
+
+**Bench feedback folded in (2026-09-01).** Release bodies are Markdown written for GitHub, so the card
+showed literal `**asterisks**`; `markdownToSpanned()` in `ActivityExtensions.kt` now renders bold/code/
+italic (underscores deliberately excluded — device names like ELOC_00247 are full of them), and
+`parsedNotes` only strips a bullet marker when whitespace follows it, so a line like `**Known issue:**`
+keeps both asterisk pairs and stays a paragraph instead of becoming a mangled bullet. The card was
+restyled orange and compacted ("What's new" and Install share a row; collapsed height roughly halved).
+And **Advanced → Firmware update now offers the prefetched release too** — it previously opened in bare
+picker mode, where "Update now" was disabled but looked enabled, because `AppButtonStyle` hard-codes
+`backgroundTint`/`textColor` and ignores the disabled state; that button now uses the new
+`color/button_background_stateful` + `button_text_stateful` selectors. The screen itself was reordered
+to read as a decision — installed firmware, the **New firmware** that would replace it (was "Selected
+firmware"), a collapsed **What'''s new** expander, **Update now**, and only then **Choose different
+firmware** (outlined, relabelled from "Choose firmware file…" once something is already on offer). This deviates from the plan's
+"without the extra the screen behaves exactly as today" — but the picker stays visible and picking a file
+replaces the offer, so the rule the plan actually protects (never gate the revert path) still holds.
+
+**Release mode.** One new intent extra, `FirmwareUpdateActivity.EXTRA_RELEASE_VERSION`: hides the picker,
+shows the version + notes, takes the file straight from `filesDir/firmware/releases/<version>/` with the
+variant known from the asset name. Preflight, stop-recording offer, progress, abort, reconnect/verify and
+the terminal states are byte-for-byte Phase 2. Without the extra the screen behaves exactly as before —
+which is what Advanced keeps opening.
+
+**Two fixes folded in.** (1) The picker staged into `cacheDir/fwupdate.bin`, which `FirmwareUpdater`
+re-opens with `RandomAccessFile.seek()` on every resume — if Android evicted the cache while the app was
+backgrounded mid-update (exactly the "walk back to the tree tomorrow" case) resume failed with no useful
+message. Both paths now stage in `filesDir`. (2) The picker's confirm dialog now warns when the chosen
+image is older than `MIN_OTA_SOURCE_VERSION`: that revert is one-way and getting back off it needs an
+SD-card swap. **Warn and allow** — never block; that is the whole point of keeping the picker.
+
+**Firebase.** The only cloud piece: on `Success` / `RolledBack` / `Failed` (not `Aborted` — the partial is
+still on the device and will be resumed), `FirestoreHelper.uploadFirmwareUpdateResult()` writes one doc to
+`firmware_update_results` keyed on mac_address (from/to version, outcome, ranger, server timestamp).
+Fire-and-forget: Firestore's offline queue flushes when the phone next has signal. Existing rules already
+allow any signed-in write outside `device_hidden`, so no rules change is needed.
+
+**Verified on hardware (2026-09-01):** prefetch on the beta channel, card on the status page with
+rendered notes, and a full install — card → transfer → double reboot → reconnect → `getStatus` reporting
+the new version.
+
+**Owed:** the rest of the plan's Phase-3 list — un-publish → card disappears; tag/embedded-version
+mismatch → offered to nobody; dismiss → stays gone until something newer; revert via the picker reports
+**Success**, not RolledBack; pre-V1.47 image → one-way warning, install still allowed; `no-ai` device →
+no card, picker still works; result docs land in `firmware_update_results`.
+
+**Operational trap found while testing:** with only a prerelease published, a phone on the *stable*
+channel reads `/releases/latest` → `Release/V1.4` → no `-ei` asset → `FirmwareReleaseHelper` treats that
+as "nothing installable is published" and deletes the cached release. Turning the beta toggle off
+therefore throws away an already-downloaded beta binary. Correct as kill-switch semantics, surprising as
+channel behaviour — an open question whether an off-channel download should be kept but not offered.
+Version not bumped (still 5.43 / 61); bump at release.
+
+**Surface the device's rejection reason for setRecordMode (2026-08-02) — `assembleDebug` green, needs
+on-device check.** With no SD card inserted, starting a recording mode looked like it worked: the
+firmware accepted it and the screen showed a running session, while nothing was ever written. Firmware
+V1.62 now rejects record-ON modes without a card (`ecode` != 0, `error` = "No SD card - cannot start
+recording…"), but the app discarded that text — `SetCommandCompletedCallback` only carried
+`(success, type)` and `DeviceActivity` did nothing on failure except re-render the old state, so the
+toggle just snapped back with no explanation. The callback now also carries the response's `error`
+string (`DeviceDriver.commandErrorMessage()`, new `KEY_ERROR`), and `DeviceActivity` shows it in a
+`showModalAlert(R.string.recording, …)` when a mode change is refused, falling back to the new
+`record_mode_rejected` string if the device sent no message. Generic, not SD-specific: any future
+`setRecordMode` rejection (e.g. "firmware transfer in progress") now reaches the user.
+**Owed:** on-device check with an empty SD slot — expect the alert and the toggle staying off. Version
+not bumped (still 5.41 / 59); bump at release.
 **LoRa region picker with custom entry + one editor per setting (2026-07-28) — code-complete,
 `assembleDebug` green; needs on-device check.** Region was a free-text field, so a typo silently produced
 a region the firmware rejects (`ElocLora::getRegionFromConfig()` → `ESP_ERR_INVALID_ARG`, LoRa stays
@@ -283,7 +389,9 @@ All activities are locked to portrait orientation for field usability.
 - Some Android ROMs (MIUI) need higher `maxSdkVersion` for legacy permissions
 
 ### ELOC Communication
-- 512-byte command limit is hardware constraint
+- The normal command parser uses `CmdBuffer<2048>`; the Classic `BluetoothSerial` RX queue is separately
+  described as 512-byte/lossy in the firmware-update bypass comments. New transports must fragment bytes
+  safely and reject a normal command that would overflow the 2,048-byte parser buffer.
 - JSON parsing must handle missing/malformed fields gracefully
 - Device sends greeting JSON on connect - wait for it before commands
 
@@ -291,3 +399,17 @@ All activities are locked to portrait orientation for field usability.
 - Field conditions require simple, large UI elements
 - Offline functionality is critical (no cellular in forests)
 - Battery and SD card status are most-viewed information
+
+## iPhone/BLE Port Plan (2026-07-30)
+
+- The recorded migration decision is: updated Android retains SPP for old firmware and adds BLE for new
+  firmware; deployed devices are upgraded with Android/SD before an iPhone can use them.
+- The complete implementation handoff is `../../IPHONE_APP_IMPLEMENTATION_PLAN.md` (at the parent `App/`
+  level). It inventories Android behavior, protocol/config/status fields, Firebase schema, iOS design,
+  firmware and Android prerequisites, testing, release gates, and Definition of Done.
+- Do not implement simultaneous SPP+BLE. Implement the required Android BLE firmware updater only after
+  the explicit hardware gates in section 12 of the plan; iPhone v1 intentionally has no firmware-transfer
+  UI. The current firmware's internal-RAM constraint and unknown deployed `partition0` contents require
+  hardware evidence first.
+- Core Bluetooth does not expose an accessory MAC. BLE firmware must report stable `deviceId` and
+  `macAddress` so iOS preserves the existing Firebase identity/metadata contract.

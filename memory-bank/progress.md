@@ -8,7 +8,9 @@
 - **Status Reading** - Get battery, SD card, recording state, firmware info
 - **Configuration Reading** - Get all device settings
 - **Configuration Writing** - Update individual device settings
-- **Recording Control** - Start/stop recording sessions
+- **Recording Control** - Start/stop recording sessions; a mode the device refuses (e.g. no SD card
+  inserted, firmware V1.62+) now raises a modal alert carrying the device's own reason instead of
+  silently snapping the toggle back (2026-08-02, on-device check owed)
 - **Time Sync** - Synchronize device clock with phone
 
 ### User Interface ✅
@@ -19,8 +21,17 @@
 - **Firmware Update over BT** - (2026-07-06, built, hardware test pending) file-picker MVP:
   `FirmwareUpdater` engine + foreground `FirmwareUpdateService` + `FirmwareUpdateActivity`
   (Device Settings → Advanced, gated on firmware `fwUpdateProto`). Resume after BT drop,
-  variant guard, rollback detection. Needs firmware ≥ V1.47. Phase 3 (Firestore release
-  distribution / "update available") not started.
+  variant guard, rollback detection. Needs firmware ≥ V1.47.
+- **Firmware "update available" via GitHub Releases** - (Phase 3, 2026-09-01, **hardware-verified**
+  end to end against prerelease ELOC-P_V1.68). Second entry point alongside the permanent file picker: the app
+  prefetches the current release from `LIFsCode/ELOC-3.0` while online (`FirmwareReleaseHelper`,
+  digest + self-description verified, stored in `filesDir`), and a dismissible card on the status page
+  offers it when the connected device is behind. Per-device skip keyed on mac_address, beta-channel
+  opt-in in Preferences, release notes from the release body, install fully offline, outcome written
+  to `firmware_update_results`. Version ordering in `driver/FirmwareVersion.kt`. Turning the feature on
+  needs a release published under the new convention (flat tag == embedded version, `-ei` asset);
+  `ELOC-P_V1.68` is the first one. Remaining bench cases (kill switch, dismiss, revert, `no-ai`,
+  result docs) still owed.
 - **Best-GPS-source recording + 15 s refresh** - (2026-07-22, 5.43/61, `compileDebugKotlin` green;
   on-device test pending). The phone-vs-ELOC comparison now drives the *recorded* location, not just the
   gauge: `Gps` gains `latitude`/`longitude`/`hasLocation`, `DeviceDriver` parses `gps/lat`+`gps/lon`, and
@@ -61,7 +72,6 @@
 | Issue | Status | Priority |
 |-------|--------|----------|
 | Bluetooth ON/OFF toggle not working | Not Started | Medium |
-| Refresh only works after scroll / refresh triggers when scrolling up | Fix applied 2026-07-22 (needs on-device verify) | Low |
 | Google Maps crashes on some devices | Not Started | Medium |
 
 ### Features 📋
@@ -91,13 +101,11 @@
 ### Bluetooth Toggle
 The Bluetooth ON/OFF button in settings doesn't work. This may be related to Android permission changes in newer API levels.
 
-### Pull-to-Refresh Behavior — fix applied 2026-07-22 (needs on-device verify)
+### Pull-to-Refresh Behavior — FIXED 2026-07-22 (see changelog; on-device verify still owed)
 The swipe-to-refresh on the status page used to refresh even when scrolling up mid-page (and felt
-"stuck" at the bottom). Cause: the `SwipeRefreshLayout`'s direct child is a non-scrollable
-ConstraintLayout, so its default at-top check always said "at top" and grabbed every downward drag.
-Fixed in `DeviceActivity.kt` by replacing the racy `isEnabled = (y <= 5)` scroll listener with
-`setOnChildScrollUpCallback { _, _ -> binding.scrollView.canScrollVertically(-1) }`. See
-`activeContext.md` for details. Verify on hardware, then close this out.
+"stuck" at the bottom). Fixed in `DeviceActivity.kt` by replacing the racy `isEnabled = (y <= 5)`
+scroll listener with `setOnChildScrollUpCallback { _, _ -> binding.scrollView.canScrollVertically(-1) }`.
+Full write-up moved to `changelog.md`. Confirm on hardware next time a device is connected.
 
 ### Google Maps Crashes
 Some devices experience crashes with Google Maps. Details in `maps.log`. May be device-specific or related to map utils version.
@@ -137,9 +145,15 @@ Some devices experience crashes with Google Maps. Details in `maps.log`. May be 
 - [x] LoRa RSSI signal strength indicator (Feb 2026)
 - [x] Map document: added batteryType and recordingState fields (Feb 2026)
 - [x] Status document stale timestamp bug fix (Mar 2026)
+- [x] Complete iPhone/BLE feasibility investigation and implementation handoff plan (Jul 2026)
 
 ### Upcoming 🎯
 - [ ] Fix remaining bugs (BT toggle, refresh)
+- [ ] Validate BLE-only firmware memory/throughput with AI + recording + LoRa
+- [ ] Confirm deployed partition0/first BLE migration and rollback behavior
+- [ ] Add BLE transport to Android while retaining legacy SPP
+- [ ] Port Android firmware updating to BLE and pass the interruption/resume hardware matrix
+- [ ] Implement the native iOS app per `../../IPHONE_APP_IMPLEMENTATION_PLAN.md`
 - [ ] Implement recording time calculation
 - [ ] Kotlin migration for legacy code
 - [ ] Performance testing with multiple devices

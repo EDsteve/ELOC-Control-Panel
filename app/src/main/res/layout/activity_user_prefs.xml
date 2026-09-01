@@ -106,6 +106,31 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="16dp"
+                    android:text="@string/firmware"
+                    android:textAllCaps="true"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:textStyle="bold" />
+
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/beta_firmware_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginVertical="8dp"
+                    app:helpText="@string/help_firmware_beta_channel"
+                    app:itemType="toggle"
+                    app:keyText="@string/firmware_beta_channel" />
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="match_parent"
+                    android:layout_height="3dp"
+                    android:layout_marginVertical="16dp"
+                    app:dividerColor="@color/black" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="16dp"
                     android:text="@string/diagnostics"
                     android:textAllCaps="true"
                     android:textAppearance="@style/TextAppearance.Material3.TitleSmall"

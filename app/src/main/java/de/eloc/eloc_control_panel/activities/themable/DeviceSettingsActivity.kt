@@ -14,6 +14,7 @@ import de.eloc.eloc_control_panel.data.CommandType
 import de.eloc.eloc_control_panel.data.MicrophoneVolumePower
 import de.eloc.eloc_control_panel.data.SampleRate
 import de.eloc.eloc_control_panel.data.TimePerFile
+import de.eloc.eloc_control_panel.data.helpers.FirmwareReleaseHelper
 import de.eloc.eloc_control_panel.databinding.ActivityDeviceSettingsBinding
 import de.eloc.eloc_control_panel.driver.Battery
 import de.eloc.eloc_control_panel.driver.BtConfig
@@ -32,6 +33,7 @@ import de.eloc.eloc_control_panel.activities.themable.editors.eloc_settings.Rang
 import de.eloc.eloc_control_panel.data.Command
 import de.eloc.eloc_control_panel.data.ConnectionStatus
 import de.eloc.eloc_control_panel.driver.DutyCycle
+import de.eloc.eloc_control_panel.driver.FirmwareVersion
 import de.eloc.eloc_control_panel.driver.Inference
 import de.eloc.eloc_control_panel.driver.LoraWan
 
@@ -187,6 +189,7 @@ class DeviceSettingsActivity : ThemableActivity() {
             val intent = Intent(this, FirmwareUpdateActivity::class.java)
             startActivity(intent)
         }
+        setFirmwareUpdateBadge()
     }
 
     private fun setGeneralListeners() {
@@ -717,8 +720,30 @@ class DeviceSettingsActivity : ThemableActivity() {
             binding.advancedFirmwareUpdateDivider.visibility = View.GONE
             binding.advancedFirmwareUpdateItem.visibility = View.GONE
         }
+        setFirmwareUpdateBadge()
 
         updateSectionHeader(binding.advancedSectionTextView, expanded)
+    }
+
+    /**
+     * Show the waiting release on the Advanced -> Firmware update row, so the
+     * update is findable from Settings too and not only from the card on the
+     * status page. Same gate as that card, minus the per-device dismissal: the
+     * row is not an interruption, so hiding it once dismissed would just make
+     * the update hard to find again.
+     */
+    private fun setFirmwareUpdateBadge() {
+        val release = FirmwareReleaseHelper.cachedRelease()
+        val offer = (release != null) &&
+                (DeviceDriver.general.fwUpdateProto >= 1) &&
+                (DeviceDriver.general.buildVariant == release.variant) &&
+                release.isDownloaded &&
+                FirmwareVersion.isNewer(release.version, DeviceDriver.general.version)
+        binding.advancedFirmwareUpdateItem.valueText = if (offer) {
+            getString(R.string.firmware_update_badge, release.version)
+        } else {
+            getString(R.string.open)
+        }
     }
 
     private fun setGeneralSectionState(expanded: Boolean) {

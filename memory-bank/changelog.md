@@ -4,6 +4,21 @@ Dated history of completed work, newest first. Entries are moved here verbatim f
 `activeContext.md` → 'Recent Changes' once a work stream is finished, so activeContext stays
 focused on current work.
 
+### Status-page pull-to-refresh vs. scroll conflict fixed (2026-07-22)
+On the device status screen, scrolling up from the bottom often triggered a pull-to-refresh instead
+of scrolling — and felt "stuck." Root cause: in `activity_device.xml` the `SwipeRefreshLayout`'s
+**direct child is a (non-scrollable) ConstraintLayout**, not the `ScrollView`, so its default
+`canChildScrollUp()` always reports "at top" and treats every downward drag as a refresh pull. The
+prior workaround toggled `swipeRefreshLayout.isEnabled = (y <= 5)` from an `OnScrollChangeListener` —
+racy (read at touch-down before the scroll delta lands), API-gated to M+ (broken on API 21–22), and it
+fought the connection-state `isEnabled` toggles. **Fix** (`DeviceActivity.kt`): removed the scroll
+listener + its registration + now-unused `import android.os.Build`; added
+`swipeRefreshLayout.setOnChildScrollUpCallback { _, _ -> binding.scrollView.canScrollVertically(-1) }`
+so refresh only arms when the ScrollView is genuinely at the very top, evaluated at interception time,
+on all API levels. Connection-state `isEnabled` toggles (Pending/Inactive/onElocInfoReceived) left as-is.
+`compileDebugKotlin` green. **On-device verification still owed** (moved here at user request before the
+hardware check): scroll-up from bottom no longer refreshes; pull-to-refresh still fires at the top.
+
 ### Status Document Stale Timestamp Bug Fix (March 2026)
 **Issue**: When changing device recording mode on a different day than the initial status document was created, the Android app updated the existing Firestore document instead of creating a new one. The `capture_timestamp` stayed at the original date, while `upload_timestamp` was refreshed and session data was updated with the new state.
 

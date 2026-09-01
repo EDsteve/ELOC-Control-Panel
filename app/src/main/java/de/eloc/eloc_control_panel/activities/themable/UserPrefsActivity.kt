@@ -11,6 +11,7 @@ import de.eloc.eloc_control_panel.databinding.ActivityUserPrefsBinding
 import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.data.PreferredFontSize
 import de.eloc.eloc_control_panel.data.StatusUploadInterval
+import de.eloc.eloc_control_panel.data.helpers.FirmwareReleaseHelper
 
 class UserPrefsActivity : ThemableActivity() {
 
@@ -82,6 +83,14 @@ class UserPrefsActivity : ThemableActivity() {
             Preferences.logBtTraffic = (!Preferences.logBtTraffic)
             loadPrefs()
         }
+
+        // Switching channel changes which GitHub release the prefetch reads, so
+        // check again straight away instead of waiting out the rate limit.
+        binding.betaFirmwareItem.setSwitchClickedListener {
+            Preferences.betaFirmwareChannel = (!Preferences.betaFirmwareChannel)
+            loadPrefs()
+            FirmwareReleaseHelper.checkForRelease(this)
+        }
     }
 
     private fun loadPrefs() {
@@ -90,5 +99,6 @@ class UserPrefsActivity : ThemableActivity() {
         binding.uploadIntervalItem.valueText = Preferences.statusUploadInterval.toString()
         binding.gpsTimeoutItem.valueText = "${Preferences.gpsLocationTimeoutSeconds} secs"
         binding.logBtTrafficItem.setSwitch(Preferences.logBtTraffic)
+        binding.betaFirmwareItem.setSwitch(Preferences.betaFirmwareChannel)
     }
 }
