@@ -118,6 +118,7 @@ internal const val KEY_INTRUDER_ENABLED = "enable"
 internal const val KEY_INTRUDER_THRESHOLD = "intruder_threshold"
 internal const val KEY_INTRUDER_WINDOWS_MS = "windowsMs"
 internal const val KEY_INTRUDER_ALARM_INTERVAL_S = "alarmIntervalS"
+internal const val KEY_INTRUDER_IDLE_INTERVAL_S = "idleIntervalS"
 
 // Intruder alarm status keys (getStatus -> "intruder" section, firmware >= 1.69). Older firmware
 // omits the section; the JSON helpers then return false/0, which reads as "no alarm".
@@ -126,6 +127,8 @@ private const val KEY_INTRUDER_ARMED = "armed"
 private const val KEY_INTRUDER_ALARM_ACTIVE = "alarmActive"
 private const val KEY_INTRUDER_SIREN_ACTIVE = "sirenActive"
 private const val KEY_INTRUDER_ALARM_AGE = "alarmAge[s]"
+private const val KEY_INTRUDER_IDLE_INTERVAL_STATUS = "idleInterval[s]"
+private const val KEY_INTRUDER_MOVING = "moving"
 
 internal const val KEY_BT_ENABLE_DURING_RECORD = "bluetoothEnableDuringRecord"
 internal const val KEY_BT_ENABLE_AT_START = "bluetoothEnableAtStart"
@@ -1221,6 +1224,11 @@ object DeviceDriver {
             intruder.alarmIntervalS = alarmIntervalS
         }
 
+        val intruderIdleIntervalPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_IDLE_INTERVAL_S"
+        intruder.idleIntervalS =
+            JsonHelper.getJSONNumberAttribute(intruderIdleIntervalPath, jsonObject).toInt()
+
         val logToSdCardPath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_LOG_CONFIG$PATH_SEPARATOR$KEY_LOGS_LOG_TO_SD_CARD"
         logs.logToSdCard = JsonHelper.getJSONBooleanAttribute(logToSdCardPath, jsonObject)
@@ -1508,6 +1516,20 @@ object DeviceDriver {
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_INTRUDER_STATUS$PATH_SEPARATOR$KEY_INTRUDER_ALARM_AGE"
         intruder.alarmAgeS =
             JsonHelper.getJSONNumberAttribute(intruderAlarmAgePath, jsonObject).toInt()
+
+        // firmware >= 1.70 only. idleInterval[s] doubles as the marker for whether `moving` means
+        // anything: without it the app would report a 1.69 device as permanently "parked".
+        val intruderIdleIntervalStatusPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_INTRUDER_STATUS$PATH_SEPARATOR$KEY_INTRUDER_IDLE_INTERVAL_STATUS"
+        val statusIdleIntervalS =
+            JsonHelper.getJSONNumberAttribute(intruderIdleIntervalStatusPath, jsonObject).toInt()
+        if (statusIdleIntervalS > 0) {
+            intruder.idleIntervalS = statusIdleIntervalS
+        }
+
+        val intruderMovingPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_INTRUDER_STATUS$PATH_SEPARATOR$KEY_INTRUDER_MOVING"
+        intruder.moving = JsonHelper.getJSONBooleanAttribute(intruderMovingPath, jsonObject)
     }
 
     private fun parseDeviceState(jsonObject: JSONObject) {

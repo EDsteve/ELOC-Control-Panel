@@ -1247,6 +1247,14 @@
                                                 app:itemType="button"
                                                 app:keyText="@string/intruder_alarm_interval"
                                                 tools:valueText="10m 00s" />
+
+                                            <de.eloc.eloc_control_panel.widgets.ListItem
+                                                android:id="@+id/intruder_idle_interval_item"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content"
+                                                app:itemType="button"
+                                                app:keyText="@string/intruder_idle_interval"
+                                                tools:valueText="01h 00m 00s" />
                                         </LinearLayout>
                                     </LinearLayout>
                                 </LinearLayout>

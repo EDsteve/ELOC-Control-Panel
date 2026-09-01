@@ -108,6 +108,11 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding.intruderWindowsMsItem.valueText = DeviceDriver.intruder.windowsMs.toString()
         binding.intruderAlarmIntervalItem.valueText =
             prettifyTime(DeviceDriver.intruder.alarmIntervalS)
+        binding.intruderIdleIntervalItem.valueText = if (DeviceDriver.intruder.reportsMotion) {
+            prettifyTime(DeviceDriver.intruder.idleIntervalS)
+        } else {
+            getString(R.string.intruder_idle_interval_unsupported)
+        }
 
         val sec = " sec"
         val secs = " secs"
@@ -454,6 +459,9 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
         binding.intruderAlarmIntervalItem.setOnClickListener {
             SettingEditors.openIntruderAlarmInterval(this)
+        }
+        binding.intruderIdleIntervalItem.setOnClickListener {
+            SettingEditors.openIntruderIdleInterval(this)
         }
     }
 

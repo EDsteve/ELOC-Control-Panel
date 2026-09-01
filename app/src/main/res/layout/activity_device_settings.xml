@@ -298,6 +298,22 @@
                         app:itemType="button"
                         app:keyText="@string/intruder_alarm_interval"
                         tools:valueText="10m 00s" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/intruder_idle_interval_item"
+                        app:helpText="@string/help_intruder_idle_interval"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/intruder_idle_interval"
+                        tools:valueText="01h 00m 00s" />
                 </LinearLayout>
 
                 <LinearLayout

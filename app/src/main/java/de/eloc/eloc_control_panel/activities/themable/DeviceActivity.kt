@@ -615,6 +615,11 @@ class DeviceActivity : ThemableActivity() {
         binding.intruderWindowItem.valueText =
             getString(R.string.milliseconds_template, intruder.windowsMs)
         binding.intruderAlarmIntervalItem.valueText = prettifyTime(intruder.alarmIntervalS)
+        binding.intruderIdleIntervalItem.valueText = if (intruder.reportsMotion) {
+            prettifyTime(intruder.idleIntervalS)
+        } else {
+            getString(R.string.intruder_idle_interval_unsupported)
+        }
     }
 
     // Alarm row of the Intruder section. The alarm latches: once knocked, the device keeps sending
@@ -626,6 +631,14 @@ class DeviceActivity : ThemableActivity() {
         return when {
             intruder.alarmActive && intruder.sirenActive ->
                 getString(R.string.intruder_alarm_active_siren, age)
+
+            // Once the siren has stopped, whether the device is still being carried is the useful
+            // half: it is what decides how often it reports its position and whether the GPS runs.
+            intruder.alarmActive && intruder.reportsMotion && intruder.moving ->
+                getString(R.string.intruder_alarm_active_moving, age)
+
+            intruder.alarmActive && intruder.reportsMotion ->
+                getString(R.string.intruder_alarm_active_parked, age)
 
             intruder.alarmActive -> getString(R.string.intruder_alarm_active_silent, age)
             intruder.enabled && !intruder.armed -> getString(R.string.intruder_alarm_not_armed)
@@ -788,6 +801,11 @@ class DeviceActivity : ThemableActivity() {
         binding.intruderAlarmIntervalItem.setOnClickListener {
             if (binding.intruderSwitch.isChecked && canEditConfig()) {
                 SettingEditors.openIntruderAlarmInterval(this)
+            }
+        }
+        binding.intruderIdleIntervalItem.setOnClickListener {
+            if (binding.intruderSwitch.isChecked && canEditConfig()) {
+                SettingEditors.openIntruderIdleInterval(this)
             }
         }
 

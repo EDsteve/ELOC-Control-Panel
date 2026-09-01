@@ -89,6 +89,15 @@ object SettingEditors {
         Intruder.MAX_ALARM_INTERVAL_S,
     )
 
+    fun openIntruderIdleInterval(context: Context) = openSecondsRange(
+        context,
+        Intruder.IDLE_INTERVAL_S,
+        context.getString(R.string.intruder_idle_interval),
+        DeviceDriver.intruder.editableIdleIntervalS,
+        Intruder.MIN_ALARM_INTERVAL_S,
+        Intruder.MAX_IDLE_INTERVAL_S,
+    )
+
     // Durations are shown to the slider as raw seconds plus a human-readable form, e.g.
     // "21600 (06h 00m 00s)".
     private fun openSecondsRange(
