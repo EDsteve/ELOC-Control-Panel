@@ -33,6 +33,9 @@ import de.eloc.eloc_control_panel.driver.KEY_LORAWAN_UPLINK_INTERVAL
 import de.eloc.eloc_control_panel.driver.KEY_DUTY_CYCLE_AWAKE_DURATION_S
 import de.eloc.eloc_control_panel.driver.KEY_DUTY_CYCLE_ENABLE
 import de.eloc.eloc_control_panel.driver.KEY_DUTY_CYCLE_SLEEP_DURATION_S
+import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_ALARM_TIMEOUT_H
+import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_CONFIRM_WINDOW_S
+import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_QUIET_S
 import de.eloc.eloc_control_panel.driver.KEY_SURVEY_ENABLE
 import de.eloc.eloc_control_panel.driver.KEY_SURVEY_MIN_DISTANCE_M
 import de.eloc.eloc_control_panel.driver.KEY_SURVEY_MIN_INTERVAL_S
@@ -499,6 +502,33 @@ class Command(
                         ""
                     } else {
                         """setConfig#cfg={"config":{"dutyCycle":{"awakeDurationS":$duration}}}"""
+                    }
+                }
+
+                KEY_INTRUDER_CONFIRM_WINDOW_S -> {
+                    val seconds = propertyValue.toDoubleOrNull()?.toInt()
+                    if (seconds == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"intruderCfg":{"confirmWindowS":$seconds}}}"""
+                    }
+                }
+
+                KEY_INTRUDER_QUIET_S -> {
+                    val seconds = propertyValue.toDoubleOrNull()?.toInt()
+                    if (seconds == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"intruderCfg":{"quietS":$seconds}}}"""
+                    }
+                }
+
+                KEY_INTRUDER_ALARM_TIMEOUT_H -> {
+                    val hours = propertyValue.toDoubleOrNull()?.toInt()
+                    if (hours == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"intruderCfg":{"alarmTimeoutH":$hours}}}"""
                     }
                 }
 

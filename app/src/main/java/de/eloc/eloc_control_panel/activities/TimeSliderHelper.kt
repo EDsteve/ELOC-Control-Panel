@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.driver.DutyCycle
 import de.eloc.eloc_control_panel.driver.Inference
+import de.eloc.eloc_control_panel.driver.Intruder
 import de.eloc.eloc_control_panel.driver.LoraWan
 import de.eloc.eloc_control_panel.driver.Survey
 
@@ -44,6 +45,8 @@ object TimeSliderHelper {
         DutyCycle.SLEEP_DURATION_S,
         DutyCycle.AWAKE_DURATION_S,
         Survey.MIN_INTERVAL_S,
+        Intruder.CONFIRM_WINDOW_S,
+        Intruder.QUIET_S,
     )
 
     fun isTimeProperty(property: String): Boolean = property in TIME_PROPERTIES

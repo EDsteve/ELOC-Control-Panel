@@ -111,6 +111,32 @@ class DeviceSettingsActivity : ThemableActivity() {
         binding.intruderWindowsMsItem.valueText = DeviceDriver.intruder.windowsMs.toString()
         binding.intruderAlarmIntervalItem.valueText =
             prettifyTime(DeviceDriver.intruder.alarmIntervalS)
+        // Firmware older than 1.73 has no candidate/confirm model, so these three would be
+        // silently ignored. Say so rather than showing a value that does nothing.
+        val candidateSupported = DeviceDriver.intruder.reportsCandidateState
+        val unsupported = getString(R.string.intruder_candidate_unsupported)
+        binding.intruderConfirmWindowItem.isEnabled = candidateSupported
+        binding.intruderQuietItem.isEnabled = candidateSupported
+        binding.intruderAlarmTimeoutItem.isEnabled = candidateSupported
+        binding.intruderConfirmWindowItem.valueText = if (candidateSupported) {
+            prettifyTime(DeviceDriver.intruder.confirmWindowS)
+        } else {
+            unsupported
+        }
+        binding.intruderQuietItem.valueText = if (candidateSupported) {
+            prettifyTime(DeviceDriver.intruder.quietS)
+        } else {
+            unsupported
+        }
+        binding.intruderAlarmTimeoutItem.valueText = when {
+            !candidateSupported -> unsupported
+            DeviceDriver.intruder.alarmTimeoutH == 0 ->
+                getString(R.string.intruder_alarm_timeout_never)
+            else -> getString(
+                R.string.intruder_alarm_timeout_value, DeviceDriver.intruder.alarmTimeoutH
+            )
+        }
+
         binding.intruderIdleIntervalItem.valueText = if (DeviceDriver.intruder.reportsMotion) {
             prettifyTime(DeviceDriver.intruder.idleIntervalS)
         } else {
@@ -493,6 +519,21 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
         binding.intruderIdleIntervalItem.setOnClickListener {
             SettingEditors.openIntruderIdleInterval(this)
+        }
+        binding.intruderConfirmWindowItem.setOnClickListener {
+            if (DeviceDriver.intruder.reportsCandidateState) {
+                SettingEditors.openIntruderConfirmWindow(this)
+            }
+        }
+        binding.intruderQuietItem.setOnClickListener {
+            if (DeviceDriver.intruder.reportsCandidateState) {
+                SettingEditors.openIntruderQuiet(this)
+            }
+        }
+        binding.intruderAlarmTimeoutItem.setOnClickListener {
+            if (DeviceDriver.intruder.reportsCandidateState) {
+                SettingEditors.openIntruderAlarmTimeout(this)
+            }
         }
     }
 

@@ -641,6 +641,12 @@ class DeviceActivity : ThemableActivity() {
                 getString(R.string.intruder_alarm_active_parked, age)
 
             intruder.alarmActive -> getString(R.string.intruder_alarm_active_silent, age)
+
+            // Knocks seen, waiting to find out whether the device is actually being moved. Worth
+            // showing: it is the only outward sign the device registered the knocks at all, since
+            // a candidate deliberately makes no sound and powers nothing up.
+            intruder.candidate -> getString(R.string.intruder_alarm_candidate)
+
             intruder.enabled && !intruder.armed -> getString(R.string.intruder_alarm_not_armed)
             else -> getString(R.string.intruder_alarm_none)
         }

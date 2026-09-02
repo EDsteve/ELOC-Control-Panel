@@ -99,6 +99,40 @@ object SettingEditors {
         Intruder.MAX_IDLE_INTERVAL_S,
     )
 
+    fun openIntruderConfirmWindow(context: Context) = openSecondsRange(
+        context,
+        Intruder.CONFIRM_WINDOW_S,
+        context.getString(R.string.intruder_confirm_window),
+        DeviceDriver.intruder.confirmWindowS,
+        Intruder.MIN_CONFIRM_WINDOW_S,
+        Intruder.MAX_CONFIRM_WINDOW_S,
+    )
+
+    fun openIntruderQuiet(context: Context) = openSecondsRange(
+        context,
+        Intruder.QUIET_S,
+        context.getString(R.string.intruder_quiet),
+        DeviceDriver.intruder.quietS,
+        Intruder.MIN_QUIET_S,
+        Intruder.MAX_QUIET_S,
+    )
+
+    fun openIntruderAlarmTimeout(context: Context) = RangeEditorActivity.openRangeEditor(
+        context,
+        Intruder.ALARM_TIMEOUT_H,
+        context.getString(R.string.intruder_alarm_timeout),
+        // Hours, not seconds - and 0 has its own meaning, so it is spelled out rather than shown
+        // as "0 h", which would read like a mistake.
+        if (DeviceDriver.intruder.alarmTimeoutH == 0) {
+            context.getString(R.string.intruder_alarm_timeout_never)
+        } else {
+            context.getString(R.string.intruder_alarm_timeout_value, DeviceDriver.intruder.alarmTimeoutH)
+        },
+        DeviceDriver.intruder.alarmTimeoutH.toFloat(),
+        Intruder.MIN_ALARM_TIMEOUT_H.toFloat(),
+        Intruder.MAX_ALARM_TIMEOUT_H.toFloat(),
+    )
+
     fun openSurveyStartSf(context: Context) {
         // A picker, not free text: SF is a radio parameter with four sensible values, and a typo
         // would silently change how much airtime every sample costs (SF12 is 26x SF7).

@@ -119,6 +119,9 @@ internal const val KEY_INTRUDER_THRESHOLD = "intruder_threshold"
 internal const val KEY_INTRUDER_WINDOWS_MS = "windowsMs"
 internal const val KEY_INTRUDER_ALARM_INTERVAL_S = "alarmIntervalS"
 internal const val KEY_INTRUDER_IDLE_INTERVAL_S = "idleIntervalS"
+internal const val KEY_INTRUDER_CONFIRM_WINDOW_S = "confirmWindowS"
+internal const val KEY_INTRUDER_QUIET_S = "quietS"
+internal const val KEY_INTRUDER_ALARM_TIMEOUT_H = "alarmTimeoutH"
 
 // Intruder alarm status keys (getStatus -> "intruder" section, firmware >= 1.69). Older firmware
 // omits the section; the JSON helpers then return false/0, which reads as "no alarm".
@@ -128,6 +131,7 @@ private const val KEY_INTRUDER_ALARM_ACTIVE = "alarmActive"
 private const val KEY_INTRUDER_SIREN_ACTIVE = "sirenActive"
 private const val KEY_INTRUDER_ALARM_AGE = "alarmAge[s]"
 private const val KEY_INTRUDER_IDLE_INTERVAL_STATUS = "idleInterval[s]"
+private const val KEY_INTRUDER_CANDIDATE = "candidate"
 private const val KEY_INTRUDER_MOVING = "moving"
 
 internal const val KEY_BT_ENABLE_DURING_RECORD = "bluetoothEnableDuringRecord"
@@ -1237,6 +1241,21 @@ object DeviceDriver {
             intruder.alarmIntervalS = alarmIntervalS
         }
 
+        val intruderConfirmWindowPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_CONFIRM_WINDOW_S"
+        intruder.confirmWindowS =
+            JsonHelper.getJSONNumberAttribute(intruderConfirmWindowPath, jsonObject).toInt()
+
+        val intruderQuietPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_QUIET_S"
+        intruder.quietS =
+            JsonHelper.getJSONNumberAttribute(intruderQuietPath, jsonObject).toInt()
+
+        val intruderAlarmTimeoutPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_ALARM_TIMEOUT_H"
+        intruder.alarmTimeoutH =
+            JsonHelper.getJSONNumberAttribute(intruderAlarmTimeoutPath, jsonObject).toInt()
+
         val intruderIdleIntervalPath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_IDLE_INTERVAL_S"
         intruder.idleIntervalS =
@@ -1567,6 +1586,10 @@ object DeviceDriver {
         val intruderMovingPath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_INTRUDER_STATUS$PATH_SEPARATOR$KEY_INTRUDER_MOVING"
         intruder.moving = JsonHelper.getJSONBooleanAttribute(intruderMovingPath, jsonObject)
+
+        val intruderCandidatePath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_INTRUDER_STATUS$PATH_SEPARATOR$KEY_INTRUDER_CANDIDATE"
+        intruder.candidate = JsonHelper.getJSONBooleanAttribute(intruderCandidatePath, jsonObject)
     }
 
     private fun parseDeviceState(jsonObject: JSONObject) {

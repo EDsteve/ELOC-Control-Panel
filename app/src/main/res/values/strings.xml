@@ -85,6 +85,12 @@
     <string name="important">Important</string>
     <string name="important_delete_prompt"><u>IMPORTANT</u>\nThis operation is NOT reversible!</string>
     <string name="intruder">Intruder</string>
+    <string name="intruder_confirm_window">Movement confirmation window</string>
+    <string name="intruder_quiet">Stopped after</string>
+    <string name="intruder_alarm_timeout">Alarm clears after</string>
+    <string name="intruder_alarm_timeout_value">%1$d h</string>
+    <string name="intruder_alarm_timeout_never">Never</string>
+    <string name="intruder_candidate_unsupported">Needs firmware 1.73 or newer</string>
     <string name="survey">LoRa signal survey</string>
     <string name="survey_start_sf">Spreading factor</string>
     <string name="survey_min_distance">Distance between points</string>
@@ -352,6 +358,7 @@
     <string name="intruder_alarm_active_silent">ACTIVE · siren off (%1$s)</string>
     <string name="intruder_alarm_active_moving">ACTIVE · moving (%1$s)</string>
     <string name="intruder_alarm_active_parked">ACTIVE · parked (%1$s)</string>
+    <string name="intruder_alarm_candidate">Knocks seen · waiting for movement</string>
     <string name="intruder_alarm_not_armed">Off while duty cycle is on</string>
     <string name="intruder_subtitle">Detect and record intruder events</string>
     <string name="device_details">Device Details</string>
@@ -408,6 +415,9 @@
     <string name="help_survey_start_sf">How far each transmission is designed to reach. SF7 is the shortest range but by far the cheapest in airtime, so it is the right default: it maps the worst case, and the result converts to every higher setting. The device raises this on its own when it walks out of coverage.</string>
     <string name="help_survey_min_distance">How far the device must move before it logs another point. This, not a fixed time, is what sets the spacing of the map: use about 25 m on foot and about 100 m from a vehicle. Standing still costs nothing.</string>
     <string name="help_survey_min_interval">The fastest the device is ever allowed to transmit, no matter how quickly it is moving. It protects the radio duty cycle. The device raises this by itself at longer-range settings, so a higher spreading factor automatically means fewer points.</string>
+    <string name="help_intruder_confirm_window">After enough knocks, the device waits this long to see whether it is actually being moved. If it stays still, nothing happens at all — no siren, no GPS, no radio. This is what stops a branch, an animal or a passing vehicle setting off a false alarm.</string>
+    <string name="help_intruder_quiet">How long the device must be still before it counts as put down. At that point it powers the GPS off and stops sending tracking messages, until it moves again. Shorter saves more battery; too short and a pause to open a gate looks like being set down.</string>
+    <string name="help_intruder_alarm_timeout">An alarm stays on after the device is put down, so picking it up again resumes tracking straight away. This is how long it waits, with no movement at all, before giving up and clearing itself. Set to zero to keep it on until you switch detection off.</string>
     <string name="help_intruder_alarm_interval">How often the device sends a LoRa alarm message with its GPS position while an alarm is active and being moved, so a device that is being carried away can be tracked. Shorter intervals track more closely but use more battery and LoRa airtime. The device does not go below 60 seconds.</string>
     <string name="help_intruder_idle_interval">How often the device reports once it has been sitting still for five minutes. A parked device is not going anywhere, so it powers its GPS down (the largest drain during an alarm) and repeats its last known position at this slower rate. It never stops reporting entirely, so you can still tell the difference between a device sitting in a shed and one that has been destroyed. Set this to the alarm interval or lower to switch the saving off.</string>
     <string name="help_lorawan_enable">Report detections and regular heartbeats over LoRaWAN (The Things Network) — long-range radio, independent of cell coverage.</string>
