@@ -141,6 +141,18 @@ internal const val KEY_LOGS_FILENAME = "filename"
 internal const val KEY_LOGS_MAX_FILES = "maxFiles"
 internal const val KEY_LOGS_MAX_FILE_SIZE = "maxFileSize"
 
+// LoRa coverage survey (getConfig -> config.surveyCfg, firmware >= 1.72). Older firmware omits the
+// section entirely; the JSON helpers then return 0, which Survey.isSupported reads as "unsupported".
+private const val KEY_SURVEY = "surveyCfg"
+internal const val KEY_SURVEY_ENABLE = "surveyEnable"
+internal const val KEY_SURVEY_MIN_INTERVAL_S = "surveyMinIntervalS"
+internal const val KEY_SURVEY_MIN_DISTANCE_M = "surveyMinDistanceM"
+internal const val KEY_SURVEY_START_SF = "surveyStartSF"
+private const val KEY_SURVEY_ENABLE_FIELD = "enable"
+private const val KEY_SURVEY_MIN_INTERVAL_S_FIELD = "minIntervalS"
+private const val KEY_SURVEY_MIN_DISTANCE_M_FIELD = "minDistanceM"
+private const val KEY_SURVEY_START_SF_FIELD = "startSF"
+
 private const val KEY_DUTY_CYCLE = "dutyCycle"
 internal const val KEY_DUTY_CYCLE_ENABLE = "dutyCycleEnable"
 internal const val KEY_DUTY_CYCLE_SLEEP_DURATION_S = "dutyCycleSleepDurationS"
@@ -230,6 +242,7 @@ object DeviceDriver {
     val gps = Gps()
     val inference = Inference()
     val dutyCycle = DutyCycle()
+    val survey = Survey()
 
     private var executor: ScheduledExecutorService? = null
     private var bluetoothListener: ScheduledExecutorService? = null
@@ -1340,6 +1353,30 @@ object DeviceDriver {
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_DUTY_CYCLE$PATH_SEPARATOR$KEY_DUTY_CYCLE_AWAKE_DURATION_S_FIELD"
         dutyCycle.awakeDurationS =
             JsonHelper.getJSONNumberAttribute(dutyCycleAwakeDurationPath, jsonObject).toInt()
+
+        val surveyEnablePath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_SURVEY$PATH_SEPARATOR$KEY_SURVEY_ENABLE_FIELD"
+        survey.enabled = JsonHelper.getJSONBooleanAttribute(surveyEnablePath, jsonObject)
+
+        val surveyMinIntervalPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_SURVEY$PATH_SEPARATOR$KEY_SURVEY_MIN_INTERVAL_S_FIELD"
+        survey.minIntervalS =
+            JsonHelper.getJSONNumberAttribute(surveyMinIntervalPath, jsonObject).toInt()
+
+        val surveyMinDistancePath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_SURVEY$PATH_SEPARATOR$KEY_SURVEY_MIN_DISTANCE_M_FIELD"
+        survey.minDistanceM =
+            JsonHelper.getJSONNumberAttribute(surveyMinDistancePath, jsonObject).toInt()
+
+        // startSF is the presence probe: firmware without surveyCfg returns 0 for it, and 0 is
+        // outside the valid 7..12 range, so it can only mean "this device has no survey mode".
+        val surveyStartSfPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_SURVEY$PATH_SEPARATOR$KEY_SURVEY_START_SF_FIELD"
+        val rawStartSf = JsonHelper.getJSONNumberAttribute(surveyStartSfPath, jsonObject).toInt()
+        survey.isSupported = rawStartSf > 0
+        if (survey.isSupported) {
+            survey.startSF = rawStartSf
+        }
     }
 
     private fun parseStatus(jsonObject: JSONObject) {

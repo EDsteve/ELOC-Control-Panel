@@ -22,7 +22,9 @@ import de.eloc.eloc_control_panel.driver.Cpu
 import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.driver.General
 import de.eloc.eloc_control_panel.driver.Intruder
+import de.eloc.eloc_control_panel.activities.openActivity
 import de.eloc.eloc_control_panel.driver.Logs
+import de.eloc.eloc_control_panel.driver.Survey
 import de.eloc.eloc_control_panel.driver.Microphone
 import de.eloc.eloc_control_panel.activities.formatNumber
 import de.eloc.eloc_control_panel.activities.showModalAlert
@@ -60,6 +62,7 @@ class DeviceSettingsActivity : ThemableActivity() {
 
         setMicrophoneSectionState(showMicrophoneSection)
         setIntruderSectionState(false)
+        setSurveySectionState(false)
         setLorawanSectionState(false)
         setInferenceSectionState(false)
         setBluetoothSectionState(false)
@@ -112,6 +115,33 @@ class DeviceSettingsActivity : ThemableActivity() {
             prettifyTime(DeviceDriver.intruder.idleIntervalS)
         } else {
             getString(R.string.intruder_idle_interval_unsupported)
+        }
+
+        // Survey settings are inert on firmware without surveyCfg, so say so rather than showing
+        // values the device would silently ignore.
+        val surveySupported = DeviceDriver.survey.isSupported
+        binding.surveyEnableItem.setSwitch(DeviceDriver.survey.enabled)
+        binding.surveyEnableItem.isEnabled = surveySupported
+        binding.surveyOpenItem.isEnabled = surveySupported
+        binding.surveyOpenItem.valueText = if (surveySupported) "" else getString(R.string.survey_unsupported)
+        binding.surveyMinDistanceItem.valueText = if (surveySupported) {
+            getString(
+                R.string.survey_min_distance_value,
+                DeviceDriver.survey.minDistanceM,
+                surveyPresetLabel(DeviceDriver.survey.minDistanceM),
+            )
+        } else {
+            getString(R.string.survey_unsupported)
+        }
+        binding.surveyMinIntervalItem.valueText = if (surveySupported) {
+            prettifyTime(DeviceDriver.survey.minIntervalS)
+        } else {
+            getString(R.string.survey_unsupported)
+        }
+        binding.surveyStartSfItem.valueText = if (surveySupported) {
+            "SF${DeviceDriver.survey.startSF}"
+        } else {
+            getString(R.string.survey_unsupported)
         }
 
         val sec = " sec"
@@ -170,6 +200,7 @@ class DeviceSettingsActivity : ThemableActivity() {
         setCpuListeners()
         setLogsListeners()
         setIntruderListeners()
+        setSurveyListeners()
         setLorawanListeners()
         setInferenceListeners()
         setBtListeners()
@@ -465,6 +496,43 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
     }
 
+    private fun setSurveyListeners() {
+        binding.surveySectionTextView.setOnClickListener {
+            setSurveySectionState(binding.surveyEnableItem.visibility != View.VISIBLE)
+        }
+        binding.surveyOpenItem.setOnClickListener {
+            if (DeviceDriver.survey.isSupported) {
+                openActivity(SurveyActivity::class.java)
+            }
+        }
+        binding.surveyEnableItem.setSwitchClickedListener {
+            val checked = binding.surveyEnableItem.isChecked
+            Command.createSetConfigPropertyCommand(
+                Survey.ENABLE,
+                checked.toString(),
+                ::runCommand,
+                {
+                    showModalAlert(getString(R.string.error), getString(R.string.invalid_setting))
+                },
+            ) { refresh() }
+        }
+        binding.surveyMinDistanceItem.setOnClickListener {
+            if (DeviceDriver.survey.isSupported) SettingEditors.openSurveyMinDistance(this)
+        }
+        binding.surveyMinIntervalItem.setOnClickListener {
+            if (DeviceDriver.survey.isSupported) SettingEditors.openSurveyMinInterval(this)
+        }
+        binding.surveyStartSfItem.setOnClickListener {
+            if (DeviceDriver.survey.isSupported) SettingEditors.openSurveyStartSf(this)
+        }
+    }
+
+    private fun surveyPresetLabel(metres: Int): String = when {
+        metres <= Survey.PRESET_WALK_DISTANCE_M -> getString(R.string.survey_preset_walk)
+        metres >= Survey.PRESET_DRIVE_DISTANCE_M -> getString(R.string.survey_preset_drive)
+        else -> getString(R.string.survey_preset_mixed)
+    }
+
     private fun setBtListeners() {
         binding.btSectionTextView.setOnClickListener {
             setBluetoothSectionState(binding.btEnableAtStartItem.visibility != View.VISIBLE)
@@ -692,6 +760,18 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
 
         updateSectionHeader(binding.intruderSectionTextView, expanded)
+    }
+
+    private fun setSurveySectionState(expanded: Boolean) {
+        val state = if (expanded) View.VISIBLE else View.GONE
+        binding.surveySection.children.forEach { child ->
+            if (child == binding.surveySectionTextView) {
+                return@forEach
+            }
+            child.visibility = state
+        }
+
+        updateSectionHeader(binding.surveySectionTextView, expanded)
     }
 
     private fun setBluetoothSectionState(expanded: Boolean) {

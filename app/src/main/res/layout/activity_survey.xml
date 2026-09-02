@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activities.themable.SurveyActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?actionBarSize"
+            app:navigationIcon="@drawable/arrow_back"
+            app:title="@string/survey" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- The reading. Big enough to be legible at arm's length in daylight, because this
+                 is read while standing at a tree deciding whether to deploy there. -->
+            <LinearLayout
+                android:id="@+id/reading_panel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/tile_gradient"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="24dp">
+
+                <TextView
+                    android:id="@+id/level_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/ui_text_primary"
+                    android:textSize="72sp"
+                    android:textStyle="bold"
+                    tools:text="4" />
+
+                <TextView
+                    android:id="@+id/level_label_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    android:textColor="@color/ui_text_primary"
+                    tools:text="Good" />
+
+                <TextView
+                    android:id="@+id/reading_detail_text_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="@color/ui_text_secondary"
+                    tools:text="Margin 17 dB · 2 gateways · SF7" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/measure_button"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/survey_measure_here"
+                android:textSize="18sp"
+                app:icon="@drawable/ic_lora"
+                app:iconGravity="textStart" />
+
+            <TextView
+                android:id="@+id/measure_hint_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:layout_marginHorizontal="4dp"
+                android:text="@string/survey_measure_hint"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:textColor="@color/ui_text_secondary" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/survey_session"
+                android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                android:textColor="@color/ui_text_primary"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/tile_gradient"
+                android:orientation="vertical"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="10dp">
+
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/state_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:itemType="normal"
+                    app:keyText="@string/survey_state"
+                    tools:valueText="Running · 12m 30s" />
+
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/samples_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:itemType="normal"
+                    app:keyText="@string/survey_samples"
+                    tools:valueText="48" />
+
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/budget_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:itemType="normal"
+                    app:keyText="@string/survey_budget"
+                    tools:valueText="48 / 400 up · 2 / 20 down" />
+
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/spacing_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:itemType="normal"
+                    app:keyText="@string/survey_spacing"
+                    tools:valueText="25 m · not faster than 10s" />
+
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/file_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:itemType="normal"
+                    app:keyText="@string/survey_file"
+                    tools:valueText="ELOC_00123_20260901_071500.csv" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/start_stop_button"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="24dp"
+                tools:text="@string/survey_stop" />
+        </LinearLayout>
+    </ScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

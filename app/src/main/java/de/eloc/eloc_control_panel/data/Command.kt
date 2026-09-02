@@ -33,6 +33,10 @@ import de.eloc.eloc_control_panel.driver.KEY_LORAWAN_UPLINK_INTERVAL
 import de.eloc.eloc_control_panel.driver.KEY_DUTY_CYCLE_AWAKE_DURATION_S
 import de.eloc.eloc_control_panel.driver.KEY_DUTY_CYCLE_ENABLE
 import de.eloc.eloc_control_panel.driver.KEY_DUTY_CYCLE_SLEEP_DURATION_S
+import de.eloc.eloc_control_panel.driver.KEY_SURVEY_ENABLE
+import de.eloc.eloc_control_panel.driver.KEY_SURVEY_MIN_DISTANCE_M
+import de.eloc.eloc_control_panel.driver.KEY_SURVEY_MIN_INTERVAL_S
+import de.eloc.eloc_control_panel.driver.KEY_SURVEY_START_SF
 import de.eloc.eloc_control_panel.driver.KEY_MICROPHONE_APPLL
 import de.eloc.eloc_control_panel.driver.KEY_MICROPHONE_CHANNEL
 import de.eloc.eloc_control_panel.driver.KEY_MICROPHONE_SAMPLE_RATE
@@ -495,6 +499,42 @@ class Command(
                         ""
                     } else {
                         """setConfig#cfg={"config":{"dutyCycle":{"awakeDurationS":$duration}}}"""
+                    }
+                }
+
+                KEY_SURVEY_ENABLE -> {
+                    val enable = propertyValue.lowercase().toBooleanStrictOrNull()
+                    if (enable == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"surveyCfg":{"enable":$enable}}}"""
+                    }
+                }
+
+                KEY_SURVEY_MIN_INTERVAL_S -> {
+                    val seconds = propertyValue.toDoubleOrNull()?.toInt()
+                    if (seconds == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"surveyCfg":{"minIntervalS":$seconds}}}"""
+                    }
+                }
+
+                KEY_SURVEY_MIN_DISTANCE_M -> {
+                    val metres = propertyValue.toDoubleOrNull()?.toInt()
+                    if (metres == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"surveyCfg":{"minDistanceM":$metres}}}"""
+                    }
+                }
+
+                KEY_SURVEY_START_SF -> {
+                    val sf = propertyValue.toDoubleOrNull()?.toInt()
+                    if (sf == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"surveyCfg":{"startSF":$sf}}}"""
                     }
                 }
 

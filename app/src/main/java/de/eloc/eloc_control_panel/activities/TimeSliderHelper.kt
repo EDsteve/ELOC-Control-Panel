@@ -5,6 +5,7 @@ import de.eloc.eloc_control_panel.R
 import de.eloc.eloc_control_panel.driver.DutyCycle
 import de.eloc.eloc_control_panel.driver.Inference
 import de.eloc.eloc_control_panel.driver.LoraWan
+import de.eloc.eloc_control_panel.driver.Survey
 
 enum class TimeUnit(val seconds: Int, @StringRes val labelRes: Int) {
     SECONDS(1, R.string.time_unit_seconds),
@@ -42,6 +43,7 @@ object TimeSliderHelper {
         Inference.OBS_WINDOW_SECS,
         DutyCycle.SLEEP_DURATION_S,
         DutyCycle.AWAKE_DURATION_S,
+        Survey.MIN_INTERVAL_S,
     )
 
     fun isTimeProperty(property: String): Boolean = property in TIME_PROPERTIES

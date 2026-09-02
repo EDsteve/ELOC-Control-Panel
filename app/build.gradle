@@ -14,7 +14,7 @@ android {
         minSdk 21
         targetSdk 36
         versionCode 61
-        versionName '5.43'
+        versionName '5.44'
         versionNameSuffix 'AppBeta'
         vectorDrawables.useSupportLibrary = true
     }

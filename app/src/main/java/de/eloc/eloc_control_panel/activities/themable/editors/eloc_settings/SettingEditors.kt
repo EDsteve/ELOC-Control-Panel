@@ -7,6 +7,7 @@ import de.eloc.eloc_control_panel.driver.DeviceDriver
 import de.eloc.eloc_control_panel.driver.DutyCycle
 import de.eloc.eloc_control_panel.driver.Intruder
 import de.eloc.eloc_control_panel.driver.LoraWan
+import de.eloc.eloc_control_panel.driver.Survey
 
 /**
  * One definition per setting of how it is edited.
@@ -97,6 +98,50 @@ object SettingEditors {
         Intruder.MIN_ALARM_INTERVAL_S,
         Intruder.MAX_IDLE_INTERVAL_S,
     )
+
+    fun openSurveyStartSf(context: Context) {
+        // A picker, not free text: SF is a radio parameter with four sensible values, and a typo
+        // would silently change how much airtime every sample costs (SF12 is 26x SF7).
+        OptionEditorActivity.open(
+            context,
+            Survey.START_SF,
+            context.getString(R.string.survey_start_sf),
+            DeviceDriver.survey.startSF.toString(),
+            Survey.SPREADING_FACTORS.map { "$it|SF$it" },
+            allowCustom = false,
+        )
+    }
+
+    fun openSurveyMinDistance(context: Context) = RangeEditorActivity.openRangeEditor(
+        context,
+        Survey.MIN_DISTANCE_M,
+        context.getString(R.string.survey_min_distance),
+        // Name the two presets in the value line: 25 m suits walking, 100 m a drive-along survey,
+        // and both land near three hours of surveying inside the daily uplink allowance.
+        context.getString(
+            R.string.survey_min_distance_value,
+            DeviceDriver.survey.minDistanceM,
+            distanceHint(context, DeviceDriver.survey.minDistanceM),
+        ),
+        DeviceDriver.survey.minDistanceM.toFloat(),
+        Survey.MIN_DISTANCE_METRES.toFloat(),
+        Survey.MAX_DISTANCE_METRES.toFloat(),
+    )
+
+    fun openSurveyMinInterval(context: Context) = openSecondsRange(
+        context,
+        Survey.MIN_INTERVAL_S,
+        context.getString(R.string.survey_min_interval),
+        DeviceDriver.survey.minIntervalS,
+        Survey.MIN_INTERVAL_SECS,
+        Survey.MAX_INTERVAL_SECS,
+    )
+
+    private fun distanceHint(context: Context, metres: Int): String = when {
+        metres <= Survey.PRESET_WALK_DISTANCE_M -> context.getString(R.string.survey_preset_walk)
+        metres >= Survey.PRESET_DRIVE_DISTANCE_M -> context.getString(R.string.survey_preset_drive)
+        else -> context.getString(R.string.survey_preset_mixed)
+    }
 
     // Durations are shown to the slider as raw seconds plus a human-readable form, e.g.
     // "21600 (06h 00m 00s)".

@@ -1,5 +1,38 @@
 ﻿# ELOC Control Panel - Active Context
 
+## LoRa signal survey support (2026-09-01) — built, not hardware-tested
+
+Pairs with firmware V1.72's coverage-survey mode (`surveyCfg`).
+
+- **`driver/Survey.kt`** + parsing in `DeviceDriver.parseConfig`. `startSF` doubles as the presence
+  probe: firmware without `surveyCfg` returns 0, which is outside the valid 7..12 range, so it can
+  only mean "no survey mode". Set explicitly on every getConfig rather than inferred from a stale
+  field, which would go wrong when connecting to an older device after a newer one.
+- **Device Settings → "LoRa signal survey"** — enable, distance, minimum interval, spreading factor.
+  SF is a picker (7/9/10/12), not free text: a typo there changes airtime by 26x. Distance shows its
+  preset inline ("25 m (walking)" / "100 m (driving)"). The section greys out on older firmware.
+- **`SurveyActivity`** — the live readout and the "Measure here" button. Deliberately its own screen
+  rather than a card on the 1500-line status page: during a survey the ranger looks at exactly one
+  thing, and the reading has to be legible at arm's length in daylight.
+
+**The two buttons are deliberately different.** GPIO0 on the device forces an extra *uplink* — free,
+it just drops another point on the map, and it is the button anyone can press by accident. The app's
+button forces an uplink that also requests a *downlink*, which is the only thing that returns a
+margin. Downlinks are the scarce resource (TTN allows ten a day), so spending one is a deliberate act
+behind the app.
+
+`getLinkCheck` answers as soon as the check is *scheduled*, not when it completes — one uplink plus
+both RX windows blocks the device for 6-7 s, and holding the Bluetooth task that long would starve
+SPP and drop the connection. So the result arrives via a later `getSurveyStatus` poll (3 s cadence),
+and the button stays busy until a fresh margin appears or 20 s pass.
+
+A stale level is never shown: with no link check answered yet the readout is a dash, because the
+whole value of the reading is that it is current at the spot the ranger is standing.
+
+**Not tested on hardware** — `assembleDebug` passes, that is all.
+
+---
+
 ## Current Work Focus
 
 **Firmware "update available" flow — GitHub Releases (Phase 3, 2026-09-01) — HARDWARE-VERIFIED

@@ -317,6 +317,105 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/survey_section"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="6dp"
+                    android:background="@drawable/tile_gradient"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="10dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/survey_section_text_view"
+                        android:drawablePadding="10dp"
+                        app:drawableStartCompat="@drawable/ic_shield"
+                        app:drawableTint="@color/ui_green"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:background="?selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:textColor="@color/ui_text_primary"
+                        android:textStyle="bold"
+                        android:text="@string/survey"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        app:drawableEndCompat="@drawable/keyboard_arrow_down" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/survey_open_item"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/survey_open" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/survey_enable_item"
+                        app:helpText="@string/help_survey_enable"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="toggle"
+                        app:keyText="@string/enabled" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/survey_min_distance_item"
+                        app:helpText="@string/help_survey_min_distance"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/survey_min_distance"
+                        tools:valueText="25 m (walking)" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/survey_min_interval_item"
+                        app:helpText="@string/help_survey_min_interval"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/survey_min_interval"
+                        tools:valueText="10s" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/survey_start_sf_item"
+                        app:helpText="@string/help_survey_start_sf"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/survey_start_sf"
+                        tools:valueText="SF7" />
+                </LinearLayout>
+
+                <LinearLayout
                     android:id="@+id/lorawan_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
