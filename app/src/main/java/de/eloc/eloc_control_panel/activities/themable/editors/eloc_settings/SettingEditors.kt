@@ -99,6 +99,15 @@ object SettingEditors {
         Intruder.MAX_IDLE_INTERVAL_S,
     )
 
+    fun openIntruderArmDelay(context: Context) = openSecondsRange(
+        context,
+        Intruder.ARM_DELAY_S,
+        context.getString(R.string.intruder_arm_delay),
+        DeviceDriver.intruder.armDelayS,
+        Intruder.MIN_ARM_DELAY_S,
+        Intruder.MAX_ARM_DELAY_S,
+    )
+
     fun openIntruderConfirmWindow(context: Context) = openSecondsRange(
         context,
         Intruder.CONFIRM_WINDOW_S,

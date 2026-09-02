@@ -85,6 +85,7 @@
     <string name="important">Important</string>
     <string name="important_delete_prompt"><u>IMPORTANT</u>\nThis operation is NOT reversible!</string>
     <string name="intruder">Intruder</string>
+    <string name="intruder_arm_delay">Arms after</string>
     <string name="intruder_confirm_window">Movement confirmation window</string>
     <string name="intruder_quiet">Stopped after</string>
     <string name="intruder_alarm_timeout">Alarm clears after</string>
@@ -359,6 +360,7 @@
     <string name="intruder_alarm_active_moving">ACTIVE · moving (%1$s)</string>
     <string name="intruder_alarm_active_parked">ACTIVE · parked (%1$s)</string>
     <string name="intruder_alarm_candidate">Knocks seen · waiting for movement</string>
+    <string name="intruder_alarm_arming">Arming in %1$s</string>
     <string name="intruder_alarm_not_armed">Off while duty cycle is on</string>
     <string name="intruder_subtitle">Detect and record intruder events</string>
     <string name="device_details">Device Details</string>
@@ -415,6 +417,7 @@
     <string name="help_survey_start_sf">How far each transmission is designed to reach. SF7 is the shortest range but by far the cheapest in airtime, so it is the right default: it maps the worst case, and the result converts to every higher setting. The device raises this on its own when it walks out of coverage.</string>
     <string name="help_survey_min_distance">How far the device must move before it logs another point. This, not a fixed time, is what sets the spacing of the map: use about 25 m on foot and about 100 m from a vehicle. Standing still costs nothing.</string>
     <string name="help_survey_min_interval">The fastest the device is ever allowed to transmit, no matter how quickly it is moving. It protects the radio duty cycle. The device raises this by itself at longer-range settings, so a higher spreading factor automatically means fewer points.</string>
+    <string name="help_intruder_arm_delay">A grace period after you start recording, during which knocks are ignored completely. It gives you time to close the case, mount the device and walk away without setting the alarm off in your hands. The countdown restarts every time recording is started, and after a reboot or battery swap.</string>
     <string name="help_intruder_confirm_window">After enough knocks, the device waits this long to see whether it is actually being moved. If it stays still, nothing happens at all — no siren, no GPS, no radio. This is what stops a branch, an animal or a passing vehicle setting off a false alarm.</string>
     <string name="help_intruder_quiet">How long the device must be still before it counts as put down. At that point it powers the GPS off and stops sending tracking messages, until it moves again. Shorter saves more battery; too short and a pause to open a gate looks like being set down.</string>
     <string name="help_intruder_alarm_timeout">An alarm stays on after the device is put down, so picking it up again resumes tracking straight away. This is how long it waits, with no movement at all, before giving up and clearing itself. Set to zero to keep it on until you switch detection off.</string>

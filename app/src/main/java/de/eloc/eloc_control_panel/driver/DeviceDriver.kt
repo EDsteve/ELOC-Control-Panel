@@ -122,6 +122,7 @@ internal const val KEY_INTRUDER_IDLE_INTERVAL_S = "idleIntervalS"
 internal const val KEY_INTRUDER_CONFIRM_WINDOW_S = "confirmWindowS"
 internal const val KEY_INTRUDER_QUIET_S = "quietS"
 internal const val KEY_INTRUDER_ALARM_TIMEOUT_H = "alarmTimeoutH"
+internal const val KEY_INTRUDER_ARM_DELAY_S = "armDelayS"
 
 // Intruder alarm status keys (getStatus -> "intruder" section, firmware >= 1.69). Older firmware
 // omits the section; the JSON helpers then return false/0, which reads as "no alarm".
@@ -132,6 +133,7 @@ private const val KEY_INTRUDER_SIREN_ACTIVE = "sirenActive"
 private const val KEY_INTRUDER_ALARM_AGE = "alarmAge[s]"
 private const val KEY_INTRUDER_IDLE_INTERVAL_STATUS = "idleInterval[s]"
 private const val KEY_INTRUDER_CANDIDATE = "candidate"
+private const val KEY_INTRUDER_ARMS_IN_STATUS = "armsIn[s]"
 private const val KEY_INTRUDER_MOVING = "moving"
 
 internal const val KEY_BT_ENABLE_DURING_RECORD = "bluetoothEnableDuringRecord"
@@ -1256,6 +1258,11 @@ object DeviceDriver {
         intruder.alarmTimeoutH =
             JsonHelper.getJSONNumberAttribute(intruderAlarmTimeoutPath, jsonObject).toInt()
 
+        val intruderArmDelayPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_ARM_DELAY_S"
+        intruder.armDelayS =
+            JsonHelper.getJSONNumberAttribute(intruderArmDelayPath, jsonObject).toInt()
+
         val intruderIdleIntervalPath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_CONFIG$PATH_SEPARATOR$KEY_INTRUDER_IDLE_INTERVAL_S"
         intruder.idleIntervalS =
@@ -1590,6 +1597,10 @@ object DeviceDriver {
         val intruderCandidatePath =
             "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_INTRUDER_STATUS$PATH_SEPARATOR$KEY_INTRUDER_CANDIDATE"
         intruder.candidate = JsonHelper.getJSONBooleanAttribute(intruderCandidatePath, jsonObject)
+
+        val intruderArmsInPath =
+            "$KEY_PAYLOAD$PATH_SEPARATOR$KEY_INTRUDER_STATUS$PATH_SEPARATOR$KEY_INTRUDER_ARMS_IN_STATUS"
+        intruder.armsInS = JsonHelper.getJSONNumberAttribute(intruderArmsInPath, jsonObject).toInt()
     }
 
     private fun parseDeviceState(jsonObject: JSONObject) {

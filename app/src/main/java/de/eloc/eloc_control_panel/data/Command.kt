@@ -34,6 +34,7 @@ import de.eloc.eloc_control_panel.driver.KEY_DUTY_CYCLE_AWAKE_DURATION_S
 import de.eloc.eloc_control_panel.driver.KEY_DUTY_CYCLE_ENABLE
 import de.eloc.eloc_control_panel.driver.KEY_DUTY_CYCLE_SLEEP_DURATION_S
 import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_ALARM_TIMEOUT_H
+import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_ARM_DELAY_S
 import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_CONFIRM_WINDOW_S
 import de.eloc.eloc_control_panel.driver.KEY_INTRUDER_QUIET_S
 import de.eloc.eloc_control_panel.driver.KEY_SURVEY_ENABLE
@@ -502,6 +503,15 @@ class Command(
                         ""
                     } else {
                         """setConfig#cfg={"config":{"dutyCycle":{"awakeDurationS":$duration}}}"""
+                    }
+                }
+
+                KEY_INTRUDER_ARM_DELAY_S -> {
+                    val seconds = propertyValue.toDoubleOrNull()?.toInt()
+                    if (seconds == null) {
+                        ""
+                    } else {
+                        """setConfig#cfg={"config":{"intruderCfg":{"armDelayS":$seconds}}}"""
                     }
                 }
 

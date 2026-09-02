@@ -47,6 +47,7 @@ object TimeSliderHelper {
         Survey.MIN_INTERVAL_S,
         Intruder.CONFIRM_WINDOW_S,
         Intruder.QUIET_S,
+        Intruder.ARM_DELAY_S,
     )
 
     fun isTimeProperty(property: String): Boolean = property in TIME_PROPERTIES

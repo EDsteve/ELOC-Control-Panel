@@ -115,6 +115,12 @@ class DeviceSettingsActivity : ThemableActivity() {
         // silently ignored. Say so rather than showing a value that does nothing.
         val candidateSupported = DeviceDriver.intruder.reportsCandidateState
         val unsupported = getString(R.string.intruder_candidate_unsupported)
+        binding.intruderArmDelayItem.isEnabled = candidateSupported
+        binding.intruderArmDelayItem.valueText = if (candidateSupported) {
+            prettifyTime(DeviceDriver.intruder.armDelayS)
+        } else {
+            unsupported
+        }
         binding.intruderConfirmWindowItem.isEnabled = candidateSupported
         binding.intruderQuietItem.isEnabled = candidateSupported
         binding.intruderAlarmTimeoutItem.isEnabled = candidateSupported
@@ -519,6 +525,11 @@ class DeviceSettingsActivity : ThemableActivity() {
         }
         binding.intruderIdleIntervalItem.setOnClickListener {
             SettingEditors.openIntruderIdleInterval(this)
+        }
+        binding.intruderArmDelayItem.setOnClickListener {
+            if (DeviceDriver.intruder.reportsCandidateState) {
+                SettingEditors.openIntruderArmDelay(this)
+            }
         }
         binding.intruderConfirmWindowItem.setOnClickListener {
             if (DeviceDriver.intruder.reportsCandidateState) {

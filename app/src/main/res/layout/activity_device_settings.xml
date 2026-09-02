@@ -306,6 +306,22 @@
                         android:layout_marginStart="16dp" />
 
                     <de.eloc.eloc_control_panel.widgets.ListItem
+                        android:id="@+id/intruder_arm_delay_item"
+                        app:helpText="@string/help_intruder_arm_delay"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:indent="16dp"
+                        app:itemType="button"
+                        app:keyText="@string/intruder_arm_delay"
+                        tools:valueText="05m 00s" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="4dp"
+                        android:layout_marginStart="16dp" />
+
+                    <de.eloc.eloc_control_panel.widgets.ListItem
                         android:id="@+id/intruder_confirm_window_item"
                         app:helpText="@string/help_intruder_confirm_window"
                         android:layout_width="match_parent"

@@ -647,6 +647,13 @@ class DeviceActivity : ThemableActivity() {
             // a candidate deliberately makes no sound and powers nothing up.
             intruder.candidate -> getString(R.string.intruder_alarm_candidate)
 
+            // Still inside the setup grace period. Distinct from "not armed", which means
+            // duty-cycle mode has disabled detection outright - here it arms by itself shortly.
+            intruder.enabled && !intruder.armed && intruder.armsInS > 0 -> getString(
+                R.string.intruder_alarm_arming,
+                TimeHelper.formatSeconds(this, intruder.armsInS, useSeconds = true)
+            )
+
             intruder.enabled && !intruder.armed -> getString(R.string.intruder_alarm_not_armed)
             else -> getString(R.string.intruder_alarm_none)
         }

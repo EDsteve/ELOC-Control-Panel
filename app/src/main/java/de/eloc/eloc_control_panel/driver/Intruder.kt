@@ -10,6 +10,12 @@ class Intruder {
         const val CONFIRM_WINDOW_S = KEY_INTRUDER_CONFIRM_WINDOW_S
         const val QUIET_S = KEY_INTRUDER_QUIET_S
         const val ALARM_TIMEOUT_H = KEY_INTRUDER_ALARM_TIMEOUT_H
+        const val ARM_DELAY_S = KEY_INTRUDER_ARM_DELAY_S
+
+        // Setup grace after recording starts. 0 arms immediately; the upper bound is a practical
+        // one - beyond a day it stops being a setup grace and becomes a way to disable detection.
+        internal const val MIN_ARM_DELAY_S = 0
+        internal const val MAX_ARM_DELAY_S = 86400
 
         // Movement-confirmation window. Long enough to cover someone knocking then unclipping a
         // strap; short enough that a candidate does not sit open after a branch has rattled the
@@ -69,6 +75,15 @@ class Intruder {
 
     // Hours of stillness after which a latched alarm clears itself. 0 = never.
     var alarmTimeoutH = 0
+        internal set
+
+    // Grace period after a recording mode is started (and after boot) during which knocks are
+    // ignored, so a ranger mounting the device cannot set it off in their hands. 0 = arm at once.
+    var armDelayS = 0
+        internal set
+
+    // Seconds still to run on that grace period; 0 once armed. From getStatus, so it counts down.
+    var armsInS = 0
         internal set
 
     // Whether the device was moving at the last status read. Only meaningful while alarmActive is
