@@ -397,7 +397,7 @@
     <string name="scheduler_active_subtitle">%1$s on · %2$s off</string>
     <string name="state_label_template">● %s</string>
     <string name="mode_record_desc">Continuous recording to SD card</string>
-    <string name="mode_record_ai_desc">Record continuously and run AI detection</string>
+    <string name="mode_record_ai_desc">Record while AI detection is running</string>
     <string name="mode_ai_desc">AI detection only, no recording</string>
     <string name="mode_record_event_desc">Record only when the AI detects an event</string>
     <string name="mode_stop_desc">Stop recording and detection</string>
