@@ -7,6 +7,7 @@ import de.eloc.eloc_control_panel.data.UploadType
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
 import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.driver.DeviceDriver
+import de.eloc.eloc_control_panel.services.StatusUploadWorker
 import org.json.JSONObject
 import java.io.File
 import java.security.MessageDigest
@@ -110,6 +111,13 @@ object FileSystemHelper {
                 "$HEADER_MAC$HEADER_DELIMITER$mac\n$json".trim()
             }
             file.writeText(contents)
+            // Anything that lands in the queue gets a durable upload scheduled right
+            // here, rather than relying on the caller to start the upload service.
+            // DeviceDriver.saveLocal() only calls that for InfoType.Status, or for
+            // StatusWithConfig once BOTH halves are saved — so a status whose config
+            // response never arrived used to sit in the queue with nothing scheduled
+            // at all, until the app happened to be opened again.
+            StatusUploadWorker.enqueue(App.instance)
             return true
         } catch (_: Exception) {
 

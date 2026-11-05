@@ -4,6 +4,37 @@ Dated history of completed work, newest first. Entries are moved here verbatim f
 `activeContext.md` → 'Recent Changes' once a work stream is finished, so activeContext stays
 focused on current work.
 
+### Status uploads: schedule the upload when the file is written (2026-11-05) — app 5.46 / 63
+
+Follow-up to the 5.45 entry below, found by testing it. A Bluetooth session that started AI detection
+on ELOC_00247 wrote `status_2026-11-05-11-25-59-…json` into the queue and **nothing was ever
+scheduled for it** — the phone sat in standby for ten minutes with no upload. The WorkManager table
+held a single record, enqueued at 11:24:50 (app launch, a minute before the status existed) and
+already SUCCEEDED; no job, no service start after the save.
+
+**Cause**: 5.45 enqueued `StatusUploadWorker` from inside `StatusUploadService.start()`, and
+`DeviceDriver.saveLocal()` only calls that for `InfoType.Status`, or for `InfoType.StatusWithConfig`
+once **both** halves are saved (`if (statusSaved && configSaved)`). That session got a status back but
+no usable config response, so `configSaved` stayed false and neither the service nor the worker ever
+learned there was anything to send. 5.45 covered "attempted and failed"; it did not cover "never
+attempted". The old wedge had been masking this, because a stranded file was picked up on the next
+app launch.
+
+**Fix**: `FileSystemHelper.saveDataFile()` calls `StatusUploadWorker.enqueue(App.instance)`
+immediately after `file.writeText(contents)`. All four call sites are the queue writes in
+`saveLocal()` (status, config, map), so every file that enters the queue now schedules its own
+durable upload, independent of the DeviceDriver state machine. A status no longer waits on a config
+response that may never arrive.
+
+**Still worth a look (not fixed here)**: why a `getConfig` response did not complete in that session,
+and more generally that `StatusWithConfig` couples the status upload to a config reply at all. That
+coupling is also how the September empty-payload config file came to exist. Uploads no longer depend
+on it, but the state machine is still fragile in both directions.
+
+**Verification owed**: on-device confirmation that a job appears within seconds of a status being
+written while the phone is asleep. The automated check could not be driven from adb — with the screen
+off, `am start` parks on PermissionsSetupActivity and goes no further.
+
 ### Status uploads: wedged queue, no durable retry, boot crash (2026-11-05) — app 5.45 / 62
 
 **Symptom**: a status captured on ELOC_00247 at 18:44 on 4 Nov only reached Firestore at 10:44 the
