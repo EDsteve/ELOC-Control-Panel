@@ -42,6 +42,11 @@ import kotlin.jvm.Throws
 private const val COMMAND_MAX_LENGTH = 512
 private const val CONNECT_TIMEOUT_MS = 10_000L
 
+// A status+config upload re-reads whatever is missing. On low heap the firmware can answer getConfig
+// with nothing usable, which usually clears once the AI start-up has settled.
+private const val SNAPSHOT_RETRIES = 2
+private const val SNAPSHOT_RETRY_DELAY_MS = 3_000L
+
 private const val KEY_PAYLOAD = "payload"
 private const val KEY_RECORDING_STATE = "recordingState"
 private const val KEY_SESSION = "session"
@@ -263,6 +268,7 @@ object DeviceDriver {
     private var configSaved = false
     private var statusSaved = false
     private var combinedStatusAndConfigTime: Date? = null
+    private var snapshotRetriesLeft = 0
     private var connecting = false
     private var disconnecting = false
     private const val EOT: Byte = 4
@@ -391,6 +397,13 @@ object DeviceDriver {
         get() = !firmwareTransferActive &&
                 (currentCommand == null) &&
                 pendingCommands.isEmpty()
+
+    /**
+     * True while a status+config upload is still missing one of its halves.
+     * Disconnecting now would lose the missing half, so screens should wait for it.
+     */
+    val isSavingSnapshot: Boolean
+        get() = (infoType == InfoType.StatusWithConfig) && (!statusSaved || !configSaved)
 
     /**
      * While true, a firmware transfer owns the socket (binary frame mode on the
@@ -590,6 +603,10 @@ object DeviceDriver {
                             "Command (ID: ${currentCommand?.id ?: -1} timed out",
                             TrafficDirection.ToEloc
                         )
+                        val timedOutName = currentCommand?.name
+                        if ((timedOutName == CMD_GET_CONFIG) || (timedOutName == CMD_GET_STATUS)) {
+                            retrySnapshotOrGiveUp()
+                        }
                         break
                     }
                 }
@@ -903,11 +920,18 @@ object DeviceDriver {
             if (intercepted) {
                 when (commandType) {
                     CommandType.GetConfig -> {
-                        parseConfig(root)
-                        if (!configSaved) {
-                            cachedConfig = json
-                            saveLocal()
+                        // Parsing an empty reply would blank every config value we hold,
+                        // including the name that goes into the upload's file name.
+                        if (hasConfigContent(root)) {
+                            parseConfig(root)
+                            if (!configSaved) {
+                                cachedConfig = json
+                                saveLocal()
+                            }
                         }
+                        // Still saving means this reply was unusable, the status half is
+                        // missing, or a file could not be written.
+                        retrySnapshotOrGiveUp()
                     }
 
                     CommandType.GetStatus -> {
@@ -926,9 +950,60 @@ object DeviceDriver {
                 }
             }
         } catch (_: Exception) {
-
+            // An unparseable reply (the firmware can lose part of it on low heap) never saves
+            // anything, so a waiting upload has to recover here.
+            retrySnapshotOrGiveUp()
         }
         return intercepted
+    }
+
+    // Low-heap firmware answers getConfig with "payload": {} and ecode 0 (before V1.80) or with
+    // an error and no config object (V1.80 onwards).
+    private fun hasConfigContent(root: JSONObject): Boolean =
+        (root.optJSONObject(KEY_PAYLOAD)?.length() ?: 0) > 0
+
+    private fun retrySnapshotOrGiveUp() {
+        if (!isSavingSnapshot) {
+            return
+        }
+        if (snapshotRetriesLeft <= 0) {
+            giveUpOnSnapshot()
+            return
+        }
+        snapshotRetriesLeft--
+        try {
+            executor?.schedule(
+                Runnable {
+                    if (isSavingSnapshot) {
+                        if (!statusSaved) {
+                            getElocStatus { }
+                        }
+                        if (!configSaved) {
+                            getElocConfig { }
+                        }
+                    }
+                },
+                SNAPSHOT_RETRY_DELAY_MS,
+                TimeUnit.MILLISECONDS
+            )
+        } catch (_: Exception) {
+            // disconnect() shut the executor down, and has already cleared the save state.
+        }
+    }
+
+    // Whatever was saved still uploads on its own: the row just has no config.
+    private fun giveUpOnSnapshot() {
+        Logger.t("Giving up on the status+config upload", TrafficDirection.FromEloc)
+        statusSaved = true
+        configSaved = true
+        cachedStatus = ""
+        cachedConfig = ""
+        infoType = null
+        combinedStatusAndConfigTime = null
+        // Lets a screen that is waiting for this upload carry on.
+        onGetCommandCompletedListeners.forEach {
+            it?.handler(CommandType.GetConfig)
+        }
     }
 
     private fun saveLocal() {
@@ -1117,7 +1192,7 @@ object DeviceDriver {
         if (saveToDatabase) {
             statusSaved = false  // Reset to allow saving
             infoType = InfoType.Status
-        } else {
+        } else if (!isSavingSnapshot) {  // A display-only read must not cancel a save in progress
             statusSaved = true   // Prevent saving
             infoType = null      // Don't trigger save
         }
@@ -1144,11 +1219,15 @@ object DeviceDriver {
             configSaved = false
             statusSaved = false
             combinedStatusAndConfigTime = null // Reset to ensure fresh timestamp for new save cycle
-        } else {
+            cachedStatus = ""
+            cachedConfig = ""
+            snapshotRetriesLeft = SNAPSHOT_RETRIES
+            infoType = InfoType.StatusWithConfig
+        } else if (!isSavingSnapshot) {  // A display-only read must not cancel a save in progress
             configSaved = true
             statusSaved = true
+            infoType = InfoType.StatusWithConfig
         }
-        infoType = InfoType.StatusWithConfig
         getElocStatus(callback)
         getElocConfig(location, callback)
     }

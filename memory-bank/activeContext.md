@@ -1,5 +1,41 @@
 ﻿# ELOC Control Panel - Active Context
 
+## Status uploads losing their config after a mode change (2026-11-05, 5.47/64) — bench-tested, failure paths not forced
+
+Web Status Uploads showed blank config columns. Audit of the last 500 uploads: 176 had no config, of
+which 72 are by design (reconnect saves status only, since 4c7a8ef), 46 come from one phone on the
+pre-Feb-2026 app (`savenkatesg`, opposite rule), 7 could not be classified, and **51 of 230 current-app
+starts/stops were real misses**. Uploads carry no app version, so that split is inferred from behaviour.
+
+After `setRecordMode`, status is saved as soon as it arrives, so losing `getConfig` afterwards leaves a
+status-only row and, because map data needs both halves, no map update. Paired with firmware V1.80,
+which fixes the low-heap failures on the device.
+
+Changes in `DeviceDriver` and `DeviceActivity`:
+- **Retry:** an empty, error, unparseable or timed-out reply re-reads the missing half, up to twice,
+  3 s apart. Then it gives up and the row stays status-only (`retrySnapshotOrGiveUp`).
+- **Empty replies are no longer parsed.** `parseConfig` on `{}` blanked `general.nodeName` and called
+  `BluetoothHelper.changeName` with an empty name.
+- **The loading screen waits** for the config (`isSavingSnapshot`). It used to clear on the status reply
+  with two commands still queued, and leaving the page disconnects. Whether techs actually left that
+  early is unproven. The worst-case wait is about 50 s, and only on a device that keeps not answering.
+- **Display-only reads no longer cancel a save.** `getStatus(false)` and `getElocInformation(_, false)`
+  used to clear the save flags, so the auto-refresh or `onResume` could drop a pending config.
+- **No second location write.** `setRecordState` already wrote the location, so the follow-up no longer
+  does. `getConfig` runs sooner, and a config file write no longer lands during AI start-up. This also
+  protects units still on older firmware.
+
+Deliberately not changed: reconnects still save status only. Saving config there too would reverse the
+Feb 2026 decision, so it is the user's call.
+
+Bench-tested on ELOC_00247 on 2026-11-05: with 5.47 installed at 15:58, the uploads at 17:08 (V1.79) and
+17:21 (V1.80) both carried their config. That is only two uploads. The 12:45 and 12:54 uploads also had
+config on 5.46 without these fixes, so the failure is intermittent and two successes prove little.
+
+Still owed: exercising the retry and give-up paths (they need a failing `getConfig`), and checking the
+wait on old firmware with Bluetooth traffic logging on. Re-running the audit once field phones have
+updated is the real test: the baseline is 51 of 230 current-app starts/stops without config.
+
 ## LoRa signal survey support (2026-09-01) — built, not hardware-tested
 
 Pairs with firmware V1.72's coverage-survey mode (`surveyCfg`).

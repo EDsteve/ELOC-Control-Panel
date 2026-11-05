@@ -113,8 +113,10 @@ class DeviceActivity : ThemableActivity() {
                     displayRecordingState()
                     if (success) {
                         // After starting recording mode, upload full info (status + config)
-                        // with new session ID and location to database (best of phone / ELOC fix)
-                        DeviceDriver.getElocInformation(effectiveGpsData(), true) {
+                        // with new session ID to database. setRecordState() already wrote the
+                        // location, so getConfig is not delayed by a second config write while
+                        // the firmware is starting up and short of memory.
+                        DeviceDriver.getElocInformation(null, true) {
                             val commandType = DeviceDriver.getCommandType(it)
                             checkReceivedInfoType(commandType)
                         }
@@ -338,6 +340,12 @@ class DeviceActivity : ThemableActivity() {
 
     private fun onElocInfoReceived() {
         if (statusReceived && configReceived) {
+            // After a mode change, stay on "Setting mode…" until the upload has its config:
+            // leaving this page disconnects, which would lose the config. The driver always
+            // ends the wait, by saving or by giving up.
+            if (DeviceDriver.isSavingSnapshot) {
+                return
+            }
             // Hide the progress indicator when data is received i.e., there is a connection
             binding.swipeRefreshLayout.isRefreshing = false
             binding.swipeRefreshLayout.isEnabled = true

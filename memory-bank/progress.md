@@ -98,6 +98,10 @@
 
 ## Known Issues
 
+### Status uploads missing config after a mode change — FIX BENCH-TESTED 2026-11-05 (5.47), failure paths not forced
+Retry, a loading screen that waits for the config, and display reads that no longer cancel a save. See
+`activeContext.md`. Reconnects still save status only, by design.
+
 ### Bluetooth Toggle
 The Bluetooth ON/OFF button in settings doesn't work. This may be related to Android permission changes in newer API levels.
 
