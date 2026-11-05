@@ -1,6 +1,7 @@
 package de.eloc.eloc_control_panel.data.helpers
 
 import android.util.Base64
+import android.util.Log
 import de.eloc.eloc_control_panel.App
 import de.eloc.eloc_control_panel.data.UploadType
 import de.eloc.eloc_control_panel.data.helpers.firebase.AuthHelper
@@ -13,6 +14,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+private const val TAG = "FileSystemHelper"
 private const val UPLOAD_CACHE_NAME = "upload_cache"
 private const val PROFILES_DIR_NAME = "profiles"
 
@@ -74,6 +76,14 @@ object FileSystemHelper {
         saveTime: Date
     ): Boolean {
         try {
+            // A response with no content must never reach the upload queue. It can
+            // never be uploaded, so it would be retried on every run forever.
+            // `true` here means "nothing left to save for this response" so the
+            // caller moves on; it does not promise that a file was written.
+            if (!hasUploadableContent(json, uploadType)) {
+                Log.w(TAG, "saveDataFile: not queueing an empty $uploadType response")
+                return true
+            }
             val dateFormatter = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-z", Locale.US)
             val captureTimestamp = dateFormatter.format(saveTime).replace(":", "")
             val prefix = when (uploadType) {
@@ -106,6 +116,22 @@ object FileSystemHelper {
         }
         return false
     }
+
+    /**
+     * True when [json] carries something worth uploading. Config and status
+     * responses keep their content under "payload"; map data is the object itself.
+     */
+    private fun hasUploadableContent(json: String, uploadType: UploadType): Boolean =
+        try {
+            val start = json.indexOf('{')
+            val root = JSONObject(if (start >= 0) json.substring(start) else "")
+            val content =
+                if (uploadType == UploadType.Map) root else root.getJSONObject("payload")
+            content.length() > 0
+        } catch (_: Exception) {
+            // Unparseable is just as unuploadable as empty.
+            false
+        }
 
     fun isConfig(fileName: String) =
         fileName.startsWith(PREFIX_CONFIG) && fileName.endsWith(JSON_EXT)

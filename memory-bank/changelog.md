@@ -4,6 +4,68 @@ Dated history of completed work, newest first. Entries are moved here verbatim f
 `activeContext.md` → 'Recent Changes' once a work stream is finished, so activeContext stays
 focused on current work.
 
+### Status uploads: wedged queue, no durable retry, boot crash (2026-11-05) — app 5.45 / 62
+
+**Symptom**: a status captured on ELOC_00247 at 18:44 on 4 Nov only reached Firestore at 10:44 the
+next morning, the moment the app was opened. Opening the app said "An upload is already in progress".
+The phone had wifi the whole time.
+
+**Evidence from the phone** (Pixel 7a, Android 17, adb):
+- `files/upload_cache/` held one file, `config_2026-09-26-11-37-34-GMT+0200_e_ELOC_00247_r_edsteve2.json`,
+  109 bytes, dated **26 September** — a `getConfig` reply whose body was `"payload" : {}`.
+- `dumpsys activity services` showed `StatusUploadService` with `createTime=-16h16m` (i.e. 18:42 on
+  4 Nov), `isForeground=true`: the service was alive all night and uploaded nothing.
+- The live foreground notification still read **"Uploading ELOC status…"** — a string set only inside
+  `doUpload()`, immediately before the call. The loop overwrites it with "Retrying in …" within a
+  second of `uploadDataFiles()` returning, so the call had been blocked for 15+ minutes, live.
+- 09:47 on 5 Nov: Play services was killed for a package update and took the app process with it;
+  Android scheduled the service restart with a **2h39m** delay. The 10:44 upload was the user opening
+  the app, nothing else.
+
+**Root cause**: `FirestoreHelper.uploadDataFiles()` dropped unusable files with a bare `continue`
+without calling `completeListener`, so `successCount + failCount` could never reach
+`pendingUploads.size`, `completed` never became true, and `while (wait) { Thread.sleep(1000) }` never
+exited. One empty-payload file from September therefore wedged **every** upload run from then on:
+`doUpload()` never returned, the 15-minute retry never advanced, and `isRunningTask` stayed `true`
+forever — which is what produced "An upload is already in progress".
+
+**Fixes**
+1. `FirestoreHelper.uploadDataFiles()` rewritten: unusable files (empty/unreadable payload, unknown
+   type) are now **discarded** with a warning instead of skipped, writes are dispatched in parallel
+   rather than chained head-to-tail, and the wait is `Tasks.await(whenAllComplete, 60s)`. A run now
+   always returns. `getMapDataTimestamp()` lost its spin loop for a bounded `Tasks.await(…, 20s)`.
+   Note for future readers: a Firestore `set()` Task completes **only** on server acknowledgement —
+   offline it never completes, which is why an unbounded wait was fatal.
+2. `FileSystemHelper.saveDataFile()` refuses to queue a response with no content
+   (`hasUploadableContent`), so junk cannot enter the queue in the first place.
+3. **New `StatusUploadWorker`** (WorkManager, `NetworkType.CONNECTED`, unique work, LINEAR backoff of
+   `Preferences.statusUploadInterval`). This is the durable half: WorkManager persists its queue to
+   disk, so a pending upload now survives process death and reboot. `work-runtime` was already a
+   dependency and was entirely unused.
+4. `StatusUploadService` is now a **single attempt** that hands retries to the worker, wrapped in
+   `finally { abortService() }` so `isRunningTask` can never stick. It returns `START_NOT_STICKY`, and
+   `startForeground()` is wrapped in try/catch. The old retry loop both could not survive a kill and
+   burned the Android 15+ six-hour daily `dataSync` budget while it ran.
+5. `BootReceiver` enqueues the worker instead of starting the foreground service. Logcat showed the
+   app had been **hard-crashing on every reboot** since at least 22 Oct:
+   `ForegroundServiceStartNotAllowedException: FGS type dataSync not allowed to start from
+   BOOT_COMPLETED!` at `StatusUploadService.onStartCommand(StatusUploadService.kt:176)`.
+6. `HomeActivity.prepareStatusUpload()`: the manual **"Upload ELOC status" menu item did nothing**
+   unless an upload happened to be running already — the start call sat behind `else if (inBackground)`.
+   Fixed; the "already in progress" snack is now only shown when the person asked for it themselves.
+
+**Verification** (hardware, Pixel 7a): the real September file was replanted in `upload_cache` against
+the rebuilt app. Logcat: `discarding '…' — empty/unreadable payload` → `nothing to send
+(discarded=1 skipped=0)` → `doWork: pending uploads drained` → `Worker result SUCCESS`. Queue empty,
+no service left running. **Still owed**: a happy-path upload from a real Bluetooth session, and a
+reboot to confirm the boot crash is gone (adb cannot send `BOOT_COMPLETED`; fixed by construction
+since the receiver no longer starts a foreground service).
+
+**User-visible change**: the upload notification no longer shows a "Retrying in mm:ss" countdown. A
+failed attempt now says "Upload will be retried when there is a connection" and the retry happens in
+the background by itself. No wiki page covers upload behaviour today (the app wiki is lockout +
+manual user management only) — a page was drafted but not pushed.
+
 ### Status-page pull-to-refresh vs. scroll conflict fixed (2026-07-22)
 On the device status screen, scrolling up from the bottom often triggered a pull-to-refresh instead
 of scrolling — and felt "stuck." Root cause: in `activity_device.xml` the `SwipeRefreshLayout`'s

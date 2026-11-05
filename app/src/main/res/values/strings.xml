@@ -259,6 +259,7 @@
     <string name="update_now">Update Now</string>
     <string name="updating_values">Updating values…</string>
     <string name="upload_in_progress">An upload is already in progress</string>
+    <string name="upload_will_retry">Upload will be retried when there is a connection</string>
     <string name="upload_was_completed_successfully">Upload was completed successfully</string>
     <string name="upload_was_not_successful">Upload was not successful</string>
     <string name="uploading_status">Uploading ELOC status…</string>

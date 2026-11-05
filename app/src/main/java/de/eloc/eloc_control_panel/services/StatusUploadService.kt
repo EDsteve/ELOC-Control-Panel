@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -20,13 +21,22 @@ import de.eloc.eloc_control_panel.activities.themable.HomeActivity
 import de.eloc.eloc_control_panel.activities.themable.UpdateAppActivity
 import de.eloc.eloc_control_panel.data.UploadResult
 import de.eloc.eloc_control_panel.data.helpers.HttpHelper
-import de.eloc.eloc_control_panel.data.util.Preferences
-import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.data.helpers.firebase.FirestoreHelper
 import java.util.concurrent.Executors
 
 private const val EXTRA_STOP = "stop_service"
+private const val TAG = "StatusUploadService"
 
+/**
+ * The interactive half of the status upload: one attempt, with a notification so
+ * the person standing at the device sees what happened.
+ *
+ * It deliberately does NOT retry in a loop any more. A service only lives as long
+ * as its process, so a loop here could never survive a kill — and while it ran it
+ * burned the Android 15+ six-hour daily budget for dataSync services. Anything
+ * that does not go out on this attempt is handed to [StatusUploadWorker], which
+ * WorkManager persists across process death and reboot.
+ */
 class StatusUploadService : Service() {
 
     companion object {
@@ -37,11 +47,19 @@ class StatusUploadService : Service() {
             private set
 
         private var lastUsedNotificationId = 0
-        private var statusUpdateIntervalMillis = Preferences.statusUploadInterval.millis
 
         fun start(context: Context) {
-            val serviceIntent = Intent(context, StatusUploadService::class.java)
-            ContextCompat.startForegroundService(context, serviceIntent)
+            // Queue the durable attempt first: if the service cannot start — or
+            // starts and is killed mid-flight — the upload still happens later.
+            StatusUploadWorker.enqueue(context)
+            try {
+                val serviceIntent = Intent(context, StatusUploadService::class.java)
+                ContextCompat.startForegroundService(context, serviceIntent)
+            } catch (e: Exception) {
+                // e.g. ForegroundServiceStartNotAllowedException when the caller is
+                // in the background. The worker above still covers us.
+                Log.w(TAG, "start: foreground service refused; worker will handle it", e)
+            }
         }
 
         private fun createNewNotificationId(): Int {
@@ -50,7 +68,6 @@ class StatusUploadService : Service() {
         }
     }
 
-    private var elapsedMillis = 0L
     private val notificationManager = NotificationManagerCompat.from(App.instance)
     private var serviceNotificationBuilder: NotificationCompat.Builder? = null
 
@@ -64,74 +81,62 @@ class StatusUploadService : Service() {
 
     private val uploadTask = Runnable {
         isRunningTask = true
-        elapsedMillis = 0
-        var taskResult = UploadResult.Failed
-        val appProtocolVersion = HttpHelper.instance.getAppProtocolVersion()
-        if (App.APP_PROTOCOL_VERSION < appProtocolVersion) {
+        try {
+            val appProtocolVersion = HttpHelper.instance.getAppProtocolVersion()
+            if (App.APP_PROTOCOL_VERSION < appProtocolVersion) {
 
-            // If different, notify user and download new app version
-            val (id, notification) = createNotification(
-                getString(R.string.app_name),
-                getString(R.string.update_app),
-            )
-            val intent = Intent(this, UpdateAppActivity::class.java)
-            notification.contentIntent =
-                PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+                // If different, notify user and download new app version
+                val (id, notification) = createNotification(
+                    getString(R.string.app_name),
+                    getString(R.string.update_app),
+                )
+                val intent = Intent(this, UpdateAppActivity::class.java)
+                notification.contentIntent =
+                    PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
-            showNotification(id, notification)
-            notificationManager.cancel(foregroundNotificationId)
+                showNotification(id, notification)
+                notificationManager.cancel(foregroundNotificationId)
+                return@Runnable
+            }
+
+            when (doUpload()) {
+                UploadResult.Uploaded -> {
+                    val (id, notification) = createNotification(
+                        getString(R.string.status_upload),
+                        getString(R.string.eloc_info_uploaded)
+                    )
+                    showNotification(id, notification)
+                }
+
+                UploadResult.Failed -> {
+                    // Hand the retry to WorkManager — it outlives this process.
+                    StatusUploadWorker.enqueue(applicationContext)
+                    val (id, notification) = createNotification(
+                        getString(R.string.status_upload),
+                        getString(R.string.upload_will_retry)
+                    )
+                    showNotification(id, notification)
+                }
+
+                UploadResult.NoData -> {
+                    Log.d(TAG, "uploadTask: nothing pending")
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "uploadTask: attempt failed; leaving it to the worker", e)
+            StatusUploadWorker.enqueue(applicationContext)
+        } finally {
+            // Always, so the service can never be left busy forever. A stuck
+            // isRunningTask is what used to make every later attempt answer
+            // "An upload is already in progress" and then do nothing at all.
             abortService()
-            return@Runnable
         }
-
-        val sleepInterval = 1000L
-        var firstIteration = true
-        while (true) {
-            if (stopRequested || (taskResult == UploadResult.NoData) || (taskResult == UploadResult.Uploaded)) {
-                break
-            }
-
-            // Interval can be changed at any time in app settings,
-            // so get the latest value for every loop iteration
-            statusUpdateIntervalMillis = Preferences.statusUploadInterval.millis
-
-            // Try an upload if interval has elapsed
-            elapsedMillis += sleepInterval
-            if (firstIteration || (elapsedMillis >= statusUpdateIntervalMillis)) {
-                firstIteration = false
-                taskResult = doUpload()
-            }
-
-            if (serviceNotificationBuilder != null) {
-                val remainingMillis = statusUpdateIntervalMillis - elapsedMillis
-                val remaining =
-                    TimeHelper.formatMillis(applicationContext, remainingMillis, true)
-                val message = getString(R.string.retrying_in_time, remaining)
-                serviceNotificationBuilder!!.setContentText(message)
-                showNotification(foregroundNotificationId, serviceNotificationBuilder!!.build())
-            }
-
-            try {
-                Thread.sleep(sleepInterval)
-            } catch (_: Exception) {
-            }
-        }
-
-        if (taskResult == UploadResult.Uploaded) {
-            val (id, notification) = createNotification(
-                getString(R.string.status_upload),
-                getString(R.string.eloc_info_uploaded)
-            )
-            showNotification(id, notification)
-        }
-        abortService()
     }
 
     private fun abortService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)
         }
-        elapsedMillis = 0
         stopRequested = false
         isRunningTask = false
         stopSelf()
@@ -141,7 +146,7 @@ class StatusUploadService : Service() {
         if (FirebaseApp.getApps(this).isEmpty()) {
             FirebaseApp.initializeApp(this)
         }
-        var result = UploadResult.NoData
+        var result: UploadResult
         try {
             if (serviceNotificationBuilder != null) {
                 val message = getString(R.string.uploading_status)
@@ -149,9 +154,10 @@ class StatusUploadService : Service() {
                 showNotification(foregroundNotificationId, serviceNotificationBuilder!!.build())
             }
             result = FirestoreHelper.instance.uploadDataFiles()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.w(TAG, "doUpload: upload failed", e)
+            result = UploadResult.Failed
         }
-        elapsedMillis = 0L
         return result
     }
 
@@ -173,11 +179,30 @@ class StatusUploadService : Service() {
             foregroundNotificationId = id
         }
 
-        startForeground(foregroundNotificationId, notification)
+        try {
+            startForeground(foregroundNotificationId, notification)
+        } catch (e: Exception) {
+            // Android refuses a dataSync foreground service started from the
+            // background, and from BOOT_COMPLETED outright. Do not take the app
+            // down over it — the worker already has the job.
+            Log.w(TAG, "onStartCommand: could not go foreground", e)
+            StatusUploadWorker.enqueue(applicationContext)
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
+        if (stopRequested) {
+            StatusUploadWorker.cancel(applicationContext)
+            abortService()
+            return START_NOT_STICKY
+        }
+
         if (!isRunningTask) {
             Executors.newSingleThreadExecutor().execute(uploadTask)
         }
-        return START_REDELIVER_INTENT
+        // One attempt only; the worker owns anything that needs retrying, so there
+        // is nothing worth redelivering if this process dies.
+        return START_NOT_STICKY
     }
 
     private fun createNotification(

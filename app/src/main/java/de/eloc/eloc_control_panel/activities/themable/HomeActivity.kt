@@ -388,11 +388,15 @@ class HomeActivity : ThemableActivity() {
 
     private fun prepareStatusUpload(inBackground: Boolean = false) {
         if (StatusUploadService.isRunningTask) {
-            binding.coordinator.showSnack(getString(R.string.upload_in_progress))
+            // Only worth saying when the person asked for an upload themselves.
+            if (!inBackground) {
+                binding.coordinator.showSnack(getString(R.string.upload_in_progress))
+            }
             return
-        } else if (inBackground) {
-            StatusUploadService.start(this)
         }
+        // Previously the menu item did nothing at all unless an upload happened to
+        // be running already, because the start call sat behind `else if`.
+        StatusUploadService.start(this)
     }
 
     private fun signOut() {

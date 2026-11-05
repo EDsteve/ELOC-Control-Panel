@@ -2,6 +2,7 @@ package de.eloc.eloc_control_panel.data.helpers.firebase
 
 import android.util.Log
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
@@ -17,6 +18,7 @@ import de.eloc.eloc_control_panel.data.helpers.TimeHelper
 import de.eloc.eloc_control_panel.data.util.Preferences
 import de.eloc.eloc_control_panel.driver.KEY_TIMESTAMP
 import de.eloc.eloc_control_panel.interfaces.ProfileCheckCallback
+import java.util.concurrent.TimeUnit
 
 class FirestoreHelper {
 
@@ -31,6 +33,12 @@ class FirestoreHelper {
         private const val COL_STATUS = "$COL_UPLOADS/status"
         private const val COL_MAP = "$COL_UPLOADS/map"
         private const val COL_FIRMWARE_RESULTS = "firmware_update_results"
+
+        // A Firestore write Task only completes on server acknowledgement, and a
+        // read can hang on a half-open connection. Both are bounded so an upload
+        // run always returns and the caller can retry on its own schedule.
+        private const val WRITE_TIMEOUT_SECONDS = 60L
+        private const val READ_TIMEOUT_SECONDS = 20L
 
         val instance
             get():  FirestoreHelper {
@@ -224,65 +232,41 @@ class FirestoreHelper {
         val pendingUploads = FileSystemHelper.pendingUploads
         val pattern = Regex("_[er]_")
         val totalCount = pendingUploads.size
-        var completed: Boolean
-        var wait = true
         if (totalCount == 0) {
             Log.d(TAG, "uploadDataFiles: no pending uploads")
             return UploadResult.NoData
         }
 
-        Log.i(TAG, "uploadDataFiles: starting upload of $totalCount file(s): $pendingUploads")
+        Log.i(
+            TAG,
+            "uploadDataFiles: starting upload of $totalCount file(s): ${pendingUploads.toList()}"
+        )
 
-        var failCount = 0
-        var successCount = 0
-        var result = UploadResult.NoData
-        val completeListener = fun(successful: Boolean, fileName: String) {
-            if (successful) {
-                successCount++
-                Log.i(TAG, "uploadDataFiles: write acked for '$fileName' (cache or server) — deleting local file")
-                FileSystemHelper.deleteUploadedFile(fileName)
-            } else {
-                failCount++
-                Log.w(TAG, "uploadDataFiles: write FAILED for '$fileName' — local file kept for retry")
-            }
+        // Files we actually sent, each paired with the write we are waiting on.
+        val writes = mutableListOf<Pair<String, Task<Void>>>()
+        var discardedCount = 0
+        var skippedCount = 0
 
-            completed = ((successCount + failCount) == pendingUploads.size)
-            if (completed) {
-                result = if (successCount == totalCount) {
-                    UploadResult.Uploaded
-                } else {
-                    UploadResult.Failed
-                }
-                Log.i(
-                    TAG,
-                    "uploadDataFiles: done — success=$successCount fail=$failCount total=$totalCount result=$result"
-                )
-                wait = false
-            }
-        }
-
-        var task = Tasks.forResult<Void>(null)
         for (fileName in pendingUploads) {
             val isConfig = FileSystemHelper.isConfig(fileName)
             val isStatus = FileSystemHelper.isStatus(fileName)
             val isMapData = FileSystemHelper.isMapData(fileName)
-            var prefix: String
-            var document: DocumentReference
-            if (isConfig) {
-                prefix = FileSystemHelper.PREFIX_CONFIG
-                document = FirebaseFirestore.getInstance()
-                    .document("$COL_CONFIG/$fileName")
-            } else if (isStatus) {
-                prefix = FileSystemHelper.PREFIX_STATUS
-                document = FirebaseFirestore.getInstance()
-                    .document("$COL_STATUS/$fileName")
-            } else if (isMapData) {
-                prefix = FileSystemHelper.PREFIX_MAP
-                document = FirebaseFirestore.getInstance()
-                    .document("$COL_MAP/$fileName")
-            } else {
+
+            if (!isConfig && !isStatus && !isMapData) {
+                // Nothing we know how to upload, and it never will be. Drop it
+                // rather than carry it on every future run.
+                Log.w(TAG, "uploadDataFiles: discarding '$fileName' — unknown file type")
+                FileSystemHelper.deleteUploadedFile(fileName)
+                discardedCount++
                 continue
             }
+
+            val collection = when {
+                isConfig -> COL_CONFIG
+                isStatus -> COL_STATUS
+                else -> COL_MAP
+            }
+            val document = FirebaseFirestore.getInstance().document("$collection/$fileName")
 
             val data = if (isMapData) {
                 FileSystemHelper.readMapDataFile(fileName)
@@ -291,7 +275,13 @@ class FirestoreHelper {
             }
 
             if (data.isNullOrEmpty()) {
-                Log.w(TAG, "uploadDataFiles: skipping '$fileName' — empty/unreadable data file")
+                // A file with no payload can never be uploaded — e.g. a getConfig
+                // reply that came back as `"payload": {}`. This used to be a bare
+                // `continue`, which left the file in the queue forever AND meant
+                // the run never counted it as finished, wedging the upload loop.
+                Log.w(TAG, "uploadDataFiles: discarding '$fileName' — empty/unreadable payload")
+                FileSystemHelper.deleteUploadedFile(fileName)
+                discardedCount++
                 continue
             }
 
@@ -300,10 +290,15 @@ class FirestoreHelper {
                 val str = data[KEY_TIMESTAMP].toString()
                 val localDocumentTimestamp = str.toLongOrNull() ?: -1L
                 if (localDocumentTimestamp <= serverDocumentTimestamp) {
-                    completeListener(true, fileName)
+                    // The server already holds this or newer — nothing to send.
+                    Log.d(TAG, "uploadDataFiles: '$fileName' is already current on the server")
+                    FileSystemHelper.deleteUploadedFile(fileName)
+                    skippedCount++
                     continue
                 }
             } else {
+                val prefix =
+                    if (isConfig) FileSystemHelper.PREFIX_CONFIG else FileSystemHelper.PREFIX_STATUS
                 val macAddress = FileSystemHelper.readMacAddress(fileName)
                 val metadata = fileName
                     .replace(prefix, "")
@@ -320,59 +315,75 @@ class FirestoreHelper {
                 }
             }
 
-            val docPath = document.path
-            Log.d(TAG, "uploadDataFiles: dispatching set() for '$fileName' -> $docPath")
-            task = task.continueWithTask {
-                document.set(data)
-            }
-                .addOnCompleteListener {
-                    if (!it.isSuccessful) {
-                        val ex = it.exception
-                        val code = (ex as? FirebaseFirestoreException)?.code?.name
-                        Log.e(
-                            TAG,
-                            "uploadDataFiles: set() failed for '$fileName' -> $docPath (code=$code)",
-                            ex
-                        )
-                    } else {
-                        Log.d(TAG, "uploadDataFiles: set() task complete for '$fileName' -> $docPath")
-                    }
-                    completeListener(it.isSuccessful, fileName)
-                }
+            Log.d(TAG, "uploadDataFiles: dispatching set() for '$fileName' -> ${document.path}")
+            writes.add(fileName to document.set(data))
         }
 
-        // Safe to wait, since function runs on background thread
-        while (wait) {
-            try {
-                Thread.sleep(1000)
-            } catch (_: Exception) {
+        if (writes.isEmpty()) {
+            Log.i(
+                TAG,
+                "uploadDataFiles: nothing to send (discarded=$discardedCount skipped=$skippedCount)"
+            )
+            return UploadResult.NoData
+        }
+
+        // Wait for the writes, but never indefinitely. A Firestore set() Task only
+        // completes once the SERVER acknowledges the write, so with no connectivity
+        // it simply never completes. Time out and let the caller retry instead: the
+        // local file is kept, and Firestore's own offline queue may still flush it.
+        try {
+            Tasks.await(
+                Tasks.whenAllComplete(writes.map { it.second }),
+                WRITE_TIMEOUT_SECONDS,
+                TimeUnit.SECONDS
+            )
+        } catch (e: Exception) {
+            Log.w(
+                TAG,
+                "uploadDataFiles: gave up waiting after ${WRITE_TIMEOUT_SECONDS}s — " +
+                        "unacknowledged writes stay queued locally",
+                e
+            )
+        }
+
+        var successCount = 0
+        var failCount = 0
+        for ((fileName, task) in writes) {
+            if (task.isSuccessful) {
+                successCount++
+                Log.i(TAG, "uploadDataFiles: server acked '$fileName' — deleting local file")
+                FileSystemHelper.deleteUploadedFile(fileName)
+            } else {
+                failCount++
+                val code = (task.exception as? FirebaseFirestoreException)?.code?.name
+                Log.w(
+                    TAG,
+                    "uploadDataFiles: '$fileName' not acked (code=$code) — kept for retry",
+                    task.exception
+                )
             }
         }
+
+        val result = if (failCount == 0) UploadResult.Uploaded else UploadResult.Failed
+        Log.i(
+            TAG,
+            "uploadDataFiles: done — success=$successCount fail=$failCount " +
+                    "discarded=$discardedCount skipped=$skippedCount result=$result"
+        )
         return result
     }
 
-    private fun getMapDataTimestamp(doc: DocumentReference): Long {
-        var timestamp = -1L
-        var wait = true
-        doc.get().addOnCompleteListener {
-            if (it.isSuccessful) {
-                val snapshot = it.result
-                if (snapshot != null) {
-                    val str = snapshot.get(KEY_TIMESTAMP).toString()
-                    timestamp = str.toLongOrNull() ?: -1L
-                }
-            }
-            wait = false
+    private fun getMapDataTimestamp(doc: DocumentReference): Long =
+        try {
+            // Bounded, unlike the spin loop this replaces: offline, get() falls back
+            // to the local cache, but a half-open connection could hang forever.
+            val snapshot = Tasks.await(doc.get(), READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            snapshot?.get(KEY_TIMESTAMP)?.toString()?.toLongOrNull() ?: -1L
+        } catch (e: Exception) {
+            // -1 means "assume the server has nothing", so the file gets uploaded.
+            Log.w(TAG, "getMapDataTimestamp: could not read ${doc.path}", e)
+            -1L
         }
-        while (wait) {
-            try {
-                Thread.sleep(500)
-            } catch (_: Exception) {
-            }
-        }
-
-        return timestamp
-    }
 
     fun getElocDevicesAsync(
         addDeviceCallback: (ElocDeviceInfo) -> Unit,
