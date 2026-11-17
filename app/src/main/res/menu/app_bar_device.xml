@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/mnu_reboot"
-        android:icon="@drawable/restart"
+        android:icon="@drawable/power_settings"
         android:title="@string/reboot_device"
         app:iconTint="@color/ui_text_primary"
         app:showAsAction="always" />
