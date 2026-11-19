@@ -171,6 +171,9 @@ de.eloc.eloc_control_panel/
 ### Testing
 - Manual testing on physical devices
 - Bluetooth testing requires real ELOC hardware
+- JVM unit tests (since 2026-11-19) in `app/src/test`, run with `./gradlew testDebugUnitTest`:
+  JUnit 4 plus the real `org.json` artifact (Android's `org.json` is a stub off the device). For
+  pure logic only, such as reply parsers (`MicTestTest`). Nothing there touches Bluetooth or Android.
 
 ### Version Control
 - Git with GitHub remote

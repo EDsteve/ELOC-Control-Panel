@@ -763,6 +763,90 @@
                                 </LinearLayout>
                             </com.google.android.material.card.MaterialCardView>
 
+                            <!-- ===================== Microphone ===================== -->
+                            <!-- Opens the Mic check screen. Shows the last result this phone saw
+                                 on this device, so a broken mic stands out on connect. -->
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/mic_card"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                app:cardBackgroundColor="@color/ui_card"
+                                app:cardCornerRadius="16dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/ui_stroke"
+                                app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/tile_gradient"
+                                    android:baselineAligned="false"
+                                    android:orientation="horizontal">
+
+                                    <View
+                                        android:id="@+id/mic_stripe"
+                                        android:layout_width="4dp"
+                                        android:layout_height="match_parent"
+                                        android:background="@color/ui_stroke" />
+
+                                    <LinearLayout
+                                        android:id="@+id/mic_header"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:background="?selectableItemBackground"
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal"
+                                        android:paddingStart="12dp"
+                                        android:paddingEnd="8dp"
+                                        android:paddingVertical="12dp">
+
+                                        <ImageView
+                                            android:id="@+id/mic_icon"
+                                            android:layout_width="24dp"
+                                            android:layout_height="24dp"
+                                            android:importantForAccessibility="no"
+                                            android:src="@drawable/ic_mic"
+                                            app:tint="@color/ui_text_secondary" />
+
+                                        <LinearLayout
+                                            android:layout_width="0dp"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginStart="12dp"
+                                            android:layout_weight="1"
+                                            android:orientation="vertical">
+
+                                            <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="@string/mic_card_title"
+                                                android:textColor="@color/ui_text_primary"
+                                                android:textSize="16sp"
+                                                android:textStyle="bold"
+                                                tools:viewBindingIgnore="true" />
+
+                                            <TextView
+                                                android:id="@+id/mic_subtitle"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="@string/mic_card_never"
+                                                android:textColor="@color/ui_text_secondary"
+                                                android:textSize="12sp" />
+                                        </LinearLayout>
+
+                                        <ImageView
+                                            android:layout_width="24dp"
+                                            android:layout_height="24dp"
+                                            android:layout_marginEnd="8dp"
+                                            android:importantForAccessibility="no"
+                                            android:src="@drawable/chevron_right"
+                                            app:tint="@color/ui_orange"
+                                            tools:viewBindingIgnore="true" />
+                                    </LinearLayout>
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
                             <!-- ===================== LoRa ===================== -->
                             <com.google.android.material.card.MaterialCardView
                                 android:layout_width="match_parent"

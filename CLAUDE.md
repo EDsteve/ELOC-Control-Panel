@@ -44,6 +44,7 @@ confuse them).
 ./gradlew assembleDebug      # debug APK (minify off)
 ./gradlew assembleRelease    # release (R8 minify + shrinkResources)
 ./gradlew installDebug       # build + install on a connected device
+./gradlew testDebugUnitTest  # JVM unit tests (app/src/test): pure logic such as reply parsers
 ```
 
 Config files needed locally (not all committed):
@@ -51,8 +52,9 @@ Config files needed locally (not all committed):
 - `local.properties` — Android SDK path + Google Maps API key (via the secrets-gradle-plugin).
 - Release signing — see `../keystore.properties` and the `*.jks` keystores in the parent `App/` folder.
 
-There is no automated test suite that exercises Bluetooth — **BT features require real ELOC hardware**;
-verify manually on a physical device.
+No automated test exercises Bluetooth — **BT features require real ELOC hardware**; verify manually on
+a physical device. The JVM unit tests in `app/src/test` (JUnit 4 + the real `org.json`, since Android's is
+a stub off the device) cover pure logic only, e.g. `MicTestTest` for the `getMicTest` parser.
 
 ## Architecture in one screen
 

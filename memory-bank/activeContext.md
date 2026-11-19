@@ -1,5 +1,42 @@
 ﻿# ELOC Control Panel - Active Context
 
+## Microphone check (2026-11-19, 5.48/65) — built, parser unit-tested, works on a device
+
+Phase 3 of the firmware's `README-MicTest-Plan.md`: the app side of `setMicTest` / `getMicTest`
+(firmware V1.83+, merged into `EDsteve/Patrol`). Field mics fail from ants and humidity; the test
+plays buzzer tones and the firmware judges how well its own mic hears them.
+
+- **Where:** a "Microphone Test" card on the status page (named so on the user's request, so it
+  says what it does), between the stats card and LoRa. It opens
+  `MicTestActivity`, its own screen like the survey: the test is a short flow the tech watches from
+  start to end, and the status page's 15 s refresh would only compete with its polling.
+- **Card:** the last result this phone saw on this device, keyed on mac_address in `Preferences`
+  (`lastMicTest` / `saveMicTest`), coloured by verdict ("Microphone OK · checked 3 days ago"). A test
+  keeps the time it was first seen, so reopening the screen does not make an old result look fresh.
+  On firmware definitely below V1.83 the card says so and opens nothing; an unreadable version gets
+  the benefit of the doubt and the device's own error is shown.
+- **Screen:** the quiet-place hint before the test (the user's decision of 2026-11-17: tell users,
+  don't ask where it runs). `setMicTest` is sent without arguments, because the verdict thresholds
+  were measured with the firmware defaults. `getMicTest` is polled every 1.5 s, never more than one
+  poll in flight. The verdict is the firmware's; the app maps it to a title, a sentence and a colour,
+  and shows the firmware's `reason` under it. Details (best rise, background, per-beep rise, clicks,
+  sample rate, runs, WAV name) sit behind an expander.
+- **Edge cases:** recording → confirm dialog (the beeps land in the WAV and the detector hears them),
+  not blocked. A refusal shows the device's reason (intruder alarm, survey, firmware transfer, another
+  test). 8 kHz → a note that only one beep can play. Device idle mid-test, five unreadable polls, 75 s
+  without a result, or a dropped link → a message instead of a stuck bar. A test still running when
+  the screen opens (left and came back, or started from the command line) is picked up.
+- **Parsing:** `driver/MicTest.kt`; field names from `MicTest.cpp` `buildResultJson`.
+- **Unit tests:** the app's first JVM tests, `app/src/test/.../driver/MicTestTest.kt` (8 tests: done
+  result, every verdict code, missing numbers, clock warning, progress, idle/error, rejected replies,
+  firmware gate). `./gradlew testDebugUnitTest`; the user asked for the setup.
+
+The user confirmed on 2026-11-19 that it works on a device. Which edge cases that covered is not
+recorded: a broken mic, a refusal during an intruder alarm and leaving the screen mid-test may still
+be untried. Firmware wiki: the App-Interface page's "the app has no
+screen for it yet" line is rewritten locally, not pushed.
+
+
 ## Status uploads losing their config after a mode change (2026-11-05, 5.47/64) — bench-tested, failure paths not forced
 
 Web Status Uploads showed blank config columns. Audit of the last 500 uploads: 176 had no config, of

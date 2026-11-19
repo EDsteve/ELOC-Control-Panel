@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activities.themable.MicTestActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?actionBarSize"
+            app:navigationIcon="@drawable/arrow_back"
+            app:title="@string/mic_check" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Before the test: what happens, and the quiet-place hint. -->
+            <LinearLayout
+                android:id="@+id/intro_panel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/tile_gradient"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mic_intro"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="@color/ui_text_primary"
+                    tools:viewBindingIgnore="true" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/mic_quiet_hint"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="@color/ui_amber"
+                    android:textStyle="bold"
+                    tools:viewBindingIgnore="true" />
+
+                <TextView
+                    android:id="@+id/low_rate_note_text_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/mic_8k_note"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="@color/ui_text_secondary"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+            </LinearLayout>
+
+            <!-- While the test runs. -->
+            <LinearLayout
+                android:id="@+id/progress_panel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/tile_gradient"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="16dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/progress_text_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    android:textColor="@color/ui_text_primary"
+                    tools:text="Listening… 8 s left" />
+
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/progress_indicator"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:max="100"
+                    app:indicatorColor="@color/ui_green"
+                    app:trackColor="@color/ui_stroke"
+                    app:trackCornerRadius="4dp"
+                    app:trackThickness="8dp"
+                    tools:progress="40" />
+            </LinearLayout>
+
+            <!-- The verdict. Large, because it is the one thing the tech needs to read. -->
+            <LinearLayout
+                android:id="@+id/result_panel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/tile_gradient"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="20dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/result_icon"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_mic"
+                        app:tint="@color/ui_green" />
+
+                    <TextView
+                        android:id="@+id/result_title_text_view"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:textColor="@color/ui_text_primary"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        tools:text="Microphone OK" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/result_text_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="@color/ui_text_primary"
+                    tools:text="The microphone heard the test beeps clearly." />
+
+                <TextView
+                    android:id="@+id/reason_text_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="@color/ui_text_secondary"
+                    tools:text="Device: microphone OK: the best beep is 67 dB above the background" />
+
+                <TextView
+                    android:id="@+id/warning_text_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="@color/ui_amber"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- A refusal, a failed test or a lost connection. -->
+            <TextView
+                android:id="@+id/message_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/tile_gradient"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="14dp"
+                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                android:textColor="@color/ui_red"
+                android:visibility="gone"
+                tools:text="The device did not start the test: intruder alarm is active and owns the buzzer"
+                tools:visibility="visible" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/start_button"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/mic_start"
+                android:textSize="18sp"
+                app:icon="@drawable/ic_mic"
+                app:iconGravity="textStart" />
+
+            <!-- The numbers behind the verdict, for whoever wants them. -->
+            <LinearLayout
+                android:id="@+id/details_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="?selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingVertical="8dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/mic_details"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:textColor="@color/ui_text_primary"
+                    android:textStyle="bold"
+                    tools:viewBindingIgnore="true" />
+
+                <ImageView
+                    android:id="@+id/details_chevron"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/keyboard_arrow_down"
+                    app:tint="@color/ui_orange" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/details_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/tile_gradient"
+                android:orientation="vertical"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="10dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/best_rise_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:itemType="normal"
+                    app:keyText="@string/mic_best_rise"
+                    tools:valueText="67.6 dB" />
+
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/background_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:itemType="normal"
+                    app:keyText="@string/mic_background"
+                    tools:valueText="-104.1 dBFS" />
+
+                <!-- One line per beep, so not a (single-line) ListItem. -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/mic_tones"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="@color/ui_text_primary"
+                    tools:viewBindingIgnore="true" />
+
+                <TextView
+                    android:id="@+id/tones_text_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="8dp"
+                    android:lineSpacingExtra="2dp"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="@color/ui_text_secondary"
+                    tools:text="2700 Hz: 67.6 dB above background\n4000 Hz: 64.1 dB above background" />
+
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/clicks_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:itemType="normal"
+                    app:keyText="@string/mic_clicks"
+                    tools:valueText="0" />
+
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/sample_rate_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:itemType="normal"
+                    app:keyText="@string/mic_sample_rate"
+                    tools:valueText="16000 Hz (measured 16024 Hz)" />
+
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/runs_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:itemType="normal"
+                    app:keyText="@string/mic_runs"
+                    tools:valueText="ok" />
+
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/time_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:itemType="normal"
+                    app:keyText="@string/mic_test_time"
+                    tools:valueText="Tue, Nov 17 2026 16:57:30" />
+
+                <de.eloc.eloc_control_panel.widgets.ListItem
+                    android:id="@+id/file_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:itemType="normal"
+                    app:keyText="@string/mic_recording_file"
+                    tools:valueText="ELOC_00247_20261117_165730.wav" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

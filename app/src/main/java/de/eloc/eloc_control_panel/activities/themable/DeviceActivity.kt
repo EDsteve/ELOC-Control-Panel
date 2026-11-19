@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.format.DateUtils
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
@@ -39,6 +40,7 @@ import de.eloc.eloc_control_panel.driver.FirmwareVersion
 import de.eloc.eloc_control_panel.driver.Intruder
 import de.eloc.eloc_control_panel.driver.LoraSignalStrength
 import de.eloc.eloc_control_panel.driver.LoraWan
+import de.eloc.eloc_control_panel.driver.MicTest
 import de.eloc.eloc_control_panel.interfaces.GetCommandCompletedCallback
 import de.eloc.eloc_control_panel.interfaces.SetCommandCompletedCallback
 import de.eloc.eloc_control_panel.receivers.ElocReceiver
@@ -354,6 +356,7 @@ class DeviceActivity : ThemableActivity() {
             setConfigInfo()
             setStatusInfo()
             bindFirmwareUpdateCard()
+            bindMicCard()
             setViewMode(ViewMode.ContentView)
         }
     }
@@ -834,6 +837,64 @@ class DeviceActivity : ThemableActivity() {
         binding.detailsHeader.setOnClickListener {
             toggleSection(binding.detailsContent, binding.detailsChevron)
         }
+
+        // Microphone check (its own screen)
+        binding.micHeader.setOnClickListener { openMicTest() }
+    }
+
+    private fun openMicTest() {
+        val version = DeviceDriver.general.version
+        if (!MicTest.isSupported(version)) {
+            showModalAlert(
+                getString(R.string.mic_check),
+                getString(R.string.mic_unsupported_message, version)
+            )
+            return
+        }
+        startActivity(Intent(this, MicTestActivity::class.java))
+    }
+
+    /**
+     * The Microphone card: the last mic check this phone saw on this device (keyed on mac_address),
+     * coloured by verdict so a broken mic stands out on connect. Re-bound on every status refresh,
+     * and after returning from the Mic check screen (onResume re-reads status and config).
+     */
+    private fun bindMicCard() {
+        val colorRes: Int
+        if (!MicTest.isSupported(DeviceDriver.general.version)) {
+            binding.micSubtitle.text = getString(R.string.mic_card_unsupported)
+            colorRes = R.color.ui_text_secondary
+            binding.micCard.alpha = DISABLED_SECTION_ALPHA
+        } else {
+            binding.micCard.alpha = 1f
+            val saved = DeviceDriver.deviceAddress?.let { Preferences.lastMicTest(it) }
+            if (saved == null) {
+                binding.micSubtitle.text = getString(R.string.mic_card_never)
+                colorRes = R.color.ui_text_secondary
+            } else {
+                val verdict = MicTest.Verdict.parse(saved.verdict)
+                val now = System.currentTimeMillis()
+                val age = if (now - saved.savedAtMillis < DateUtils.MINUTE_IN_MILLIS) {
+                    getString(R.string.mic_just_now)
+                } else {
+                    DateUtils.getRelativeTimeSpanString(
+                        saved.savedAtMillis, now, DateUtils.MINUTE_IN_MILLIS
+                    )
+                }
+                binding.micSubtitle.text = getString(
+                    R.string.mic_card_last,
+                    getString(MicTestActivity.verdictShortLabelRes(verdict)),
+                    age.toString().replaceFirstChar { it.lowercase() },
+                )
+                colorRes = MicTestActivity.verdictColorRes(verdict)
+            }
+        }
+        val color = ContextCompat.getColor(this, colorRes)
+        binding.micIcon.setColorFilter(color)
+        binding.micStripe.setBackgroundColor(
+            if (colorRes == R.color.ui_text_secondary) ContextCompat.getColor(this, R.color.ui_stroke)
+            else color
+        )
     }
 
     private fun elocFound(device: BtDevice) {

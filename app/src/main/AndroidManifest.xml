@@ -174,6 +174,11 @@
             android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi,LockedOrientationActivity" />
         <activity
+            android:name=".activities.themable.MicTestActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
             android:name=".activities.themable.DeviceSettingsActivity"
             android:exported="false"
             android:screenOrientation="portrait"

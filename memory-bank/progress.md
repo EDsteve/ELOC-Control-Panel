@@ -32,6 +32,11 @@
   needs a release published under the new convention (flat tag == embedded version, `-ei` asset);
   `ELOC-P_V1.68` is the first one. Remaining bench cases (kill switch, dismiss, revert, `no-ai`,
   result docs) still owed.
+- **Microphone check** - (2026-11-19, 5.48/65, parser unit-tested; the user confirmed it works on a
+  device). "Microphone Test" card on the status page (between the stats card and LoRa) opens `MicTestActivity`:
+  quiet-place hint, `setMicTest` with firmware defaults, `getMicTest` polled every 1.5 s, the
+  firmware's verdict + numbers. Last result per mac_address in `Preferences`, shown on the card.
+  Needs firmware V1.83+ (`MicTest.MIN_FIRMWARE_VERSION`).
 - **Best-GPS-source recording + 15 s refresh** - (2026-07-22, 5.43/61, `compileDebugKotlin` green;
   on-device test pending). The phone-vs-ELOC comparison now drives the *recorded* location, not just the
   gauge: `Gps` gains `latitude`/`longitude`/`hasLocation`, `DeviceDriver` parses `gps/lat`+`gps/lon`, and

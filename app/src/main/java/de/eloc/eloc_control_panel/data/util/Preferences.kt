@@ -38,6 +38,8 @@ object Preferences {
     private const val PREF_FIRMWARE_RELEASE = "firmware_cached_release"
     private const val PREF_FIRMWARE_LAST_CHECK = "firmware_last_check"
     private const val PREF_FIRMWARE_SKIPPED = "firmware_skipped_versions"
+    // Last microphone self-test per device, keyed on mac_address.
+    private const val PREF_MIC_TESTS = "mic_test_results"
     const val CHANNEL_STABLE = "stable"
     const val CHANNEL_BETA = "beta"
     private const val RANGER_NOT_SET = "<ranger not set>"
@@ -202,6 +204,52 @@ object Preferences {
 
     private fun writeFirmwareSkips(skips: JSONObject) =
         preferences.edit().putString(PREF_FIRMWARE_SKIPPED, skips.toString()).apply()
+
+    /** The last microphone self-test this phone saw on a device, for the status-page card. */
+    data class SavedMicTest(val verdict: String, val finding: String, val identity: String, val savedAtMillis: Long)
+
+    fun lastMicTest(macAddress: String): SavedMicTest? {
+        val key = macAddress.trim()
+        if (key.isEmpty()) {
+            return null
+        }
+        val entry = readMicTests().optJSONObject(key) ?: return null
+        return SavedMicTest(
+            verdict = entry.optString("verdict", ""),
+            finding = entry.optString("finding", ""),
+            identity = entry.optString("identity", ""),
+            savedAtMillis = entry.optLong("savedAt", 0L),
+        )
+    }
+
+    /**
+     * Keeps the first time a given test was seen: reopening the screen shows the device's last
+     * result again, and that must not make an old test look fresh.
+     */
+    fun saveMicTest(macAddress: String, verdict: String, finding: String, identity: String) {
+        val key = macAddress.trim()
+        if (key.isEmpty() || verdict.isBlank()) {
+            return
+        }
+        if (lastMicTest(key)?.identity == identity) {
+            return
+        }
+        val entry = JSONObject()
+            .put("verdict", verdict)
+            .put("finding", finding)
+            .put("identity", identity)
+            .put("savedAt", System.currentTimeMillis())
+        val tests = readMicTests().put(key, entry)
+        preferences.edit().putString(PREF_MIC_TESTS, tests.toString()).apply()
+    }
+
+    private fun readMicTests(): JSONObject {
+        return try {
+            JSONObject(preferences.getString(PREF_MIC_TESTS, "{}") ?: "{}")
+        } catch (_: Exception) {
+            JSONObject()
+        }
+    }
 
     val cameraRequested: Boolean get() = preferences.getBoolean(PREF_CAMERA_REQUESTED, false)
     val locationRequested: Boolean get() = preferences.getBoolean(PREF_LOCATION_REQUESTED, false)
