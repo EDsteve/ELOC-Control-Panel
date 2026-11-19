@@ -34,7 +34,7 @@ plays buzzer tones and the firmware judges how well its own mic hears them.
 The user confirmed on 2026-11-19 that it works on a device. Which edge cases that covered is not
 recorded: a broken mic, a refusal during an intruder alarm and leaving the screen mid-test may still
 be untried. Firmware wiki: the App-Interface page's "the app has no
-screen for it yet" line is rewritten locally, not pushed.
+screen for it yet" line now points to the Microphone Test card (pushed 2026-11-19, 5784fbb).
 
 
 ## Status uploads losing their config after a mode change (2026-11-05, 5.47/64) — bench-tested, failure paths not forced
